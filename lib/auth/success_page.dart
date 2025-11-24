@@ -6,114 +6,70 @@ class SuccessPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF1B5E20);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.all(24),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Back button
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-              const Spacer(),
-              // Illustration
+              // Success illustration
               Container(
-                padding: const EdgeInsets.all(32),
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
                   color: const Color(0xFF4CAF50).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.lock_outline,
-                        size: 60,
-                        color: Color(0xFF1B5E20),
-                      ),
-                    ),
-                    Positioned(
-                      right: -10,
-                      top: -10,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4CAF50),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: const Icon(
+                  Icons.check_circle,
+                  size: 120,
+                  color: Color(0xFF4CAF50),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 40),
+              // Title
               const Text(
-                "Change password successfully!",
-                textAlign: TextAlign.center,
+                'Success!',
                 style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1F3F),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              // Message
               Text(
-                "You have successfully changed password.\nPlease use the new password when sign in.",
+                'Your password has been reset successfully.\nYou can now sign in with your new password.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   color: Colors.grey.shade600,
                   height: 1.5,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 60),
+              // Back to login button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const LoginPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryGreen,
+                    backgroundColor: const Color(0xFF4C40F7),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   child: const Text(
-                    "OK",
+                    'Back to Sign In',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -122,7 +78,6 @@ class SuccessPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
