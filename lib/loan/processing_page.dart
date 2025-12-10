@@ -1,29 +1,70 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import '../services/api_service.dart';
 import 'loan_offer_page.dart';
 
 class ProcessingPage extends StatefulWidget {
-  const ProcessingPage({super.key});
+  final SimpleLoanRequest? request;
+
+  const ProcessingPage({super.key, this.request});
 
   @override
   State<ProcessingPage> createState() => _ProcessingPageState();
 }
 
 class _ProcessingPageState extends State<ProcessingPage> {
+  final ApiService _apiService = ApiService();
+
   @override
   void initState() {
     super.initState();
-    // Simulate processing time
-    Timer(const Duration(seconds: 3), () {
+    _processApplication();
+  }
+
+  Future<void> _processApplication() async {
+    // Artificial delay for better UX (optional)
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (widget.request == null) {
+       _showError('No application data provided.');
+       return;
+    }
+
+    try {
+      final response = await _apiService.applyForLoan(widget.request!);
+      
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const LoanOfferPage(),
+            builder: (_) => LoanOfferPage(offer: response),
           ),
         );
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        _showError(e.toString());
+      }
+    }
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to input page
+            },
+            child: const Text('Go Back'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -31,144 +72,50 @@ class _ProcessingPageState extends State<ProcessingPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        title: const Text('Processing', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Scoring - Processing',
-          style: TextStyle(color: Colors.black, fontSize: 16),
-        ),
+        automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
-      body: SafeArea(
+      body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(
+                width: 80,
+                height: 80,
+                child: CircularProgressIndicator(
+                  strokeWidth: 6,
+                  key: ValueKey('loading_indicator'),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                ),
+              ),
+              const SizedBox(height: 32),
               const Text(
-                'Processing...',
+                'Analyzing your profile...',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Your verification is pending. You can continue using the app.',
+                'Please wait while we calculate your credit score and prepare your loan offer.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
                   height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Get to know what this app can provide you to reach your',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-              ),
-              Text(
-                'credit security. Thank You',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 60),
-              // Processing animation
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 120,
-                      height: 120,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 6,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF4CAF50),
-                        ),
-                        backgroundColor: Colors.grey.shade200,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.check_circle,
-                      size: 60,
-                      color: Color(0xFF4CAF50),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-              // Information box
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    _buildInfoRow('You are eligible for', ''),
-                    const Divider(height: 24),
-                    _buildInfoRow('Purpose of Loan', 'xxx/xxxx/xxxx'),
-                    const Divider(height: 24),
-                    _buildInfoRow('Next Repayment Date', '02/04/2023'),
-                    const Divider(height: 24),
-                    _buildInfoRow('Internal Rate', '10%'),
-                    const Divider(height: 24),
-                    _buildInfoRow('Monthly Payment', 'đ 1,500'),
-                    const Divider(height: 24),
-                    _buildInfoRow('No of Payments', '24'),
-                    const Divider(height: 24),
-                    _buildInfoRow('Total Payback Amount', 'đ 34,000'),
-                  ],
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1F3F),
-          ),
-        ),
-      ],
     );
   }
 }

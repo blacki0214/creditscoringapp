@@ -3,13 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:creditscoring/main.dart';
 
 void main() {
-  testWidgets('App loads LoginPage correctly', (WidgetTester tester) async {
+  testWidgets('App loads SplashScreen correctly', (WidgetTester tester) async {
     // Load the main app
     await tester.pumpWidget(const VietCreditApp());
 
-    // Verify LoginPage UI
-    expect(find.text('Welcome Back'), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
-    expect(find.byType(TextField), findsNWidgets(2));
+    // Verify SplashScreen UI
+    expect(find.text('VietCredit'), findsOneWidget);
+    expect(find.text('SCORE'), findsOneWidget);
+
+    // Dispose the widget to cancel the pending Timer in SplashScreen
+    await tester.pumpWidget(const SizedBox());
   });
 }
