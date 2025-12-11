@@ -374,6 +374,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ElevatedButton(
+              onPressed: () {
                 // Perform logout via AuthViewModel
                 context.read<AuthViewModel>().reset(); 
                 
