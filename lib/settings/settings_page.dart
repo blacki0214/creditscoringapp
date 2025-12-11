@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../auth/login_page.dart';
+import '../viewmodels/settings_viewmodel.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import 'profile_page.dart';
 import 'support_page.dart';
 import 'feedback_page.dart';
@@ -12,6 +15,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settingsViewModel = context.watch<SettingsViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -61,22 +66,22 @@ class SettingsPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Nguyen Van A',
-                                  style: TextStyle(
+                                  settingsViewModel.name,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'nguyenvana@email.com',
-                                  style: TextStyle(
+                                  settingsViewModel.email,
+                                  style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 14,
                                   ),
@@ -369,7 +374,9 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+                // Perform logout via AuthViewModel
+                context.read<AuthViewModel>().reset(); 
+                
                 Navigator.of(context).pop();
                 Navigator.pushAndRemoveUntil(
                   context,

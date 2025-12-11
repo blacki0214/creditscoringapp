@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/onboarding_viewmodel.dart';
 import '../auth/login_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -9,8 +11,7 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+  PageController _pageController = PageController();
 
   final List<OnboardingContent> _pages = [
     OnboardingContent(
@@ -31,7 +32,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize PageController with current page from ViewModel
+    final viewModel = context.read<OnboardingViewModel>();
+     _pageController = PageController(initialPage: viewModel.currentPage); 
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<OnboardingViewModel>();
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A1F3F),
       body: SafeArea(
@@ -53,9 +64,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
+                  viewModel.setCurrentPage(index);
                 },
                 itemCount: _pages.length,
                 itemBuilder: (context, index) {
@@ -68,7 +77,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 _pages.length,
-                (index) => _buildIndicator(index == _currentPage),
+                (index) => _buildIndicator(index == viewModel.currentPage),
               ),
             ),
             const SizedBox(height: 40),
@@ -80,10 +89,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (_currentPage == _pages.length - 1) {
+                    if (viewModel.currentPage == _pages.length - 1) {
                       _navigateToLogin();
                     } else {
-                      _pageController.nextPage(
+                       viewModel.setCurrentPage(viewModel.currentPage + 1);
+                      _pageController.animateToPage(
+                        viewModel.currentPage, // It's already updated
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                       );
@@ -97,7 +108,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ),
                   ),
                   child: Text(
-                    _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                    viewModel.currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

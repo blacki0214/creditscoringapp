@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:provider/provider.dart';
+import '../viewmodels/onboarding_viewmodel.dart';
 import 'onboarding_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -10,25 +11,24 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingPage()),
-        );
-      }
+    // Schedule initialization after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeApp();
     });
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _initializeApp() async {
+    await context.read<OnboardingViewModel>().initializeApp();
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OnboardingPage()),
+      );
+    }
   }
 
   @override

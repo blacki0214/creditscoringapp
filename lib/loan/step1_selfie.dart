@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/loan_viewmodel.dart';
 import 'step2_personal_info.dart';
 
 class Step1SelfiePage extends StatefulWidget {
@@ -86,6 +88,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                 ),
                 child: IconButton(
                   onPressed: () {
+                    // Complete Step 1
+                    context.read<LoanViewModel>().completeStep1();
+                    
                     Navigator.push(
                       context,
                       MaterialPageRoute(

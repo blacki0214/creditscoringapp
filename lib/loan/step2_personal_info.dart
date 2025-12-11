@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/loan_viewmodel.dart';
 import 'processing_page.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
@@ -12,29 +13,15 @@ class Step2PersonalInfoPage extends StatefulWidget {
 class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
   
-  // Existing controllers
+  // Controllers
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _idController = TextEditingController();
   final _addressController = TextEditingController();
-  final _passportController = TextEditingController();
-
-  // New controllers for API fields
   final _ageController = TextEditingController();
   final _monthlyIncomeController = TextEditingController();
   final _yearsEmployedController = TextEditingController();
-  final _yearsCreditHistoryController = TextEditingController(text: '0');
-
-  // Dropdown values
-  String selectedCity = 'HCM';
-  String selectedDistrict = 'District';
-  String selectedEmployment = 'EMPLOYED'; // Matches API enum
-  String selectedHomeOwnership = 'RENT'; // Matches API enum
-  String selectedLoanPurpose = 'PERSONAL'; // Matches API enum
-  
-  // Boolean switches
-  bool hasPreviousDefaults = false;
-  bool currentlyDefaulting = false;
+  final _yearsCreditHistoryController = TextEditingController();
 
   final List<String> employmentOptions = ['EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED'];
   final List<String> homeOwnershipOptions = ['RENT', 'OWN', 'MORTGAGE', 'LIVING_WITH_PARENTS', 'OTHER'];
@@ -50,7 +37,25 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize controllers with data from ViewModel
+    final viewModel = context.read<LoanViewModel>();
+    _nameController.text = viewModel.fullName;
+    _phoneController.text = viewModel.phoneNumber;
+    _idController.text = viewModel.idNumber;
+    _addressController.text = viewModel.address;
+    _ageController.text = viewModel.age.toString();
+    _monthlyIncomeController.text = viewModel.monthlyIncome.toStringAsFixed(0);
+    _yearsEmployedController.text = viewModel.yearsEmployed.toString();
+    _yearsCreditHistoryController.text = viewModel.yearsCreditHistory.toString();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Watch ViewModel for state changes
+    final viewModel = context.watch<LoanViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -92,13 +97,17 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       const SizedBox(height: 32),
                       
                       _buildSectionHeader('Personal Details'),
-                      _buildTextField(_nameController, 'Full Name', 'Nguyen Van A'),
+                      _buildTextField(_nameController, 'Full Name', 'Nguyen Van A', 
+                        onChanged: (val) => viewModel.updatePersonalInfo(name: val)),
                       const SizedBox(height: 16),
-                      _buildTextField(_ageController, 'Age', '30', keyboardType: TextInputType.number),
+                      _buildTextField(_ageController, 'Age', '30', keyboardType: TextInputType.number,
+                        onChanged: (val) => viewModel.updatePersonalInfo(ageVal: int.tryParse(val))),
                       const SizedBox(height: 16),
-                      _buildTextField(_phoneController, 'Phone Number', '(+84) 901234567', keyboardType: TextInputType.phone),
+                      _buildTextField(_phoneController, 'Phone Number', '(+84) 901234567', keyboardType: TextInputType.phone,
+                        onChanged: (val) => viewModel.updatePersonalInfo(phone: val)),
                       const SizedBox(height: 16),
-                      _buildTextField(_idController, 'ID Number (CCCD)', '079...'),
+                      _buildTextField(_idController, 'ID Number (CCCD)', '079...',
+                        onChanged: (val) => viewModel.updatePersonalInfo(id: val)),
                       
                       const SizedBox(height: 24),
                       _buildSectionHeader('Employment & Income'),
@@ -107,54 +116,58 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           Expanded(
                             child: _buildDropdown(
                               'Employment Status',
-                              selectedEmployment,
+                              viewModel.employmentStatus,
                               employmentOptions,
-                              (val) => setState(() => selectedEmployment = val!),
+                              (val) => viewModel.updatePersonalInfo(employment: val!),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _buildTextField(_yearsEmployedController, 'Years Employed', '5', keyboardType: TextInputType.number),
+                            child: _buildTextField(_yearsEmployedController, 'Years Employed', '5', keyboardType: TextInputType.number,
+                              onChanged: (val) => viewModel.updatePersonalInfo(yearsEmp: double.tryParse(val))),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(_monthlyIncomeController, 'Monthly Income (VND)', '15000000', keyboardType: TextInputType.number),
+                      _buildTextField(_monthlyIncomeController, 'Monthly Income (VND)', '15000000', keyboardType: TextInputType.number,
+                        onChanged: (val) => viewModel.updatePersonalInfo(income: double.tryParse(val))),
 
                       const SizedBox(height: 24),
                       _buildSectionHeader('Residence & Assets'),
                       _buildDropdown(
                         'Home Ownership',
-                        selectedHomeOwnership,
+                        viewModel.homeOwnership,
                         homeOwnershipOptions,
-                        (val) => setState(() => selectedHomeOwnership = val!),
+                        (val) => viewModel.updatePersonalInfo(home: val!),
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(_addressController, 'Current Address', '123 Street...'),
+                      _buildTextField(_addressController, 'Current Address', '123 Street...',
+                        onChanged: (val) => viewModel.updatePersonalInfo(addr: val)),
 
                       const SizedBox(height: 24),
                       _buildSectionHeader('Loan Request'),
                       _buildDropdown(
                         'Loan Purpose',
-                        selectedLoanPurpose,
+                        viewModel.loanPurpose,
                         loanPurposeOptions,
-                        (val) => setState(() => selectedLoanPurpose = val!),
+                        (val) => viewModel.updatePersonalInfo(purpose: val!),
                       ),
                       
                       const SizedBox(height: 24),
                       _buildSectionHeader('Credit History'),
-                      _buildTextField(_yearsCreditHistoryController, 'Years Credit History', '2', keyboardType: TextInputType.number),
+                      _buildTextField(_yearsCreditHistoryController, 'Years Credit History', '2', keyboardType: TextInputType.number,
+                        onChanged: (val) => viewModel.updatePersonalInfo(history: int.tryParse(val))),
                       const SizedBox(height: 16),
                       SwitchListTile(
                         title: const Text('Have you ever defaulted?'),
-                        value: hasPreviousDefaults,
-                        onChanged: (val) => setState(() => hasPreviousDefaults = val),
+                        value: viewModel.hasPreviousDefaults,
+                        onChanged: (val) => viewModel.updatePersonalInfo(defaults: val),
                         activeColor: const Color(0xFF4C40F7),
                       ),
                       SwitchListTile(
                         title: const Text('Currently defaulting?'),
-                        value: currentlyDefaulting,
-                        onChanged: (val) => setState(() => currentlyDefaulting = val),
+                        value: viewModel.currentlyDefaulting,
+                        onChanged: (val) => viewModel.updatePersonalInfo(currentDefault: val),
                         activeColor: const Color(0xFF4C40F7),
                       ),
                       
@@ -170,14 +183,16 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _submitApplication,
+                  onPressed: viewModel.isProcessing ? null : () => _submitApplication(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4C40F7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
+                  child: viewModel.isProcessing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
                     'Submit Application',
                     style: TextStyle(
                       fontSize: 16,
@@ -208,10 +223,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, String hint, {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(TextEditingController controller, String label, String hint, {TextInputType keyboardType = TextInputType.text, Function(String)? onChanged}) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      onChanged: onChanged,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter $label';
@@ -254,26 +270,17 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     );
   }
 
-  Future<void> _submitApplication() async {
+  Future<void> _submitApplication(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      final request = SimpleLoanRequest(
-        fullName: _nameController.text,
-        age: int.tryParse(_ageController.text) ?? 18,
-        monthlyIncome: double.tryParse(_monthlyIncomeController.text) ?? 0,
-        employmentStatus: selectedEmployment,
-        yearsEmployed: double.tryParse(_yearsEmployedController.text) ?? 0,
-        homeOwnership: selectedHomeOwnership,
-        // loanAmount removed - system calculates max
-        loanPurpose: selectedLoanPurpose,
-        yearsCreditHistory: int.tryParse(_yearsCreditHistoryController.text) ?? 0,
-        hasPreviousDefaults: hasPreviousDefaults,
-        currentlyDefaulting: currentlyDefaulting,
-      );
-
-      Navigator.push(
+       // Navigate to ProcessingPage - which will trigger the submission in VM
+       // Or even better, let ProcessingPage be just a "Waiter" for the VM state?
+       // But wait, ProcessingPage in original design did the call.
+       // Here I will use ProcessingPage to TRIGGER the call.
+       
+       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ProcessingPage(request: request),
+          builder: (_) => const ProcessingPage(),
         ),
       );
     }
@@ -285,11 +292,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _phoneController.dispose();
     _idController.dispose();
     _addressController.dispose();
-    // _passportController.dispose(); // This controller was not defined in the original code, keeping it commented or removing it based on context.
     _ageController.dispose();
     _monthlyIncomeController.dispose();
     _yearsEmployedController.dispose();
-    // _loanAmountController.dispose(); // Removed as per instruction
     _yearsCreditHistoryController.dispose();
     super.dispose();
   }

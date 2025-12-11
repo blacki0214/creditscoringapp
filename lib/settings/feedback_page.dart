@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/settings_viewmodel.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -9,8 +11,8 @@ class FeedbackPage extends StatefulWidget {
 
 class _FeedbackPageState extends State<FeedbackPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'Nguyen Van A');
-  final _emailController = TextEditingController(text: 'nguyenvana@email.com');
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
   
@@ -50,6 +52,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
       message: 'The support team was very helpful...',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final vm = context.read<SettingsViewModel>();
+    _nameController = TextEditingController(text: vm.name);
+    _emailController = TextEditingController(text: vm.email);
+  }
 
   @override
   Widget build(BuildContext context) {

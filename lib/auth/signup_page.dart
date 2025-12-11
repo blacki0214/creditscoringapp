@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
 import 'login_page.dart';
 
@@ -15,11 +17,12 @@ class _SignupPageState extends State<SignupPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-  int _currentStep = 0;
+  // Using ViewModel for obscured password and current step
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<AuthViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -27,7 +30,13 @@ class _SignupPageState extends State<SignupPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+             if (viewModel.signupStep > 0) {
+              viewModel.setSignupStep(0);
+             } else {
+               Navigator.pop(context);
+             }
+          },
         ),
       ),
       body: SafeArea(
@@ -43,14 +52,14 @@ class _SignupPageState extends State<SignupPage> {
                   Row(
                     children: [
                       _buildStepIndicator(0, true),
-                      _buildStepLine(_currentStep >= 1),
-                      _buildStepIndicator(1, _currentStep >= 1),
+                      _buildStepLine(viewModel.signupStep >= 1),
+                      _buildStepIndicator(1, viewModel.signupStep >= 1),
                     ],
                   ),
                   const SizedBox(height: 32),
                   // Title
                   Text(
-                    _currentStep == 0 ? 'Sign up #1' : 'Sign up #2',
+                    viewModel.signupStep == 0 ? 'Sign up #1' : 'Sign up #2',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -59,7 +68,7 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _currentStep == 0
+                    viewModel.signupStep == 0
                         ? 'Create your account'
                         : 'Almost there!',
                     style: TextStyle(
@@ -69,7 +78,7 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   const SizedBox(height: 32),
                   // Step 1 fields
-                  if (_currentStep == 0) ...[
+                  if (viewModel.signupStep == 0) ...[
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
@@ -129,7 +138,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ],
                   // Step 2 fields
-                  if (_currentStep == 1) ...[
+                  if (viewModel.signupStep == 1) ...[
                     TextFormField(
                       controller: _phoneController,
                       decoration: InputDecoration(
@@ -161,21 +170,19 @@ class _SignupPageState extends State<SignupPage> {
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: _obscurePassword,
+                      obscureText: viewModel.obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Create a password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
+                            viewModel.obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                           ),
                           onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                             context.read<AuthViewModel>().togglePasswordVisibility();
                           },
                         ),
                         border: OutlineInputBorder(
@@ -210,21 +217,31 @@ class _SignupPageState extends State<SignupPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: viewModel.isLoading 
+                      ? null 
+                      : () async {
                         if (_formKey.currentState!.validate()) {
-                          if (_currentStep == 0) {
-                            setState(() {
-                              _currentStep = 1;
-                            });
+                          if (viewModel.signupStep == 0) {
+                             viewModel.setSignupStep(1);
                           } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const OTPPage(
-                                  isForResetPassword: false,
-                                ),
-                              ),
+                            // Perform signup
+                            final success = await context.read<AuthViewModel>().signup(
+                              _nameController.text,
+                              _emailController.text,
+                              _phoneController.text,
+                              _passwordController.text,
                             );
+
+                            if (success && context.mounted) {
+                                Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const OTPPage(
+                                    isForResetPassword: false,
+                                  ),
+                                ),
+                              );
+                            }
                           }
                         }
                       },
@@ -234,8 +251,10 @@ class _SignupPageState extends State<SignupPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: Text(
-                        _currentStep == 0 ? 'Continue' : 'Sign up',
+                      child: viewModel.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                        viewModel.signupStep == 0 ? 'Continue' : 'Sign up',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -255,6 +274,8 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       TextButton(
                         onPressed: () {
+                          // Reset view model state before navigating
+                          context.read<AuthViewModel>().reset();
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
