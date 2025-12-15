@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import 'signup_page.dart';
 import 'forgot_password.dart';
 import '../home/home_page.dart';
@@ -14,10 +16,12 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
+    // Access ViewModel
+    final viewModel = context.watch<AuthViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -29,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 40),
+                   const SizedBox(height: 40),
                   // Logo
                   Center(
                     child: Image.asset(
@@ -90,21 +94,19 @@ class _LoginPageState extends State<LoginPage> {
                   // Password field
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: _obscurePassword,
+                    obscureText: viewModel.obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword
+                          viewModel.obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                         ),
                         onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
+                           context.read<AuthViewModel>().togglePasswordVisibility();
                         },
                       ),
                       border: OutlineInputBorder(
@@ -157,14 +159,22 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: viewModel.isLoading 
+                        ? null 
+                        : () async {
                         if (_formKey.currentState!.validate()) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const HomePage(),
-                            ),
+                          final success = await context.read<AuthViewModel>().login(
+                            _emailController.text,
+                            _passwordController.text,
                           );
+                          if (success && context.mounted) {
+                             Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HomePage(),
+                              ),
+                            );
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -173,7 +183,9 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
+                      child: viewModel.isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
                         'Sign in',
                         style: TextStyle(
                           fontSize: 16,
@@ -183,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                   const SizedBox(height: 32),
                   // Sign up link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -194,6 +206,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       TextButton(
                         onPressed: () {
+                           // Reset view model state before navigating
+                          context.read<AuthViewModel>().reset();
                           Navigator.push(
                             context,
                             MaterialPageRoute(

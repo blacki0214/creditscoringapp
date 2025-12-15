@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import '../viewmodels/home_viewmodel.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-  String _selectedPeriod = 'Current year';
-
-  @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<HomeViewModel>();
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A1F3F),
       body: SafeArea(
@@ -49,14 +45,12 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         onTap: () {
-                          Future.delayed(Duration.zero, () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SettingsPage(),
-                              ),
-                            );
-                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsPage(),
+                            ),
+                          );
                         },
                       ),
                       PopupMenuItem(
@@ -68,14 +62,12 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         onTap: () {
-                          Future.delayed(Duration.zero, () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ProfilePage(),
-                              ),
-                            );
-                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProfilePage(),
+                            ),
+                          );
                         },
                       ),
                       PopupMenuItem(
@@ -87,14 +79,12 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         onTap: () {
-                          Future.delayed(Duration.zero, () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SupportPage(),
-                              ),
-                            );
-                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SupportPage(),
+                            ),
+                          );
                         },
                       ),
                       PopupMenuItem(
@@ -107,12 +97,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         onTap: () {
                           // Handle logout - navigate back to login
-                          Future.delayed(Duration.zero, () {
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/',
-                              (route) => false,
-                            );
-                          });
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/',
+                            (route) => false,
+                          );
                         },
                       ),
                     ],
@@ -371,11 +359,11 @@ class _HomePageState extends State<HomePage> {
                         // Period selector
                         Row(
                           children: [
-                            _buildPeriodChip('Current year', _selectedPeriod == 'Current year'),
+                            _buildPeriodChip(context, viewModel, 'Current year'),
                             const SizedBox(width: 8),
-                            _buildPeriodChip('Loans', _selectedPeriod == 'Loans'),
+                            _buildPeriodChip(context, viewModel, 'Loans'),
                             const SizedBox(width: 8),
-                            _buildPeriodChip('Hards', _selectedPeriod == 'Hards'),
+                            _buildPeriodChip(context, viewModel, 'Hards'),
                           ],
                         ),
                         const SizedBox(height: 32),
@@ -498,6 +486,7 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Expanded(
                               child: _buildMetricCard(
+                                context,
                                 'Payment history',
                                 '100%',
                                 'On-time payments',
@@ -507,6 +496,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _buildMetricCard(
+                                context,
                                 'Credit card use',
                                 '2%',
                                 'Of credit limit',
@@ -516,6 +506,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _buildMetricCard(
+                                context,
                                 'Derogatory marks',
                                 '0',
                                 'Accounts',
@@ -529,6 +520,7 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Expanded(
                               child: _buildMetricCard(
+                                context,
                                 'Credit age',
                                 '7yrs',
                                 'Average',
@@ -538,6 +530,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _buildMetricCard(
+                                context,
                                 'Total accounts',
                                 '28',
                                 'Open and closed',
@@ -547,6 +540,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _buildMetricCard(
+                                context,
                                 'Hard inquiries',
                                 '3',
                                 'Last 2 years',
@@ -580,10 +574,10 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home, 'Home', 0),
-                _buildNavItem(Icons.upload_file, 'Upload', 1),
-                _buildNavItem(Icons.mail_outline, 'Messages', 2),
-                _buildNavItem(Icons.settings_outlined, 'Settings', 3),
+                _buildNavItem(context, viewModel, Icons.home, 'Home', 0),
+                _buildNavItem(context, viewModel, Icons.upload_file, 'Upload', 1),
+                _buildNavItem(context, viewModel, Icons.mail_outline, 'Messages', 2),
+                _buildNavItem(context, viewModel, Icons.settings_outlined, 'Settings', 3),
               ],
             ),
           ),
@@ -592,12 +586,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPeriodChip(String label, bool isSelected) {
+  Widget _buildPeriodChip(BuildContext context, HomeViewModel viewModel, String label) {
+    final isSelected = viewModel.selectedPeriod == label;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedPeriod = label;
-        });
+        viewModel.setPeriod(label);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Viewing $label data'),
@@ -625,6 +618,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMetricCard(
+    BuildContext context,
     String title,
     String value,
     String subtitle,
@@ -731,8 +725,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = _selectedIndex == index;
+  Widget _buildNavItem(BuildContext context, HomeViewModel viewModel, IconData icon, String label, int index) {
+    final isSelected = viewModel.selectedIndex == index;
     return InkWell(
       onTap: () {
         if (index == 1) {
@@ -752,9 +746,7 @@ class _HomePageState extends State<HomePage> {
               duration: Duration(seconds: 2),
             ),
           );
-          setState(() {
-            _selectedIndex = index;
-          });
+          viewModel.setIndex(index);
         } else if (index == 3) {
           // Navigate to settings
           Navigator.push(
@@ -764,9 +756,7 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         } else {
-          setState(() {
-            _selectedIndex = index;
-          });
+          viewModel.setIndex(index);
         }
       },
       child: Container(

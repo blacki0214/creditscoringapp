@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/settings_viewmodel.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -11,12 +13,24 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
   
-  final _nameController = TextEditingController(text: 'Nguyen Van A');
-  final _emailController = TextEditingController(text: 'nguyenvana@email.com');
-  final _phoneController = TextEditingController(text: '+84 0398882xxx');
-  final _addressController = TextEditingController(text: '123 Hai Trieu Minh City');
-  final _idController = TextEditingController(text: '079xxxxxxxx');
-  final _dobController = TextEditingController(text: '15/03/1990');
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _idController = TextEditingController();
+  final _dobController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final vm = context.read<SettingsViewModel>();
+    _nameController.text = vm.name;
+    _emailController.text = vm.email;
+    _phoneController.text = vm.phone;
+    _addressController.text = vm.address;
+    _idController.text = vm.idNumber;
+    _dobController.text = vm.dob;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,17 +51,28 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () {
               setState(() {
-                _isEditing = !_isEditing;
-                if (!_isEditing) {
+                if (_isEditing) {
                   // Save changes
                   if (_formKey.currentState!.validate()) {
+                    context.read<SettingsViewModel>().updateProfile(
+                      name: _nameController.text,
+                      email: _emailController.text,
+                      phone: _phoneController.text,
+                      address: _addressController.text,
+                      idNumber: _idController.text,
+                      dob: _dobController.text,
+                    );
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Profile updated successfully'),
                         backgroundColor: Color(0xFF4CAF50),
                       ),
                     );
+                    _isEditing = false;
                   }
+                } else {
+                  _isEditing = true;
                 }
               });
             },

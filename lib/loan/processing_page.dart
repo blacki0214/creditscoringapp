@@ -1,49 +1,41 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/loan_viewmodel.dart';
 import 'loan_offer_page.dart';
 
 class ProcessingPage extends StatefulWidget {
-  final SimpleLoanRequest? request;
-
-  const ProcessingPage({super.key, this.request});
+  const ProcessingPage({super.key});
 
   @override
   State<ProcessingPage> createState() => _ProcessingPageState();
 }
 
 class _ProcessingPageState extends State<ProcessingPage> {
-  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
-    _processApplication();
+    // Trigger the actual processing
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _processApplication();
+    });
   }
 
   Future<void> _processApplication() async {
-    // Artificial delay for better UX (optional)
-    await Future.delayed(const Duration(seconds: 2));
+    final viewModel = context.read<LoanViewModel>();
+    final success = await viewModel.submitApplication();
 
-    if (widget.request == null) {
-       _showError('No application data provided.');
-       return;
-    }
-
-    try {
-      final response = await _apiService.applyForLoan(widget.request!);
-      
-      if (mounted) {
-        Navigator.pushReplacement(
+    if (mounted) {
+       if (success) {
+          Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => LoanOfferPage(offer: response),
+            builder: (_) => const LoanOfferPage(),
           ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        _showError(e.toString());
-      }
+       } else {
+         _showError(viewModel.errorMessage ?? 'Unknown error occurred');
+       }
     }
   }
 
