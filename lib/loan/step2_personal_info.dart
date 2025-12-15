@@ -237,6 +237,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
       value: value,
+      isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -249,7 +250,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
       ),
-      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, overflow: TextOverflow.ellipsis,))).toList(),
       onChanged: onChanged,
     );
   }
