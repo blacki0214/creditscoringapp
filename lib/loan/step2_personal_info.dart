@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
+import 'step1_front_id.dart';
 import 'processing_page.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
@@ -18,7 +21,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _phoneController = TextEditingController();
   final _idController = TextEditingController();
   final _addressController = TextEditingController();
-  final _ageController = TextEditingController();
+  DateTime? _selectedDOB;
   final _monthlyIncomeController = TextEditingController();
   final _yearsEmployedController = TextEditingController();
   final _yearsCreditHistoryController = TextEditingController();
@@ -36,6 +39,58 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     'OTHER'
   ];
 
+  final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter your full name';
+    if (value.length < 3) return 'Name must be at least 3 characters';
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Name can only contain letters';
+    return null;
+  }
+
+  String? _validateDOB(DateTime? value) {
+    if (value == null) return 'Please select your date of birth';
+    final today = DateTime.now();
+    final age = today.year - value.year;
+    if (age < 18) return 'Must be 18 or older';
+    if (age > 100) return 'Please enter a valid date of birth';
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter your phone number';
+    final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
+    if (cleaned.length < 9 || cleaned.length > 12) return 'Invalid phone number';
+    if (!RegExp(r'^[0-9]+$').hasMatch(cleaned)) return 'Phone can only contain numbers';
+    return null;
+  }
+
+  String? _validateID(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter your ID number';
+    if (value.length < 9 || value.length > 12) return 'ID must be 9-12 digits';
+    if (!RegExp(r'^[0-9]+$').hasMatch(value)) return 'ID can only contain numbers';
+    return null;
+  }
+
+  String? _validateIncome(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter your monthly income';
+    final cleaned = value.replaceAll(RegExp(r'[,\.]'), '');
+    final income = double.tryParse(cleaned);
+    if (income == null) return 'Income must be a number';
+    if (income < 0) return 'Income cannot be negative';
+    if (income > 1000000000) return 'Please enter a valid income';
+    return null;
+  }
+
+  String? _validateYears(String? value, String fieldName) {
+    if (value == null || value.isEmpty) return 'Please enter $fieldName';
+    final years = double.tryParse(value);
+    if (years == null) return '$fieldName must be a number';
+    if (years < 0) return '$fieldName cannot be negative';
+    if (years > 50) return 'Please enter a valid number of years';
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +100,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _phoneController.text = viewModel.phoneNumber;
     _idController.text = viewModel.idNumber;
     _addressController.text = viewModel.address;
-    _ageController.text = viewModel.age.toString();
+    _selectedDOB = viewModel.dob;
     _monthlyIncomeController.text = viewModel.monthlyIncome.toStringAsFixed(0);
     _yearsEmployedController.text = viewModel.yearsEmployed.toString();
     _yearsCreditHistoryController.text = viewModel.yearsCreditHistory.toString();
@@ -97,17 +152,35 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       const SizedBox(height: 32),
                       
                       _buildSectionHeader('Personal Details'),
-                      _buildTextField(_nameController, 'Full Name', 'Nguyen Van A', 
-                        onChanged: (val) => viewModel.updatePersonalInfo(name: val)),
+                      _buildTextField(
+                        _nameController, 
+                        'Full Name', 
+                        'Nguyen Van A',
+                        validator: _validateName,
+                        onChanged: (val) => viewModel.updatePersonalInfo(name: val),
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_ageController, 'Age', '30', keyboardType: TextInputType.number,
-                        onChanged: (val) => viewModel.updatePersonalInfo(ageVal: int.tryParse(val))),
+                      _buildDateOfBirthField(viewModel),
                       const SizedBox(height: 16),
-                      _buildTextField(_phoneController, 'Phone Number', '(+84) 901234567', keyboardType: TextInputType.phone,
-                        onChanged: (val) => viewModel.updatePersonalInfo(phone: val)),
+                      _buildTextField(
+                        _phoneController, 
+                        'Phone Number', 
+                        '+84', 
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\+\-\(\)\s]'))],
+                        validator: _validatePhone,
+                        onChanged: (val) => viewModel.updatePersonalInfo(phone: val),
+                      ),
                       const SizedBox(height: 16),
-                      _buildTextField(_idController, 'ID Number (CCCD)', '079...',
-                        onChanged: (val) => viewModel.updatePersonalInfo(id: val)),
+                      _buildTextField(
+                        _idController, 
+                        'ID Number (CCCD)', 
+                        '079',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: _validateID,
+                        onChanged: (val) => viewModel.updatePersonalInfo(id: val),
+                      ),
                       
                       const SizedBox(height: 24),
                       _buildSectionHeader('Employment & Income'),
@@ -123,14 +196,43 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _buildTextField(_yearsEmployedController, 'Years Employed', '5', keyboardType: TextInputType.number,
-                              onChanged: (val) => viewModel.updatePersonalInfo(yearsEmp: double.tryParse(val))),
+                            child: _buildTextField(
+                              _yearsEmployedController, 
+                              'Years Employed', 
+                              '5', 
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                              validator: (val) => _validateYears(val, 'Years Employed'),
+                              onChanged: (val) => viewModel.updatePersonalInfo(yearsEmp: double.tryParse(val)),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(_monthlyIncomeController, 'Monthly Income (VND)', '15000000', keyboardType: TextInputType.number,
-                        onChanged: (val) => viewModel.updatePersonalInfo(income: double.tryParse(val))),
+                      _buildTextField(
+                        _monthlyIncomeController, 
+                        'Monthly Income (VND)', 
+                        '15,000,000', 
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          TextInputFormatter.withFunction((oldValue, newValue) {
+                            if (newValue.text.isEmpty) return newValue;
+                            final number = int.tryParse(newValue.text);
+                            if (number == null) return oldValue;
+                            final formatted = _currencyFormatter.format(number);
+                            return TextEditingValue(
+                              text: formatted,
+                              selection: TextSelection.collapsed(offset: formatted.length),
+                            );
+                          }),
+                        ],
+                        validator: _validateIncome,
+                        onChanged: (val) {
+                          final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
+                          viewModel.updatePersonalInfo(income: double.tryParse(cleaned));
+                        },
+                      ),
 
                       const SizedBox(height: 24),
                       _buildSectionHeader('Residence & Assets'),
@@ -155,8 +257,15 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       
                       const SizedBox(height: 24),
                       _buildSectionHeader('Credit History'),
-                      _buildTextField(_yearsCreditHistoryController, 'Years Credit History', '2', keyboardType: TextInputType.number,
-                        onChanged: (val) => viewModel.updatePersonalInfo(history: int.tryParse(val))),
+                      _buildTextField(
+                        _yearsCreditHistoryController, 
+                        'Years Credit History', 
+                        '2', 
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (val) => _validateYears(val, 'Years Credit History'),
+                        onChanged: (val) => viewModel.updatePersonalInfo(history: int.tryParse(val)),
+                      ),
                       const SizedBox(height: 16),
                       SwitchListTile(
                         title: const Text('Have you ever defaulted?'),
@@ -223,12 +332,70 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, String hint, {TextInputType keyboardType = TextInputType.text, Function(String)? onChanged}) {
+  Widget _buildDateOfBirthField(LoanViewModel viewModel) {
+    final dobText = _selectedDOB != null 
+        ? '${_selectedDOB!.day.toString().padLeft(2, '0')}/${_selectedDOB!.month.toString().padLeft(2, '0')}/${_selectedDOB!.year}'
+        : '';
+    
+    return TextFormField(
+      readOnly: true,
+      controller: TextEditingController(text: dobText),
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: _selectedDOB ?? DateTime(2000),
+          firstDate: DateTime(1950),
+          lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: Color(0xFF4C40F7),
+                  onPrimary: Colors.white,
+                  surface: Colors.white,
+                  onSurface: Colors.black,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+        if (picked != null) {
+          setState(() {
+            _selectedDOB = picked;
+          });
+          viewModel.updatePersonalInfo(dob: picked);
+        }
+      },
+      validator: (value) => _validateDOB(_selectedDOB),
+      decoration: InputDecoration(
+        labelText: 'Date of Birth',
+        hintText: 'DD/MM/YYYY',
+        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, String hint, {TextInputType keyboardType = TextInputType.text, Function(String)? onChanged, String? Function(String?)? validator, List<TextInputFormatter>? inputFormatters}) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       onChanged: onChanged,
-      validator: (value) {
+      inputFormatters: inputFormatters,
+      validator: validator ?? (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter $label';
         }
@@ -245,6 +412,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
       ),
     );
@@ -292,7 +463,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _phoneController.dispose();
     _idController.dispose();
     _addressController.dispose();
-    _ageController.dispose();
     _monthlyIncomeController.dispose();
     _yearsEmployedController.dispose();
     _yearsCreditHistoryController.dispose();

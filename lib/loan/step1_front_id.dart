@@ -3,18 +3,16 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-import '../viewmodels/loan_viewmodel.dart';
-import 'step2_personal_info.dart';
+import 'step1_back_id.dart';
 
-class Step1SelfiePage extends StatefulWidget {
-  const Step1SelfiePage({super.key});
+class Step1FrontIDPage extends StatefulWidget {
+  const Step1FrontIDPage({super.key});
 
   @override
-  State<Step1SelfiePage> createState() => _Step1SelfiePageState();
+  State<Step1FrontIDPage> createState() => _Step1FrontIDPageState();
 }
 
-class _Step1SelfiePageState extends State<Step1SelfiePage> {
+class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
   Uint8List? imageData;
   bool isLoading = false;
   final ImagePicker _picker = ImagePicker();
@@ -50,19 +48,12 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     }
   }
 
-  void clearImage() {
-    setState(() => imageData = null);
-  }
-
   Future<void> takePhoto() async {
     if (isLoading) return;
     setState(() => isLoading = true);
     try {
       if (_isMobile) {
-        final XFile? photo = await _picker.pickImage(
-          source: ImageSource.camera,
-          preferredCameraDevice: CameraDevice.front,
-        );
+        final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
         if (photo != null) {
           final bytes = await photo.readAsBytes();
           if (mounted) setState(() => imageData = bytes);
@@ -82,6 +73,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     }
   }
 
+  void clearImage() {
+    setState(() => imageData = null);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +109,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Take your selfie for verification',
+                'Capture the front of your ID',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -149,7 +143,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Click to capture a selfie image',
+                            'Click to capture an image\nof your ID Card (Front)',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
@@ -208,11 +202,10 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                 child: IconButton(
                   onPressed: imageData != null
                       ? () {
-                          context.read<LoanViewModel>().completeStep1();
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const Step2PersonalInfoPage(),
+                              builder: (_) => const Step1BackIDPage(),
                             ),
                           );
                         }

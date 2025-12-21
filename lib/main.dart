@@ -5,9 +5,12 @@ import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/onboarding_viewmodel.dart';
 import 'viewmodels/loan_viewmodel.dart';
 import 'viewmodels/settings_viewmodel.dart';
+import 'services/local_storage_service.dart';
 import 'onboarding/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await LocalStorageService.init();
   runApp(const VietCreditApp());
 }
 
