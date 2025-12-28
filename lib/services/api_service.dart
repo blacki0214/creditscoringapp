@@ -9,6 +9,7 @@ class SimpleLoanRequest {
   final double yearsEmployed;
   final String homeOwnership;
   final String loanPurpose;
+  final double requestedAmountVnd;
   final int yearsCreditHistory;
   final bool hasPreviousDefaults;
   final bool currentlyDefaulting;
@@ -21,6 +22,7 @@ class SimpleLoanRequest {
     required this.yearsEmployed,
     required this.homeOwnership,
     required this.loanPurpose,
+    this.requestedAmountVnd = 0.0,
     this.yearsCreditHistory = 0,
     this.hasPreviousDefaults = false,
     this.currentlyDefaulting = false,
@@ -35,6 +37,7 @@ class SimpleLoanRequest {
       'years_employed': yearsEmployed,
       'home_ownership': homeOwnership,
       'loan_purpose': loanPurpose,
+      'requested_amount_vnd': requestedAmountVnd,
       'years_credit_history': yearsCreditHistory,
       'has_previous_defaults': hasPreviousDefaults,
       'currently_defaulting': currentlyDefaulting,

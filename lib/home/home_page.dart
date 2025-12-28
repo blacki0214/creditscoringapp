@@ -6,6 +6,7 @@ import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
 import '../loan/loan_application_page.dart';
+import '../loan/step2_personal_info.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
@@ -616,7 +617,7 @@ class HomePage extends StatelessWidget {
               children: [
                 _buildNavItem(context, viewModel, Icons.home, 'Home', 0),
                 _buildNavItem(context, viewModel, Icons.upload_file, 'Upload', 1),
-                _buildNavItem(context, viewModel, Icons.mail_outline, 'Messages', 2),
+                _buildNavItem(context, viewModel, Icons.calculate, 'Demo', 2),
                 _buildNavItem(context, viewModel, Icons.settings_outlined, 'Settings', 3),
               ],
             ),
@@ -1158,15 +1159,13 @@ class HomePage extends StatelessWidget {
             ),
           );
         } else if (index == 2) {
-          // Messages functionality
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Messages feature coming soon!'),
-              backgroundColor: Color(0xFF4C40F7),
-              duration: Duration(seconds: 2),
+          // Navigate to demo using Step 2 UI
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const Step2PersonalInfoPage(demoMode: true),
             ),
           );
-          viewModel.setIndex(index);
         } else if (index == 3) {
           // Navigate to settings
           Navigator.push(
