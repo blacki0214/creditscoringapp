@@ -6,7 +6,7 @@ import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
 import '../loan/loan_application_page.dart';
-import '../loan/step2_personal_info.dart';
+import '../loan/demo_calculator_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
@@ -1159,11 +1159,11 @@ class HomePage extends StatelessWidget {
             ),
           );
         } else if (index == 2) {
-          // Navigate to demo using Step 2 UI
+          // Navigate to demo calculator
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const Step2PersonalInfoPage(demoMode: true),
+              builder: (_) => const DemoCalculatorPage(),
             ),
           );
         } else if (index == 3) {

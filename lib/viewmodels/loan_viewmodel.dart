@@ -196,4 +196,15 @@ class LoanViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+
+  // Demo mode: Call API without storage/state management (sandbox)
+  Future<LoanOfferResponse?> getDemoCalculation(SimpleLoanRequest request) async {
+    try {
+      // Call same API, but don't modify any state
+      final response = await _apiService.applyForLoan(request);
+      return response;
+    } catch (e) {
+      return null;
+    }
+  }
 }
