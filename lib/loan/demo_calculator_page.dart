@@ -71,60 +71,56 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           style: TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Calculate Your Financial Profile',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1F3F),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                  vertical: 20,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Calculate Your Financial Profile',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1F3F),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Enter your information to see your credit score and loan eligibility (no ID verification required).',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Personal Details
-                    _buildSectionHeader('Personal Details'),
-                    _buildDateField(),
-                    
-                    const SizedBox(height: 24),
-                    // Employment & Income
-                    _buildSectionHeader('Employment & Income'),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDropdown(
-                            label: 'Employment Status',
-                            value: _employmentStatus,
-                            items: employmentOptions,
-                            onChanged: (val) => setState(() => _employmentStatus = val!),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _yearsEmployedController,
-                            label: 'Years Employed',
-                            hint: '5',
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                          ),
-                        ),
-                      ],
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Enter your information to see your credit score and loan eligibility (no ID verification required).',
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Personal Details
+                      _buildSectionHeader('Personal Details'),
+                      _buildDateField(),
+                      
+                      const SizedBox(height: 16),
+                      // Employment & Income
+                      _buildSectionHeader('Employment & Income'),
+                      _buildDropdown(
+                        label: 'Employment Status',
+                        value: _employmentStatus,
+                        items: employmentOptions,
+                        onChanged: (val) => setState(() => _employmentStatus = val!),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _yearsEmployedController,
+                        label: 'Years Employed',
+                        hint: '5',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                      ),
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _monthlyIncomeController,
@@ -137,7 +133,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     // Residence & Assets
                     _buildSectionHeader('Residence & Assets'),
                     _buildDropdown(
@@ -153,7 +149,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       hint: '123 Street...',
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     // Loan Request
                     _buildSectionHeader('Loan Request'),
                     _buildDropdown(
@@ -174,7 +170,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ],
                     ),
                     
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     // Credit History
                     _buildSectionHeader('Credit History'),
                     _buildTextField(
@@ -198,40 +194,43 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       activeColor: const Color(0xFF4C40F7),
                     ),
                     
-                    // Results
                     if (_demoResult != null) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       _buildSectionHeader('Your Financial Profile'),
                       _buildResultCard(),
                     ],
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          
-          // Calculate Button
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isCalculating ? null : _calculateProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4C40F7),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            
+            // Calculate Button
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                vertical: 16,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isCalculating ? null : _calculateProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4C40F7),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _isCalculating
+                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      : const Text(
+                          'Calculate Profile',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
                 ),
-                child: _isCalculating
-                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    : const Text(
-                        'Calculate Profile',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                      ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

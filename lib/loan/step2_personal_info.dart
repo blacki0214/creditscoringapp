@@ -86,7 +86,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                  vertical: 20,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -105,7 +108,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         'Please provide accurate information for credit scoring.',
                         style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
                       
                       _buildSectionHeader('Personal Details'),
                       _buildDateField(),
@@ -119,30 +122,22 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         onChanged: (val) => vm.updatePersonalInfo(id: val),
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Employment & Income'),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDropdown(
-                              label: 'Employment Status',
-                              value: vm.employmentStatus,
-                              items: employmentOptions,
-                              onChanged: (val) => vm.updatePersonalInfo(employment: val!),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _yearsEmployedController,
-                              label: 'Years Employed',
-                              hint: '5',
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                              onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
-                            ),
-                          ),
-                        ],
+                      _buildDropdown(
+                        label: 'Employment Status',
+                        value: vm.employmentStatus,
+                        items: employmentOptions,
+                        onChanged: (val) => vm.updatePersonalInfo(employment: val!),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _yearsEmployedController,
+                        label: 'Years Employed',
+                        hint: '5',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                        onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -160,7 +155,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         },
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Residence & Assets'),
                       _buildDropdown(
                         label: 'Home Ownership',
@@ -176,7 +171,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         onChanged: (val) => vm.updatePersonalInfo(addr: val),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Loan Request'),
                       _buildDropdown(
                         label: 'Loan Purpose',
@@ -200,7 +195,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         },
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Credit History'),
                       _buildTextField(
                         controller: _yearsCreditHistoryController,
@@ -229,7 +224,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                vertical: 16,
+              ),
               child: SizedBox(
                 width: double.infinity,
                 height: 56,
