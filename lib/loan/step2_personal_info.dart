@@ -16,6 +16,9 @@ class Step2PersonalInfoPage extends StatefulWidget {
 class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
   
+  // Credit history selection
+  bool? _hasCreditHistory;
+  
   // Controllers
   late TextEditingController _idController;
   late TextEditingController _monthlyIncomeController;
@@ -110,6 +113,61 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ),
                       const SizedBox(height: 20),
                       
+                      // Credit History Selection (Radio)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4C40F7).withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Do you have credit history?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1A1F3F),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<bool>(
+                                    title: const Text('Yes, I have credit history'),
+                                    value: true,
+                                    groupValue: _hasCreditHistory,
+                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    activeColor: const Color(0xFF4C40F7),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<bool>(
+                                    title: const Text('No, I\'m new to credit'),
+                                    value: false,
+                                    groupValue: _hasCreditHistory,
+                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    activeColor: const Color(0xFF4C40F7),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      if (_hasCreditHistory != null) ...[
+                        const SizedBox(height: 24),
+                      
                       _buildSectionHeader('Personal Details'),
                       _buildDateField(),
                       const SizedBox(height: 16),
@@ -197,28 +255,57 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       
                       const SizedBox(height: 16),
                       _buildSectionHeader('Credit History'),
-                      _buildTextField(
-                        controller: _yearsCreditHistoryController,
-                        label: 'Years Credit History',
-                        hint: '2',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
-                      ),
-                      const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text('Have you ever defaulted?'),
-                        value: vm.hasPreviousDefaults,
-                        onChanged: (val) => vm.updatePersonalInfo(defaults: val),
-                        activeColor: const Color(0xFF4C40F7),
-                      ),
-                      SwitchListTile(
-                        title: const Text('Currently defaulting?'),
-                        value: vm.currentlyDefaulting,
-                        onChanged: (val) => vm.updatePersonalInfo(currentDefault: val),
-                        activeColor: const Color(0xFF4C40F7),
-                      ),
+                      
+                      // Show credit history fields only if user has credit history
+                      if (_hasCreditHistory == true) ...[
+                        _buildTextField(
+                          controller: _yearsCreditHistoryController,
+                          label: 'Years Credit History',
+                          hint: '2',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
+                        ),
+                        const SizedBox(height: 16),
+                        SwitchListTile(
+                          title: const Text('Have you ever defaulted?'),
+                          value: vm.hasPreviousDefaults,
+                          onChanged: (val) => vm.updatePersonalInfo(defaults: val),
+                          activeColor: const Color(0xFF4C40F7),
+                        ),
+                        SwitchListTile(
+                          title: const Text('Currently defaulting?'),
+                          value: vm.currentlyDefaulting,
+                          onChanged: (val) => vm.updatePersonalInfo(currentDefault: val),
+                          activeColor: const Color(0xFF4C40F7),
+                        ),
+                      ] else if (_hasCreditHistory == false) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'No problem! We\'ll evaluate your application based on your income and employment.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
+                  ],
                   ),
                 ),
               ),

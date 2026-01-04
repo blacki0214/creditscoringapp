@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
+import '../services/local_storage_service.dart';
 import '../auth/login_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -187,7 +188,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
+  /// Navigate to login page after onboarding is complete
+  /// Marks onboarding as seen to prevent showing it again after logout
   void _navigateToLogin() {
+    // Mark onboarding as seen before navigating
+    context.read<OnboardingViewModel>().completeOnboarding();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),

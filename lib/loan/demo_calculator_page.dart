@@ -15,6 +15,9 @@ class DemoCalculatorPage extends StatefulWidget {
 class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   final _formKey = GlobalKey<FormState>();
   
+  // Credit history selection
+  bool? _hasCreditHistory;
+  
   // Controllers
   final _monthlyIncomeController = TextEditingController();
   final _yearsEmployedController = TextEditingController();
@@ -100,105 +103,189 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ),
                       const SizedBox(height: 20),
                       
-                      // Personal Details
-                      _buildSectionHeader('Personal Details'),
-                      _buildDateField(),
+                      // Credit History Selection (Radio)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4C40F7).withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Do you have credit history?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1A1F3F),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<bool>(
+                                    title: const Text('Yes, I have credit history'),
+                                    value: true,
+                                    groupValue: _hasCreditHistory,
+                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    activeColor: const Color(0xFF4C40F7),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<bool>(
+                                    title: const Text('No, I\'m new to credit'),
+                                    value: false,
+                                    groupValue: _hasCreditHistory,
+                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    activeColor: const Color(0xFF4C40F7),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                       
-                      const SizedBox(height: 16),
-                      // Employment & Income
-                      _buildSectionHeader('Employment & Income'),
-                      _buildDropdown(
-                        label: 'Employment Status',
-                        value: _employmentStatus,
-                        items: employmentOptions,
-                        onChanged: (val) => setState(() => _employmentStatus = val!),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _yearsEmployedController,
-                        label: 'Years Employed',
-                        hint: '5',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                      ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _monthlyIncomeController,
-                      label: 'Monthly Income (VND)',
-                      hint: '15,000,000',
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        _CurrencyInputFormatter(_currencyFormatter),
-                      ],
-                    ),
+                      if (_hasCreditHistory != null) ...[
+                        const SizedBox(height: 24),
+                        
+                        // Personal Details
+                        _buildSectionHeader('Personal Details'),
+                        _buildDateField(),
+                        
+                        const SizedBox(height: 16),
+                        // Employment & Income
+                        _buildSectionHeader('Employment & Income'),
+                        _buildDropdown(
+                          label: 'Employment Status',
+                          value: _employmentStatus,
+                          items: employmentOptions,
+                          onChanged: (val) => setState(() => _employmentStatus = val!),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _yearsEmployedController,
+                          label: 'Years Employed',
+                          hint: '5',
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _monthlyIncomeController,
+                          label: 'Monthly Income (VND)',
+                          hint: '15,000,000',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            _CurrencyInputFormatter(_currencyFormatter),
+                          ],
+                        ),
 
-                    const SizedBox(height: 16),
-                    // Residence & Assets
-                    _buildSectionHeader('Residence & Assets'),
-                    _buildDropdown(
-                      label: 'Home Ownership',
-                      value: _homeOwnership,
-                      items: homeOwnershipOptions,
-                      onChanged: (val) => setState(() => _homeOwnership = val!),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _addressController,
-                      label: 'Current Address',
-                      hint: '123 Street...',
-                    ),
+                        const SizedBox(height: 16),
+                        // Residence & Assets
+                        _buildSectionHeader('Residence & Assets'),
+                        _buildDropdown(
+                          label: 'Home Ownership',
+                          value: _homeOwnership,
+                          items: homeOwnershipOptions,
+                          onChanged: (val) => setState(() => _homeOwnership = val!),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _addressController,
+                          label: 'Current Address',
+                          hint: '123 Street...',
+                        ),
 
-                    const SizedBox(height: 16),
-                    // Loan Request
-                    _buildSectionHeader('Loan Request'),
-                    _buildDropdown(
-                      label: 'Loan Purpose',
-                      value: _loanPurpose,
-                      items: loanPurposeOptions,
-                      onChanged: (val) => setState(() => _loanPurpose = val!),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _loanAmountController,
-                      label: 'Desired Loan Amount (VND)',
-                      hint: '100,000,000',
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        _CurrencyInputFormatter(_currencyFormatter),
+                        const SizedBox(height: 16),
+                        // Loan Request
+                        _buildSectionHeader('Loan Request'),
+                        _buildDropdown(
+                          label: 'Loan Purpose',
+                          value: _loanPurpose,
+                          items: loanPurposeOptions,
+                          onChanged: (val) => setState(() => _loanPurpose = val!),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _loanAmountController,
+                          label: 'Desired Loan Amount (VND)',
+                          hint: '100,000,000',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            _CurrencyInputFormatter(_currencyFormatter),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        // Credit History
+                        _buildSectionHeader('Credit History'),
+                        
+                        // Show credit history fields only if user has credit history
+                        if (_hasCreditHistory == true) ...[
+                          _buildTextField(
+                            controller: _yearsCreditHistoryController,
+                            label: 'Years Credit History',
+                            hint: '2',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          ),
+                          const SizedBox(height: 16),
+                          SwitchListTile(
+                            title: const Text('Have you ever defaulted?'),
+                            value: _hasPreviousDefaults,
+                            onChanged: (val) => setState(() => _hasPreviousDefaults = val),
+                            activeColor: const Color(0xFF4C40F7),
+                          ),
+                          SwitchListTile(
+                            title: const Text('Currently defaulting?'),
+                            value: _currentlyDefaulting,
+                            onChanged: (val) => setState(() => _currentlyDefaulting = val),
+                            activeColor: const Color(0xFF4C40F7),
+                          ),
+                        ] else if (_hasCreditHistory == false) ...[
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'No problem! We\'ll calculate your profile based on income and employment only.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        
+                        if (_demoResult != null) ...[
+                          const SizedBox(height: 20),
+                          _buildSectionHeader('Your Financial Profile'),
+                          _buildResultCard(),
+                        ],
                       ],
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    // Credit History
-                    _buildSectionHeader('Credit History'),
-                    _buildTextField(
-                      controller: _yearsCreditHistoryController,
-                      label: 'Years Credit History',
-                      hint: '2',
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      title: const Text('Have you ever defaulted?'),
-                      value: _hasPreviousDefaults,
-                      onChanged: (val) => setState(() => _hasPreviousDefaults = val),
-                      activeColor: const Color(0xFF4C40F7),
-                    ),
-                    SwitchListTile(
-                      title: const Text('Currently defaulting?'),
-                      value: _currentlyDefaulting,
-                      onChanged: (val) => setState(() => _currentlyDefaulting = val),
-                      activeColor: const Color(0xFF4C40F7),
-                    ),
-                    
-                    if (_demoResult != null) ...[
-                      const SizedBox(height: 20),
-                      _buildSectionHeader('Your Financial Profile'),
-                      _buildResultCard(),
-                    ],
                     ],
                   ),
                 ),
@@ -215,9 +302,11 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isCalculating ? null : _calculateProfile,
+                  onPressed: (_isCalculating || !_isFormComplete()) ? null : _calculateProfile,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: (_isCalculating || !_isFormComplete())
+                        ? Colors.grey.shade400
+                        : const Color(0xFF4C40F7),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: _isCalculating
@@ -235,7 +324,38 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     );
   }
 
+  /// Check if all required form fields are filled
+  bool _isFormComplete() {
+    // Credit history must be selected
+    if (_hasCreditHistory == null) return false;
+
+    // Common required fields
+    if (_selectedDOB == null) return false;
+    if (_yearsEmployedController.text.isEmpty) return false;
+    if (_monthlyIncomeController.text.isEmpty) return false;
+    if (_addressController.text.isEmpty) return false;
+    if (_loanAmountController.text.isEmpty) return false;
+
+    // If user has credit history, they must fill in years
+    if (_hasCreditHistory == true && _yearsCreditHistoryController.text.isEmpty) {
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> _calculateProfile() async {
+    // Validate credit history selection first
+    if (_hasCreditHistory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select whether you have credit history'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
     
     setState(() {
@@ -244,11 +364,47 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     });
 
     try {
-      // Parse inputs
-      final income = double.parse(_monthlyIncomeController.text.replaceAll(RegExp(r'[,.]'), ''));
+      // Parse inputs - Vietnamese locale uses dots (.) for thousands separators
+      // Remove dots (thousands separators) to parse correctly
+      final incomeText = _monthlyIncomeController.text.replaceAll('.', '');
+      final income = double.parse(incomeText);
+      
       final yearsEmp = double.parse(_yearsEmployedController.text);
-      final creditYears = int.parse(_yearsCreditHistoryController.text);
-      final loanAmount = double.parse(_loanAmountController.text.replaceAll(RegExp(r'[,.]'), ''));
+      
+      // Parse loan amount - remove dots (thousands separators) for Vietnamese format
+      final loanAmountText = _loanAmountController.text.replaceAll('.', '');
+      final loanAmount = double.parse(loanAmountText);
+      
+      // Validate income is not zero (prevent division by zero in DTI calculation)
+      if (income <= 0) {
+        if (!mounted) return;
+        setState(() => _isCalculating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Monthly income must be greater than 0'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
+      // Parse credit history only if user has credit history
+      int creditYears = 0;
+      if (_hasCreditHistory == true) {
+        final creditYearsText = _yearsCreditHistoryController.text;
+        if (creditYearsText.isEmpty) {
+          if (!mounted) return;
+          setState(() => _isCalculating = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter years of credit history'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+        creditYears = int.parse(creditYearsText);
+      }
       
       // Calculate age
       int age = 25;
@@ -289,6 +445,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         return;
       }
 
+      // Calculate DTI safely (income is already validated > 0)
+      final dtiValue = ((loanAmount / (income * 12)) * 100);
+
       setState(() {
         _demoResult = {
           'creditScore': response.creditScore,
@@ -296,8 +455,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           'interestRate': response.interestRate ?? 15.0,
           'monthlyPayment': response.monthlyPaymentVnd ?? 0.0,
           'loanTerm': response.loanTermMonths ?? 36,
-          'dti': ((loanAmount / (income * 12)) * 100).toStringAsFixed(2),
-          'maxLoan': response.loanAmountVnd?.toInt() ?? 0,
+          'dti': dtiValue.toStringAsFixed(2),
+          'maxLoan': response.maxAmountVnd.toInt(),
         };
         _isCalculating = false;
       });

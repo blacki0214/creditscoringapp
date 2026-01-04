@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
+import '../services/local_storage_service.dart';
 import 'onboarding_page.dart';
+import '../auth/login_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,13 +23,28 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
+  /// Initialize app and determine next screen based on onboarding status
+  /// If user has seen onboarding before, skip to login
+  /// Otherwise, show onboarding splash screens for first-time users
   Future<void> _initializeApp() async {
     await context.read<OnboardingViewModel>().initializeApp();
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OnboardingPage()),
-      );
+      // Check if user has already seen onboarding
+      final hasSeenOnboarding = LocalStorageService.hasSeenOnboarding();
+      
+      if (hasSeenOnboarding) {
+        // User has completed onboarding before, go to login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+      } else {
+        // First time user, show onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingPage()),
+        );
+      }
     }
   }
 

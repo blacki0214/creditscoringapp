@@ -10,6 +10,7 @@ import '../loan/demo_calculator_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
+import '../auth/login_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -100,7 +101,7 @@ class HomePage extends StatelessWidget {
                           ],
                         ),
                         onTap: () {
-                          // Handle logout - navigate back to login
+                          // Handle logout - navigate to login page
                           Navigator.of(context).pushNamedAndRemoveUntil(
                             '/',
                             (route) => false,
