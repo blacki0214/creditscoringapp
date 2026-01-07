@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'loan_offer_page.dart';
 
+/// Processing screen: triggers submission and routes to offer or shows error.
 class ProcessingPage extends StatefulWidget {
   const ProcessingPage({super.key});
 
@@ -11,31 +12,26 @@ class ProcessingPage extends StatefulWidget {
 }
 
 class _ProcessingPageState extends State<ProcessingPage> {
-
   @override
   void initState() {
     super.initState();
-    // Trigger the actual processing
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _processApplication();
     });
   }
 
   Future<void> _processApplication() async {
-    final viewModel = context.read<LoanViewModel>();
-    final success = await viewModel.submitApplication();
+    final vm = context.read<LoanViewModel>();
+    final success = await vm.submitApplication();
+    if (!mounted) return;
 
-    if (mounted) {
-       if (success) {
-          Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const LoanOfferPage(),
-          ),
-        );
-       } else {
-         _showError(viewModel.errorMessage ?? 'Unknown error occurred');
-       }
+    if (success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoanOfferPage()),
+      );
+    } else {
+      _showError(vm.errorMessage ?? 'Unknown error occurred');
     }
   }
 
@@ -50,7 +46,7 @@ class _ProcessingPageState extends State<ProcessingPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to input page
+              Navigator.pop(context); // Back to form
             },
             child: const Text('Go Back'),
           ),

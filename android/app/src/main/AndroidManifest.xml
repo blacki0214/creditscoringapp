@@ -42,4 +42,14 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    
+    <!-- Camera and storage permissions for image capture -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- For gallery on Android 13+ (not strictly required for camera capture) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Legacy storage permissions for older Android versions -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Declare camera feature as optional to avoid install issues on emulators without camera -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 </manifest>

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../services/local_storage_service.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
@@ -367,188 +370,225 @@ class HomePage extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 32),
-                        // Credit score gauge
-                        Center(
-                          child: SizedBox(
-                            width: 250,
-                            height: 200,
-                            child: CustomPaint(
-                              painter: CreditScoreGaugePainter(score: 620),
-                              child: const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 60),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '620',
-                                        style: TextStyle(
-                                          fontSize: 48,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF1A1F3F),
+                        // Content based on selected period
+                        if (viewModel.selectedPeriod == 'Current year') ...[
+                          // Credit score gauge
+                          Center(
+                            child: SizedBox(
+                              width: 250,
+                              height: 200,
+                              child: CustomPaint(
+                                painter: CreditScoreGaugePainter(score: 620),
+                                child: const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 60),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '620',
+                                          style: TextStyle(
+                                            fontSize: 48,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1A1F3F),
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        'Your credit score',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.black87,
+                                        Text(
+                                          'Your credit score',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.black87,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Score info
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'starting score',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
+                          const SizedBox(height: 24),
+                          // Score info
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'starting score',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  '600',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1F3F),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    '600',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1A1F3F),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Text(
-                                  'change to date',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  '20',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1F3F),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        // Update button
-                        Center(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Updating your credit score...'),
-                                  backgroundColor: Color(0xFF4C40F7),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE8F5E9),
-                              foregroundColor: const Color(0xFF4CAF50),
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
+                                ],
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                              Column(
+                                children: [
+                                  Text(
+                                    'change to date',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    '20',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1A1F3F),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            child: const Text(
-                              'Update your credit score',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          // Update button
+                          Center(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Updating your credit score...'),
+                                    backgroundColor: Color(0xFF4C40F7),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE8F5E9),
+                                foregroundColor: const Color(0xFF4CAF50),
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: const Text(
+                                'Update your credit score',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                        // Credit metrics grid
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                'Payment history',
-                                '100%',
-                                'On-time payments',
-                                const Color(0xFF4CAF50),
+                          const SizedBox(height: 32),
+                          // Credit metrics grid
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  'Payment history',
+                                  '100%',
+                                  'On-time payments',
+                                  const Color(0xFF4CAF50),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                'Credit card use',
-                                '2%',
-                                'Of credit limit',
-                                const Color(0xFF4CAF50),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  'Credit card use',
+                                  '2%',
+                                  'Of credit limit',
+                                  const Color(0xFF4CAF50),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                'Derogatory marks',
-                                '0',
-                                'Accounts',
-                                const Color(0xFF4CAF50),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  'Derogatory marks',
+                                  '0',
+                                  'Accounts',
+                                  const Color(0xFF4CAF50),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                'Credit age',
-                                '7yrs',
-                                'Average',
-                                const Color(0xFF4CAF50),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  'Credit age',
+                                  '7yrs',
+                                  'Average',
+                                  const Color(0xFF4CAF50),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                'Total accounts',
-                                '28',
-                                'Open and closed',
-                                const Color(0xFFFFA726),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  'Total accounts',
+                                  '28',
+                                  'Open and closed',
+                                  const Color(0xFFFFA726),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                'Hard inquiries',
-                                '3',
-                                'Last 2 years',
-                                const Color(0xFFFFA726),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  'Hard inquiries',
+                                  '3',
+                                  'Last 2 years',
+                                  const Color(0xFFFFA726),
+                                ),
                               ),
+                            ],
+                          ),
+                        ] else if (viewModel.selectedPeriod == 'Loans') ...[
+                          // Loan display section
+                          _buildLoanDisplay(context),
+                        ] else if (viewModel.selectedPeriod == 'Hards') ...[
+                          // Hards section - placeholder
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.warning_outlined,
+                                  size: 64,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No hard inquiries',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Your credit record is clean',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -583,6 +623,386 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLoanDisplay(BuildContext context) {
+    final loanViewModel = context.watch<LoanViewModel>();
+    final applicationHistory = LocalStorageService.getApplicationHistory();
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Current Loan Offer Section
+        if (loanViewModel.currentOffer != null) ...[
+          const Text(
+            'Current Loan Offer',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1F3F),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: loanViewModel.currentOffer!.approved 
+                ? const Color(0xFFE8F5E9) 
+                : const Color(0xFFFFEBEE),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: loanViewModel.currentOffer!.approved
+                  ? const Color(0xFF4CAF50)
+                  : const Color(0xFFEF5350),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      loanViewModel.currentOffer!.approved ? 'APPROVED' : 'REJECTED',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: loanViewModel.currentOffer!.approved
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFEF5350),
+                      ),
+                    ),
+                    Icon(
+                      loanViewModel.currentOffer!.approved
+                        ? Icons.check_circle
+                        : Icons.cancel,
+                      color: loanViewModel.currentOffer!.approved
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
+                      size: 24,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (loanViewModel.currentOffer!.approved) ...[
+                  _buildLoanDetailRow(
+                    'Loan Amount',
+                    currencyFormat.format(loanViewModel.currentOffer!.loanAmountVnd),
+                  ),
+                  const SizedBox(height: 12),
+                  if (loanViewModel.currentOffer!.interestRate != null)
+                    Column(
+                      children: [
+                        _buildLoanDetailRow(
+                          'Interest Rate',
+                          '${loanViewModel.currentOffer!.interestRate!.toStringAsFixed(2)}% / year',
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  if (loanViewModel.currentOffer!.monthlyPaymentVnd != null)
+                    Column(
+                      children: [
+                        _buildLoanDetailRow(
+                          'Monthly Payment',
+                          currencyFormat.format(loanViewModel.currentOffer!.monthlyPaymentVnd),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  if (loanViewModel.currentOffer!.loanTermMonths != null)
+                    Column(
+                      children: [
+                        _buildLoanDetailRow(
+                          'Loan Term',
+                          '${loanViewModel.currentOffer!.loanTermMonths} months',
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  _buildLoanDetailRow(
+                    'Credit Score',
+                    '${loanViewModel.currentOffer!.creditScore}',
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Viewing loan terms...'),
+                                backgroundColor: Color(0xFF4C40F7),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF4C40F7),
+                            elevation: 0,
+                            side: const BorderSide(color: Color(0xFF4C40F7)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('View Terms'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Processing loan acceptance...'),
+                                backgroundColor: Color(0xFF4CAF50),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4CAF50),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Accept Loan'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          loanViewModel.currentOffer!.approvalMessage,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFFEF5350),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildLoanDetailRow(
+                          'Credit Score',
+                          '${loanViewModel.currentOffer!.creditScore}',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+        ] else if (loanViewModel.isProcessing) ...[
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Processing your loan application...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF1A1F3F),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.money_off,
+                  size: 64,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No Active Loan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Start a new loan application',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LoanApplicationPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4C40F7),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Apply Now'),
+                ),
+              ],
+            ),
+          ),
+        ],
+        // Application History Section
+        if (applicationHistory.isNotEmpty) ...[
+          const SizedBox(height: 32),
+          const Text(
+            'Application History',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1F3F),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: applicationHistory.length,
+            itemBuilder: (context, index) {
+              final app = applicationHistory[index];
+              final timestamp = app['timestamp'] != null
+                ? DateTime.parse(app['timestamp'])
+                : DateTime.now();
+              final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
+              final isApproved = app['approved'] == true;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isApproved
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFEF5350),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isApproved ? Icons.check_circle : Icons.cancel,
+                      color: isApproved
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isApproved ? 'Approved' : 'Rejected',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isApproved
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFEF5350),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Score: ${app['creditScore'] ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F3F),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Amount: ${app['loanAmount'] != null ? currencyFormat.format(app['loanAmount']) : 'N/A'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLoanDetailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1F3F),
+          ),
+        ),
+      ],
     );
   }
 
