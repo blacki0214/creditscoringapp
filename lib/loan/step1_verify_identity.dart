@@ -119,23 +119,8 @@ class _Step1VerifyIdentityPageState extends State<Step1VerifyIdentityPage> {
                   ),
                 ),
               ),
-<<<<<<< Updated upstream
             );
           },
-=======
-              const SizedBox(height: 20),
-              const Text(
-                'Continue',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF4C40F7),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ), 
->>>>>>> Stashed changes
         ),
       ),
     );
