@@ -5,6 +5,7 @@ class LocalStorageService {
   static const String _keyPersonalInfo = 'personal_info_draft';
   static const String _keyApplicationHistory = 'application_history';
   static const String _keyLastSaved = 'last_saved_timestamp';
+  static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
 
   static SharedPreferences? _prefs;
 
@@ -106,6 +107,24 @@ class LocalStorageService {
       return true;
     } catch (e) {
       print('Error clearing all data: $e');
+      return false;
+    }
+  }
+
+  /// Check if user has already completed onboarding on first app launch
+  /// Returns true if onboarding was seen, false for first-time users
+  static bool hasSeenOnboarding() {
+    return prefs.getBool(_keyHasSeenOnboarding) ?? false;
+  }
+
+  /// Mark onboarding as completed when user finishes the splash screens
+  /// This flag prevents showing onboarding again after logout
+  static Future<bool> markOnboardingAsSeen() async {
+    try {
+      await prefs.setBool(_keyHasSeenOnboarding, true);
+      return true;
+    } catch (e) {
+      print('Error marking onboarding as seen: $e');
       return false;
     }
   }

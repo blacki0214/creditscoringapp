@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'step1_front_id.dart';
+import '../services/api_service.dart';
 import 'processing_page.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
@@ -16,100 +16,59 @@ class Step2PersonalInfoPage extends StatefulWidget {
 class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
   
+  // Credit history selection
+  bool? _hasCreditHistory;
+  
   // Controllers
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _idController = TextEditingController();
-  final _addressController = TextEditingController();
+  late TextEditingController _idController;
+  late TextEditingController _monthlyIncomeController;
+  late TextEditingController _yearsEmployedController;
+  late TextEditingController _yearsCreditHistoryController;
+  late TextEditingController _loanAmountController;
+  late TextEditingController _addressController;
+  
   DateTime? _selectedDOB;
-  final _monthlyIncomeController = TextEditingController();
-  final _yearsEmployedController = TextEditingController();
-  final _yearsCreditHistoryController = TextEditingController();
-
+  
+  final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
+  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  
   final List<String> employmentOptions = ['EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED'];
   final List<String> homeOwnershipOptions = ['RENT', 'OWN', 'MORTGAGE', 'LIVING_WITH_PARENTS', 'OTHER'];
   final List<String> loanPurposeOptions = [
-    'PERSONAL', 
-    'EDUCATION', 
-    'MEDICAL', 
-    'BUSINESS', 
-    'HOME_IMPROVEMENT', 
-    'DEBT_CONSOLIDATION', 
-    'VENTURE', 
-    'OTHER'
+    'PERSONAL', 'EDUCATION', 'MEDICAL', 'BUSINESS', 
+    'HOME_IMPROVEMENT', 'DEBT_CONSOLIDATION', 'VENTURE', 'OTHER'
   ];
-
-  final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
-
-  String? _validateName(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter your full name';
-    if (value.length < 3) return 'Name must be at least 3 characters';
-    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Name can only contain letters';
-    return null;
-  }
-
-  String? _validateDOB(DateTime? value) {
-    if (value == null) return 'Please select your date of birth';
-    final today = DateTime.now();
-    final age = today.year - value.year;
-    if (age < 18) return 'Must be 18 or older';
-    if (age > 100) return 'Please enter a valid date of birth';
-    return null;
-  }
-
-  String? _validatePhone(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter your phone number';
-    final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
-    if (cleaned.length < 9 || cleaned.length > 12) return 'Invalid phone number';
-    if (!RegExp(r'^[0-9]+$').hasMatch(cleaned)) return 'Phone can only contain numbers';
-    return null;
-  }
-
-  String? _validateID(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter your ID number';
-    if (value.length < 9 || value.length > 12) return 'ID must be 9-12 digits';
-    if (!RegExp(r'^[0-9]+$').hasMatch(value)) return 'ID can only contain numbers';
-    return null;
-  }
-
-  String? _validateIncome(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter your monthly income';
-    final cleaned = value.replaceAll(RegExp(r'[,\.]'), '');
-    final income = double.tryParse(cleaned);
-    if (income == null) return 'Income must be a number';
-    if (income < 0) return 'Income cannot be negative';
-    if (income > 1000000000) return 'Please enter a valid income';
-    return null;
-  }
-
-  String? _validateYears(String? value, String fieldName) {
-    if (value == null || value.isEmpty) return 'Please enter $fieldName';
-    final years = double.tryParse(value);
-    if (years == null) return '$fieldName must be a number';
-    if (years < 0) return '$fieldName cannot be negative';
-    if (years > 50) return 'Please enter a valid number of years';
-    return null;
-  }
-
+  
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with data from ViewModel
-    final viewModel = context.read<LoanViewModel>();
-    _nameController.text = viewModel.fullName;
-    _phoneController.text = viewModel.phoneNumber;
-    _idController.text = viewModel.idNumber;
-    _addressController.text = viewModel.address;
-    _selectedDOB = viewModel.dob;
-    _monthlyIncomeController.text = viewModel.monthlyIncome.toStringAsFixed(0);
-    _yearsEmployedController.text = viewModel.yearsEmployed.toString();
-    _yearsCreditHistoryController.text = viewModel.yearsCreditHistory.toString();
+    
+    // Load from ViewModel
+    final vm = context.read<LoanViewModel>();
+    _idController = TextEditingController(text: vm.idNumber);
+    _monthlyIncomeController = TextEditingController(text: vm.monthlyIncome.toInt().toString());
+    _yearsEmployedController = TextEditingController(text: vm.yearsEmployed.toInt().toString());
+    _yearsCreditHistoryController = TextEditingController(text: vm.yearsCreditHistory.toString());
+    _loanAmountController = TextEditingController(text: vm.desiredLoanAmount.toInt().toString());
+    _addressController = TextEditingController(text: vm.address);
+    _selectedDOB = vm.dob;
+  }
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    _monthlyIncomeController.dispose();
+    _yearsEmployedController.dispose();
+    _yearsCreditHistoryController.dispose();
+    _loanAmountController.dispose();
+    _addressController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     // Watch ViewModel for state changes
-    final viewModel = context.watch<LoanViewModel>();
+    final vm = context.watch<LoanViewModel>();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -130,7 +89,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                  vertical: 20,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -149,166 +111,231 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         'Please provide accurate information for credit scoring.',
                         style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
+                      
+                      // Credit History Selection (Radio)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4C40F7).withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Do you have credit history?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1A1F3F),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<bool>(
+                                    title: const Text('Yes, I have credit history'),
+                                    value: true,
+                                    groupValue: _hasCreditHistory,
+                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    activeColor: const Color(0xFF4C40F7),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<bool>(
+                                    title: const Text('No, I\'m new to credit'),
+                                    value: false,
+                                    groupValue: _hasCreditHistory,
+                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    activeColor: const Color(0xFF4C40F7),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      if (_hasCreditHistory != null) ...[
+                        const SizedBox(height: 24),
                       
                       _buildSectionHeader('Personal Details'),
-                      _buildTextField(
-                        _nameController, 
-                        'Full Name', 
-                        'Nguyen Van A',
-                        validator: _validateName,
-                        onChanged: (val) => viewModel.updatePersonalInfo(name: val),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDateOfBirthField(viewModel),
+                      _buildDateField(),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        _phoneController, 
-                        'Phone Number', 
-                        '+84', 
-                        keyboardType: TextInputType.phone,
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\+\-\(\)\s]'))],
-                        validator: _validatePhone,
-                        onChanged: (val) => viewModel.updatePersonalInfo(phone: val),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        _idController, 
-                        'ID Number (CCCD)', 
-                        '079',
+                        controller: _idController,
+                        label: 'ID Number (CCCD)',
+                        hint: '079',
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        validator: _validateID,
-                        onChanged: (val) => viewModel.updatePersonalInfo(id: val),
+                        onChanged: (val) => vm.updatePersonalInfo(id: val),
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Employment & Income'),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDropdown(
-                              'Employment Status',
-                              viewModel.employmentStatus,
-                              employmentOptions,
-                              (val) => viewModel.updatePersonalInfo(employment: val!),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildTextField(
-                              _yearsEmployedController, 
-                              'Years Employed', 
-                              '5', 
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                              validator: (val) => _validateYears(val, 'Years Employed'),
-                              onChanged: (val) => viewModel.updatePersonalInfo(yearsEmp: double.tryParse(val)),
-                            ),
-                          ),
-                        ],
+                      _buildDropdown(
+                        label: 'Employment Status',
+                        value: vm.employmentStatus,
+                        items: employmentOptions,
+                        onChanged: (val) => vm.updatePersonalInfo(employment: val!),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _yearsEmployedController,
+                        label: 'Years Employed',
+                        hint: '5',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                        onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        _monthlyIncomeController, 
-                        'Monthly Income (VND)', 
-                        '15,000,000', 
+                        controller: _monthlyIncomeController,
+                        label: 'Monthly Income (VND)',
+                        hint: '15,000,000',
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                          TextInputFormatter.withFunction((oldValue, newValue) {
-                            if (newValue.text.isEmpty) return newValue;
-                            final number = int.tryParse(newValue.text);
-                            if (number == null) return oldValue;
-                            final formatted = _currencyFormatter.format(number);
-                            return TextEditingValue(
-                              text: formatted,
-                              selection: TextSelection.collapsed(offset: formatted.length),
-                            );
-                          }),
+                          _CurrencyInputFormatter(_currencyFormatter),
                         ],
-                        validator: _validateIncome,
                         onChanged: (val) {
                           final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
-                          viewModel.updatePersonalInfo(income: double.tryParse(cleaned));
+                          vm.updatePersonalInfo(income: double.tryParse(cleaned));
                         },
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Residence & Assets'),
                       _buildDropdown(
-                        'Home Ownership',
-                        viewModel.homeOwnership,
-                        homeOwnershipOptions,
-                        (val) => viewModel.updatePersonalInfo(home: val!),
+                        label: 'Home Ownership',
+                        value: vm.homeOwnership,
+                        items: homeOwnershipOptions,
+                        onChanged: (val) => vm.updatePersonalInfo(home: val!),
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(_addressController, 'Current Address', '123 Street...',
-                        onChanged: (val) => viewModel.updatePersonalInfo(addr: val)),
+                      _buildTextField(
+                        controller: _addressController,
+                        label: 'Current Address',
+                        hint: '123 Street...',
+                        onChanged: (val) => vm.updatePersonalInfo(addr: val),
+                      ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildSectionHeader('Loan Request'),
                       _buildDropdown(
-                        'Loan Purpose',
-                        viewModel.loanPurpose,
-                        loanPurposeOptions,
-                        (val) => viewModel.updatePersonalInfo(purpose: val!),
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      _buildSectionHeader('Credit History'),
-                      _buildTextField(
-                        _yearsCreditHistoryController, 
-                        'Years Credit History', 
-                        '2', 
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        validator: (val) => _validateYears(val, 'Years Credit History'),
-                        onChanged: (val) => viewModel.updatePersonalInfo(history: int.tryParse(val)),
+                        label: 'Loan Purpose',
+                        value: vm.loanPurpose,
+                        items: loanPurposeOptions,
+                        onChanged: (val) => vm.updatePersonalInfo(purpose: val!),
                       ),
                       const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text('Have you ever defaulted?'),
-                        value: viewModel.hasPreviousDefaults,
-                        onChanged: (val) => viewModel.updatePersonalInfo(defaults: val),
-                        activeColor: const Color(0xFF4C40F7),
-                      ),
-                      SwitchListTile(
-                        title: const Text('Currently defaulting?'),
-                        value: viewModel.currentlyDefaulting,
-                        onChanged: (val) => viewModel.updatePersonalInfo(currentDefault: val),
-                        activeColor: const Color(0xFF4C40F7),
+                      _buildTextField(
+                        controller: _loanAmountController,
+                        label: 'Desired Loan Amount (VND)',
+                        hint: '100,000,000',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _CurrencyInputFormatter(_currencyFormatter),
+                        ],
+                        onChanged: (val) {
+                          final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
+                          vm.updatePersonalInfo(requestedAmount: double.tryParse(cleaned));
+                        },
                       ),
                       
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
+                      _buildSectionHeader('Credit History'),
+                      
+                      // Show credit history fields only if user has credit history
+                      if (_hasCreditHistory == true) ...[
+                        _buildTextField(
+                          controller: _yearsCreditHistoryController,
+                          label: 'Years Credit History',
+                          hint: '2',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
+                        ),
+                        const SizedBox(height: 16),
+                        SwitchListTile(
+                          title: const Text('Have you ever defaulted?'),
+                          value: vm.hasPreviousDefaults,
+                          onChanged: (val) => vm.updatePersonalInfo(defaults: val),
+                          activeColor: const Color(0xFF4C40F7),
+                        ),
+                        SwitchListTile(
+                          title: const Text('Currently defaulting?'),
+                          value: vm.currentlyDefaulting,
+                          onChanged: (val) => vm.updatePersonalInfo(currentDefault: val),
+                          activeColor: const Color(0xFF4C40F7),
+                        ),
+                      ] else if (_hasCreditHistory == false) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'No problem! We\'ll evaluate your application based on your income and employment.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
+                  ],
                   ),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                vertical: 16,
+              ),
               child: SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: viewModel.isProcessing ? null : () => _submitApplication(context),
+                  onPressed: vm.isProcessing ? null : _submitApplication,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4C40F7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: viewModel.isProcessing
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                    'Submit Application',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: vm.isProcessing
+                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      : const Text(
+                          'Submit Application',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -332,7 +359,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     );
   }
 
-  Widget _buildDateOfBirthField(LoanViewModel viewModel) {
+  Widget _buildDateField() {
     final dobText = _selectedDOB != null 
         ? '${_selectedDOB!.day.toString().padLeft(2, '0')}/${_selectedDOB!.month.toString().padLeft(2, '0')}/${_selectedDOB!.year}'
         : '';
@@ -361,13 +388,14 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           },
         );
         if (picked != null) {
-          setState(() {
-            _selectedDOB = picked;
-          });
-          viewModel.updatePersonalInfo(dob: picked);
+          setState(() => _selectedDOB = picked);
+          context.read<LoanViewModel>().updatePersonalInfo(dob: picked);
         }
       },
-      validator: (value) => _validateDOB(_selectedDOB),
+      validator: (value) {
+        if (_selectedDOB == null) return 'Please select your date of birth';
+        return null;
+      },
       decoration: InputDecoration(
         labelText: 'Date of Birth',
         hintText: 'DD/MM/YYYY',
@@ -381,24 +409,25 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, String hint, {TextInputType keyboardType = TextInputType.text, Function(String)? onChanged, String? Function(String?)? validator, List<TextInputFormatter>? inputFormatters}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    Function(String)? onChanged,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      onChanged: onChanged,
       inputFormatters: inputFormatters,
-      validator: validator ?? (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter $label';
-        }
+      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Please enter $label';
         return null;
       },
       decoration: InputDecoration(
@@ -413,15 +442,16 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
       ),
     );
   }
 
-  Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged) {
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
     return DropdownButtonFormField<String>(
       value: value,
       isExpanded: true,
@@ -442,31 +472,47 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     );
   }
 
-  Future<void> _submitApplication(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-       // Navigate to ProcessingPage - which will trigger the submission in VM
-       // Or even better, let ProcessingPage be just a "Waiter" for the VM state?
-       // But wait, ProcessingPage in original design did the call.
-       // Here I will use ProcessingPage to TRIGGER the call.
-       
-       Navigator.push(
+  // ==================== SUBMIT HANDLER ====================
+  
+  Future<void> _submitApplication() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    final vm = context.read<LoanViewModel>();
+    final success = await vm.submitApplication();
+    
+    if (!mounted) return;
+    
+    if (success) {
+      Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => const ProcessingPage(),
+        MaterialPageRoute(builder: (_) => const ProcessingPage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(vm.errorMessage ?? 'Submission failed'),
+          backgroundColor: Colors.red,
         ),
       );
     }
   }
 
+}
+
+// Currency input formatter
+class _CurrencyInputFormatter extends TextInputFormatter {
+  final NumberFormat formatter;
+  _CurrencyInputFormatter(this.formatter);
+
   @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _idController.dispose();
-    _addressController.dispose();
-    _monthlyIncomeController.dispose();
-    _yearsEmployedController.dispose();
-    _yearsCreditHistoryController.dispose();
-    super.dispose();
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) return newValue;
+    final number = int.tryParse(newValue.text);
+    if (number == null) return oldValue;
+    final formatted = formatter.format(number);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }

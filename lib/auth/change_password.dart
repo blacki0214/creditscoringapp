@@ -15,6 +15,34 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
 
+  /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!value.contains(RegExp(r'[A-Z]'))) {
+      return 'Password must contain at least 1 uppercase letter';
+    }
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return 'Password must contain at least 1 number';
+    }
+    return null;
+  }
+
+  /// Validate confirm password matches new password
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != _newPasswordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,6 +108,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   // New password field
                   TextFormField(
                     controller: _newPasswordController,
+                    maxLength: 50,
                     obscureText: _obscureNewPassword,
                     decoration: InputDecoration(
                       labelText: 'New Password',
@@ -111,21 +140,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           width: 2,
                         ),
                       ),
+                      helperText: 'At least 8 characters, 1 uppercase letter, 1 number',
+                      helperStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      counterText: '', // Hide character counter
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
+                    validator: _validatePassword,
                   ),
                   const SizedBox(height: 20),
                   // Confirm password field
                   TextFormField(
                     controller: _confirmPasswordController,
+                    maxLength: 50,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
@@ -157,16 +182,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           width: 2,
                         ),
                       ),
+                      counterText: '', // Hide character counter
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value != _newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
+                    validator: _validateConfirmPassword,
                   ),
                   const SizedBox(height: 32),
                   // Reset password button

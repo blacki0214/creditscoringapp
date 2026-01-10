@@ -12,6 +12,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
 
+  /// Validate email format: must have text@text pattern
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    // Check for basic email pattern: text@text.text
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,6 +90,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   // Email field
                   TextFormField(
                     controller: _emailController,
+                    maxLength: 50,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
@@ -95,16 +109,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           width: 2,
                         ),
                       ),
+                      counterText: '', // Hide character counter
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                    validator: _validateEmail,
                   ),
                   const SizedBox(height: 32),
                   // Send code button

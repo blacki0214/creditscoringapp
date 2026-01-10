@@ -17,6 +17,36 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!value.contains(RegExp(r'[A-Z]'))) {
+      return 'Password must contain at least 1 uppercase letter';
+    }
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return 'Password must contain at least 1 number';
+    }
+    return null;
+  }
+
+  /// Validate email format: must have text@text pattern
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    // Check for basic email pattern: text@text.text
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Access ViewModel
@@ -64,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   // Email field
                   TextFormField(
                     controller: _emailController,
+                    maxLength: 50,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
@@ -82,18 +113,15 @@ class _LoginPageState extends State<LoginPage> {
                           width: 2,
                         ),
                       ),
+                      counterText: '', // Hide character counter
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      return null;
-                    },
+                    validator: _validateEmail,
                   ),
                   const SizedBox(height: 20),
                   // Password field
                   TextFormField(
                     controller: _passwordController,
+                    maxLength: 50,
                     obscureText: viewModel.obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -123,13 +151,9 @@ class _LoginPageState extends State<LoginPage> {
                           width: 2,
                         ),
                       ),
+                      counterText: '', // Hide character counter
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
+                    validator: _validatePassword,
                   ),
                   const SizedBox(height: 16),
                   // Forgot password
