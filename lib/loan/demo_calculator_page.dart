@@ -427,7 +427,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         yearsEmployed: yearsEmp,
         homeOwnership: _homeOwnership,
         loanPurpose: _loanPurpose,
-        requestedAmountVnd: loanAmount,
         yearsCreditHistory: creditYears,
         hasPreviousDefaults: _hasPreviousDefaults,
         currentlyDefaulting: _currentlyDefaulting,

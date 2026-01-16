@@ -21,7 +21,6 @@ class LoanViewModel extends ChangeNotifier {
   String employmentStatus = 'EMPLOYED';
   double yearsEmployed = 5;
   double monthlyIncome = 15000000;
-  double desiredLoanAmount = 0;
   
   String homeOwnership = 'RENT';
   String loanPurpose = 'PERSONAL';
@@ -59,7 +58,6 @@ class LoanViewModel extends ChangeNotifier {
       employmentStatus = draft['employmentStatus'] ?? employmentStatus;
       yearsEmployed = draft['yearsEmployed'] ?? yearsEmployed;
       monthlyIncome = draft['monthlyIncome'] ?? monthlyIncome;
-      desiredLoanAmount = draft['desiredLoanAmount'] ?? desiredLoanAmount;
       homeOwnership = draft['homeOwnership'] ?? homeOwnership;
       loanPurpose = draft['loanPurpose'] ?? loanPurpose;
       yearsCreditHistory = draft['yearsCreditHistory'] ?? yearsCreditHistory;
@@ -79,7 +77,6 @@ class LoanViewModel extends ChangeNotifier {
       'employmentStatus': employmentStatus,
       'yearsEmployed': yearsEmployed,
       'monthlyIncome': monthlyIncome,
-      'desiredLoanAmount': desiredLoanAmount,
       'homeOwnership': homeOwnership,
       'loanPurpose': loanPurpose,
       'yearsCreditHistory': yearsCreditHistory,
@@ -103,7 +100,6 @@ class LoanViewModel extends ChangeNotifier {
     String? employment,
     double? yearsEmp,
     double? income,
-    double? requestedAmount,
     String? home,
     String? purpose,
     int? history,
@@ -118,7 +114,6 @@ class LoanViewModel extends ChangeNotifier {
     if (employment != null) employmentStatus = employment;
     if (yearsEmp != null) yearsEmployed = yearsEmp;
     if (income != null) monthlyIncome = income;
-    if (requestedAmount != null) desiredLoanAmount = requestedAmount;
     if (home != null) homeOwnership = home;
     if (purpose != null) loanPurpose = purpose;
     if (history != null) yearsCreditHistory = history;
@@ -153,7 +148,6 @@ class LoanViewModel extends ChangeNotifier {
       yearsEmployed: yearsEmployed,
       homeOwnership: homeOwnership,
       loanPurpose: loanPurpose,
-      requestedAmountVnd: desiredLoanAmount,
       yearsCreditHistory: yearsCreditHistory,
       hasPreviousDefaults: hasPreviousDefaults,
       currentlyDefaulting: currentlyDefaulting,

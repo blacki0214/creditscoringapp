@@ -24,7 +24,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   late TextEditingController _monthlyIncomeController;
   late TextEditingController _yearsEmployedController;
   late TextEditingController _yearsCreditHistoryController;
-  late TextEditingController _loanAmountController;
   late TextEditingController _addressController;
   
   DateTime? _selectedDOB;
@@ -46,10 +45,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     // Load from ViewModel
     final vm = context.read<LoanViewModel>();
     _idController = TextEditingController(text: vm.idNumber);
-    _monthlyIncomeController = TextEditingController(text: vm.monthlyIncome.toInt().toString());
-    _yearsEmployedController = TextEditingController(text: vm.yearsEmployed.toInt().toString());
-    _yearsCreditHistoryController = TextEditingController(text: vm.yearsCreditHistory.toString());
-    _loanAmountController = TextEditingController(text: vm.desiredLoanAmount.toInt().toString());
+    _monthlyIncomeController = TextEditingController(); 
+    _yearsEmployedController = TextEditingController(); 
+    _yearsCreditHistoryController = TextEditingController(); 
     _addressController = TextEditingController(text: vm.address);
     _selectedDOB = vm.dob;
   }
@@ -60,7 +58,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _monthlyIncomeController.dispose();
     _yearsEmployedController.dispose();
     _yearsCreditHistoryController.dispose();
-    _loanAmountController.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -174,7 +171,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       _buildTextField(
                         controller: _idController,
                         label: 'ID Number (CCCD)',
-                        hint: '079',
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onChanged: (val) => vm.updatePersonalInfo(id: val),
@@ -192,7 +188,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       _buildTextField(
                         controller: _yearsEmployedController,
                         label: 'Years Employed',
-                        hint: '5',
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
                         onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
@@ -201,7 +196,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       _buildTextField(
                         controller: _monthlyIncomeController,
                         label: 'Monthly Income (VND)',
-                        hint: '15,000,000',
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
@@ -225,7 +219,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       _buildTextField(
                         controller: _addressController,
                         label: 'Current Address',
-                        hint: '123 Street...',
                         onChanged: (val) => vm.updatePersonalInfo(addr: val),
                       ),
 
@@ -237,22 +230,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         items: loanPurposeOptions,
                         onChanged: (val) => vm.updatePersonalInfo(purpose: val!),
                       ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _loanAmountController,
-                        label: 'Desired Loan Amount (VND)',
-                        hint: '100,000,000',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          _CurrencyInputFormatter(_currencyFormatter),
-                        ],
-                        onChanged: (val) {
-                          final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
-                          vm.updatePersonalInfo(requestedAmount: double.tryParse(cleaned));
-                        },
-                      ),
-                      
+
                       const SizedBox(height: 16),
                       _buildSectionHeader('Credit History'),
                       
@@ -261,7 +239,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         _buildTextField(
                           controller: _yearsCreditHistoryController,
                           label: 'Years Credit History',
-                          hint: '2',
                           keyboardType: TextInputType.number,
                           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                           onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
@@ -398,7 +375,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       },
       decoration: InputDecoration(
         labelText: 'Date of Birth',
-        hintText: 'DD/MM/YYYY',
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
@@ -416,7 +392,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
-    required String hint,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     Function(String)? onChanged,
@@ -432,7 +407,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       },
       decoration: InputDecoration(
         labelText: label,
-        hintText: hint,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
