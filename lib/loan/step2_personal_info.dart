@@ -42,11 +42,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     
     // Load from ViewModel
     final vm = context.read<LoanViewModel>();
-    _idController = TextEditingController(text: vm.idNumber);
+    _idController = TextEditingController();
     _monthlyIncomeController = TextEditingController(); 
     _yearsEmployedController = TextEditingController(); 
     _yearsCreditHistoryController = TextEditingController(); 
-    _addressController = TextEditingController(text: vm.address);
+    _addressController = TextEditingController();
     _selectedDOB = vm.dob;
   }
 
