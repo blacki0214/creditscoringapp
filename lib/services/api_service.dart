@@ -9,7 +9,6 @@ class SimpleLoanRequest {
   final double yearsEmployed;
   final String homeOwnership;
   final String loanPurpose;
-  final double requestedAmountVnd;
   final int yearsCreditHistory;
   final bool hasPreviousDefaults;
   final bool currentlyDefaulting;
@@ -22,7 +21,6 @@ class SimpleLoanRequest {
     required this.yearsEmployed,
     required this.homeOwnership,
     required this.loanPurpose,
-    this.requestedAmountVnd = 0.0,
     this.yearsCreditHistory = 0,
     this.hasPreviousDefaults = false,
     this.currentlyDefaulting = false,
@@ -37,7 +35,6 @@ class SimpleLoanRequest {
       'years_employed': yearsEmployed,
       'home_ownership': homeOwnership,
       'loan_purpose': loanPurpose,
-      'requested_amount_vnd': requestedAmountVnd,
       'years_credit_history': yearsCreditHistory,
       'has_previous_defaults': hasPreviousDefaults,
       'currently_defaulting': currentlyDefaulting,
@@ -48,7 +45,6 @@ class SimpleLoanRequest {
 class LoanOfferResponse {
   final bool approved;
   final double loanAmountVnd;
-  final double requestedAmountVnd;
   final double maxAmountVnd;
   final double? interestRate;
   final double? monthlyPaymentVnd;
@@ -62,7 +58,6 @@ class LoanOfferResponse {
   LoanOfferResponse({
     required this.approved,
     required this.loanAmountVnd,
-    required this.requestedAmountVnd,
     required this.maxAmountVnd,
     this.interestRate,
     this.monthlyPaymentVnd,
@@ -78,9 +73,6 @@ class LoanOfferResponse {
     return LoanOfferResponse(
       approved: json['approved'] as bool,
       loanAmountVnd: (json['loan_amount_vnd'] as num).toDouble(),
-      // The API now implies requested amount is internal or irrelevant, 
-      // but keeping it if returned or defaulting to 0 for stability
-      requestedAmountVnd: 0.0, 
       maxAmountVnd: (json['max_amount_vnd'] as num).toDouble(),
       interestRate: json['interest_rate'] != null
           ? (json['interest_rate'] as num).toDouble()
