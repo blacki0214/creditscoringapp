@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import '../services/api_service.dart';
 import 'processing_page.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
@@ -30,7 +29,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   DateTime? _selectedDOB;
   
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
   
   final List<String> employmentOptions = ['EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED'];
   final List<String> homeOwnershipOptions = ['RENT', 'OWN', 'MORTGAGE', 'LIVING_WITH_PARENTS', 'OTHER'];
