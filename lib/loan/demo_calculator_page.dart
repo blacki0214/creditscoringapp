@@ -175,7 +175,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         _buildTextField(
                           controller: _yearsEmployedController,
                           label: 'Years Employed',
-                          hint: '5',
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
                         ),
@@ -183,7 +182,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         _buildTextField(
                           controller: _monthlyIncomeController,
                           label: 'Monthly Income (VND)',
-                          hint: '15,000,000',
                           keyboardType: TextInputType.number,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -204,7 +202,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         _buildTextField(
                           controller: _addressController,
                           label: 'Current Address',
-                          hint: '123 Street...',
                         ),
 
                         const SizedBox(height: 16),
@@ -220,7 +217,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         _buildTextField(
                           controller: _loanAmountController,
                           label: 'Desired Loan Amount (VND)',
-                          hint: '100,000,000',
                           keyboardType: TextInputType.number,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -237,7 +233,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                           _buildTextField(
                             controller: _yearsCreditHistoryController,
                             label: 'Years Credit History',
-                            hint: '2',
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                           ),
@@ -522,7 +517,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       },
       decoration: InputDecoration(
         labelText: 'Date of Birth',
-        hintText: 'DD/MM/YYYY',
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
@@ -540,7 +534,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
-    required String hint,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
   }) {
@@ -554,7 +547,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       },
       decoration: InputDecoration(
         labelText: label,
-        hintText: hint,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
