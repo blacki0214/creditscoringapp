@@ -46,3 +46,9 @@ app.*.map.json
 /flutter
 
 /.agent
+
+# Firebase configuration with API keys
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
