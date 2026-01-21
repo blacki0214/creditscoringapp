@@ -1,15 +1,35 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/vnpt_ekyc_service.dart';
 
 class LoanViewModel extends ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final VnptEkycService _vnptService = VnptEkycService();
 
   // Step progress
   bool _step1Completed = false;
   bool _step2Completed = false;
   bool _step3Completed = false;
   bool _isProcessing = false;
+
+  // VNPT eKYC captured images
+  Uint8List? _frontIdImageBytes;
+  Uint8List? _backIdImageBytes;
+  Uint8List? _selfieImageBytes;
+
+  // VNPT eKYC verification results
+  VnptIdCardResponse? _frontIdData;
+  VnptIdCardResponse? _backIdData;
+  VnptLivenessResponse? _livenessData;
+  VnptFaceMatchResponse? _faceMatchData;
+
+  // VNPT processing states
+  bool _isVerifyingFrontId = false;
+  bool _isVerifyingBackId = false;
+  bool _isVerifyingSelfie = false;
+  String? _vnptErrorMessage;
 
   // Personal Information Data
   String fullName = 'Nguyen Van A';
@@ -39,6 +59,19 @@ class LoanViewModel extends ChangeNotifier {
   bool get isProcessing => _isProcessing;
   LoanOfferResponse? get currentOffer => _currentOffer;
   String? get errorMessage => _errorMessage;
+
+  // VNPT eKYC getters
+  Uint8List? get frontIdImageBytes => _frontIdImageBytes;
+  Uint8List? get backIdImageBytes => _backIdImageBytes;
+  Uint8List? get selfieImageBytes => _selfieImageBytes;
+  VnptIdCardResponse? get frontIdData => _frontIdData;
+  VnptIdCardResponse? get backIdData => _backIdData;
+  VnptLivenessResponse? get livenessData => _livenessData;
+  VnptFaceMatchResponse? get faceMatchData => _faceMatchData;
+  bool get isVerifyingFrontId => _isVerifyingFrontId;
+  bool get isVerifyingBackId => _isVerifyingBackId;
+  bool get isVerifyingSelfie => _isVerifyingSelfie;
+  String? get vnptErrorMessage => _vnptErrorMessage;
 
   // Load saved draft on init
   LoanViewModel() {
@@ -200,5 +233,139 @@ class LoanViewModel extends ChangeNotifier {
     } catch (e) {
       return null;
     }
+  }
+
+  // ===== VNPT eKYC Methods =====
+
+  /// Verify front ID with VNPT OCR
+  Future<bool> verifyFrontIdWithVnpt(Uint8List imageBytes) async {
+    _isVerifyingFrontId = true;
+    _vnptErrorMessage = null;
+    _frontIdImageBytes = imageBytes;
+    notifyListeners();
+
+    try {
+      final response = await _vnptService.verifyIdCardFront(imageBytes);
+      _frontIdData = response;
+
+      if (response.success) {
+        // Auto-fill personal info from OCR
+        if (response.fullName != null) fullName = response.fullName!;
+        if (response.idNumber != null) idNumber = response.idNumber!;
+        if (response.dateOfBirth != null) dob = response.dateOfBirth;
+        if (response.placeOfResidence != null) address = response.placeOfResidence!;
+        
+        _saveDraft();
+      } else {
+        _vnptErrorMessage = response.errorMessage ?? 'Không nhận diện được CMND/CCCD';
+      }
+
+      _isVerifyingFrontId = false;
+      notifyListeners();
+      return response.success;
+    } catch (e) {
+      _vnptErrorMessage = e.toString();
+      _isVerifyingFrontId = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Verify back ID with VNPT OCR
+  Future<bool> verifyBackIdWithVnpt(Uint8List imageBytes) async {
+    _isVerifyingBackId = true;
+    _vnptErrorMessage = null;
+    _backIdImageBytes = imageBytes;
+    notifyListeners();
+
+    try {
+      final response = await _vnptService.verifyIdCardBack(imageBytes);
+      _backIdData = response;
+
+      if (!response.success) {
+        _vnptErrorMessage = response.errorMessage ?? 'Không nhận diện được mặt sau CMND/CCCD';
+      }
+
+      _isVerifyingBackId = false;
+      notifyListeners();
+      return response.success;
+    } catch (e) {
+      _vnptErrorMessage = e.toString();
+      _isVerifyingBackId = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Verify selfie with VNPT liveness detection and face matching
+  Future<bool> verifySelfieWithVnpt(Uint8List imageBytes) async {
+    _isVerifyingSelfie = true;
+    _vnptErrorMessage = null;
+    _selfieImageBytes = imageBytes;
+    notifyListeners();
+
+    try {
+      // Step 1: Liveness detection
+      final livenessResponse = await _vnptService.detectLiveness(imageBytes);
+      _livenessData = livenessResponse;
+
+      if (!livenessResponse.success || !livenessResponse.isLivePerson) {
+        _vnptErrorMessage = 'Vui lòng chụp ảnh thật, không sử dụng ảnh chụp lại';
+        _isVerifyingSelfie = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Step 2: Face matching with ID card photo (if available)
+      if (_frontIdImageBytes != null) {
+        final faceMatchResponse = await _vnptService.compareFaces(
+          image1Bytes: _frontIdImageBytes!,
+          image2Bytes: imageBytes,
+        );
+        _faceMatchData = faceMatchResponse;
+
+        if (!faceMatchResponse.success || !faceMatchResponse.isMatch) {
+          _vnptErrorMessage = 'Khuôn mặt không khớp với ảnh trên CMND/CCCD';
+          _isVerifyingSelfie = false;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      // All checks passed
+      _isVerifyingSelfie = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _vnptErrorMessage = e.toString();
+      _isVerifyingSelfie = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Clear VNPT error message
+  void clearVnptError() {
+    _vnptErrorMessage = null;
+    notifyListeners();
+  }
+
+  /// Reset all VNPT eKYC data
+  void resetVnptData() {
+    _frontIdImageBytes = null;
+    _backIdImageBytes = null;
+    _selfieImageBytes = null;
+    _frontIdData = null;
+    _backIdData = null;
+    _livenessData = null;
+    _faceMatchData = null;
+    _vnptErrorMessage = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _vnptService.dispose();
+    super.dispose();
   }
 }
