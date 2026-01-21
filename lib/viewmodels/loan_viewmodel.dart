@@ -237,7 +237,7 @@ class LoanViewModel extends ChangeNotifier {
 
   // ===== VNPT eKYC Methods =====
 
-  /// Verify front ID with VNPT OCR
+  /// Verify front ID with VNPT OCR (with classify and card liveness checks)
   Future<bool> verifyFrontIdWithVnpt(Uint8List imageBytes) async {
     _isVerifyingFrontId = true;
     _vnptErrorMessage = null;
@@ -245,6 +245,37 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Step 1: Classify ID type
+      print('[ViewModel] Step 1: Classifying ID type...');
+      final classifyResult = await _vnptService.classifyIdCard(imageBytes);
+      
+      if (classifyResult.success) {
+        print('[ViewModel] ID Type: ${classifyResult.typeDescription} (${classifyResult.typeId})');
+      }
+
+      // Step 2: Check card liveness (real vs fake)
+      print('[ViewModel] Step 2: Checking card liveness...');
+      final cardLiveness = await _vnptService.checkCardLiveness(imageBytes);
+      
+      if (!cardLiveness.isRealCard) {
+        _vnptErrorMessage = cardLiveness.errorMessage ?? 
+            'Giấy tờ không hợp lệ. Vui lòng sử dụng giấy tờ thật, không phải bản photocopy.';
+        _isVerifyingFrontId = false;
+        notifyListeners();
+        return false;
+      }
+
+      if (cardLiveness.faceSwapping == true) {
+        _vnptErrorMessage = 'Phát hiện ảnh bị dán/chỉnh sửa. Vui lòng sử dụng giấy tờ gốc.';
+        _isVerifyingFrontId = false;
+        notifyListeners();
+        return false;
+      }
+
+      print('[ViewModel] Card liveness: PASS ✓');
+
+      // Step 3: Perform OCR
+      print('[ViewModel] Step 3: Performing OCR...');
       final response = await _vnptService.verifyIdCardFront(imageBytes);
       _frontIdData = response;
 
@@ -256,6 +287,7 @@ class LoanViewModel extends ChangeNotifier {
         if (response.placeOfResidence != null) address = response.placeOfResidence!;
         
         _saveDraft();
+        print('[ViewModel] OCR successful, data auto-filled');
       } else {
         _vnptErrorMessage = response.errorMessage ?? 'Không nhận diện được CMND/CCCD';
       }

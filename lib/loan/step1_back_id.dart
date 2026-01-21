@@ -277,6 +277,8 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
                                 const SizedBox(height: 12),
                                 if (extractedData.issueDate != null)
                                   _buildInfoRow('Issue Date', extractedData.issueDate!),
+                                if (extractedData.issuePlace != null)
+                                  _buildInfoRow('Issue Place', extractedData.issuePlace!),
                                 if (extractedData.expiryDate != null)
                                   _buildInfoRow('Expiry Date', extractedData.expiryDate!),
                               ],
