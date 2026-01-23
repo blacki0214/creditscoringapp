@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../config/vnpt_config.dart';
+import '../services/vnpt_credentials_manager.dart';
+import '../utils/jwt_token_helper.dart';
 
 /// VNPT eKYC Service
 /// 
@@ -11,29 +13,79 @@ import '../config/vnpt_config.dart';
 /// - Liveness detection
 class VnptEkycService {
   final http.Client _client;
+  late VnptCredentials _credentials;
   String? _cachedAccessToken;
   DateTime? _tokenExpiryTime;
+  
+  // Callback for token expiry warnings
+  final Function(String message, DateTime expiryTime)? onTokenExpiryWarning;
 
-  VnptEkycService({http.Client? client})
-      : _client = client ?? http.Client() {
-    // Initialize with provided access token
-    _cachedAccessToken = VnptConfig.initialAccessToken;
-    // Token expires at timestamp 1769003984 (from JWT payload)
-    _tokenExpiryTime = DateTime.fromMillisecondsSinceEpoch(1769003984 * 1000);
+  VnptEkycService({
+    http.Client? client,
+    this.onTokenExpiryWarning,
+  }) : _client = client ?? http.Client();
+
+  /// Initialize the service with credentials
+  /// Must be called before using any API methods
+  Future<void> initialize() async {
+    try {
+      _credentials = await VnptCredentialsManager.loadCredentials();
+      _cachedAccessToken = _credentials.accessToken;
+      
+      // Parse token expiry from JWT
+      _tokenExpiryTime = JwtTokenHelper.getExpiryTime(_credentials.accessToken);
+      
+      // Log token info
+      if (_tokenExpiryTime != null) {
+        final expiryInfo = JwtTokenHelper.getExpiryInfo(_credentials.accessToken);
+        print('[VNPT] Token info: $expiryInfo');
+        
+        // Check if token is expired or expiring soon
+        if (JwtTokenHelper.isExpired(_credentials.accessToken)) {
+          final errorMsg = 'VNPT Access Token đã HẾT HẠN! Vui lòng cập nhật token mới trong file .env';
+          print('[VNPT] $errorMsg');
+          throw VnptException(errorMsg);
+        } else if (JwtTokenHelper.isExpiringSoon(
+          _credentials.accessToken,
+          buffer: VnptConfig.tokenExpiryWarningBuffer,
+        )) {
+          final warningMsg = 'VNPT Access Token sẽ hết hạn trong ${JwtTokenHelper.getTimeUntilExpiry(_credentials.accessToken)?.inHours} giờ. Vui lòng chuẩn bị token mới.';
+          print('[VNPT] $warningMsg');
+          onTokenExpiryWarning?.call(warningMsg, _tokenExpiryTime!);
+        }
+      } else {
+        print('[VNPT] Warning: Could not parse token expiry time');
+      }
+      
+      print('[VNPT] Service initialized successfully');
+    } catch (e) {
+      print('[VNPT] Failed to initialize service: $e');
+      rethrow;
+    }
   }
 
-  /// Get valid access token (cached or refresh if expired)
+  /// Get valid access token with expiry check
   Future<String> _getAccessToken() async {
-    // Check if cached token is still valid
-    if (_cachedAccessToken != null &&
-        _tokenExpiryTime != null &&
-        DateTime.now().isBefore(_tokenExpiryTime!)) {
-      return _cachedAccessToken!;
+    if (_cachedAccessToken == null) {
+      throw VnptException('Service not initialized. Call initialize() first.');
     }
 
-    // Token expired or not available, use initial token
-    // In production, implement token refresh logic here
-    _cachedAccessToken = VnptConfig.initialAccessToken;
+    // Check if token is expired
+    if (JwtTokenHelper.isExpired(_cachedAccessToken!)) {
+      final errorMsg = 'VNPT Access Token đã hết hạn! Vui lòng cập nhật token mới trong file .env và khởi động lại app.';
+      print('[VNPT] $errorMsg');
+      throw VnptException(errorMsg);
+    }
+    
+    // Warn if token is expiring soon
+    if (_tokenExpiryTime != null && JwtTokenHelper.isExpiringSoon(
+      _cachedAccessToken!,
+      buffer: VnptConfig.tokenExpiryWarningBuffer,
+    )) {
+      final timeLeft = JwtTokenHelper.getTimeUntilExpiry(_cachedAccessToken!);
+      print('[VNPT] Warning: Token expires in ${timeLeft?.inHours} hours');
+    }
+
     return _cachedAccessToken!;
   }
 
@@ -50,8 +102,8 @@ class VnptEkycService {
       // Create multipart request
       final request = http.MultipartRequest('POST', url);
       request.headers['Authorization'] = token;
-      request.headers['Token-id'] = VnptConfig.tokenId;
-      request.headers['Token-key'] = VnptConfig.tokenKey;
+      request.headers['Token-id'] = _credentials.tokenId;
+      request.headers['Token-key'] = _credentials.tokenKey;
 
       print('[VNPT] Headers: ${request.headers}');
 
@@ -132,8 +184,8 @@ class VnptEkycService {
             url,
             headers: {
               'Authorization': token,
-              'Token-id': VnptConfig.tokenId,
-              'Token-key': VnptConfig.tokenKey,
+              'Token-id': _credentials.tokenId,
+              'Token-key': _credentials.tokenKey,
               'Content-Type': 'application/json',
               'mac-address': 'FLUTTER_APP',
             },
@@ -191,8 +243,8 @@ class VnptEkycService {
             url,
             headers: {
               'Authorization': token,
-              'Token-id': VnptConfig.tokenId,
-              'Token-key': VnptConfig.tokenKey,
+              'Token-id': _credentials.tokenId,
+              'Token-key': _credentials.tokenKey,
               'Content-Type': 'application/json',
               'mac-address': 'FLUTTER_APP',
             },
@@ -247,8 +299,8 @@ class VnptEkycService {
             url,
             headers: {
               'Authorization': token,
-              'Token-id': VnptConfig.tokenId,
-              'Token-key': VnptConfig.tokenKey,
+              'Token-id': _credentials.tokenId,
+              'Token-key': _credentials.tokenKey,
               'Content-Type': 'application/json',
               'mac-address': 'FLUTTER_APP',
             },
@@ -302,8 +354,8 @@ class VnptEkycService {
             url,
             headers: {
               'Authorization': token,
-              'Token-id': VnptConfig.tokenId,
-              'Token-key': VnptConfig.tokenKey,
+              'Token-id': _credentials.tokenId,
+              'Token-key': _credentials.tokenKey,
               'Content-Type': 'application/json',
               'mac-address': 'FLUTTER_APP',
             },
@@ -378,8 +430,8 @@ class VnptEkycService {
             url,
             headers: {
               'Authorization': token,
-              'Token-id': VnptConfig.tokenId,
-              'Token-key': VnptConfig.tokenKey,
+              'Token-id': _credentials.tokenId,
+              'Token-key': _credentials.tokenKey,
               'Content-Type': 'application/json',
               'mac-address': 'FLUTTER_APP',
             },
@@ -437,8 +489,8 @@ class VnptEkycService {
             url,
             headers: {
               'Authorization': token,
-              'Token-id': VnptConfig.tokenId,
-              'Token-key': VnptConfig.tokenKey,
+              'Token-id': _credentials.tokenId,
+              'Token-key': _credentials.tokenKey,
               'Content-Type': 'application/json',
               'mac-address': 'FLUTTER_APP',
             },
