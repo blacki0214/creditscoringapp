@@ -40,16 +40,16 @@ class LoanOfferPage extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               Text(
-                offer.approved ? 'Congratulations!' : 'Application Rejected',
+                offer['approved'] as bool ? 'Congratulations!' : 'Application Rejected',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: offer.approved ? const Color(0xFF1A1F3F) : Colors.red,
+                  color: offer['approved'] as bool ? const Color(0xFF1A1F3F) : Colors.red,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                offer.approvalMessage,
+                offer['approvalMessage'] as String,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -62,18 +62,18 @@ class LoanOfferPage extends StatelessWidget {
                 width: 150,
                 height: 150,
                 decoration: BoxDecoration(
-                  color: (offer.approved ? const Color(0xFF4CAF50) : Colors.red).withOpacity(0.1),
+                  color: (offer['approved'] as bool ? const Color(0xFF4CAF50) : Colors.red).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  offer.approved ? Icons.check_circle : Icons.cancel,
+                  offer['approved'] as bool ? Icons.check_circle : Icons.cancel,
                   size: 100,
-                  color: offer.approved ? const Color(0xFF4CAF50) : Colors.red,
+                  color: offer['approved'] as bool ? const Color(0xFF4CAF50) : Colors.red,
                 ),
               ),
               const SizedBox(height: 40),
               // Loan details card (only show if approved)
-              if (offer.approved)
+              if (offer['approved'] as bool)
                 Expanded(
                   child: Container(
                     width: double.infinity,
@@ -98,7 +98,7 @@ class LoanOfferPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
                           // Highlight the Tier if present
-                          if (offer.loanTier != null) ...[
+                          if (offer['loanTier'] != null) ...[
                              Center(
                                child: Container(
                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -108,7 +108,7 @@ class LoanOfferPage extends StatelessWidget {
                                    border: Border.all(color: Colors.amber),
                                  ),
                                  child: Text(
-                                   '${offer.loanTier} TIER',
+                                   '${offer['loanTier']} TIER',
                                    style: const TextStyle(
                                      fontWeight: FontWeight.bold,
                                      color: Colors.deepOrange,
@@ -118,25 +118,25 @@ class LoanOfferPage extends StatelessWidget {
                              ),
                              const SizedBox(height: 16),
                           ],
-                          _buildDetailRow('Approved Amount', currencyFormat.format(offer.loanAmountVnd)),
+                          _buildDetailRow('Approved Amount', currencyFormat.format(offer['loanAmountVnd'] as num)),
                           const SizedBox(height: 16),
                           // Max eligible is redundant if same as approved, but good to show
-                          _buildDetailRow('Max Eligible', currencyFormat.format(offer.maxAmountVnd)),
+                          _buildDetailRow('Max Eligible', currencyFormat.format(offer['maxAmountVnd'] as num)),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Credit Score', offer.creditScore.toString()),
+                          _buildDetailRow('Credit Score', offer['creditScore'].toString()),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Interest Rate', '${offer.interestRate}%'),
+                          _buildDetailRow('Interest Rate', '${offer['interestRate']}%'),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Monthly Payment', offer.monthlyPaymentVnd != null ? currencyFormat.format(offer.monthlyPaymentVnd) : 'N/A'),
+                          _buildDetailRow('Monthly Payment', offer['monthlyPaymentVnd'] != null ? currencyFormat.format(offer['monthlyPaymentVnd'] as num) : 'N/A'),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Term', '${offer.loanTermMonths ?? 0} months'),
-                          if (offer.tierReason != null) ...[
+                          _buildDetailRow('Term', '${offer['loanTermMonths'] ?? 0} months'),
+                          if (offer['tierReason'] != null) ...[
                              const SizedBox(height: 16),
                              const Divider(),
                              const SizedBox(height: 8),
                              const Text('Why this tier?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
                              const SizedBox(height: 4),
-                             Text(offer.tierReason!, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                             Text(offer['tierReason'] as String, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
                           ]
                         ],
                       ),
@@ -145,7 +145,7 @@ class LoanOfferPage extends StatelessWidget {
                 ),
               const SizedBox(height: 24),
               // Action buttons
-              if (offer.approved) ...[
+              if (offer['approved'] as bool) ...[
                 SizedBox(
                   width: double.infinity,
                   height: 56,

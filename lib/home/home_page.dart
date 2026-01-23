@@ -636,7 +636,7 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                if (loanViewModel.currentOffer!.approved) ...[
+                if (loanViewModel.currentOffer!['approved'] as bool) ...[
                   _buildLoanDetailRow(
                     'Loan Amount',
                     currencyFormat.format(
@@ -644,17 +644,17 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (loanViewModel.currentOffer!.interestRate != null)
+                  if (loanViewModel.currentOffer!['interestRate'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
                           'Interest Rate',
-                          '${loanViewModel.currentOffer!.interestRate!.toStringAsFixed(2)}% / year',
+                          '${(loanViewModel.currentOffer!['interestRate'] as num).toStringAsFixed(2)}% / year',
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
-                  if (loanViewModel.currentOffer!.monthlyPaymentVnd != null)
+                  if (loanViewModel.currentOffer!['monthlyPaymentVnd'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
@@ -666,19 +666,19 @@ class HomePage extends StatelessWidget {
                         const SizedBox(height: 12),
                       ],
                     ),
-                  if (loanViewModel.currentOffer!.loanTermMonths != null)
+                  if (loanViewModel.currentOffer!['loanTermMonths'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
                           'Loan Term',
-                          '${loanViewModel.currentOffer!.loanTermMonths} months',
+                          '${loanViewModel.currentOffer!['loanTermMonths']} months',
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
                   _buildLoanDetailRow(
                     'Credit Score',
-                    '${loanViewModel.currentOffer!.creditScore}',
+                    '${loanViewModel.currentOffer!['creditScore']}',
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -734,7 +734,7 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          loanViewModel.currentOffer!.approvalMessage,
+                          loanViewModel.currentOffer!['approvalMessage'] as String,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFFEF5350),
@@ -745,7 +745,7 @@ class HomePage extends StatelessWidget {
                         const SizedBox(height: 12),
                         _buildLoanDetailRow(
                           'Credit Score',
-                          '${loanViewModel.currentOffer!.creditScore}',
+                          '${loanViewModel.currentOffer!['creditScore']}',
                         ),
                       ],
                     ),
