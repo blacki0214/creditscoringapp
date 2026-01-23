@@ -38,10 +38,8 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
     super.initState();
     final vm = context.read<LoanViewModel>();
     
-    // Initialize from ViewModel or defaults
-    _totalPriceController = TextEditingController(
-      text: vm.desiredLoanAmount > 0 ? vm.desiredLoanAmount.toInt().toString() : '',
-    );
+    // Initialize from user input (empty by default)
+    _totalPriceController = TextEditingController(text: '');
     _downPaymentController = TextEditingController(text: '0');
     _selectedPurpose = vm.loanPurpose;
     

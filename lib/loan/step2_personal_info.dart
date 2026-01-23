@@ -49,7 +49,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _monthlyIncomeController = TextEditingController(text: vm.monthlyIncome.toInt().toString());
     _yearsEmployedController = TextEditingController(text: vm.yearsEmployed.toInt().toString());
     _yearsCreditHistoryController = TextEditingController(text: vm.yearsCreditHistory.toString());
-    _loanAmountController = TextEditingController(text: vm.desiredLoanAmount.toInt().toString());
+    _loanAmountController = TextEditingController(text: '');
     _addressController = TextEditingController(text: vm.address);
     _selectedDOB = vm.dob;
   }
@@ -208,8 +208,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
                         onChanged: (val) {
-                          final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
-                          vm.updatePersonalInfo(income: double.tryParse(cleaned));
+                          // Store locally - not in ViewModel
                         },
                       ),
 
@@ -249,7 +248,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         ],
                         onChanged: (val) {
                           final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
-                          vm.updatePersonalInfo(requestedAmount: double.tryParse(cleaned));
+                          // Store locally - not in ViewModel
                         },
                       ),
                       
