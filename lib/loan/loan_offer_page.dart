@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../home/home_page.dart';
 import '../viewmodels/loan_viewmodel.dart';
+import 'step3_offer_calculator.dart';
 
 class LoanOfferPage extends StatelessWidget {
   const LoanOfferPage({super.key});
@@ -150,12 +151,11 @@ class LoanOfferPage extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushAndRemoveUntil(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const HomePage(),
+                          builder: (_) => const Step3OfferCalculatorPage(),
                         ),
-                        (route) => false,
                       );
                     },
                     style: ElevatedButton.styleFrom(
