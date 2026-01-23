@@ -596,12 +596,12 @@ class HomePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: loanViewModel.currentOffer!.approved
+              color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
                   ? const Color(0xFFE8F5E9)
                   : const Color(0xFFFFEBEE),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: loanViewModel.currentOffer!.approved
+                color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
                     ? const Color(0xFF4CAF50)
                     : const Color(0xFFEF5350),
               ),
@@ -613,22 +613,22 @@ class HomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      loanViewModel.currentOffer!.approved
+                      (loanViewModel.currentOffer!['approved'] as bool? ?? true)
                           ? 'APPROVED'
                           : 'REJECTED',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: loanViewModel.currentOffer!.approved
+                        color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
                             ? const Color(0xFF4CAF50)
                             : const Color(0xFFEF5350),
                       ),
                     ),
                     Icon(
-                      loanViewModel.currentOffer!.approved
+                      (loanViewModel.currentOffer!['approved'] as bool? ?? true)
                           ? Icons.check_circle
                           : Icons.cancel,
-                      color: loanViewModel.currentOffer!.approved
+                      color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
                           ? const Color(0xFF4CAF50)
                           : const Color(0xFFEF5350),
                       size: 24,
@@ -640,7 +640,7 @@ class HomePage extends StatelessWidget {
                   _buildLoanDetailRow(
                     'Loan Amount',
                     currencyFormat.format(
-                      loanViewModel.currentOffer!.loanAmountVnd,
+                      loanViewModel.currentOffer!['loanAmountVnd'] as num,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -660,7 +660,7 @@ class HomePage extends StatelessWidget {
                         _buildLoanDetailRow(
                           'Monthly Payment',
                           currencyFormat.format(
-                            loanViewModel.currentOffer!.monthlyPaymentVnd,
+                            loanViewModel.currentOffer!['monthlyPaymentVnd'] as num,
                           ),
                         ),
                         const SizedBox(height: 12),

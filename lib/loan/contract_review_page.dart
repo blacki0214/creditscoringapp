@@ -94,7 +94,7 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                     _buildSectionHeader('Loan Terms'),
                     _buildTermRow('Loan Amount', _currencyFormat.format(widget.loanAmount)),
                     const SizedBox(height: 12),
-                    _buildTermRow('Interest Rate', '${offer.interestRate?.toStringAsFixed(2) ?? "15.00"}% per annum'),
+                    _buildTermRow('Interest Rate', '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}% per annum'),
                     const SizedBox(height: 12),
                     _buildTermRow('Loan Term', '${widget.tenor} months'),
                     const SizedBox(height: 12),
@@ -327,7 +327,7 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${offer.creditScore}',
+                    '${offer['creditScore']}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -426,7 +426,7 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
 
   double _calculateMonthlyPayment(dynamic offer) {
     if (widget.loanAmount <= 0) return 0;
-    final interestRate = offer.interestRate ?? 15.0;
+    final interestRate = (offer['interestRate'] as num?) ?? 15.0;
     return (widget.loanAmount / widget.tenor) * (1 + (interestRate / 100));
   }
 }

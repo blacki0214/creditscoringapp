@@ -35,7 +35,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
     }
 
     // Determine approval status based on offer
-    final isApproved = offer.approved ?? true;
+    final isApproved = (offer['approved'] as bool?) ?? true;
     final statusIcon = isApproved ? Icons.check_circle : Icons.cancel;
     final statusColor = isApproved ? const Color(0xFF4CAF50) : Colors.red;
     final statusTitle = isApproved ? 'Application Approved' : 'Application Rejected';
@@ -256,7 +256,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDetailBox('Term', '${widget.tenor} months'),
-              _buildDetailBox('Interest Rate', '${offer.interestRate?.toStringAsFixed(2) ?? "15.00"}%'),
+              _buildDetailBox('Interest Rate', '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}%'),
             ],
           ),
 
@@ -351,7 +351,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            offer.approvalMessage ?? 'Your application did not meet our lending criteria at this time.',
+            (offer['approvalMessage'] as String?) ?? 'Your application did not meet our lending criteria at this time.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade700,
@@ -505,7 +505,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
 
   double _calculateMonthlyPayment(dynamic offer) {
     if (widget.loanAmount <= 0) return 0;
-    final interestRate = offer.interestRate ?? 15.0;
+    final interestRate = (offer['interestRate'] as num?) ?? 15.0;
     return (widget.loanAmount / widget.tenor) * (1 + (interestRate / 100));
   }
 }

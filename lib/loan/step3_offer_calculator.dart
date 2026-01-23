@@ -44,8 +44,8 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
     _selectedPurpose = vm.loanPurpose;
     
     // Set tenor from offer if available
-    if (vm.currentOffer?.loanTermMonths != null) {
-      _tenor = (vm.currentOffer!.loanTermMonths ?? 12).toDouble();
+    if (vm.currentOffer?['loanTermMonths'] != null) {
+      _tenor = ((vm.currentOffer!['loanTermMonths'] as num?) ?? 12).toDouble();
     }
   }
 
@@ -73,11 +73,11 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
     final calculatedLoanAmount = (totalPrice - downPayment).clamp(0, double.infinity) as double;
     
     // Loan Limit comes from the scoring API (based on income/credit score)
-    final loanLimit = offer.maxAmountVnd;
+    final loanLimit = offer['maxAmountVnd'] as num;
     final isWithinLimit = calculatedLoanAmount <= loanLimit;
 
     // Calculate monthly payment based on tenor
-    final interestRate = offer.interestRate ?? 15.0; // Default 15% if null
+    final interestRate = (offer['interestRate'] as num?) ?? 15.0; // Default 15% if null
     final monthlyPayment = calculatedLoanAmount > 0
         ? (calculatedLoanAmount / _tenor.toInt()) * (1 + (interestRate / 100))
         : 0.0;
@@ -565,8 +565,8 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailChip('Interest Rate', '${offer.interestRate.toStringAsFixed(2)}%'),
-              _buildDetailChip('Credit Score', '${offer.creditScore}'),
+              _buildDetailChip('Interest Rate', '${(offer['interestRate'] as num).toStringAsFixed(2)}%'),
+              _buildDetailChip('Credit Score', '${offer['creditScore']}'),
             ],
           ),
         ],
