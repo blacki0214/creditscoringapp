@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
-import '../services/local_storage_service.dart';
 import '../auth/login_page.dart';
 
 class OnboardingPage extends StatefulWidget {

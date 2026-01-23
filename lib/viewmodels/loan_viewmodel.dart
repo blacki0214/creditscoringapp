@@ -76,7 +76,6 @@ class LoanViewModel extends ChangeNotifier {
       'address': address,
       'employmentStatus': employmentStatus,
       'yearsEmployed': yearsEmployed,
-      'desiredLoanAmount': desiredLoanAmount,
       'monthlyIncome': monthlyIncome,
       'homeOwnership': homeOwnership,
       'loanPurpose': loanPurpose,
@@ -100,7 +99,7 @@ class LoanViewModel extends ChangeNotifier {
     String? addr,
     String? employment,
     double? yearsEmp,
-    double? requestedAmount,
+    double? income,
     String? home,
     String? purpose,
     int? history,
@@ -114,8 +113,6 @@ class LoanViewModel extends ChangeNotifier {
     if (addr != null) address = addr;
     if (employment != null) employmentStatus = employment;
     if (yearsEmp != null) yearsEmployed = yearsEmp;
-    if (income != null) monthlyIncome = income;
-    if (requestedAmount != null) desiredLoanAmount = requestedAmountsEmp;
     if (income != null) monthlyIncome = income;
     if (home != null) homeOwnership = home;
     if (purpose != null) loanPurpose = purpose;
