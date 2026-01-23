@@ -200,8 +200,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
                         onChanged: (val) {
-                          final cleaned = val.replaceAll(RegExp(r'[,\.]'), '');
-                          vm.updatePersonalInfo(income: double.tryParse(cleaned));
+                          // Store locally - not in ViewModel
                         },
                       ),
 
@@ -449,22 +448,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   Future<void> _submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
     
-    final vm = context.read<LoanViewModel>();
-    final success = await vm.submitApplication();
-    
-    if (!mounted) return;
-    
-    if (success) {
+    // Navigate to ProcessingPage (which will handle API call)
+    if (mounted) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ProcessingPage()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(vm.errorMessage ?? 'Submission failed'),
-          backgroundColor: Colors.red,
-        ),
       );
     }
   }

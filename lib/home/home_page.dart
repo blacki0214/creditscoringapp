@@ -44,7 +44,11 @@ class HomePage extends StatelessWidget {
                       PopupMenuItem(
                         child: Row(
                           children: [
-                            Icon(Icons.settings_outlined, color: Colors.grey.shade700, size: 20),
+                            Icon(
+                              Icons.settings_outlined,
+                              color: Colors.grey.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
                             const Text('Settings'),
                           ],
@@ -61,7 +65,11 @@ class HomePage extends StatelessWidget {
                       PopupMenuItem(
                         child: Row(
                           children: [
-                            Icon(Icons.person_outline, color: Colors.grey.shade700, size: 20),
+                            Icon(
+                              Icons.person_outline,
+                              color: Colors.grey.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
                             const Text('Profile'),
                           ],
@@ -78,7 +86,11 @@ class HomePage extends StatelessWidget {
                       PopupMenuItem(
                         child: Row(
                           children: [
-                            Icon(Icons.support_agent_outlined, color: Colors.grey.shade700, size: 20),
+                            Icon(
+                              Icons.support_agent_outlined,
+                              color: Colors.grey.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
                             const Text('Support'),
                           ],
@@ -95,17 +107,23 @@ class HomePage extends StatelessWidget {
                       PopupMenuItem(
                         child: Row(
                           children: [
-                            const Icon(Icons.logout, color: Colors.red, size: 20),
+                            const Icon(
+                              Icons.logout,
+                              color: Colors.red,
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
-                            const Text('Logout', style: TextStyle(color: Colors.red)),
+                            const Text(
+                              'Logout',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                         onTap: () {
                           // Handle logout - navigate to login page
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/',
-                            (route) => false,
-                          );
+                          Navigator.of(
+                            context,
+                          ).pushNamedAndRemoveUntil('/', (route) => false);
                         },
                       ),
                     ],
@@ -128,7 +146,10 @@ class HomePage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                    ),
                     itemBuilder: (context) => [
                       const PopupMenuItem(
                         enabled: false,
@@ -158,7 +179,9 @@ class HomePage extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4C40F7).withOpacity(0.1),
+                                      color: const Color(
+                                        0xFF4C40F7,
+                                      ).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Icon(
@@ -170,7 +193,8 @@ class HomePage extends StatelessWidget {
                                   const SizedBox(width: 12),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Loan Approved',
@@ -217,7 +241,9 @@ class HomePage extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4C40F7).withOpacity(0.1),
+                                      color: const Color(
+                                        0xFF4C40F7,
+                                      ).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Icon(
@@ -229,7 +255,8 @@ class HomePage extends StatelessWidget {
                                   const SizedBox(width: 12),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Credit Score Updated',
@@ -276,7 +303,9 @@ class HomePage extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4C40F7).withOpacity(0.1),
+                                      color: const Color(
+                                        0xFF4C40F7,
+                                      ).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Icon(
@@ -288,7 +317,8 @@ class HomePage extends StatelessWidget {
                                   const SizedBox(width: 12),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Payment Reminder',
@@ -364,11 +394,13 @@ class HomePage extends StatelessWidget {
                         // Period selector
                         Row(
                           children: [
-                            _buildPeriodChip(context, viewModel, 'Current year'),
+                            _buildPeriodChip(
+                              context,
+                              viewModel,
+                              'Current year',
+                            ),
                             const SizedBox(width: 8),
                             _buildPeriodChip(context, viewModel, 'Loans'),
-                            const SizedBox(width: 8),
-                            _buildPeriodChip(context, viewModel, 'Hards'),
                           ],
                         ),
                         const SizedBox(height: 32),
@@ -463,7 +495,9 @@ class HomePage extends StatelessWidget {
                               onPressed: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Updating your credit score...'),
+                                    content: Text(
+                                      'Updating your credit score...',
+                                    ),
                                     backgroundColor: Color(0xFF4C40F7),
                                     duration: Duration(seconds: 2),
                                   ),
@@ -487,109 +521,12 @@ class HomePage extends StatelessWidget {
                               ),
                             ),
                           ),
+                          // Credit Score Tips Section
                           const SizedBox(height: 32),
-                          // Credit metrics grid
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildMetricCard(
-                                  context,
-                                  'Payment history',
-                                  '100%',
-                                  'On-time payments',
-                                  const Color(0xFF4CAF50),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildMetricCard(
-                                  context,
-                                  'Credit card use',
-                                  '2%',
-                                  'Of credit limit',
-                                  const Color(0xFF4CAF50),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildMetricCard(
-                                  context,
-                                  'Derogatory marks',
-                                  '0',
-                                  'Accounts',
-                                  const Color(0xFF4CAF50),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildMetricCard(
-                                  context,
-                                  'Credit age',
-                                  '7yrs',
-                                  'Average',
-                                  const Color(0xFF4CAF50),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildMetricCard(
-                                  context,
-                                  'Total accounts',
-                                  '28',
-                                  'Open and closed',
-                                  const Color(0xFFFFA726),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildMetricCard(
-                                  context,
-                                  'Hard inquiries',
-                                  '3',
-                                  'Last 2 years',
-                                  const Color(0xFFFFA726),
-                                ),
-                              ),
-                            ],
-                          ),
+                          _buildCreditScoreTips(context),
                         ] else if (viewModel.selectedPeriod == 'Loans') ...[
                           // Loan display section
                           _buildLoanDisplay(context),
-                        ] else if (viewModel.selectedPeriod == 'Hards') ...[
-                          // Hards section - placeholder
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.warning_outlined,
-                                  size: 64,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No hard inquiries',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Your credit record is clean',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ],
                     ),
@@ -604,10 +541,7 @@ class HomePage extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
           ],
         ),
         child: SafeArea(
@@ -617,9 +551,21 @@ class HomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(context, viewModel, Icons.home, 'Home', 0),
-                _buildNavItem(context, viewModel, Icons.upload_file, 'Upload', 1),
+                _buildNavItem(
+                  context,
+                  viewModel,
+                  Icons.upload_file,
+                  'Upload',
+                  1,
+                ),
                 _buildNavItem(context, viewModel, Icons.calculate, 'Demo', 2),
-                _buildNavItem(context, viewModel, Icons.settings_outlined, 'Settings', 3),
+                _buildNavItem(
+                  context,
+                  viewModel,
+                  Icons.settings_outlined,
+                  'Settings',
+                  3,
+                ),
               ],
             ),
           ),
@@ -650,14 +596,14 @@ class HomePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: loanViewModel.currentOffer!.approved 
-                ? const Color(0xFFE8F5E9) 
-                : const Color(0xFFFFEBEE),
+              color: loanViewModel.currentOffer!.approved
+                  ? const Color(0xFFE8F5E9)
+                  : const Color(0xFFFFEBEE),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: loanViewModel.currentOffer!.approved
-                  ? const Color(0xFF4CAF50)
-                  : const Color(0xFFEF5350),
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFEF5350),
               ),
             ),
             child: Column(
@@ -667,22 +613,24 @@ class HomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      loanViewModel.currentOffer!.approved ? 'APPROVED' : 'REJECTED',
+                      loanViewModel.currentOffer!.approved
+                          ? 'APPROVED'
+                          : 'REJECTED',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: loanViewModel.currentOffer!.approved
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFEF5350),
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFFEF5350),
                       ),
                     ),
                     Icon(
                       loanViewModel.currentOffer!.approved
-                        ? Icons.check_circle
-                        : Icons.cancel,
+                          ? Icons.check_circle
+                          : Icons.cancel,
                       color: loanViewModel.currentOffer!.approved
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFEF5350),
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFEF5350),
                       size: 24,
                     ),
                   ],
@@ -691,7 +639,9 @@ class HomePage extends StatelessWidget {
                 if (loanViewModel.currentOffer!.approved) ...[
                   _buildLoanDetailRow(
                     'Loan Amount',
-                    currencyFormat.format(loanViewModel.currentOffer!.loanAmountVnd),
+                    currencyFormat.format(
+                      loanViewModel.currentOffer!.loanAmountVnd,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   if (loanViewModel.currentOffer!.interestRate != null)
@@ -709,7 +659,9 @@ class HomePage extends StatelessWidget {
                       children: [
                         _buildLoanDetailRow(
                           'Monthly Payment',
-                          currencyFormat.format(loanViewModel.currentOffer!.monthlyPaymentVnd),
+                          currencyFormat.format(
+                            loanViewModel.currentOffer!.monthlyPaymentVnd,
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -812,7 +764,9 @@ class HomePage extends StatelessWidget {
                   width: 50,
                   height: 50,
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF4C40F7),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -832,11 +786,7 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.money_off,
-                  size: 64,
-                  color: Colors.grey.shade400,
-                ),
+                Icon(Icons.money_off, size: 64, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
                 Text(
                   'No Active Loan',
@@ -849,10 +799,7 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Start a new loan application',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -900,8 +847,8 @@ class HomePage extends StatelessWidget {
             itemBuilder: (context, index) {
               final app = applicationHistory[index];
               final timestamp = app['timestamp'] != null
-                ? DateTime.parse(app['timestamp'])
-                : DateTime.now();
+                  ? DateTime.parse(app['timestamp'])
+                  : DateTime.now();
               final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
               final isApproved = app['approved'] == true;
 
@@ -913,8 +860,8 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isApproved
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFEF5350),
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
                     width: 1.5,
                   ),
                 ),
@@ -923,8 +870,8 @@ class HomePage extends StatelessWidget {
                     Icon(
                       isApproved ? Icons.check_circle : Icons.cancel,
                       color: isApproved
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFEF5350),
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFEF5350),
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -938,8 +885,8 @@ class HomePage extends StatelessWidget {
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: isApproved
-                                ? const Color(0xFF4CAF50)
-                                : const Color(0xFFEF5350),
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFEF5350),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -1008,7 +955,11 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildPeriodChip(BuildContext context, HomeViewModel viewModel, String label) {
+  Widget _buildPeriodChip(
+    BuildContext context,
+    HomeViewModel viewModel,
+    String label,
+  ) {
     final isSelected = viewModel.selectedPeriod == label;
     return GestureDetector(
       onTap: () {
@@ -1052,10 +1003,15 @@ class HomePage extends StatelessWidget {
           context: context,
           builder: (context) => AlertDialog(
             backgroundColor: const Color(0xFF252B4C),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Text(
               title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1063,7 +1019,11 @@ class HomePage extends StatelessWidget {
               children: [
                 Text(
                   'Current Value: $value',
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -1073,14 +1033,20 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'This metric affects your credit score. Keep monitoring it regularly for the best results.',
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Close', style: TextStyle(color: Color(0xFF4C40F7))),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(color: Color(0xFF4C40F7)),
+                ),
               ),
             ],
           ),
@@ -1102,13 +1068,14 @@ class HomePage extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey.shade400),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 12,
+                  color: Colors.grey.shade400,
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -1136,10 +1103,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -1147,7 +1111,13 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, HomeViewModel viewModel, IconData icon, String label, int index) {
+  Widget _buildNavItem(
+    BuildContext context,
+    HomeViewModel viewModel,
+    IconData icon,
+    String label,
+    int index,
+  ) {
     final isSelected = viewModel.selectedIndex == index;
     return InkWell(
       onTap: () {
@@ -1155,25 +1125,19 @@ class HomePage extends StatelessWidget {
           // Navigate to loan application
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const LoanApplicationPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const LoanApplicationPage()),
           );
         } else if (index == 2) {
           // Navigate to demo calculator
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const DemoCalculatorPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const DemoCalculatorPage()),
           );
         } else if (index == 3) {
           // Navigate to settings
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const SettingsPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
           );
         } else {
           viewModel.setIndex(index);
@@ -1289,4 +1253,365 @@ class CreditScoreGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Widget to build credit score tips section
+Widget _buildCreditScoreTips(BuildContext context) {
+  // This returns a Column widget which stacks widgets vertically
+  return Column(
+    // crossAxisAlignment aligns children to the start (left side)
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Section title with icon
+      Row(
+        children: [
+          // Icon representing tips/lightbulb moment
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              // Light purple background for the icon
+              color: const Color(0xFF4C40F7).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.lightbulb_outline,
+              color: Color(0xFF4C40F7),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Title text
+          const Text(
+            'How to Improve Your Credit Score',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1F3F),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      // Subtitle/description
+      Text(
+        'Follow these tips to build and maintain a healthy credit score',
+        style: TextStyle(
+          fontSize: 14,
+          color: Colors.grey.shade600,
+        ),
+      ),
+      const SizedBox(height: 20),
+      
+      // Tip 1: Pay on time
+      _buildTipCard(
+        icon: Icons.schedule,
+        iconColor: const Color(0xFF4CAF50),
+        iconBgColor: const Color(0xFFE8F5E9),
+        title: '1. Pay Bills on Time',
+        description:
+            'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
+        tips: [
+          'Set up autopay for recurring bills',
+          'Use calendar reminders 3 days before due dates',
+          'Pay at least the minimum amount required',
+          'Consider bi-weekly payments to stay ahead',
+        ],
+      ),
+      
+      const SizedBox(height: 16),
+      
+      // Tip 2: Keep credit utilization low
+      _buildTipCard(
+        icon: Icons.credit_card,
+        iconColor: const Color(0xFF2196F3),
+        iconBgColor: const Color(0xFFE3F2FD),
+        title: '2. Keep Credit Utilization Below 30%',
+        description:
+            'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
+        tips: [
+          'Try to use less than 30% of your available credit',
+          'Pay down balances before statement closing dates',
+          'Request credit limit increases (but don\'t spend more)',
+          'Spread charges across multiple cards if needed',
+        ],
+      ),
+      
+      const SizedBox(height: 16),
+      
+      // Tip 3: Don't close old accounts
+      _buildTipCard(
+        icon: Icons.history,
+        iconColor: const Color(0xFFFFA726),
+        iconBgColor: const Color(0xFFFFF3E0),
+        title: '3. Maintain Long Credit History',
+        description:
+            'Length of credit history accounts for 15% of your score. Older accounts show you have experience managing credit.',
+        tips: [
+          'Keep old credit cards open, even if unused',
+          'Use old cards occasionally to keep them active',
+          'Don\'t close your oldest credit card',
+          'Be patient - good credit takes time to build',
+        ],
+      ),
+      
+      const SizedBox(height: 16),
+      
+      // Tip 4: Limit new credit applications
+      _buildTipCard(
+        icon: Icons.playlist_add_check,
+        iconColor: const Color(0xFF9C27B0),
+        iconBgColor: const Color(0xFFF3E5F5),
+        title: '4. Limit New Credit Applications',
+        description:
+            'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
+        tips: [
+          'Only apply for credit when you really need it',
+          'Multiple inquiries within 14-45 days count as one',
+          'Avoid opening multiple accounts in a short time',
+          'Check your own credit (soft inquiry) regularly',
+        ],
+      ),
+      
+      const SizedBox(height: 16),
+      
+      // Tip 5: Diversify credit types
+      _buildTipCard(
+        icon: Icons.diversity_3,
+        iconColor: const Color(0xFF00BCD4),
+        iconBgColor: const Color(0xFFE0F7FA),
+        title: '5. Mix Different Types of Credit',
+        description:
+            'Credit mix accounts for 10% of your score. Having different types shows you can manage various credit responsibly.',
+        tips: [
+          'Consider having both revolving (credit cards) and installment loans',
+          'A mortgage, car loan, and credit card show diversity',
+          'Don\'t open accounts just for mix - only if needed',
+          'Focus on paying existing accounts first',
+        ],
+      ),
+      
+      const SizedBox(height: 20),
+      
+      // Additional helpful info box
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF9C4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFFBC02D),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.info_outline,
+              color: Color(0xFFF57F17),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Remember',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Color(0xFFF57F17),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Building good credit takes time and consistency. Focus on making regular payments, keeping balances low, and avoiding unnecessary credit applications. Check your credit report regularly for errors.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade800,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+// Widget to build individual tip card - reusable component
+Widget _buildTipCard({
+  required IconData icon,
+  required Color iconColor,
+  required Color iconBgColor,
+  required String title,
+  required String description,
+  required List<String> tips,
+}) {
+  // StatefulBuilder allows this widget to have its own state
+  // even though the parent widget is stateless
+  return StatefulBuilder(
+    builder: (BuildContext context, StateSetter setState) {
+      // isExpanded tracks whether this tip card is open or closed
+      bool isExpanded = false;
+
+      // Return a Container that wraps the entire card
+      return Container(
+        // decoration gives the card its appearance
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+          // boxShadow creates the shadow effect
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        // ClipRRect ensures children respect rounded corners
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          // Material provides the ink splash effect on tap
+          child: Material(
+            color: Colors.transparent,
+            // InkWell makes the card tappable/clickable
+            child: InkWell(
+              // onTap defines what happens when user taps the card
+              onTap: () {
+                // setState rebuilds this widget with new isExpanded value
+                setState(() {
+                  isExpanded = !isExpanded; // Toggle between true/false
+                });
+              },
+              // Padding adds space inside the card
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                // Column stacks the card content vertically
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row with icon and title
+                    Row(
+                      children: [
+                        // Icon container
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: iconBgColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: iconColor,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Expanded makes the text take remaining space
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1F3F),
+                            ),
+                          ),
+                        ),
+                        // Expand/collapse icon - changes based on isExpanded
+                        Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color: Colors.grey.shade600,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Description text
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade700,
+                        height: 1.5, // Line height for readability
+                      ),
+                    ),
+                    // AnimatedCrossFade smoothly shows/hides the tips list
+                    AnimatedCrossFade(
+                      // firstChild is shown when isExpanded is false
+                      firstChild: const SizedBox.shrink(), // Empty widget
+                      // secondChild is shown when isExpanded is true
+                      secondChild: Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          // Divider line
+                          Divider(
+                            color: Colors.grey.shade300,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 12),
+                          // Loop through each tip and create a list item
+                          ...tips.map(
+                            (tip) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Bullet point
+                                  Container(
+                                    margin: const EdgeInsets.only(
+                                      top: 6,
+                                      right: 12,
+                                    ),
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: iconColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  // Tip text
+                                  Expanded(
+                                    child: Text(
+                                      tip,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade700,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // crossFadeState determines which child to show
+                      crossFadeState: isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      // duration controls animation speed
+                      duration: const Duration(milliseconds: 300),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

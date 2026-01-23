@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'step1_verify_identity.dart';
+import 'step1_front_id.dart';
 
 class LoanApplicationPage extends StatelessWidget {
   const LoanApplicationPage({super.key});
@@ -95,7 +95,7 @@ class LoanApplicationPage extends StatelessWidget {
                            Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const Step1VerifyIdentityPage(),
+                              builder: (_) => const Step1FrontIDPage(),
                             ),
                           );
                         } else if (!viewModel.step2Completed) {
@@ -106,7 +106,7 @@ class LoanApplicationPage extends StatelessWidget {
                            Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const Step1VerifyIdentityPage(),
+                              builder: (_) => const Step1FrontIDPage(),
                             ),
                           );
                         }
