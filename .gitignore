@@ -46,6 +46,13 @@ app.*.map.json
 /flutter
 
 /.agent
+lib/config/vnpt_config.dart
+vnpt_ekyc/vnpt_ekyc.pdf
+
+# Environment variables - Do not commit credentials!
+.env
+*.env
+!.env.example
 .env
 lib/firebase_options.dart
 android/app/google-services.json

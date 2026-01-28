@@ -19,6 +19,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   bool? _hasCreditHistory;
   
   // Controllers
+  late TextEditingController _fullNameController;
   late TextEditingController _idController;
   late TextEditingController _monthlyIncomeController;
   late TextEditingController _yearsEmployedController;
@@ -42,16 +43,18 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     
     // Load from ViewModel
     final vm = context.read<LoanViewModel>();
-    _idController = TextEditingController();
+    _fullNameController = TextEditingController(text: vm.fullName);
+    _idController = TextEditingController(text: vm.idNumber);
     _monthlyIncomeController = TextEditingController(); 
     _yearsEmployedController = TextEditingController(); 
     _yearsCreditHistoryController = TextEditingController(); 
-    _addressController = TextEditingController();
+    _addressController = TextEditingController(text: vm.address);
     _selectedDOB = vm.dob;
   }
 
   @override
   void dispose() {
+    _fullNameController.dispose();
     _idController.dispose();
     _monthlyIncomeController.dispose();
     _yearsEmployedController.dispose();
@@ -164,6 +167,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         const SizedBox(height: 24),
                       
                       _buildSectionHeader('Personal Details'),
+                      _buildTextField(
+                        controller: _fullNameController,
+                        label: 'Full Name',
+                        onChanged: (val) => vm.updatePersonalInfo(name: val),
+                      ),
+                      const SizedBox(height: 16),
                       _buildDateField(),
                       const SizedBox(height: 16),
                       _buildTextField(

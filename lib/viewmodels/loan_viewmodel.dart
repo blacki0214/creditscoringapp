@@ -1,10 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/vnpt_ekyc_service.dart';
+import '../services/api_service.dart';
 
 class LoanViewModel extends ChangeNotifier {
+  // API Service
+  final ApiService _apiService = ApiService();
+  
+  // VNPT eKYC Service (singleton instance)
+  final VnptEkycService _vnptService = VnptEkycService();
   final FirebaseLoanService _loanService = FirebaseLoanService();
   final FirebaseService _firebase = FirebaseService();
 
@@ -13,6 +22,22 @@ class LoanViewModel extends ChangeNotifier {
   bool _step2Completed = false;
   bool _step3Completed = false;
   bool _isProcessing = false;
+
+  // VNPT eKYC captured images
+  Uint8List? _frontIdImageBytes;
+  Uint8List? _backIdImageBytes;
+  Uint8List? _selfieImageBytes;
+
+  // VNPT eKYC verification results
+  VnptIdCardResponse? _frontIdData;
+  VnptIdCardResponse? _backIdData;
+  VnptFaceMatchResponse? _faceMatchData;
+
+  // VNPT processing states
+  bool _isVerifyingFrontId = false;
+  bool _isVerifyingBackId = false;
+  bool _isVerifyingSelfie = false;
+  String? _vnptErrorMessage;
 
   // Personal Information Data
   String fullName = 'Nguyen Van A';
@@ -50,6 +75,18 @@ class LoanViewModel extends ChangeNotifier {
     if (_currentOffer == null) return null;
     return LoanOfferResponse.fromJson(_currentOffer!);
   }
+
+  // VNPT eKYC getters
+  Uint8List? get frontIdImageBytes => _frontIdImageBytes;
+  Uint8List? get backIdImageBytes => _backIdImageBytes;
+  Uint8List? get selfieImageBytes => _selfieImageBytes;
+  VnptIdCardResponse? get frontIdData => _frontIdData;
+  VnptIdCardResponse? get backIdData => _backIdData;
+  VnptFaceMatchResponse? get faceMatchData => _faceMatchData;
+  bool get isVerifyingFrontId => _isVerifyingFrontId;
+  bool get isVerifyingBackId => _isVerifyingBackId;
+  bool get isVerifyingSelfie => _isVerifyingSelfie;
+  String? get vnptErrorMessage => _vnptErrorMessage;
 
   // Load saved draft on init
   LoanViewModel() {
@@ -258,4 +295,153 @@ class LoanViewModel extends ChangeNotifier {
       return null;
     }
   }
+
+  // ===== VNPT eKYC Methods =====
+
+  /// Verify front ID with VNPT OCR (with classify and card liveness checks)
+  Future<bool> verifyFrontIdWithVnpt(Uint8List imageBytes) async {
+    _isVerifyingFrontId = true;
+    _vnptErrorMessage = null;
+    _frontIdImageBytes = imageBytes;
+    notifyListeners();
+
+    try {
+      // Step 1: Classify ID type
+      print('[ViewModel] Step 1: Classifying ID type...');
+      final classifyResult = await _vnptService.classifyIdCard(imageBytes);
+      
+      if (classifyResult.success) {
+        print('[ViewModel] ID Type: ${classifyResult.typeDescription} (${classifyResult.typeId})');
+      }
+
+
+      print('[ViewModel] Step 2: Card liveness check SKIPPED (testing mode)');
+
+      // Step 3: Perform OCR
+      print('[ViewModel] Step 3: Performing OCR...');
+      final response = await _vnptService.verifyIdCardFront(imageBytes);
+      _frontIdData = response;
+
+      if (response.success) {
+        // Auto-fill personal info from OCR
+        if (response.fullName != null) fullName = response.fullName!;
+        if (response.idNumber != null) idNumber = response.idNumber!;
+        if (response.dateOfBirth != null) dob = response.dateOfBirth;
+        if (response.placeOfResidence != null) address = response.placeOfResidence!;
+        
+        _saveDraft();
+        print('[ViewModel] OCR successful, data auto-filled');
+      } else {
+        _vnptErrorMessage = response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
+      }
+
+      _isVerifyingFrontId = false;
+      notifyListeners();
+      return response.success;
+    } catch (e) {
+      _vnptErrorMessage = e.toString();
+      _isVerifyingFrontId = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Verify back ID with VNPT OCR
+  Future<bool> verifyBackIdWithVnpt(Uint8List imageBytes) async {
+    _isVerifyingBackId = true;
+    _vnptErrorMessage = null;
+    _backIdImageBytes = imageBytes;
+    notifyListeners();
+
+    try {
+      final response = await _vnptService.verifyIdCardBack(imageBytes);
+      _backIdData = response;
+
+      if (!response.success) {
+        _vnptErrorMessage = response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
+      }
+
+      _isVerifyingBackId = false;
+      notifyListeners();
+      return response.success;
+    } catch (e) {
+      _vnptErrorMessage = e.toString();
+      _isVerifyingBackId = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Verify selfie with VNPT face comparison
+  Future<bool> verifySelfieWithVnpt(Uint8List imageBytes) async {
+    _isVerifyingSelfie = true;
+    _vnptErrorMessage = null;
+    _selfieImageBytes = imageBytes;
+    notifyListeners();
+
+    try {
+      // Need front ID image for face comparison
+      if (_frontIdImageBytes == null) {
+        _vnptErrorMessage = 'Please capture the front of the ID card first';
+        _isVerifyingSelfie = false;
+        notifyListeners();
+        return false;
+      }
+
+      print('[ViewModel] Comparing faces...');
+      
+      // Compare face on ID card with selfie
+      final faceMatch = await _vnptService.compareFaces(
+        idCardImageBytes: _frontIdImageBytes!,
+        selfieImageBytes: imageBytes,
+      );
+
+      _faceMatchData = faceMatch;
+
+      if (!faceMatch.success) {
+        _vnptErrorMessage = faceMatch.errorMessage ?? 'Cannot compare faces';
+        _isVerifyingSelfie = false;
+        notifyListeners();
+        return false;
+      }
+
+      print('[ViewModel] Face match result: ${faceMatch.matchStatus}');
+      print('[ViewModel] Similarity: ${faceMatch.similarity != null ? (faceMatch.similarity! * 100).toStringAsFixed(1) : "N/A"}%');
+
+      _isVerifyingSelfie = false;
+      notifyListeners();
+      return faceMatch.success;
+      
+    } catch (e) {
+      _vnptErrorMessage = e.toString();
+      _isVerifyingSelfie = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Clear VNPT error message
+  void clearVnptError() {
+    _vnptErrorMessage = null;
+    notifyListeners();
+  }
+
+  /// Reset all VNPT eKYC data
+  void resetVnptData() {
+    _frontIdImageBytes = null;
+    _backIdImageBytes = null;
+    _selfieImageBytes = null;
+    _frontIdData = null;
+    _backIdData = null;
+    _faceMatchData = null;
+    _vnptErrorMessage = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _vnptService.dispose();
+    super.dispose();
+  }
+}
 }

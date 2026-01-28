@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/loan_viewmodel.dart';
 import 'step1_selfie.dart';
 
 class Step1BackIDPage extends StatefulWidget {
@@ -48,10 +50,6 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
     }
   }
 
-  void clearImage() {
-    setState(() => imageData = null);
-  }
-
   Future<void> takePhoto() async {
     if (isLoading) return;
     setState(() => isLoading = true);
@@ -77,161 +75,374 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
     }
   }
 
+  void clearImage() {
+    setState(() => imageData = null);
+  }
+
+  Future<void> _processImage() async {
+    if (imageData == null) return;
+
+    final loanViewModel = context.read<LoanViewModel>();
+    
+    // Call VNPT API to verify back ID (OCR only, no navigation)
+    final success = await loanViewModel.verifyBackIdWithVnpt(imageData!);
+
+    if (!mounted) return;
+
+    if (!success) {
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Authentication failed'),
+          content: Text(
+            loanViewModel.vnptErrorMessage ?? 
+            'Cannot recognize the back of ID card. Please take a clearer photo.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                loanViewModel.clearVnptError();
+              },
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                loanViewModel.clearVnptError();
+                clearImage();
+              },
+              child: const Text('Take again'),
+            ),
+          ],
+        ),
+      );
+    }
+    // If success, results will be displayed automatically via Consumer
+  }
+
+  void _continueToNext() {
+    // Navigate to next step (selfie page)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const Step1SelfiePage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Scoring - Step 1 EKYC',
-          style: TextStyle(color: Colors.black, fontSize: 16),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              const Text(
-                'Step 1: Verify your identity',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1F3F),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Capture the back of your ID',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 60),
-              if (imageData == null)
-                GestureDetector(
-                  onTap: isLoading ? null : takePhoto,
-                  child: Container(
-                    width: double.infinity,
-                    height: 280,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF4C40F7),
-                        width: 2,
-                      ),
+    return Consumer<LoanViewModel>(
+      builder: (context, loanViewModel, child) {
+        final isVerifying = loanViewModel.isVerifyingBackId;
+        final extractedData = loanViewModel.backIdData;
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text(
+              'Scoring - Step 1 EKYC',
+              style: TextStyle(color: Colors.black, fontSize: 16),
+            ),
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Step 1: Verify your identity',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1F3F),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isLoading)
-                          const CircularProgressIndicator()
-                        else ...[
-                          Icon(
-                            Icons.camera_alt,
-                            size: 80,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Capture the back of your ID',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 60),
+                  
+                  // Image capture area
+                  if (imageData == null)
+                    GestureDetector(
+                      onTap: isLoading ? null : takePhoto,
+                      child: Container(
+                        width: double.infinity,
+                        height: 280,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
                             color: const Color(0xFF4C40F7),
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isLoading)
+                              const CircularProgressIndicator()
+                            else ...[
+                              Icon(
+                                Icons.camera_alt,
+                                size: 80,
+                                color: const Color(0xFF4C40F7),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Click to capture an image\nof your ID Card (Back)',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Column(
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          height: 280,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: extractedData?.success == true 
+                                  ? Colors.green 
+                                  : Colors.orange,
+                              width: 2,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Image.memory(
+                              imageData!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Show extracted data if available
+                        if (extractedData != null && extractedData.success) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFF4CAF50),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFF4CAF50),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Information recognized',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF4CAF50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                if (extractedData.issueDate != null)
+                                  _buildInfoRow('Issue Date', extractedData.issueDate!),
+                                if (extractedData.issuePlace != null)
+                                  _buildInfoRow('Issue Place', extractedData.issuePlace!),
+                                if (extractedData.expiryDate != null)
+                                  _buildInfoRow('Expiry Date', extractedData.expiryDate!),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            'Click to capture an image\nof your ID Card (Back)',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
                         ],
+                        
+                        // Retake options
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isMobile) ...[
+                              ElevatedButton.icon(
+                                onPressed: takePhoto,
+                                icon: const Icon(Icons.camera_alt),
+                                label: const Text('Camera'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF4C40F7),
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                            ElevatedButton.icon(
+                              onPressed: selectImage,
+                              icon: const Icon(Icons.photo_library),
+                              label: Text(_isMobile ? 'Gallery' : 'Choose File'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey.shade400,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  ),
-                )
-              else
-                Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 280,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.green,
-                          width: 2,
+                  
+                  const SizedBox(height: 60),
+                  
+                  // Process/Continue buttons with loading state
+                  if (isVerifying)
+                    Column(
+                      children: [
+                        const SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                          ),
                         ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Image.memory(
-                          imageData!,
-                          fit: BoxFit.cover,
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Đang xử lý mặt sau CMND/CCCD...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF1A1F3F),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: clearImage,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade400,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 60),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: imageData != null
-                      ? const Color(0xFF4C40F7)
-                      : Colors.grey.shade300,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: imageData != null
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const Step1SelfiePage(),
+                      ],
+                    )
+                  else if (extractedData == null || !extractedData.success)
+                    // Show Process button when image is uploaded but not processed
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: imageData != null
+                                ? const Color(0xFF4C40F7)
+                                : Colors.grey.shade300,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: imageData != null ? _processImage : null,
+                            icon: Icon(
+                              Icons.play_arrow,
+                              color: imageData != null ? Colors.white : Colors.grey,
+                              size: 32,
                             ),
-                          );
-                        }
-                      : null,
-                  icon: Icon(
-                    Icons.arrow_forward,
-                    color: imageData != null ? Colors.white : Colors.grey,
-                    size: 32,
-                  ),
-                ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Process',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: imageData != null
+                                ? const Color(0xFF4C40F7)
+                                : Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Show Continue button after successful processing
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: _continueToNext,
+                            icon: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                      ],
+                    ),
+                  
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Continue',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: imageData != null
-                      ? const Color(0xFF4C40F7)
-                      : Colors.grey.shade400,
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1F3F),
+            ),
+          ),
+        ],
       ),
     );
   }
