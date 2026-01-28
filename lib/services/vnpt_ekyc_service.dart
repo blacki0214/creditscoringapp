@@ -12,46 +12,46 @@ import '../utils/jwt_token_helper.dart';
 /// - Face matching
 /// - Liveness detection
 class VnptEkycService {
-  final http.Client _client;
+  static final VnptEkycService _instance = VnptEkycService._internal();
+  factory VnptEkycService() => _instance;
+  VnptEkycService._internal();
+
+  final http.Client _client = http.Client();
   late VnptCredentials _credentials;
   String? _cachedAccessToken;
   DateTime? _tokenExpiryTime;
   
   // Callback for token expiry warnings
-  final Function(String message, DateTime expiryTime)? onTokenExpiryWarning;
-
-  VnptEkycService({
-    http.Client? client,
-    this.onTokenExpiryWarning,
-  }) : _client = client ?? http.Client();
+  void Function(String message, DateTime expiryTime)? onTokenExpiryWarning;
 
   /// Initialize the service with credentials
   /// Must be called before using any API methods
-  Future<void> initialize() async {
+  static Future<void> initialize() async {
     try {
-      _credentials = await VnptCredentialsManager.loadCredentials();
-      _cachedAccessToken = _credentials.accessToken;
+      final instance = VnptEkycService._instance;
+      instance._credentials = await VnptCredentialsManager.loadCredentials();
+      instance._cachedAccessToken = instance._credentials.accessToken;
       
       // Parse token expiry from JWT
-      _tokenExpiryTime = JwtTokenHelper.getExpiryTime(_credentials.accessToken);
+      instance._tokenExpiryTime = JwtTokenHelper.getExpiryTime(instance._credentials.accessToken);
       
       // Log token info
-      if (_tokenExpiryTime != null) {
-        final expiryInfo = JwtTokenHelper.getExpiryInfo(_credentials.accessToken);
+      if (instance._tokenExpiryTime != null) {
+        final expiryInfo = JwtTokenHelper.getExpiryInfo(instance._credentials.accessToken);
         print('[VNPT] Token info: $expiryInfo');
         
         // Check if token is expired or expiring soon
-        if (JwtTokenHelper.isExpired(_credentials.accessToken)) {
+        if (JwtTokenHelper.isExpired(instance._credentials.accessToken)) {
           final errorMsg = 'VNPT Access Token đã HẾT HẠN! Vui lòng cập nhật token mới trong file .env';
           print('[VNPT] $errorMsg');
           throw VnptException(errorMsg);
         } else if (JwtTokenHelper.isExpiringSoon(
-          _credentials.accessToken,
+          instance._credentials.accessToken,
           buffer: VnptConfig.tokenExpiryWarningBuffer,
         )) {
-          final warningMsg = 'VNPT Access Token sẽ hết hạn trong ${JwtTokenHelper.getTimeUntilExpiry(_credentials.accessToken)?.inHours} giờ. Vui lòng chuẩn bị token mới.';
+          final warningMsg = 'VNPT Access Token sẽ hết hạn trong ${JwtTokenHelper.getTimeUntilExpiry(instance._credentials.accessToken)?.inHours} giờ. Vui lòng chuẩn bị token mới.';
           print('[VNPT] $warningMsg');
-          onTokenExpiryWarning?.call(warningMsg, _tokenExpiryTime!);
+          instance.onTokenExpiryWarning?.call(warningMsg, instance._tokenExpiryTime!);
         }
       } else {
         print('[VNPT] Warning: Could not parse token expiry time');
@@ -326,104 +326,38 @@ class VnptEkycService {
     }
   }
 
-  /// Check if ID card is real (not photocopy/fake)
-  Future<VnptCardLivenessResponse> checkCardLiveness(Uint8List imageBytes) async {
-    try {
-      print('[VNPT] Starting card liveness check');
-      
-      final uploadResponse = await uploadImage(imageBytes);
-
-      if (!uploadResponse.success || uploadResponse.imageId == null) {
-        throw VnptException('Không thể tải ảnh lên');
-      }
-
-      print('[VNPT] Image uploaded, hash: ${uploadResponse.imageId}');
-
-      final token = await _getAccessToken();
-      final url = Uri.parse('${VnptConfig.baseUrl}${VnptConfig.cardLivenessEndpoint}');
-
-      final requestBody = {
-        'img': uploadResponse.imageId,
-        'client_session': _generateClientSession(),
-      };
-
-      print('[VNPT] Card liveness request to: $url');
-
-      final response = await _client
-          .post(
-            url,
-            headers: {
-              'Authorization': token,
-              'Token-id': _credentials.tokenId,
-              'Token-key': _credentials.tokenKey,
-              'Content-Type': 'application/json',
-              'mac-address': 'FLUTTER_APP',
-            },
-            body: jsonEncode(requestBody),
-          )
-          .timeout(VnptConfig.apiTimeout);
-
-      print('[VNPT] Card liveness response status: ${response.statusCode}');
-      print('[VNPT] Card liveness response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return VnptCardLivenessResponse.fromJson(data);
-      } else {
-        throw VnptException(
-          'Card liveness check failed: ${response.statusCode}',
-          response.body,
-        );
-      }
-    } catch (e) {
-      print('[VNPT] Card liveness error: $e');
-      throw VnptException('Lỗi khi kiểm tra giấy tờ thật: $e');
-    }
-  }
-
-  /// Verify ID card front side
-  Future<VnptIdCardResponse> verifyIdCardFront(Uint8List imageBytes) async {
-    return performOcrFront(imageBytes);
-  }
-
-  /// Verify ID card back side
-  Future<VnptIdCardResponse> verifyIdCardBack(Uint8List imageBytes) async {
-    return performOcrBack(imageBytes);
-  }
-
-  /// Perform face matching between two images
+  /// Compare face on ID card with selfie
   Future<VnptFaceMatchResponse> compareFaces({
-    required Uint8List image1Bytes,
-    required Uint8List image2Bytes,
+    required Uint8List idCardImageBytes,
+    required Uint8List selfieImageBytes,
   }) async {
     try {
       print('[VNPT] Starting face comparison');
       
       // Upload both images
-      final upload1 = await uploadImage(image1Bytes);
-      final upload2 = await uploadImage(image2Bytes);
+      final idCardUpload = await uploadImage(idCardImageBytes);
+      final selfieUpload = await uploadImage(selfieImageBytes);
 
-      if (!upload1.success || !upload2.success) {
+      if (!idCardUpload.success || !selfieUpload.success) {
         throw VnptException('Không thể tải ảnh lên');
       }
 
       print('[VNPT] Both images uploaded');
-      print('[VNPT] Image 1 hash: ${upload1.imageId}');
-      print('[VNPT] Image 2 hash: ${upload2.imageId}');
+      print('[VNPT] ID card hash: ${idCardUpload.imageId}');
+      print('[VNPT] Selfie hash: ${selfieUpload.imageId}');
 
       // Perform face matching
       final token = await _getAccessToken();
       final url = Uri.parse('${VnptConfig.baseUrl}${VnptConfig.faceCompareEndpoint}');
 
       final requestBody = {
-        'img_front': upload1.imageId,  // ID card photo
-        'img_face': upload2.imageId,   // Selfie photo
+        'img_front': idCardUpload.imageId,  // ID card photo
+        'img_face': selfieUpload.imageId,   // Selfie photo
         'client_session': _generateClientSession(),
         'token': 'ekyc_flutter_${DateTime.now().millisecondsSinceEpoch}',
       };
 
       print('[VNPT] Face compare request to: $url');
-      print('[VNPT] Request body: $requestBody');
 
       final response = await _client
           .post(
@@ -457,63 +391,14 @@ class VnptEkycService {
     }
   }
 
-  /// Perform liveness detection on selfie
-  Future<VnptLivenessResponse> detectLiveness(Uint8List imageBytes) async {
-    try {
-      print('[VNPT] Starting liveness detection');
-      
-      // Upload image
-      final uploadResponse = await uploadImage(imageBytes);
+  /// Verify ID card front side
+  Future<VnptIdCardResponse> verifyIdCardFront(Uint8List imageBytes) async {
+    return performOcrFront(imageBytes);
+  }
 
-      if (!uploadResponse.success || uploadResponse.imageId == null) {
-        throw VnptException('Không thể tải ảnh lên');
-      }
-
-      print('[VNPT] Image uploaded for liveness, hash: ${uploadResponse.imageId}');
-
-      // Perform liveness detection
-      final token = await _getAccessToken();
-      final url = Uri.parse('${VnptConfig.baseUrl}${VnptConfig.faceLivenessEndpoint}');
-
-      final requestBody = {
-        'img': uploadResponse.imageId,
-        'client_session': _generateClientSession(),
-        'token': 'ekyc_flutter_${DateTime.now().millisecondsSinceEpoch}',
-      };
-
-      print('[VNPT] Liveness request to: $url');
-      print('[VNPT] Request body: $requestBody');
-
-      final response = await _client
-          .post(
-            url,
-            headers: {
-              'Authorization': token,
-              'Token-id': _credentials.tokenId,
-              'Token-key': _credentials.tokenKey,
-              'Content-Type': 'application/json',
-              'mac-address': 'FLUTTER_APP',
-            },
-            body: jsonEncode(requestBody),
-          )
-          .timeout(VnptConfig.apiTimeout);
-
-      print('[VNPT] Liveness response status: ${response.statusCode}');
-      print('[VNPT] Liveness response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return VnptLivenessResponse.fromJson(data);
-      } else {
-        throw VnptException(
-          'Liveness detection failed: ${response.statusCode}',
-          response.body,
-        );
-      }
-    } catch (e) {
-      print('[VNPT] Liveness error: $e');
-      throw VnptException('Lỗi khi kiểm tra ảnh thật: $e');
-    }
+  /// Verify ID card back side
+  Future<VnptIdCardResponse> verifyIdCardBack(Uint8List imageBytes) async {
+    return performOcrBack(imageBytes);
   }
 
   void dispose() {
@@ -640,32 +525,6 @@ class VnptIdCardResponse {
   }
 }
 
-/// Response from face matching
-class VnptFaceMatchResponse {
-  final bool success;
-  final bool isMatch;
-  final double? similarity;
-  final String? errorMessage;
-
-  VnptFaceMatchResponse({
-    required this.success,
-    required this.isMatch,
-    this.similarity,
-    this.errorMessage,
-  });
-
-  factory VnptFaceMatchResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'];
-    final similarity = (data?['similarity'] as num?)?.toDouble() ?? 0.0;
-
-    return VnptFaceMatchResponse(
-      success: json['code'] == 200 || json['success'] == true,
-      isMatch: similarity >= 0.7, // 70% threshold
-      similarity: similarity,
-      errorMessage: json['message'],
-    );
-  }
-}
 
 /// Response from liveness detection
 class VnptLivenessResponse {
@@ -761,6 +620,52 @@ class VnptClassifyResponse {
       default:
         return 'Giấy tờ khác';
     }
+  }
+}
+
+/// Response from face matching
+class VnptFaceMatchResponse {
+  final bool success;
+  final bool isMatch;
+  final double? similarity;
+  final String? result;
+  final String? matchStatus; // MATCH or NOMATCH
+  final String? errorMessage;
+
+  VnptFaceMatchResponse({
+    required this.success,
+    required this.isMatch,
+    this.similarity,
+    this.result,
+    this.matchStatus,
+    this.errorMessage,
+  });
+
+  factory VnptFaceMatchResponse.fromJson(Map<String, dynamic> json) {
+    final object = json['object'];
+    final isSuccess = json['message'] == 'IDG-00000000';
+    
+    if (!isSuccess || object == null) {
+      return VnptFaceMatchResponse(
+        success: false,
+        isMatch: false,
+        errorMessage: json['message'] ?? 'Face matching failed',
+      );
+    }
+
+    final matchStatus = object['msg'] as String?;
+    final isMatch = matchStatus == 'MATCH';
+    final prob = object['prob'];
+    final similarity = prob != null ? (prob is int ? prob.toDouble() : prob as double) / 100.0 : null;
+
+    return VnptFaceMatchResponse(
+      success: true,
+      isMatch: isMatch,
+      similarity: similarity,
+      result: object['result'] as String?,
+      matchStatus: matchStatus,
+      errorMessage: null,
+    );
   }
 }
 

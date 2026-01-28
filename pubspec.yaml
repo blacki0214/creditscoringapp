@@ -30,20 +30,32 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  image_picker: ^1.0.7
-  permission_handler: ^11.3.1
-  file_picker: ^8.0.0
+  
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  shared_preferences: ^2.2.2
-  http: ^1.2.0
+  
+  # State Management
   provider: ^6.1.1
+  
+  # Local Storage
+  shared_preferences: ^2.2.2
+  
+  # HTTP Requests
+  http: ^1.2.0
+  
+  # Image Handling
+  image_picker: ^1.0.7
+  file_picker: ^8.0.0
+  permission_handler: ^11.3.1
+  
+  # Date Formatting
   intl: ^0.19.0
   
-  # Security - Credentials Management
-  flutter_secure_storage: ^9.0.0
+  # Environment Variables & Security
   flutter_dotenv: ^5.1.0
+  flutter_secure_storage: ^9.0.0
+
 
 dev_dependencies:
   flutter_test:

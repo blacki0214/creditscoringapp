@@ -79,25 +79,17 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
     setState(() => imageData = null);
   }
 
-  Future<void> _verifyAndContinue() async {
+  Future<void> _processImage() async {
     if (imageData == null) return;
 
     final loanViewModel = context.read<LoanViewModel>();
     
-    // Call VNPT API to verify back ID
+    // Call VNPT API to verify back ID (OCR only, no navigation)
     final success = await loanViewModel.verifyBackIdWithVnpt(imageData!);
 
     if (!mounted) return;
 
-    if (success) {
-      // Show success and navigate
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const Step1SelfiePage(),
-        ),
-      );
-    } else {
+    if (!success) {
       // Show error dialog
       showDialog(
         context: context,
@@ -127,6 +119,17 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
         ),
       );
     }
+    // If success, results will be displayed automatically via Consumer
+  }
+
+  void _continueToNext() {
+    // Navigate to next step (selfie page)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const Step1SelfiePage(),
+      ),
+    );
   }
 
   @override
@@ -319,7 +322,7 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
                   
                   const SizedBox(height: 60),
                   
-                  // Continue button with loading state
+                  // Process/Continue buttons with loading state
                   if (isVerifying)
                     Column(
                       children: [
@@ -332,7 +335,7 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Verifying ID card back...',
+                          'Đang xử lý mặt sau CMND/CCCD...',
                           style: TextStyle(
                             fontSize: 14,
                             color: Color(0xFF1A1F3F),
@@ -341,7 +344,8 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
                         ),
                       ],
                     )
-                  else
+                  else if (extractedData == null || !extractedData.success)
+                    // Show Process button when image is uploaded but not processed
                     Column(
                       children: [
                         Container(
@@ -354,9 +358,9 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            onPressed: imageData != null ? _verifyAndContinue : null,
+                            onPressed: imageData != null ? _processImage : null,
                             icon: Icon(
-                              Icons.arrow_forward,
+                              Icons.play_arrow,
                               color: imageData != null ? Colors.white : Colors.grey,
                               size: 32,
                             ),
@@ -364,13 +368,44 @@ class _Step1BackIDPageState extends State<Step1BackIDPage> {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'Continue',
+                          'Process',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: imageData != null
                                 ? const Color(0xFF4C40F7)
                                 : Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Show Continue button after successful processing
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: _continueToNext,
+                            icon: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4CAF50),
                           ),
                         ),
                       ],

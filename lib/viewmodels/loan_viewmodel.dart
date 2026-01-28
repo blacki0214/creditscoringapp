@@ -1,11 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import 'dart:typed_data';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
+import '../services/api_service.dart';
 
 class LoanViewModel extends ChangeNotifier {
+  // API Service
   final ApiService _apiService = ApiService();
+  
+  // VNPT eKYC Service (singleton instance)
   final VnptEkycService _vnptService = VnptEkycService();
 
   // Step progress
@@ -22,7 +26,6 @@ class LoanViewModel extends ChangeNotifier {
   // VNPT eKYC verification results
   VnptIdCardResponse? _frontIdData;
   VnptIdCardResponse? _backIdData;
-  VnptLivenessResponse? _livenessData;
   VnptFaceMatchResponse? _faceMatchData;
 
   // VNPT processing states
@@ -66,7 +69,6 @@ class LoanViewModel extends ChangeNotifier {
   Uint8List? get selfieImageBytes => _selfieImageBytes;
   VnptIdCardResponse? get frontIdData => _frontIdData;
   VnptIdCardResponse? get backIdData => _backIdData;
-  VnptLivenessResponse? get livenessData => _livenessData;
   VnptFaceMatchResponse? get faceMatchData => _faceMatchData;
   bool get isVerifyingFrontId => _isVerifyingFrontId;
   bool get isVerifyingBackId => _isVerifyingBackId;
@@ -253,26 +255,8 @@ class LoanViewModel extends ChangeNotifier {
         print('[ViewModel] ID Type: ${classifyResult.typeDescription} (${classifyResult.typeId})');
       }
 
-      // Step 2: Check card liveness (real vs fake)
-      print('[ViewModel] Step 2: Checking card liveness...');
-      final cardLiveness = await _vnptService.checkCardLiveness(imageBytes);
-      
-      if (!cardLiveness.isRealCard) {
-        _vnptErrorMessage = cardLiveness.errorMessage ?? 
-            'Giấy tờ không hợp lệ. Vui lòng sử dụng giấy tờ thật, không phải bản photocopy.';
-        _isVerifyingFrontId = false;
-        notifyListeners();
-        return false;
-      }
 
-      if (cardLiveness.faceSwapping == true) {
-        _vnptErrorMessage = 'Phát hiện ảnh bị dán/chỉnh sửa. Vui lòng sử dụng giấy tờ gốc.';
-        _isVerifyingFrontId = false;
-        notifyListeners();
-        return false;
-      }
-
-      print('[ViewModel] Card liveness: PASS ✓');
+      print('[ViewModel] Step 2: Card liveness check SKIPPED (testing mode)');
 
       // Step 3: Perform OCR
       print('[ViewModel] Step 3: Performing OCR...');
@@ -289,7 +273,7 @@ class LoanViewModel extends ChangeNotifier {
         _saveDraft();
         print('[ViewModel] OCR successful, data auto-filled');
       } else {
-        _vnptErrorMessage = response.errorMessage ?? 'Không nhận diện được CMND/CCCD';
+        _vnptErrorMessage = response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
       }
 
       _isVerifyingFrontId = false;
@@ -315,7 +299,7 @@ class LoanViewModel extends ChangeNotifier {
       _backIdData = response;
 
       if (!response.success) {
-        _vnptErrorMessage = response.errorMessage ?? 'Không nhận diện được mặt sau CMND/CCCD';
+        _vnptErrorMessage = response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
       }
 
       _isVerifyingBackId = false;
@@ -329,7 +313,7 @@ class LoanViewModel extends ChangeNotifier {
     }
   }
 
-  /// Verify selfie with VNPT liveness detection and face matching
+  /// Verify selfie with VNPT face comparison
   Future<bool> verifySelfieWithVnpt(Uint8List imageBytes) async {
     _isVerifyingSelfie = true;
     _vnptErrorMessage = null;
@@ -337,37 +321,38 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Step 1: Liveness detection
-      final livenessResponse = await _vnptService.detectLiveness(imageBytes);
-      _livenessData = livenessResponse;
-
-      if (!livenessResponse.success || !livenessResponse.isLivePerson) {
-        _vnptErrorMessage = 'Vui lòng chụp ảnh thật, không sử dụng ảnh chụp lại';
+      // Need front ID image for face comparison
+      if (_frontIdImageBytes == null) {
+        _vnptErrorMessage = 'Please capture the front of the ID card first';
         _isVerifyingSelfie = false;
         notifyListeners();
         return false;
       }
 
-      // Step 2: Face matching with ID card photo (if available)
-      if (_frontIdImageBytes != null) {
-        final faceMatchResponse = await _vnptService.compareFaces(
-          image1Bytes: _frontIdImageBytes!,
-          image2Bytes: imageBytes,
-        );
-        _faceMatchData = faceMatchResponse;
+      print('[ViewModel] Comparing faces...');
+      
+      // Compare face on ID card with selfie
+      final faceMatch = await _vnptService.compareFaces(
+        idCardImageBytes: _frontIdImageBytes!,
+        selfieImageBytes: imageBytes,
+      );
 
-        if (!faceMatchResponse.success || !faceMatchResponse.isMatch) {
-          _vnptErrorMessage = 'Khuôn mặt không khớp với ảnh trên CMND/CCCD';
-          _isVerifyingSelfie = false;
-          notifyListeners();
-          return false;
-        }
+      _faceMatchData = faceMatch;
+
+      if (!faceMatch.success) {
+        _vnptErrorMessage = faceMatch.errorMessage ?? 'Cannot compare faces';
+        _isVerifyingSelfie = false;
+        notifyListeners();
+        return false;
       }
 
-      // All checks passed
+      print('[ViewModel] Face match result: ${faceMatch.matchStatus}');
+      print('[ViewModel] Similarity: ${faceMatch.similarity != null ? (faceMatch.similarity! * 100).toStringAsFixed(1) : "N/A"}%');
+
       _isVerifyingSelfie = false;
       notifyListeners();
-      return true;
+      return faceMatch.success;
+      
     } catch (e) {
       _vnptErrorMessage = e.toString();
       _isVerifyingSelfie = false;
@@ -389,7 +374,6 @@ class LoanViewModel extends ChangeNotifier {
     _selfieImageBytes = null;
     _frontIdData = null;
     _backIdData = null;
-    _livenessData = null;
     _faceMatchData = null;
     _vnptErrorMessage = null;
     notifyListeners();

@@ -1,16 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/onboarding_viewmodel.dart';
 import 'viewmodels/loan_viewmodel.dart';
 import 'viewmodels/settings_viewmodel.dart';
 import 'services/local_storage_service.dart';
+import 'services/vnpt_ekyc_service.dart';
+import 'services/vnpt_credentials_manager.dart';
 import 'onboarding/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize local storage
   await LocalStorageService.init();
+  
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+  
+  // Initialize VNPT eKYC service with credentials from .env
+  try {
+    await VnptEkycService.initialize();
+  } catch (e) {
+    // If token is expired, clear cache and reload from .env
+    if (e.toString().contains('HẾT HẠN') || e.toString().contains('expired')) {
+      print('[VNPT] Token expired, clearing cache and reloading from .env...');
+      await VnptCredentialsManager.clearCredentials();
+      
+      // Retry initialization (will load from .env this time)
+      await VnptEkycService.initialize();
+    } else {
+      rethrow;
+    }
+  }
+  
   runApp(const VietCreditApp());
 }
 

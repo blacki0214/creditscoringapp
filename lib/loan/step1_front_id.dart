@@ -79,25 +79,17 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
     setState(() => imageData = null);
   }
 
-  Future<void> _verifyAndContinue() async {
+  Future<void> _processImage() async {
     if (imageData == null) return;
 
     final loanViewModel = context.read<LoanViewModel>();
     
-    // Call VNPT API to verify ID
+    // Call VNPT API to verify ID 
     final success = await loanViewModel.verifyFrontIdWithVnpt(imageData!);
 
     if (!mounted) return;
 
-    if (success) {
-      // Show success and navigate
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const Step1BackIDPage(),
-        ),
-      );
-    } else {
+    if (!success) {
       // Show error dialog
       showDialog(
         context: context,
@@ -105,7 +97,7 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
           title: const Text('Authentication failed'),
           content: Text(
             loanViewModel.vnptErrorMessage ?? 
-            'The ID card/cannot be identified. Please take a clearer photo.',
+            'The ID card cannot be identified. Please take a clearer photo.',
           ),
           actions: [
             TextButton(
@@ -127,6 +119,17 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
         ),
       );
     }
+    // If success, results will be displayed automatically via Consumer
+  }
+
+  void _continueToNext() {
+    // Navigate to next step (back ID page)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const Step1BackIDPage(),
+      ),
+    );
   }
 
   @override
@@ -265,7 +268,7 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                                     ),
                                     const SizedBox(width: 8),
                                     const Text(
-                                      'Thông tin đã nhận diện',
+                                      'Information recognized',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -276,19 +279,15 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                                 ),
                                 const SizedBox(height: 12),
                                 if (extractedData.fullName != null)
-                                  _buildInfoRow('Họ tên', extractedData.fullName!),
+                                  _buildInfoRow('Name', extractedData.fullName!),
                                 if (extractedData.idNumber != null)
-                                  _buildInfoRow('Số CMND/CCCD', extractedData.idNumber!),
+                                  _buildInfoRow('ID Number', extractedData.idNumber!),
                                 if (extractedData.dateOfBirth != null)
                                   _buildInfoRow(
-                                    'Ngày sinh',
+                                    'Date of Birth',
                                     '${extractedData.dateOfBirth!.day}/${extractedData.dateOfBirth!.month}/${extractedData.dateOfBirth!.year}',
                                   ),
-                                if (extractedData.confidence != null)
-                                  _buildInfoRow(
-                                    'Độ chính xác',
-                                    '${(extractedData.confidence! * 100).toStringAsFixed(0)}%',
-                                  ),
+
                               ],
                             ),
                           ),
@@ -327,7 +326,7 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                   
                   const SizedBox(height: 60),
                   
-                  // Continue button with loading state
+                  // Process/Continue buttons with loading state
                   if (isVerifying)
                     Column(
                       children: [
@@ -340,7 +339,7 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Đang xác thực CMND/CCCD...',
+                          'Processing ID...',
                           style: TextStyle(
                             fontSize: 14,
                             color: Color(0xFF1A1F3F),
@@ -349,7 +348,8 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                         ),
                       ],
                     )
-                  else
+                  else if (extractedData == null || !extractedData.success)
+                    // Show Process button when image is uploaded but not processed
                     Column(
                       children: [
                         Container(
@@ -362,9 +362,9 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            onPressed: imageData != null ? _verifyAndContinue : null,
+                            onPressed: imageData != null ? _processImage : null,
                             icon: Icon(
-                              Icons.arrow_forward,
+                              Icons.play_arrow,
                               color: imageData != null ? Colors.white : Colors.grey,
                               size: 32,
                             ),
@@ -372,13 +372,44 @@ class _Step1FrontIDPageState extends State<Step1FrontIDPage> {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'Continue',
+                          'Process',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: imageData != null
                                 ? const Color(0xFF4C40F7)
                                 : Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Show Continue button after successful processing
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: _continueToNext,
+                            icon: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4CAF50),
                           ),
                         ),
                       ],

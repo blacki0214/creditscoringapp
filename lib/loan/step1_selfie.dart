@@ -82,26 +82,17 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     }
   }
 
-  Future<void> _verifyAndContinue() async {
+  Future<void> _processImage() async {
     if (imageData == null) return;
 
     final loanViewModel = context.read<LoanViewModel>();
     
-    // Call VNPT API to verify selfie (liveness + face matching)
+    // Call VNPT API to verify selfie (face comparison only, no navigation)
     final success = await loanViewModel.verifySelfieWithVnpt(imageData!);
 
     if (!mounted) return;
 
-    if (success) {
-      // Complete Step 1 and navigate to Step 2
-      loanViewModel.completeStep1();
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const Step2PersonalInfoPage(),
-        ),
-      );
-    } else {
+    if (!success) {
       // Show error dialog
       showDialog(
         context: context,
@@ -131,6 +122,20 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
         ),
       );
     }
+    // If success, results will be displayed automatically via Consumer
+  }
+
+  void _continueToNext() {
+    final loanViewModel = context.read<LoanViewModel>();
+    
+    // Complete Step 1 and navigate to Step 2
+    loanViewModel.completeStep1();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const Step2PersonalInfoPage(),
+      ),
+    );
   }
 
   @override
@@ -138,8 +143,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     return Consumer<LoanViewModel>(
       builder: (context, loanViewModel, child) {
         final isVerifying = loanViewModel.isVerifyingSelfie;
-        final livenessData = loanViewModel.livenessData;
         final faceMatchData = loanViewModel.faceMatchData;
+       
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -229,9 +234,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: (livenessData?.success == true && faceMatchData?.success == true)
-                                  ? Colors.green 
-                                  : Colors.orange,
+                              color: faceMatchData?.isMatch == true
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFF4C40F7),
                               width: 2,
                             ),
                           ),
@@ -245,18 +250,18 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 16),
                         
-                        // Show verification results if available
-                        if (livenessData != null && faceMatchData != null) ...[
+                        // Show face match results if available
+                        if (faceMatchData != null && faceMatchData.success) ...[
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: (livenessData.success && faceMatchData.success)
+                              color: faceMatchData.isMatch
                                   ? const Color(0xFFE8F5E9)
                                   : const Color(0xFFFFF3E0),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: (livenessData.success && faceMatchData.success)
+                                color: faceMatchData.isMatch
                                     ? const Color(0xFF4CAF50)
                                     : const Color(0xFFFF9800),
                                 width: 1,
@@ -268,21 +273,21 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                 Row(
                                   children: [
                                     Icon(
-                                      (livenessData.success && faceMatchData.success)
+                                      faceMatchData.isMatch
                                           ? Icons.check_circle
                                           : Icons.warning,
-                                      color: (livenessData.success && faceMatchData.success)
+                                      color: faceMatchData.isMatch
                                           ? const Color(0xFF4CAF50)
                                           : const Color(0xFFFF9800),
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Verification Results',
+                                      'Kết quả so sánh khuôn mặt',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: (livenessData.success && faceMatchData.success)
+                                        color: faceMatchData.isMatch
                                             ? const Color(0xFF4CAF50)
                                             : const Color(0xFFFF9800),
                                       ),
@@ -291,22 +296,25 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                 ),
                                 const SizedBox(height: 12),
                                 _buildInfoRow(
-                                  'Liveness Check',
-                                  livenessData.isLivePerson ? '✓ Real person' : '✗ Not detected',
-                                ),
-                                if (livenessData.livenessScore != null)
-                                  _buildInfoRow(
-                                    'Liveness Score',
-                                    '${(livenessData.livenessScore! * 100).toStringAsFixed(0)}%',
-                                  ),
-                                _buildInfoRow(
-                                  'Face Match',
-                                  faceMatchData.isMatch ? '✓ Matched' : '✗ Not matched',
+                                  'Trạng thái',
+                                  faceMatchData.isMatch ? '✓ Khớp' : '✗ Không khớp',
                                 ),
                                 if (faceMatchData.similarity != null)
                                   _buildInfoRow(
-                                    'Similarity',
-                                    '${(faceMatchData.similarity! * 100).toStringAsFixed(0)}%',
+                                    'Độ tương đồng',
+                                    '${(faceMatchData.similarity! * 100).toStringAsFixed(1)}%',
+                                  ),
+                                if (faceMatchData.result != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      faceMatchData.result!,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade700,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
                                   ),
                               ],
                             ),
@@ -346,7 +354,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                   
                   const SizedBox(height: 60),
                   
-                  // Continue button with loading state
+                  // Process/Continue buttons with loading state
                   if (isVerifying)
                     Column(
                       children: [
@@ -359,7 +367,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Verifying selfie...\nChecking liveness and face match',
+                          'Đang so sánh khuôn mặt...',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -369,7 +377,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                       ],
                     )
-                  else
+                  else if (faceMatchData == null || !faceMatchData.success)
+                    // Show Process button when image is uploaded but not processed
                     Column(
                       children: [
                         Container(
@@ -382,9 +391,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            onPressed: imageData != null ? _verifyAndContinue : null,
+                            onPressed: imageData != null ? _processImage : null,
                             icon: Icon(
-                              Icons.arrow_forward,
+                              Icons.play_arrow,
                               color: imageData != null ? Colors.white : Colors.grey,
                               size: 32,
                             ),
@@ -392,13 +401,44 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'Continue',
+                          'Process',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: imageData != null
                                 ? const Color(0xFF4C40F7)
                                 : Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Show Continue button after successful processing
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: _continueToNext,
+                            icon: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4CAF50),
                           ),
                         ),
                       ],
