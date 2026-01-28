@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // User avatars
+    match /users/{userId}/avatar.jpg {
+      // Users can read any avatar (for display purposes)
+      allow read: if true;
+      
+      // Users can only write their own avatar
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Validate file is an image and under 5MB
+      allow create, update: if isAuthenticated() && 
+                              request.auth.uid == userId &&
+                              request.resource.size < 5 * 1024 * 1024 &&
+                              request.resource.contentType.matches('image/.*');
+    }
+    
+    // EKYC images (ID cards, selfies)
+    match /ekyc/{userId}/{imageId} {
+      // Users can read their own EKYC images
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Users can write their own EKYC images
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Validate file is an image and under 10MB
+      allow create, update: if isAuthenticated() && 
+                              request.auth.uid == userId &&
+                              request.resource.size < 10 * 1024 * 1024 &&
+                              request.resource.contentType.matches('image/.*');
+    }
+    
+    // Default deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

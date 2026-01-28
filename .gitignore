@@ -53,3 +53,7 @@ vnpt_ekyc/vnpt_ekyc.pdf
 .env
 *.env
 !.env.example
+.env
+lib/firebase_options.dart
+android/app/google-services.json
+lib/config/vnpt_config.dart

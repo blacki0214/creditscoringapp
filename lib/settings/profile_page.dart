@@ -34,6 +34,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsViewModel = context.watch<SettingsViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -97,15 +99,22 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Avatar section
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey.shade200,
-                      child: const Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Color(0xFF4C40F7),
-                      ),
-                    ),
+                    settingsViewModel.avatarUrl != null
+                        ? CircleAvatar(
+                            radius: 60,
+                            backgroundImage: NetworkImage(
+                              settingsViewModel.avatarUrl!,
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey.shade200,
+                            child: const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Color(0xFF4C40F7),
+                            ),
+                          ),
                     if (_isEditing)
                       Positioned(
                         bottom: 0,

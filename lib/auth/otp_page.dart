@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import 'change_password.dart';
 import 'login_page.dart';
 
 class OTPPage extends StatefulWidget {
   final bool isForResetPassword;
+  final String? phoneNumber; // For display
+  final VoidCallback? onVerified; // Callback for phone signup
 
-  const OTPPage({super.key, required this.isForResetPassword});
+  const OTPPage({
+    super.key,
+    this.isForResetPassword = false,
+    this.phoneNumber,
+    this.onVerified,
+  });
 
   @override
   State<OTPPage> createState() => _OTPPageState();
@@ -15,11 +24,11 @@ class _OTPPageState extends State<OTPPage> {
   String otpCode = '';
   
   void _onNumberTap(String number) {
-    if (otpCode.length < 4) {
+    if (otpCode.length < 6) {
       setState(() {
         otpCode += number;
       });
-      if (otpCode.length == 4) {
+      if (otpCode.length == 6) {
         _submitOTP();
       }
     }
@@ -33,13 +42,23 @@ class _OTPPageState extends State<OTPPage> {
     }
   }
   
-  void _submitOTP() {
-    if (widget.isForResetPassword) {
+  Future<void> _submitOTP() async {
+    if (widget.onVerified != null) {
+      // Phone signup flow - verify with ViewModel
+      final viewModel = context.read<AuthViewModel>();
+      final success = await viewModel.verifyOTP(otpCode);
+      
+      if (success && mounted) {
+        widget.onVerified!();
+      }
+    } else if (widget.isForResetPassword) {
+      // Password reset flow
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
       );
     } else {
+      // Old signup flow
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -48,8 +67,17 @@ class _OTPPageState extends State<OTPPage> {
     }
   }
 
+  Future<void> _resendOTP() async {
+    if (widget.onVerified != null) {
+      final viewModel = context.read<AuthViewModel>();
+      await viewModel.resendOTP();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<AuthViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -60,7 +88,7 @@ class _OTPPageState extends State<OTPPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.isForResetPassword ? 'Forgot password' : 'Sign up',
+          widget.isForResetPassword ? 'Forgot password' : 'Verify OTP',
           style: const TextStyle(color: Colors.black),
         ),
       ),
@@ -74,7 +102,7 @@ class _OTPPageState extends State<OTPPage> {
                 children: [
                   const SizedBox(height: 20),
                   const Text(
-                    'Type a code',
+                    'Enter OTP Code',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -83,7 +111,9 @@ class _OTPPageState extends State<OTPPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'We texted you a code to verify\nyour phone number',
+                    widget.phoneNumber != null
+                        ? 'Verification code sent to\n${widget.phoneNumber}'
+                        : 'We texted you a code to verify\nyour phone number',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -92,48 +122,100 @@ class _OTPPageState extends State<OTPPage> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  // OTP Display
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (index) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: otpCode.length > index
-                                ? const Color(0xFF4C40F7)
-                                : Colors.grey.shade300,
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            otpCode.length > index ? otpCode[index] : '',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1F3F),
+                  // OTP Display - 6 digits
+                  SizedBox(
+                    width: double.infinity,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(6, (index) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: 45,
+                          height: 55,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: otpCode.length > index
+                                  ? const Color(0xFF4C40F7)
+                                  : Colors.grey.shade300,
+                              width: 2,
                             ),
                           ),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Resend',
-                      style: TextStyle(
-                        color: Color(0xFF4C40F7),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
+                          child: Center(
+                            child: Text(
+                              otpCode.length > index ? otpCode[index] : '',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1A1F3F),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  // Error message
+                  if (viewModel.errorMessage != null)
+                    SizedBox(
+                      width: double.infinity,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                viewModel.errorMessage!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // Resend button
+                  if (widget.onVerified != null) ...[
+                    if (viewModel.otpResendTime > 0)
+                      Text(
+                        'Resend OTP in ${viewModel.otpResendTime}s',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      )
+                    else
+                      TextButton(
+                        onPressed: viewModel.isLoading ? null : _resendOTP,
+                        child: const Text(
+                          'Resend OTP',
+                          style: TextStyle(
+                            color: Color(0xFF4C40F7),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                  ] else
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'Resend',
+                        style: TextStyle(
+                          color: Color(0xFF4C40F7),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

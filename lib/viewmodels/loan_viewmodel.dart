@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
+import '../services/firebase_loan_service.dart';
+import '../services/firebase_service.dart';
+import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
 import '../services/api_service.dart';
@@ -11,6 +14,8 @@ class LoanViewModel extends ChangeNotifier {
   
   // VNPT eKYC Service (singleton instance)
   final VnptEkycService _vnptService = VnptEkycService();
+  final FirebaseLoanService _loanService = FirebaseLoanService();
+  final FirebaseService _firebase = FirebaseService();
 
   // Step progress
   bool _step1Completed = false;
@@ -52,16 +57,24 @@ class LoanViewModel extends ChangeNotifier {
   bool currentlyDefaulting = false;
 
   // Response Data
-  LoanOfferResponse? _currentOffer;
+  Map<String, dynamic>? _currentOffer;
   String? _errorMessage;
+  List<Map<String, dynamic>> _applications = [];
 
   // Getters
   bool get step1Completed => _step1Completed;
   bool get step2Completed => _step2Completed;
   bool get step3Completed => _step3Completed;
   bool get isProcessing => _isProcessing;
-  LoanOfferResponse? get currentOffer => _currentOffer;
+  Map<String, dynamic>? get currentOffer => _currentOffer;
   String? get errorMessage => _errorMessage;
+  List<Map<String, dynamic>> get applications => _applications;
+
+  // Legacy getter for backward compatibility
+  LoanOfferResponse? get currentOfferLegacy {
+    if (_currentOffer == null) return null;
+    return LoanOfferResponse.fromJson(_currentOffer!);
+  }
 
   // VNPT eKYC getters
   Uint8List? get frontIdImageBytes => _frontIdImageBytes;
@@ -160,11 +173,17 @@ class LoanViewModel extends ChangeNotifier {
   }
 
   Future<bool> submitApplication() async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return false;
+    }
+
     _isProcessing = true;
     _errorMessage = null;
     notifyListeners();
 
-    // Create request object
     // Calculate age from DOB
     int age = 0;
     if (dob != null) {
@@ -189,21 +208,30 @@ class LoanViewModel extends ChangeNotifier {
     );
 
     try {
-      // Call API
       // Artificial delay for UX
-     await Future.delayed(const Duration(seconds: 2));
-     
-      _currentOffer = await _apiService.applyForLoan(request);
+      await Future.delayed(const Duration(seconds: 2));
       
-      // Save to history
-      await LocalStorageService.saveApplicationHistory({
-        'fullName': fullName,
-        'age': age,
-        'loanPurpose': loanPurpose,
-        'approved': _currentOffer?.approved ?? false,
-        'creditScore': _currentOffer?.creditScore ?? 0,
-        'loanAmount': _currentOffer?.loanAmountVnd ?? 0,
-      });
+      // Submit to Firebase (which calls API and stores results)
+      final result = await _loanService.submitLoanApplication(
+        userId: userId,
+        loanRequest: request,
+      );
+      
+      _currentOffer = {
+        'applicationId': result['applicationId'],
+        'offerId': result['offerId'],
+        'approved': (result['loanOffer'] as LoanOfferResponse).approved,
+        'creditScore': (result['loanOffer'] as LoanOfferResponse).creditScore,
+        'loanAmountVnd': (result['loanOffer'] as LoanOfferResponse).loanAmountVnd,
+        'maxAmountVnd': (result['loanOffer'] as LoanOfferResponse).maxAmountVnd,
+        'interestRate': (result['loanOffer'] as LoanOfferResponse).interestRate,
+        'monthlyPaymentVnd': (result['loanOffer'] as LoanOfferResponse).monthlyPaymentVnd,
+        'loanTermMonths': (result['loanOffer'] as LoanOfferResponse).loanTermMonths,
+        'riskLevel': (result['loanOffer'] as LoanOfferResponse).riskLevel,
+        'approvalMessage': (result['loanOffer'] as LoanOfferResponse).approvalMessage,
+        'loanTier': (result['loanOffer'] as LoanOfferResponse).loanTier,
+        'tierReason': (result['loanOffer'] as LoanOfferResponse).tierReason,
+      };
       
       // Clear draft after successful submission
       await LocalStorageService.clearDraft();
@@ -220,17 +248,48 @@ class LoanViewModel extends ChangeNotifier {
       return false;
     }
   }
+
+  // Load user applications from Firebase
+  Future<void> loadApplications() async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) return;
+
+    try {
+      _applications = await _loanService.getUserApplications(userId);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
+  // Accept loan offer
+  Future<bool> acceptOffer(String offerId) async {
+    try {
+      await _loanService.acceptLoanOffer(offerId);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
   
   void resetError() {
     _errorMessage = null;
     notifyListeners();
   }
 
+  void clearCurrentOffer() {
+    _currentOffer = null;
+    notifyListeners();
+  }
+
   // Demo mode: Call API without storage/state management (sandbox)
   Future<LoanOfferResponse?> getDemoCalculation(SimpleLoanRequest request) async {
     try {
-      // Call same API, but don't modify any state
-      final response = await _apiService.applyForLoan(request);
+      final apiService = ApiService();
+      final response = await apiService.applyForLoan(request);
       return response;
     } catch (e) {
       return null;
@@ -384,4 +443,5 @@ class LoanViewModel extends ChangeNotifier {
     _vnptService.dispose();
     super.dispose();
   }
+}
 }

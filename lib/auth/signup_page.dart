@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
 import 'login_page.dart';
+import 'email_verification_page.dart';
+import '../home/home_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -13,15 +15,15 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  final _phoneController = TextEditingController();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-
+  
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter a password';
+      return 'Please enter your password';
     }
     if (value.length < 8) {
       return 'Password must be at least 8 characters';
@@ -35,7 +37,7 @@ class _SignupPageState extends State<SignupPage> {
     return null;
   }
 
-  /// Validate email format: must have text@text pattern
+  /// Validate email format: must have text@text pattern (required)
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
@@ -46,6 +48,90 @@ class _SignupPageState extends State<SignupPage> {
       return 'Please enter a valid email address';
     }
     return null;
+  }
+
+  /// Validate phone number: 10 digits starting with 0 (optional)
+  String? _validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // Phone is optional
+    }
+    // Remove any spaces or special characters
+    final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    if (cleaned.length != 10) {
+      return 'Phone number must be 10 digits';
+    }
+    if (!cleaned.startsWith('0')) {
+      return 'Phone number must start with 0';
+    }
+    return null;
+  }
+
+  Future<void> _continueToNextStep() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final viewModel = context.read<AuthViewModel>();
+    
+    if (viewModel.signupStep == 0) {
+      // Step 0: Email + Password entered, move to phone (optional)
+      viewModel.setSignupStep(1);
+    } else if (viewModel.signupStep == 1) {
+      // Step 1: Phone entered (or skipped), move to avatar
+      // If phone provided, send OTP
+      if (_phoneController.text.trim().isNotEmpty) {
+        final phoneNumber = _phoneController.text.trim();
+        final cleaned = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+        final internationalPhone = '+84${cleaned.substring(1)}';
+        
+        final success = await viewModel.sendPhoneOTP(internationalPhone);
+        if (success && mounted) {
+          // Navigate to OTP page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OTPPage(
+                phoneNumber: phoneNumber,
+                onVerified: () {
+                  context.read<AuthViewModel>().setSignupStep(2);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        // Skip phone, go to avatar
+        viewModel.setSignupStep(2);
+      }
+    }
+  }
+
+  Future<void> _completeSignup() async {
+    final viewModel = context.read<AuthViewModel>();
+    
+    // Sign up with email and password
+    final success = await viewModel.signUpWithEmail(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      fullName: _nameController.text.trim(),
+      phoneNumber: _phoneController.text.trim().isNotEmpty 
+          ? '+84${_phoneController.text.trim().replaceAll(RegExp(r'[^0-9]'), '').substring(1)}'
+          : '', // Empty if not provided
+    );
+
+    if (success && mounted) {
+      // Send email verification
+      await viewModel.sendEmailVerification();
+      
+      // Navigate to email verification page
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const EmailVerificationPage()),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -60,11 +146,11 @@ class _SignupPageState extends State<SignupPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-             if (viewModel.signupStep > 0) {
-              viewModel.setSignupStep(0);
-             } else {
-               Navigator.pop(context);
-             }
+            if (viewModel.signupStep > 0) {
+              viewModel.setSignupStep(viewModel.signupStep - 1);
+            } else {
+              Navigator.pop(context);
+            }
           },
         ),
       ),
@@ -83,12 +169,18 @@ class _SignupPageState extends State<SignupPage> {
                       _buildStepIndicator(0, true),
                       _buildStepLine(viewModel.signupStep >= 1),
                       _buildStepIndicator(1, viewModel.signupStep >= 1),
+                      _buildStepLine(viewModel.signupStep >= 2),
+                      _buildStepIndicator(2, viewModel.signupStep >= 2),
                     ],
                   ),
                   const SizedBox(height: 32),
                   // Title
                   Text(
-                    viewModel.signupStep == 0 ? 'Sign up #1' : 'Sign up #2',
+                    viewModel.signupStep == 0
+                        ? 'Create Account'
+                        : viewModel.signupStep == 1
+                            ? 'Phone Number (Optional)'
+                            : 'Profile Picture',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -98,21 +190,24 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 8),
                   Text(
                     viewModel.signupStep == 0
-                        ? 'Create your account'
-                        : 'Almost there!',
+                        ? 'Enter your details to get started'
+                        : viewModel.signupStep == 1
+                            ? 'Add phone for verification (optional)'
+                            : 'Add profile picture (optional)',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Step 1 fields
+                  
+                  // Step 0: Name, Email, Password
                   if (viewModel.signupStep == 0) ...[
                     TextFormField(
                       controller: _nameController,
                       maxLength: 50,
                       decoration: InputDecoration(
-                        labelText: 'Name',
+                        labelText: 'Full Name',
                         hintText: 'Enter your full name',
                         prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(
@@ -129,7 +224,7 @@ class _SignupPageState extends State<SignupPage> {
                             width: 2,
                           ),
                         ),
-                        counterText: '', // Hide character counter
+                        counterText: '',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -160,42 +255,9 @@ class _SignupPageState extends State<SignupPage> {
                             width: 2,
                           ),
                         ),
-                        counterText: '', // Hide character counter
+                        counterText: '',
                       ),
                       validator: _validateEmail,
-                    ),
-                  ],
-                  // Step 2 fields
-                  if (viewModel.signupStep == 1) ...[
-                    TextFormField(
-                      controller: _phoneController,
-                      maxLength: 20,
-                      decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        hintText: 'Enter your phone number',
-                        prefixIcon: const Icon(Icons.phone_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF4C40F7),
-                            width: 2,
-                          ),
-                        ),
-                        counterText: '', // Hide character counter
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your phone number';
-                        }
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
@@ -204,7 +266,7 @@ class _SignupPageState extends State<SignupPage> {
                       obscureText: viewModel.obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        hintText: 'Create a password',
+                        hintText: 'Enter password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -213,7 +275,7 @@ class _SignupPageState extends State<SignupPage> {
                                 : Icons.visibility_off_outlined,
                           ),
                           onPressed: () {
-                             context.read<AuthViewModel>().togglePasswordVisibility();
+                            context.read<AuthViewModel>().togglePasswordVisibility();
                           },
                         ),
                         border: OutlineInputBorder(
@@ -230,95 +292,244 @@ class _SignupPageState extends State<SignupPage> {
                             width: 2,
                           ),
                         ),
-                        helperText: 'At least 8 characters, 1 uppercase letter, 1 number',
-                        helperStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                        counterText: '', // Hide character counter
+                        counterText: '',
                       ),
                       validator: _validatePassword,
                     ),
-                  ],
-                  const SizedBox(height: 32),
-                  // Continue/Sign up button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: viewModel.isLoading 
-                      ? null 
-                      : () async {
-                        if (_formKey.currentState!.validate()) {
-                          if (viewModel.signupStep == 0) {
-                             viewModel.setSignupStep(1);
-                          } else {
-                            // Perform signup
-                            final success = await context.read<AuthViewModel>().signup(
-                              _nameController.text,
-                              _emailController.text,
-                              _phoneController.text,
-                              _passwordController.text,
-                            );
-
-                            if (success && context.mounted) {
-                                Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const OTPPage(
-                                    isForResetPassword: false,
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: viewModel.isLoading ? null : _continueToNextStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C40F7),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                      ),
-                      child: viewModel.isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                        viewModel.signupStep == 0 ? 'Continue' : 'Sign up',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                        child: const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Sign in link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account? ',
-                        style: TextStyle(color: Colors.grey.shade700),
+                  ],
+
+                  // Step 1: Phone Number (Optional)
+                  if (viewModel.signupStep == 1) ...[
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number (Optional)',
+                        hintText: 'Enter your phone number',
+                        prefixIcon: const Icon(Icons.phone_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF4C40F7),
+                            width: 2,
+                          ),
+                        ),
+                        counterText: '',
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // Reset view model state before navigating
-                          context.read<AuthViewModel>().reset();
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LoginPage(),
-                            ),
-                          );
-                        },
+                      validator: _validatePhone,
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: viewModel.isLoading ? null : _continueToNextStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C40F7),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: viewModel.isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        // Skip phone, go to avatar
+                        context.read<AuthViewModel>().setSignupStep(2);
+                      },
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: Color(0xFF4C40F7),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Step 2: Avatar Upload
+                  if (viewModel.signupStep == 2) ...[
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => context.read<AuthViewModel>().pickAvatar(),
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey.shade200,
+                          backgroundImage: viewModel.selectedAvatar != null
+                              ? FileImage(viewModel.selectedAvatar!)
+                              : null,
+                          child: viewModel.selectedAvatar == null
+                              ? Icon(
+                                  Icons.camera_alt,
+                                  size: 40,
+                                  color: Colors.grey.shade600,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => context.read<AuthViewModel>().pickAvatar(),
                         child: const Text(
-                          'Sign in',
+                          'Choose from gallery',
                           style: TextStyle(
                             color: Color(0xFF4C40F7),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    if (viewModel.selectedAvatar != null)
+                      Center(
+                        child: TextButton(
+                          onPressed: () => context.read<AuthViewModel>().clearAvatar(),
+                          child: Text(
+                            'Remove photo',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: viewModel.isLoading ? null : _completeSignup,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C40F7),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: viewModel.isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'Complete',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: _completeSignup,
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: Color(0xFF4C40F7),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 32),
+                  // Sign in link
+                  if (viewModel.signupStep == 0)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Already have an account? ',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.read<AuthViewModel>().reset();
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LoginPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Sign in',
+                            style: TextStyle(
+                              color: Color(0xFF4C40F7),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  
+                  // Error message
+                  if (viewModel.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red.shade700),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                viewModel.errorMessage!,
+                                style: TextStyle(color: Colors.red.shade700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -330,11 +541,11 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget _buildStepIndicator(int step, bool isActive) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF4C40F7) : Colors.grey.shade300,
         shape: BoxShape.circle,
+        color: isActive ? const Color(0xFF4C40F7) : Colors.grey.shade300,
       ),
       child: Center(
         child: Text(
@@ -352,7 +563,6 @@ class _SignupPageState extends State<SignupPage> {
     return Expanded(
       child: Container(
         height: 2,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
         color: isActive ? const Color(0xFF4C40F7) : Colors.grey.shade300,
       ),
     );
@@ -360,9 +570,9 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   void dispose() {
+    _phoneController.dispose();
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
