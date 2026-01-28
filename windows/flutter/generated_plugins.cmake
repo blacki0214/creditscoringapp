@@ -5,10 +5,10 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   cloud_firestore
   file_selector_windows
-  flutter_secure_storage_windows
   firebase_auth
   firebase_core
   firebase_storage
+  flutter_secure_storage_windows
   permission_handler_windows
 )
 

@@ -444,4 +444,4 @@ class LoanViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
-}
+
