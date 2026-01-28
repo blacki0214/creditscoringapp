@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'signup_page.dart';
 import 'forgot_password.dart';
+import 'phone_login_page.dart';
 import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,6 +18,18 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  /// Validate email format
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -30,19 +43,6 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (!value.contains(RegExp(r'[0-9]'))) {
       return 'Password must contain at least 1 number';
-    }
-    return null;
-  }
-
-  /// Validate email format: must have text@text pattern
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    // Check for basic email pattern: text@text.text
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
     }
     return null;
   }
@@ -63,16 +63,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   const SizedBox(height: 40),
-                  // Logo
-                  Center(
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      height: 80,
-                      width: 80,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   // Title
                   const Text(
                     'Sign in',
@@ -94,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                   // Email field
                   TextFormField(
                     controller: _emailController,
-                    maxLength: 50,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
@@ -113,7 +104,6 @@ class _LoginPageState extends State<LoginPage> {
                           width: 2,
                         ),
                       ),
-                      counterText: '', // Hide character counter
                     ),
                     validator: _validateEmail,
                   ),
@@ -134,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                               : Icons.visibility_off_outlined,
                         ),
                         onPressed: () {
-                           context.read<AuthViewModel>().togglePasswordVisibility();
+                          context.read<AuthViewModel>().togglePasswordVisibility();
                         },
                       ),
                       border: OutlineInputBorder(
@@ -187,16 +177,16 @@ class _LoginPageState extends State<LoginPage> {
                         ? null 
                         : () async {
                         if (_formKey.currentState!.validate()) {
-                          final success = await context.read<AuthViewModel>().login(
-                            _emailController.text,
-                            _passwordController.text,
+                          // Sign in with email and password
+                          final success = await viewModel.signInWithEmail(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text.trim(),
                           );
-                          if (success && context.mounted) {
-                             Navigator.pushReplacement(
+                          
+                          if (success && mounted) {
+                            Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const HomePage(),
-                              ),
+                              MaterialPageRoute(builder: (_) => const HomePage()),
                             );
                           }
                         }
@@ -219,7 +209,80 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                   const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+                  // Sign in with Phone (OTP) button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      onPressed: viewModel.isLoading
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const PhoneLoginPage(),
+                                ),
+                              );
+                            },
+                      icon: const Icon(Icons.phone_outlined, color: Color(0xFF4C40F7)),
+                      label: const Text(
+                        'Sign in with Phone',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4C40F7),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Continue with Google button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      onPressed: viewModel.isLoading
+                          ? null
+                          : () async {
+                              final success = await context.read<AuthViewModel>().signInWithGoogle();
+                              if (success && context.mounted) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const HomePage(),
+                                  ),
+                                );
+                              }
+                            },
+                      icon: Image.asset(
+                        'assets/images/gg_logo.png',
+                        height: 24,
+                        width: 24,
+                      ),
+                      label: const Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1F3F),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300, width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   // Sign up link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -230,7 +293,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       TextButton(
                         onPressed: () {
-                           // Reset view model state before navigating
+                          // Reset view model state before navigating
                           context.read<AuthViewModel>().reset();
                           Navigator.push(
                             context,
@@ -249,6 +312,31 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
+                  // Show error message if any
+                  if (viewModel.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red.shade700),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                viewModel.errorMessage!,
+                                style: TextStyle(color: Colors.red.shade700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

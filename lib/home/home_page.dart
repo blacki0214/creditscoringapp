@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
@@ -12,8 +13,41 @@ import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
 import '../auth/login_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data when user comes back to this page
+    if (_isInitialized) {
+      _loadUserData();
+    }
+    _isInitialized = true;
+  }
+
+  void _loadUserData() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null && mounted) {
+        print('HomePage: Loading user data for $userId');
+        context.read<HomeViewModel>().loadAllUserData(userId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +70,14 @@ class HomePage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       backgroundColor: Colors.white24,
-                      child: Icon(Icons.person, color: Colors.white),
+                      backgroundImage: viewModel.userAvatar != null
+                          ? NetworkImage(viewModel.userAvatar!)
+                          : null,
+                      child: viewModel.userAvatar == null
+                          ? const Icon(Icons.person, color: Colors.white)
+                          : null,
                     ),
                     itemBuilder: (context) => [
                       PopupMenuItem(
@@ -128,11 +167,11 @@ class HomePage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Column(
+                  Column(
                     children: [
                       Text(
-                        'Nguyen Van A',
-                        style: TextStyle(
+                        viewModel.userName ?? 'User',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -374,9 +413,9 @@ class HomePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Greeting
-                        const Text(
-                          'Hello, Nguyen Van A',
-                          style: TextStyle(
+                        Text(
+                          'Hello, ${viewModel.userName ?? "User"}',
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1A1F3F),
@@ -407,105 +446,179 @@ class HomePage extends StatelessWidget {
                         // Content based on selected period
                         if (viewModel.selectedPeriod == 'Current year') ...[
                           // Credit score gauge
-                          Center(
-                            child: SizedBox(
-                              width: 250,
-                              height: 200,
-                              child: CustomPaint(
-                                painter: CreditScoreGaugePainter(score: 620),
-                                child: const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: 60),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          '620',
-                                          style: TextStyle(
-                                            fontSize: 48,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1F3F),
+                          if (viewModel.creditScore != null) ...[
+                            Center(
+                              child: SizedBox(
+                                width: 250,
+                                height: 200,
+                                child: CustomPaint(
+                                  painter: CreditScoreGaugePainter(
+                                    score: viewModel.creditScore!,
+                                    hasData: true,
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 60),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${viewModel.creditScore}',
+                                            style: const TextStyle(
+                                              fontSize: 48,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF1A1F3F),
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          'Your credit score',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.black87,
+                                          const Text(
+                                            'Your credit score',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black87,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                          ] else ...[
+                            // No credit score state
+                            Center(
+                              child: SizedBox(
+                                width: 250,
+                                height: 200,
+                                child: CustomPaint(
+                                  painter: CreditScoreGaugePainter(
+                                    score: 0,
+                                    hasData: false,
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 60),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.credit_score_outlined,
+                                            size: 48,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'No data yet',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'credit score',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           // Score info
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
-                                children: [
-                                  Text(
-                                    'starting score',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
+                          if (viewModel.creditScore != null) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Column(
+                                  children: [
+                                    Text(
+                                      'starting score',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    '600',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1A1F3F),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${viewModel.startingScore ?? viewModel.creditScore}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1A1F3F),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  Text(
-                                    'change to date',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    Text(
+                                      'change to date',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    '20',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1A1F3F),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${viewModel.scoreChange >= 0 ? "+" : ""}${viewModel.scoreChange}',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: viewModel.scoreChange >= 0 
+                                            ? const Color(0xFF4CAF50)
+                                            : const Color(0xFFEF5350),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           // Update button
                           Center(
                             child: ElevatedButton(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Updating your credit score...',
-                                    ),
-                                    backgroundColor: Color(0xFF4C40F7),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
+                              onPressed: () async {
+                                final userId = FirebaseAuth.instance.currentUser?.uid;
+                                if (userId != null) {
+                                  if (viewModel.creditScore != null) {
+                                    // Refresh credit score
+                                    await viewModel.refreshCreditScore(userId);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Credit score updated!'),
+                                          backgroundColor: Color(0xFF4CAF50),
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    // Navigate to loan application
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const LoanApplicationPage(),
+                                      ),
+                                    );
+                                  }
+                                }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE8F5E9),
-                                foregroundColor: const Color(0xFF4CAF50),
+                                backgroundColor: viewModel.creditScore != null
+                                    ? const Color(0xFFE8F5E9)
+                                    : const Color(0xFF4C40F7),
+                                foregroundColor: viewModel.creditScore != null
+                                    ? const Color(0xFF4CAF50)
+                                    : Colors.white,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 32,
@@ -515,9 +628,11 @@ class HomePage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              child: const Text(
-                                'Update your credit score',
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                              child: Text(
+                                viewModel.creditScore != null
+                                    ? 'Update your credit score'
+                                    : 'Apply for loan now',
+                                style: const TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -1176,8 +1291,9 @@ class HomePage extends StatelessWidget {
 
 class CreditScoreGaugePainter extends CustomPainter {
   final int score;
+  final bool hasData;
 
-  CreditScoreGaugePainter({required this.score});
+  CreditScoreGaugePainter({required this.score, this.hasData = true});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1200,59 +1316,76 @@ class CreditScoreGaugePainter extends CustomPainter {
       backgroundPaint,
     );
 
-    // Color segments
-    final segments = [
-      {'color': const Color(0xFFFF5252), 'start': 0.0, 'sweep': 0.25},
-      {'color': const Color(0xFFFFA726), 'start': 0.25, 'sweep': 0.25},
-      {'color': const Color(0xFFFFEB3B), 'start': 0.5, 'sweep': 0.25},
-      {'color': const Color(0xFF4CAF50), 'start': 0.75, 'sweep': 0.25},
-    ];
+    if (hasData) {
+      // Color segments for score ranges
+      final segments = [
+        {'color': const Color(0xFFFF5252), 'start': 0.0, 'sweep': 0.25}, // Poor
+        {'color': const Color(0xFFFFA726), 'start': 0.25, 'sweep': 0.25}, // Fair
+        {'color': const Color(0xFFFFEB3B), 'start': 0.5, 'sweep': 0.25}, // Good
+        {'color': const Color(0xFF4CAF50), 'start': 0.75, 'sweep': 0.25}, // Excellent
+      ];
 
-    for (var segment in segments) {
-      final paint = Paint()
-        ..color = segment['color'] as Color
+      for (var segment in segments) {
+        final paint = Paint()
+          ..color = segment['color'] as Color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
+
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: radius),
+          math.pi + (math.pi * (segment['start'] as double)),
+          math.pi * (segment['sweep'] as double),
+          false,
+          paint,
+        );
+      }
+
+      // Indicator needle
+      final scorePercentage = ((score - 300) / (850 - 300)).clamp(0.0, 1.0);
+      final angle = math.pi + (math.pi * scorePercentage);
+
+      final needlePaint = Paint()
+        ..color = const Color(0xFF1A1F3F)
+        ..style = PaintingStyle.fill;
+
+      final needleLength = radius - 10;
+      final needleEnd = Offset(
+        center.dx + needleLength * math.cos(angle),
+        center.dy + needleLength * math.sin(angle),
+      );
+
+      // Draw needle circle
+      canvas.drawCircle(center, 8, needlePaint);
+
+      // Draw needle line
+      final needleLinePaint = Paint()
+        ..color = const Color(0xFF1A1F3F)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawLine(center, needleEnd, needleLinePaint);
+    } else {
+      // Draw gray arc when no data
+      final grayPaint = Paint()
+        ..color = Colors.grey.shade300
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
-        math.pi + (math.pi * (segment['start'] as double)),
-        math.pi * (segment['sweep'] as double),
+        math.pi,
+        math.pi,
         false,
-        paint,
+        grayPaint,
       );
     }
-
-    // Indicator needle
-    final scorePercentage = ((score - 300) / (850 - 300)).clamp(0.0, 1.0);
-    final angle = math.pi + (math.pi * scorePercentage);
-
-    final needlePaint = Paint()
-      ..color = const Color(0xFF1A1F3F)
-      ..style = PaintingStyle.fill;
-
-    final needleLength = radius - 10;
-    final needleEnd = Offset(
-      center.dx + needleLength * math.cos(angle),
-      center.dy + needleLength * math.sin(angle),
-    );
-
-    // Draw needle circle
-    canvas.drawCircle(center, 8, needlePaint);
-
-    // Draw needle line
-    final needleLinePaint = Paint()
-      ..color = const Color(0xFF1A1F3F)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(center, needleEnd, needleLinePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 // Widget to build credit score tips section

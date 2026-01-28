@@ -70,7 +70,7 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
     // Parse inputs
     final totalPrice = _parseAmount(_totalPriceController.text);
     final downPayment = _parseAmount(_downPaymentController.text);
-    final calculatedLoanAmount = (totalPrice - downPayment).clamp(0, double.infinity) as double;
+    final calculatedLoanAmount = (totalPrice - downPayment).clamp(0.0, double.infinity);
     
     // Loan Limit comes from the scoring API (based on income/credit score)
     final loanLimit = offer['maxAmountVnd'] as num;

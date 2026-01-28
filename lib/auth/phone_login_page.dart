@@ -1,68 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import 'otp_page.dart';
+import '../home/home_page.dart';
 
-class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+class PhoneLoginPage extends StatefulWidget {
+  const PhoneLoginPage({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  State<PhoneLoginPage> createState() => _PhoneLoginPageState();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+class _PhoneLoginPageState extends State<PhoneLoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
 
-  /// Validate email format: must have text@text pattern
-  String? _validateEmail(String? value) {
+  /// Validate phone number: 10 digits starting with 0
+  String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return 'Please enter your phone number';
     }
-    // Check for basic email pattern: text@text.text
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
+    final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    if (cleaned.length != 10) {
+      return 'Phone number must be 10 digits';
+    }
+    if (!cleaned.startsWith('0')) {
+      return 'Phone number must start with 0';
     }
     return null;
   }
 
-  Future<void> _sendResetEmail() async {
+  Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     final viewModel = context.read<AuthViewModel>();
-    final success = await viewModel.sendPasswordResetEmail(_emailController.text.trim());
+    viewModel.clearError();
+    
+    // Convert Vietnamese phone to international format
+    final phoneNumber = _phoneController.text.trim();
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+    final internationalPhone = '+84${cleaned.substring(1)}';
+    
+    final success = await viewModel.sendPhoneOTP(internationalPhone);
 
     if (success && mounted) {
-      // Show success dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Email Sent!'),
-          content: const Text(
-            'We\'ve sent a password reset link to your email. Please check your inbox and follow the instructions to reset your password.',
+      // Navigate to OTP page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPPage(
+            phoneNumber: phoneNumber,
+            onVerified: () {
+              // OTP verified, user is logged in
+              // Navigate to home page and remove all previous routes
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const HomePage()),
+                (route) => false,
+              );
+            },
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to login
-              },
-              child: const Text(
-                'OK',
-                style: TextStyle(
-                  color: Color(0xFF4C40F7),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
   }
 
   @override
@@ -78,10 +87,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Forgot password',
-          style: TextStyle(color: Colors.black),
-        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -92,52 +97,34 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-                  // Illustration
-                  Center(
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4C40F7).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.lock_reset,
-                        size: 100,
-                        color: Color(0xFF4C40F7),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 40),
                   // Title
                   const Text(
-                    'Reset Password',
+                    'Sign in with Phone',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
-                    'Enter your email address and we\'ll send you a link to reset your password.',
+                    'Enter your phone number to receive OTP',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
-                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  // Email field
+                  const SizedBox(height: 40),
+                  // Phone field
                   TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    maxLength: 50,
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    maxLength: 10,
                     decoration: InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                      labelText: 'Phone Number',
+                      hintText: 'Enter your phone number',
+                      prefixIcon: const Icon(Icons.phone_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -152,17 +139,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           width: 2,
                         ),
                       ),
-                      counterText: '', // Hide character counter
+                      counterText: '',
                     ),
-                    validator: _validateEmail,
+                    validator: _validatePhone,
                   ),
                   const SizedBox(height: 32),
-                  // Send reset link button
+                  // Send OTP button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : _sendResetEmail,
+                      onPressed: viewModel.isLoading ? null : _sendOTP,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4C40F7),
                         shape: RoundedRectangleBorder(
@@ -172,7 +159,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       child: viewModel.isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              'Send Reset Link',
+                              'Send OTP',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -214,11 +201,5 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
   }
 }

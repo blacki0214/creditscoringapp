@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/login_page.dart';
 import '../viewmodels/settings_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
@@ -10,8 +11,24 @@ import 'notifications_page.dart';
 import 'security_page.dart';
 import 'privacy_policy_page.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Load user profile when page initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<SettingsViewModel>().loadUserProfile();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +72,22 @@ class SettingsPage extends StatelessWidget {
                           CircleAvatar(
                             radius: 35,
                             backgroundColor: Colors.white,
-                            child: CircleAvatar(
-                              radius: 32,
-                              backgroundColor: Colors.grey.shade200,
-                              child: const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Color(0xFF4C40F7),
-                              ),
-                            ),
+                            child: settingsViewModel.avatarUrl != null
+                                ? CircleAvatar(
+                                    radius: 32,
+                                    backgroundImage: NetworkImage(
+                                      settingsViewModel.avatarUrl!,
+                                    ),
+                                  )
+                                : CircleAvatar(
+                                    radius: 32,
+                                    backgroundColor: Colors.grey.shade200,
+                                    child: const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Color(0xFF4C40F7),
+                                    ),
+                                  ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(

@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_service.dart';
 
 class FirebaseAuthService {
   final FirebaseService _firebase = FirebaseService();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // Sign up with email and password
   Future<UserCredential> signUpWithEmail({
@@ -11,6 +13,7 @@ class FirebaseAuthService {
     required String password,
     required String fullName,
     required String phoneNumber,
+    String? avatarUrl,
   }) async {
     try {
       // Create user account
@@ -20,15 +23,23 @@ class FirebaseAuthService {
       );
 
       // Create user document in Firestore
-      await _firebase.usersCollection.doc(credential.user!.uid).set({
+      final userData = {
         'uid': credential.user!.uid,
         'email': email,
         'fullName': fullName,
         'phoneNumber': phoneNumber,
+        'authMethod': 'email',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
         'profileComplete': false,
-      });
+      };
+
+      // Add avatarUrl if provided
+      if (avatarUrl != null) {
+        userData['avatarUrl'] = avatarUrl;
+      }
+
+      await _firebase.usersCollection.doc(credential.user!.uid).set(userData);
 
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -49,6 +60,33 @@ class FirebaseAuthService {
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
+  }
+
+  // Send email verification
+  Future<void> sendEmailVerification() async {
+    try {
+      final user = _firebase.auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  // Send password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebase.auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  // Check if email is verified
+  Future<bool> isEmailVerified() async {
+    await _firebase.auth.currentUser?.reload();
+    return _firebase.auth.currentUser?.emailVerified ?? false;
   }
 
   // Sign in with phone number (OTP)
@@ -93,39 +131,170 @@ class FirebaseAuthService {
     await _firebase.auth.signOut();
   }
 
-  // Send password reset email
-  Future<void> sendPasswordResetEmail(String email) async {
+
+  // Get current user stream
+  Stream<User?> get authStateChanges => _firebase.auth.authStateChanges();
+
+  // Get current user
+  User? get currentUser => _firebase.auth.currentUser;
+
+  // === PHONE AUTHENTICATION ===
+  
+  // Send OTP to phone number
+  Future<String> sendPhoneOTP({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(String errorMessage) onError,
+  }) async {
     try {
-      await _firebase.auth.sendPasswordResetEmail(email: email);
+      String verificationIdResult = '';
+      
+      await _firebase.auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification (Android only)
+          await _firebase.auth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          onError(_handleAuthException(e));
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          verificationIdResult = verificationId;
+          onCodeSent(verificationId);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          verificationIdResult = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
+      );
+      
+      return verificationIdResult;
+    } catch (e) {
+      throw Exception('Failed to send OTP: $e');
+    }
+  }
+
+  // Verify OTP and sign in
+  Future<UserCredential> verifyPhoneOTP({
+    required String verificationId,
+    required String smsCode,
+    String? fullName,
+  }) async {
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
+      );
+
+      final userCredential = await _firebase.auth.signInWithCredential(credential);
+      
+      // Create/update user document if this is a new user
+      if (userCredential.additionalUserInfo?.isNewUser == true) {
+        final userData = {
+          'uid': userCredential.user!.uid,
+          'phoneNumber': userCredential.user!.phoneNumber,
+          'authMethod': 'phone',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'profileComplete': false,
+        };
+        
+        if (fullName != null) {
+          userData['fullName'] = fullName;
+        }
+        
+        await _firebase.usersCollection
+            .doc(userCredential.user!.uid)
+            .set(userData);
+      }
+
+      return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
 
-  // Get current user stream
-  Stream<User?> get authStateChanges => _firebase.auth.authStateChanges();
+  // === GOOGLE SIGN-IN ===
+  
+  // Sign in with Google
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      // Trigger the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        // User canceled the sign-in
+        return null;
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final userCredential = await _firebase.auth.signInWithCredential(credential);
+      
+      // Create/update user document if this is a new user
+      if (userCredential.additionalUserInfo?.isNewUser == true) {
+        final userData = {
+          'uid': userCredential.user!.uid,
+          'email': userCredential.user!.email,
+          'fullName': userCredential.user!.displayName ?? 'User',
+          'phoneNumber': userCredential.user!.phoneNumber ?? '',
+          'avatarUrl': userCredential.user!.photoURL,
+          'authMethod': 'google',
+          'googleId': googleUser.id,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'profileComplete': true, // Google users have complete profile
+        };
+        
+        await _firebase.usersCollection
+            .doc(userCredential.user!.uid)
+            .set(userData);
+      }
+
+      return userCredential;
+    } catch (e) {
+      throw Exception('Google Sign-In failed: $e');
+    }
+  }
+
+  // Sign out from Google
+  Future<void> signOutGoogle() async {
+    await _googleSignIn.signOut();
+  }
 
   // Handle auth exceptions
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'weak-password':
-        return 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.';
+        return 'Password is too weak. Please choose a stronger password.';
       case 'email-already-in-use':
-        return 'Email đã được sử dụng. Vui lòng đăng nhập hoặc sử dụng email khác.';
+        return 'Email is already in use. Please login or use a different email.';
       case 'user-not-found':
-        return 'Không tìm thấy tài khoản. Vui lòng đăng ký.';
+        return 'Account not found. Please sign up.';
       case 'wrong-password':
-        return 'Mật khẩu không đúng. Vui lòng thử lại.';
+        return 'Incorrect password. Please try again.';
       case 'invalid-email':
-        return 'Email không hợp lệ.';
+        return 'Invalid email address.';
       case 'user-disabled':
-        return 'Tài khoản đã bị vô hiệu hóa.';
+        return 'Account has been disabled.';
       case 'invalid-verification-code':
-        return 'Mã OTP không đúng. Vui lòng thử lại.';
+        return 'Invalid OTP code. Please try again.';
       case 'invalid-verification-id':
-        return 'Phiên xác thực không hợp lệ. Vui lòng yêu cầu mã mới.';
+        return 'Invalid verification session. Please request a new code.';
+      case 'invalid-phone-number':
+        return 'Invalid phone number.';
+      case 'too-many-requests':
+        return 'Too many requests. Please try again later.';
       default:
-        return 'Đã xảy ra lỗi: ${e.message}';
+        return 'An error occurred: ${e.message}';
     }
   }
 }

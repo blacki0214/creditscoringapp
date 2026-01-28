@@ -31,6 +31,7 @@ class SettingsViewModel extends ChangeNotifier {
   String get phone => _userProfile?['phoneNumber'] ?? '+84 0398882xxx';
   String get address => _userProfile?['address'] ?? '123 Hai Trieu Minh City';
   String get idNumber => _userProfile?['nationalId'] ?? '079xxxxxxxx';
+  String? get avatarUrl => _userProfile?['avatarUrl'] as String?;
   String get dob {
     if (_userProfile?['dateOfBirth'] != null) {
       final dateTime = (_userProfile!['dateOfBirth'] as dynamic).toDate();
@@ -42,13 +43,19 @@ class SettingsViewModel extends ChangeNotifier {
   // Load user profile
   Future<void> loadUserProfile() async {
     final userId = _firebase.currentUserId;
-    if (userId == null) return;
+    if (userId == null) {
+      print('SettingsViewModel: No userId found');
+      return;
+    }
 
     try {
+      print('SettingsViewModel: Loading profile for user $userId');
       _setLoading(true);
       _userProfile = await _userService.getUserProfile(userId);
+      print('SettingsViewModel: Profile loaded: name=${_userProfile?['fullName']}, email=${_userProfile?['email']}');
       _setLoading(false);
     } catch (e) {
+      print('SettingsViewModel: Error loading profile: $e');
       _setError(e.toString());
       _setLoading(false);
     }

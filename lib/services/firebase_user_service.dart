@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'firebase_service.dart';
 
 class FirebaseUserService {
@@ -106,6 +108,98 @@ class FirebaseUserService {
       await batch.commit();
     } catch (e) {
       throw Exception('Failed to delete user account: $e');
+    }
+  }
+
+  // Upload user avatar to Firebase Storage
+  Future<String> uploadUserAvatar(String userId, File imageFile) async {
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('users')
+          .child(userId)
+          .child('avatar.jpg');
+      
+      final uploadTask = await storageRef.putFile(imageFile);
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Failed to upload avatar: $e');
+    }
+  }
+
+  // Update user avatar URL in Firestore
+  Future<void> updateUserAvatar(String userId, String avatarUrl) async {
+    try {
+      await _firebase.usersCollection.doc(userId).update({
+        'avatarUrl': avatarUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update avatar URL: $e');
+    }
+  }
+
+  // Get user's latest credit score from applications
+  Future<Map<String, dynamic>?> getUserCreditScore(String userId) async {
+    try {
+      print('FirebaseUserService: Querying credit score for user $userId');
+      final querySnapshot = await _firebase.creditApplicationsCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get();
+
+      print('FirebaseUserService: Found ${querySnapshot.docs.length} applications');
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+        
+        print('FirebaseUserService: Application data: creditScore=${data['creditScore']}, riskLevel=${data['riskLevel']}');
+        
+        return {
+          'creditScore': data['creditScore'],
+          'riskLevel': data['riskLevel'],
+          'approved': data['approved'],
+          'createdAt': data['createdAt'],
+        };
+      }
+      print('FirebaseUserService: No applications found for user');
+      return null;
+    } catch (e) {
+      print('FirebaseUserService: Error getting credit score: $e');
+      throw Exception('Failed to get credit score: $e');
+    }
+  }
+
+  // Update cached credit score in user document
+  Future<void> updateCachedCreditScore(
+    String userId,
+    int creditScore,
+  ) async {
+    try {
+      await _firebase.usersCollection.doc(userId).update({
+        'latestCreditScore': creditScore,
+        'lastCreditCheckDate': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update cached credit score: $e');
+    }
+  }
+
+  // Get total application count for user
+  Future<int> getTotalApplicationsCount(String userId) async {
+    try {
+      final querySnapshot = await _firebase.creditApplicationsCollection
+          .where('userId', isEqualTo: userId)
+          .get();
+      
+      return querySnapshot.docs.length;
+    } catch (e) {
+      return 0;
     }
   }
 }
