@@ -638,7 +638,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                           // Credit Score Tips Section
                           const SizedBox(height: 32),
-                          _buildCreditScoreTips(context),
+                          _buildCreditScoreTips(
+                            context,
+                            creditScore: viewModel.creditScore,
+                          ),
                         ] else if (viewModel.selectedPeriod == 'Loans') ...[
                           // Loan display section
                           _buildLoanDisplay(context),
@@ -1389,7 +1392,41 @@ class CreditScoreGaugePainter extends CustomPainter {
 }
 
 // Widget to build credit score tips section
-Widget _buildCreditScoreTips(BuildContext context) {
+Widget _buildCreditScoreTips(BuildContext context, {required int? creditScore}) {
+  final score = creditScore;
+  final hasScore = score != null;
+  final isLow = hasScore && score! < 580;
+  final isMid = hasScore && score! >= 580 && score < 700;
+  final isGood = hasScore && score! >= 700;
+
+  final Color accentColor = !hasScore
+      ? Colors.grey
+      : isLow
+          ? const Color(0xFFD32F2F)
+          : isMid
+              ? const Color(0xFFF57C00)
+              : const Color(0xFF2E7D32);
+
+  final IconData headerIcon = !hasScore
+      ? Icons.info_outline
+      : isGood
+          ? Icons.verified
+          : Icons.lightbulb_outline;
+
+  final String headerTitle = !hasScore
+      ? 'Credit Score Tips'
+      : isGood
+          ? 'Congratulations'
+          : 'How to Improve Your Credit Score';
+
+  final String subtitleText = !hasScore
+      ? 'We need more information to generate personalized tips.'
+      : isGood
+          ? 'Your credit score is perfect. Keep up the great habits!'
+          : isLow
+              ? 'Your score is low. Try these steps to improve it.'
+              : 'Your score is fair. These tips can help you move higher.';
+
   // This returns a Column widget which stacks widgets vertically
   return Column(
     // crossAxisAlignment aligns children to the start (left side)
@@ -1402,21 +1439,21 @@ Widget _buildCreditScoreTips(BuildContext context) {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              // Light purple background for the icon
-              color: const Color(0xFF4C40F7).withOpacity(0.1),
+              // Light background for the icon
+              color: accentColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.lightbulb_outline,
-              color: Color(0xFF4C40F7),
+            child: Icon(
+              headerIcon,
+              color: accentColor,
               size: 24,
             ),
           ),
           const SizedBox(width: 12),
           // Title text
-          const Text(
-            'How to Improve Your Credit Score',
-            style: TextStyle(
+          Text(
+            headerTitle,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1A1F3F),
@@ -1427,151 +1464,113 @@ Widget _buildCreditScoreTips(BuildContext context) {
       const SizedBox(height: 16),
       // Subtitle/description
       Text(
-        'Follow these tips to build and maintain a healthy credit score',
+        subtitleText,
         style: TextStyle(
           fontSize: 14,
           color: Colors.grey.shade600,
         ),
       ),
       const SizedBox(height: 20),
-      
-      // Tip 1: Pay on time
-      _buildTipCard(
-        icon: Icons.schedule,
-        iconColor: const Color(0xFF4CAF50),
-        iconBgColor: const Color(0xFFE8F5E9),
-        title: '1. Pay Bills on Time',
-        description:
-            'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
-        tips: [
-          'Set up autopay for recurring bills',
-          'Use calendar reminders 3 days before due dates',
-          'Pay at least the minimum amount required',
-          'Consider bi-weekly payments to stay ahead',
-        ],
-      ),
-      
-      const SizedBox(height: 16),
-      
-      // Tip 2: Keep credit utilization low
-      _buildTipCard(
-        icon: Icons.credit_card,
-        iconColor: const Color(0xFF2196F3),
-        iconBgColor: const Color(0xFFE3F2FD),
-        title: '2. Keep Credit Utilization Below 30%',
-        description:
-            'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
-        tips: [
-          'Try to use less than 30% of your available credit',
-          'Pay down balances before statement closing dates',
-          'Request credit limit increases (but don\'t spend more)',
-          'Spread charges across multiple cards if needed',
-        ],
-      ),
-      
-      const SizedBox(height: 16),
-      
-      // Tip 3: Don't close old accounts
-      _buildTipCard(
-        icon: Icons.history,
-        iconColor: const Color(0xFFFFA726),
-        iconBgColor: const Color(0xFFFFF3E0),
-        title: '3. Maintain Long Credit History',
-        description:
-            'Length of credit history accounts for 15% of your score. Older accounts show you have experience managing credit.',
-        tips: [
-          'Keep old credit cards open, even if unused',
-          'Use old cards occasionally to keep them active',
-          'Don\'t close your oldest credit card',
-          'Be patient - good credit takes time to build',
-        ],
-      ),
-      
-      const SizedBox(height: 16),
-      
-      // Tip 4: Limit new credit applications
-      _buildTipCard(
-        icon: Icons.playlist_add_check,
-        iconColor: const Color(0xFF9C27B0),
-        iconBgColor: const Color(0xFFF3E5F5),
-        title: '4. Limit New Credit Applications',
-        description:
-            'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
-        tips: [
-          'Only apply for credit when you really need it',
-          'Multiple inquiries within 14-45 days count as one',
-          'Avoid opening multiple accounts in a short time',
-          'Check your own credit (soft inquiry) regularly',
-        ],
-      ),
-      
-      const SizedBox(height: 16),
-      
-      // Tip 5: Diversify credit types
-      _buildTipCard(
-        icon: Icons.diversity_3,
-        iconColor: const Color(0xFF00BCD4),
-        iconBgColor: const Color(0xFFE0F7FA),
-        title: '5. Mix Different Types of Credit',
-        description:
-            'Credit mix accounts for 10% of your score. Having different types shows you can manage various credit responsibly.',
-        tips: [
-          'Consider having both revolving (credit cards) and installment loans',
-          'A mortgage, car loan, and credit card show diversity',
-          'Don\'t open accounts just for mix - only if needed',
-          'Focus on paying existing accounts first',
-        ],
-      ),
-      
-      const SizedBox(height: 20),
-      
-      // Additional helpful info box
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFF9C4),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFFFBC02D),
-            width: 1,
+
+      if (!hasScore)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(
-              Icons.info_outline,
-              color: Color(0xFFF57F17),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Remember',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFFF57F17),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Building good credit takes time and consistency. Focus on making regular payments, keeping balances low, and avoiding unnecessary credit applications. Check your credit report regularly for errors.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade800,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline, color: Colors.grey.shade600, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Complete your profile and submit an application to see tailored credit score tips.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                ),
               ),
-            ),
+            ],
+          ),
+        )
+      else if (isGood)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF2E7D32)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.check_circle, color: Color(0xFF2E7D32), size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Your credit score is perfect. Keep paying on time and maintaining low balances to stay in the top tier.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                ),
+              ),
+            ],
+          ),
+        )
+      else ...[
+        // Tip 1: Pay on time
+        _buildTipCard(
+          icon: Icons.schedule,
+          iconColor: const Color(0xFF4CAF50),
+          iconBgColor: const Color(0xFFE8F5E9),
+          title: '1. Pay Bills on Time',
+          description:
+              'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
+          tips: [
+            'Set up autopay for recurring bills',
+            'Use calendar reminders 3 days before due dates',
+            'Pay at least the minimum amount required',
+            'Consider bi-weekly payments to stay ahead',
           ],
         ),
-      ),
+
+        const SizedBox(height: 16),
+
+        // Tip 2: Keep credit utilization low
+        _buildTipCard(
+          icon: Icons.credit_card,
+          iconColor: const Color(0xFF2196F3),
+          iconBgColor: const Color(0xFFE3F2FD),
+          title: '2. Keep Credit Utilization Below 30%',
+          description:
+              'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
+          tips: [
+            'Try to use less than 30% of your available credit',
+            'Pay down balances before statement closing dates',
+            'Request credit limit increases (but don\'t spend more)',
+            'Spread charges across multiple cards if needed',
+          ],
+        ),
+
+        if (isLow) ...[
+          const SizedBox(height: 16),
+
+          // Tip 3: Limit new credit applications
+          _buildTipCard(
+            icon: Icons.playlist_add_check,
+            iconColor: const Color(0xFF9C27B0),
+            iconBgColor: const Color(0xFFF3E5F5),
+            title: '3. Limit New Credit Applications',
+            description:
+                'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
+            tips: [
+              'Only apply for credit when you really need it',
+              'Multiple inquiries within 14-45 days count as one',
+              'Avoid opening multiple accounts in a short time',
+              'Check your own credit (soft inquiry) regularly',
+            ],
+          ),
+        ],
+      ],
     ],
   );
 }

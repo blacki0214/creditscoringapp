@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class SimpleLoanRequest {
@@ -100,9 +101,13 @@ class ApiService {
     final client = _client ?? http.Client();
     final url = Uri.parse('$baseUrl/apply');
     try {
+      final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
       final response = await client.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': accessToken,
+        },
         body: jsonEncode(request.toJson()),
       );
 
