@@ -52,6 +52,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
 
   void clearImage() {
     setState(() => imageData = null);
+    // Only clear selfie verification data, keep ID card data
+    final loanViewModel = context.read<LoanViewModel>();
+    loanViewModel.clearSelfieData();
   }
 
   Future<void> takePhoto() async {
@@ -251,76 +254,101 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         const SizedBox(height: 16),
                         
                         // Show face match results if available
-                        if (faceMatchData != null && faceMatchData.success) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: faceMatchData.isMatch
-                                  ? const Color(0xFFE8F5E9)
-                                  : const Color(0xFFFFF3E0),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: faceMatchData.isMatch
-                                    ? const Color(0xFF4CAF50)
-                                    : const Color(0xFFFF9800),
-                                width: 1,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      faceMatchData.isMatch
-                                          ? Icons.check_circle
-                                          : Icons.warning,
-                                      color: faceMatchData.isMatch
-                                          ? const Color(0xFF4CAF50)
-                                          : const Color(0xFFFF9800),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Kết quả so sánh khuôn mặt',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: faceMatchData.isMatch
-                                            ? const Color(0xFF4CAF50)
-                                            : const Color(0xFFFF9800),
+                        if (faceMatchData != null && faceMatchData.success) 
+                          Builder(
+                            builder: (context) {
+                              // Determine if face verification passed all checks
+                              final bool passedValidation = faceMatchData.isMatch && 
+                                  (faceMatchData.similarity ?? 0) >= 0.70;
+                              
+                              return Column(
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: passedValidation
+                                          ? const Color(0xFFE8F5E9)  // Green for pass
+                                          : const Color(0xFFFFEBEE),  // Red for fail
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: passedValidation
+                                            ? const Color(0xFF4CAF50)  // Green border
+                                            : const Color(0xFFE53935),  // Red border
+                                        width: 2,
                                       ),
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                _buildInfoRow(
-                                  'Trạng thái',
-                                  faceMatchData.isMatch ? '✓ Khớp' : '✗ Không khớp',
-                                ),
-                                if (faceMatchData.similarity != null)
-                                  _buildInfoRow(
-                                    'Độ tương đồng',
-                                    '${(faceMatchData.similarity! * 100).toStringAsFixed(1)}%',
-                                  ),
-                                if (faceMatchData.result != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      faceMatchData.result!,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
-                                        fontStyle: FontStyle.italic,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              passedValidation
+                                                  ? Icons.check_circle
+                                                  : Icons.cancel,
+                                              color: passedValidation
+                                                  ? const Color(0xFF4CAF50)
+                                                  : const Color(0xFFE53935),
+                                              size: 24,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                passedValidation 
+                                                    ? 'Xác thực thành công'
+                                                    : 'Xác thực thất bại',
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: passedValidation
+                                                      ? const Color(0xFF4CAF50)
+                                                      : const Color(0xFFE53935),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        _buildInfoRow(
+                                          'Trạng thái',
+                                          faceMatchData.isMatch ? '✓ Khớp' : '✗ Không khớp',
+                                        ),
+                                        if (!passedValidation) ...[
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red.shade50,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.info_outline, color: Colors.red.shade700, size: 18),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    faceMatchData.similarity != null && faceMatchData.similarity! < 0.70
+                                                        ? 'Độ tương đồng quá thấp (cần ≥70%). Vui lòng chụp lại với khuôn mặt rõ ràng.'
+                                                        : 'Khuôn mặt không khớp. Vui lòng thử lại.',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.red.shade700,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
-                              ],
-                            ),
+                                  const SizedBox(height: 16),
+                                ],
+                              );
+                            },
                           ),
-                          const SizedBox(height: 16),
-                        ],
                         
                         // Retake options
                         Row(
@@ -412,8 +440,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                       ],
                     )
-                  else
-                    // Show Continue button after successful processing
+                  else if (faceMatchData.isMatch && (faceMatchData.similarity ?? 0) >= 0.70)
+                    // Show Continue button ONLY if validation passed
                     Column(
                       children: [
                         Container(
@@ -439,6 +467,37 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Show Retake button if validation failed
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE53935),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: clearImage,
+                            icon: const Icon(
+                              Icons.refresh,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Retake Photo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE53935),
                           ),
                         ),
                       ],

@@ -408,9 +408,31 @@ class LoanViewModel extends ChangeNotifier {
       print('[ViewModel] Face match result: ${faceMatch.matchStatus}');
       print('[ViewModel] Similarity: ${faceMatch.similarity != null ? (faceMatch.similarity! * 100).toStringAsFixed(1) : "N/A"}%');
 
+      // SECURITY: Validate face match quality
+      // Check 1: Must have MATCH status from VNPT
+      if (!faceMatch.isMatch) {
+        _vnptErrorMessage = 'Face does not match the ID card photo. Please ensure good lighting and try again.';
+        _isVerifyingSelfie = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Check 2: Similarity must meet minimum threshold (70%)
+      const double minSimilarity = 0.70; // 70% threshold
+      if (faceMatch.similarity == null || faceMatch.similarity! < minSimilarity) {
+        final similarityPercent = faceMatch.similarity != null 
+            ? (faceMatch.similarity! * 100).toStringAsFixed(1) 
+            : '0.0';
+        _vnptErrorMessage = 'Face similarity too low ($similarityPercent%). Please ensure your full face is clearly visible and try again.';
+        _isVerifyingSelfie = false;
+        notifyListeners();
+        return false;
+      }
+
+      print('[ViewModel] Face verification passed all security checks');
       _isVerifyingSelfie = false;
       notifyListeners();
-      return faceMatch.success;
+      return true;
       
     } catch (e) {
       _vnptErrorMessage = e.toString();
@@ -423,6 +445,15 @@ class LoanViewModel extends ChangeNotifier {
   /// Clear VNPT error message
   void clearVnptError() {
     _vnptErrorMessage = null;
+    notifyListeners();
+  }
+
+  /// Clear only selfie verification data (for retaking selfie without losing ID card data)
+  void clearSelfieData() {
+    _selfieImageBytes = null;
+    _faceMatchData = null;
+    _vnptErrorMessage = null;
+    _isVerifyingSelfie = false;
     notifyListeners();
   }
 
