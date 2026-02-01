@@ -6,19 +6,96 @@ class FirebaseLoanService {
   final FirebaseService _firebase = FirebaseService();
   final ApiService _apiService = ApiService();
 
-  // Submit loan application
+  // Submit loan application using two-step API flow
   Future<Map<String, dynamic>> submitLoanApplication({
     required String userId,
     required SimpleLoanRequest loanRequest,
   }) async {
     try {
-      // 1. Call the credit scoring API
-      final loanOffer = await _apiService.applyForLoan(loanRequest);
+      // Step 1: Calculate credit score and loan limit
+      final limitRequest = CalculateLimitRequest(
+        fullName: loanRequest.fullName,
+        age: loanRequest.age,
+        monthlyIncome: loanRequest.monthlyIncome,
+        employmentStatus: loanRequest.employmentStatus,
+        yearsEmployed: loanRequest.yearsEmployed,
+        homeOwnership: loanRequest.homeOwnership,
+        loanPurpose: loanRequest.loanPurpose,
+        yearsCreditHistory: loanRequest.yearsCreditHistory,
+        hasPreviousDefaults: loanRequest.hasPreviousDefaults,
+        currentlyDefaulting: loanRequest.currentlyDefaulting,
+      );
 
-      // 2. Create application document
+      final limitResponse = await _apiService.calculateLimit(limitRequest);
+
+      // If not approved, return early
+      if (!limitResponse.approved) {
+        // Create application document for rejected application
+        final applicationRef = await _firebase.creditApplicationsCollection.add({
+          'userId': userId,
+          'status': 'rejected',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          
+          // Application data
+          'fullName': loanRequest.fullName,
+          'age': loanRequest.age,
+          'monthlyIncome': loanRequest.monthlyIncome,
+          'employmentStatus': loanRequest.employmentStatus,
+          'yearsEmployed': loanRequest.yearsEmployed,
+          'homeOwnership': loanRequest.homeOwnership,
+          'loanPurpose': loanRequest.loanPurpose,
+          'yearsCreditHistory': loanRequest.yearsCreditHistory,
+          'hasPreviousDefaults': loanRequest.hasPreviousDefaults,
+          'currentlyDefaulting': loanRequest.currentlyDefaulting,
+          
+          // Result data
+          'creditScore': limitResponse.creditScore,
+          'riskLevel': limitResponse.riskLevel,
+          'approved': false,
+          'loanLimitVnd': limitResponse.loanLimitVnd,
+        });
+
+        // Create rejected offer document
+        final offerRef = await _firebase.loanOffersCollection.add({
+          'userId': userId,
+          'applicationId': applicationRef.id,
+          'createdAt': FieldValue.serverTimestamp(),
+          'expiresAt': Timestamp.fromDate(
+            DateTime.now().add(const Duration(days: 30)),
+          ),
+          
+          'approved': false,
+          'loanAmountVnd': 0,
+          'maxAmountVnd': limitResponse.loanLimitVnd,
+          'creditScore': limitResponse.creditScore,
+          'riskLevel': limitResponse.riskLevel,
+          'approvalMessage': limitResponse.message,
+          'accepted': false,
+        });
+
+        return {
+          'applicationId': applicationRef.id,
+          'offerId': offerRef.id,
+          'limitResponse': limitResponse,
+          'termsResponse': null,
+        };
+      }
+
+      // Step 2: Calculate loan terms for approved applications
+      // Use the loan limit as the approved amount
+      final termsRequest = CalculateTermsRequest(
+        loanAmount: limitResponse.loanLimitVnd,
+        loanPurpose: loanRequest.loanPurpose,
+        creditScore: limitResponse.creditScore,
+      );
+
+      final termsResponse = await _apiService.calculateTerms(termsRequest);
+
+      // Create application document
       final applicationRef = await _firebase.creditApplicationsCollection.add({
         'userId': userId,
-        'status': loanOffer.approved ? 'approved' : 'rejected',
+        'status': 'approved',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
         
@@ -35,12 +112,13 @@ class FirebaseLoanService {
         'currentlyDefaulting': loanRequest.currentlyDefaulting,
         
         // Result data
-        'creditScore': loanOffer.creditScore,
-        'riskLevel': loanOffer.riskLevel,
-        'approved': loanOffer.approved,
+        'creditScore': limitResponse.creditScore,
+        'riskLevel': limitResponse.riskLevel,
+        'approved': true,
+        'loanLimitVnd': limitResponse.loanLimitVnd,
       });
 
-      // 3. Create loan offer document
+      // Create loan offer document
       final offerRef = await _firebase.loanOffersCollection.add({
         'userId': userId,
         'applicationId': applicationRef.id,
@@ -50,31 +128,32 @@ class FirebaseLoanService {
         ),
         
         // Offer details
-        'approved': loanOffer.approved,
-        'loanAmountVnd': loanOffer.loanAmountVnd,
-        'maxAmountVnd': loanOffer.maxAmountVnd,
-        'interestRate': loanOffer.interestRate,
-        'monthlyPaymentVnd': loanOffer.monthlyPaymentVnd,
-        'loanTermMonths': loanOffer.loanTermMonths,
-        'creditScore': loanOffer.creditScore,
-        'riskLevel': loanOffer.riskLevel,
-        'approvalMessage': loanOffer.approvalMessage,
-        'loanTier': loanOffer.loanTier,
-        'tierReason': loanOffer.tierReason,
+        'approved': true,
+        'loanAmountVnd': limitResponse.loanLimitVnd,
+        'maxAmountVnd': limitResponse.loanLimitVnd,
+        'interestRate': termsResponse.interestRate,
+        'monthlyPaymentVnd': termsResponse.monthlyPaymentVnd,
+        'loanTermMonths': termsResponse.loanTermMonths,
+        'totalPaymentVnd': termsResponse.totalPaymentVnd,
+        'totalInterestVnd': termsResponse.totalInterestVnd,
+        'creditScore': limitResponse.creditScore,
+        'riskLevel': limitResponse.riskLevel,
+        'approvalMessage': limitResponse.message,
         
         // Acceptance status
         'accepted': false,
       });
 
-      // 4. Add to application history
+      // Add to application history
       await _firebase.applicationHistoryCollection.add({
         'userId': userId,
         'applicationId': applicationRef.id,
         'action': 'created',
         'timestamp': FieldValue.serverTimestamp(),
         'details': {
-          'creditScore': loanOffer.creditScore,
-          'approved': loanOffer.approved,
+          'creditScore': limitResponse.creditScore,
+          'approved': true,
+          'loanLimitVnd': limitResponse.loanLimitVnd,
         },
         'performedBy': userId,
       });
@@ -82,7 +161,8 @@ class FirebaseLoanService {
       return {
         'applicationId': applicationRef.id,
         'offerId': offerRef.id,
-        'loanOffer': loanOffer,
+        'limitResponse': limitResponse,
+        'termsResponse': termsResponse,
       };
     } catch (e) {
       throw Exception('Failed to submit loan application: $e');

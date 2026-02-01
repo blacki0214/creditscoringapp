@@ -1,17 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'dart:typed_data';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
-import '../services/api_service.dart';
 
 class LoanViewModel extends ChangeNotifier {
-  // API Service
-  final ApiService _apiService = ApiService();
-  
   // VNPT eKYC Service (singleton instance)
   final VnptEkycService _vnptService = VnptEkycService();
   final FirebaseLoanService _loanService = FirebaseLoanService();
@@ -211,27 +205,39 @@ class LoanViewModel extends ChangeNotifier {
       // Artificial delay for UX
       await Future.delayed(const Duration(seconds: 2));
       
-      // Submit to Firebase (which calls API and stores results)
+      // Submit to Firebase (which calls the two-step API and stores results)
       final result = await _loanService.submitLoanApplication(
         userId: userId,
         loanRequest: request,
       );
       
+      final limitResponse = result['limitResponse'] as CalculateLimitResponse;
+      final termsResponse = result['termsResponse'] as CalculateTermsResponse?;
+      
+      // Build currentOffer map from the two-step response
       _currentOffer = {
         'applicationId': result['applicationId'],
         'offerId': result['offerId'],
-        'approved': (result['loanOffer'] as LoanOfferResponse).approved,
-        'creditScore': (result['loanOffer'] as LoanOfferResponse).creditScore,
-        'loanAmountVnd': (result['loanOffer'] as LoanOfferResponse).loanAmountVnd,
-        'maxAmountVnd': (result['loanOffer'] as LoanOfferResponse).maxAmountVnd,
-        'interestRate': (result['loanOffer'] as LoanOfferResponse).interestRate,
-        'monthlyPaymentVnd': (result['loanOffer'] as LoanOfferResponse).monthlyPaymentVnd,
-        'loanTermMonths': (result['loanOffer'] as LoanOfferResponse).loanTermMonths,
-        'riskLevel': (result['loanOffer'] as LoanOfferResponse).riskLevel,
-        'approvalMessage': (result['loanOffer'] as LoanOfferResponse).approvalMessage,
-        'loanTier': (result['loanOffer'] as LoanOfferResponse).loanTier,
-        'tierReason': (result['loanOffer'] as LoanOfferResponse).tierReason,
+        'approved': limitResponse.approved,
+        'creditScore': limitResponse.creditScore,
+        'loanLimitVnd': limitResponse.loanLimitVnd,
+        'maxAmountVnd': limitResponse.loanLimitVnd,
+        'riskLevel': limitResponse.riskLevel,
+        'approvalMessage': limitResponse.message,
       };
+
+      // Add terms data if approved
+      if (termsResponse != null) {
+        _currentOffer!['loanAmountVnd'] = limitResponse.loanLimitVnd;
+        _currentOffer!['interestRate'] = termsResponse.interestRate;
+        _currentOffer!['monthlyPaymentVnd'] = termsResponse.monthlyPaymentVnd;
+        _currentOffer!['loanTermMonths'] = termsResponse.loanTermMonths;
+        _currentOffer!['totalPaymentVnd'] = termsResponse.totalPaymentVnd;
+        _currentOffer!['totalInterestVnd'] = termsResponse.totalInterestVnd;
+      } else {
+        // For rejected applications
+        _currentOffer!['loanAmountVnd'] = 0;
+      }
       
       // Clear draft after successful submission
       await LocalStorageService.clearDraft();
