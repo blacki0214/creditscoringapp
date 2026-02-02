@@ -21,23 +21,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _isInitialized = false;
-
   @override
   void initState() {
     super.initState();
     _loadUserData();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refresh data when user comes back to this page
-    if (_isInitialized) {
-      _loadUserData();
-    }
-    _isInitialized = true;
-  }
+  // REMOVED didChangeDependencies - it was causing infinite loop!
+  // Every time HomeViewModel called notifyListeners(), it triggered
+  // didChangeDependencies → _loadUserData → notifyListeners → repeat infinitely
+  // This caused hundreds of Firestore queries per second and memory leak
 
   void _loadUserData() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
