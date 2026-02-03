@@ -27,6 +27,11 @@ class _HomePageState extends State<HomePage> {
     _loadUserData();
   }
 
+  // REMOVED didChangeDependencies - it was causing infinite loop!
+  // Every time HomeViewModel called notifyListeners(), it triggered
+  // didChangeDependencies → _loadUserData → notifyListeners → repeat infinitely
+  // This caused hundreds of Firestore queries per second and memory leak
+
   void _loadUserData() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
