@@ -349,34 +349,6 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                               );
                             },
                           ),
-                        
-                        // Retake options
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_isMobile) ...[
-                              ElevatedButton.icon(
-                                onPressed: takePhoto,
-                                icon: const Icon(Icons.camera_alt),
-                                label: const Text('Camera'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF4C40F7),
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                            ],
-                            ElevatedButton.icon(
-                              onPressed: selectImage,
-                              icon: const Icon(Icons.photo_library),
-                              label: Text(_isMobile ? 'Gallery' : 'Choose File'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey.shade400,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   
