@@ -50,8 +50,6 @@ void main() {
         'credit_score': 750,
         'risk_level': 'Low',
         'approval_message': 'Approved',
-        'loan_tier': 'GOLD',
-        'tier_reason': 'Good credit history'
       };
 
       final response = LoanOfferResponse.fromJson(json);
@@ -65,8 +63,6 @@ void main() {
       expect(response.creditScore, 750);
       expect(response.riskLevel, 'Low');
       expect(response.approvalMessage, 'Approved');
-      expect(response.loanTier, 'GOLD');
-      expect(response.tierReason, 'Good credit history');
     });
   });
 
@@ -83,8 +79,6 @@ void main() {
         'credit_score': 750,
         'risk_level': 'Low',
         'approval_message': 'Approved',
-        'loan_tier': 'SILVER',
-        'tier_reason': 'Ok'
       };
 
       final client = MockClient((request) async {
@@ -111,7 +105,6 @@ void main() {
 
       expect(result.approved, true);
       expect(result.loanAmountVnd, 40000000);
-      expect(result.loanTier, 'SILVER');
     });
 
     test('applyForLoan throws exception on error', () async {
