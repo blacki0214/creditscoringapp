@@ -6,6 +6,37 @@ class FirebaseLoanService {
   final FirebaseService _firebase = FirebaseService();
   final ApiService _apiService = ApiService();
 
+  // Create pending application (for async processing)
+  Future<String> createPendingApplication({
+    required String userId,
+    required SimpleLoanRequest loanRequest,
+  }) async {
+    try {
+      final applicationRef = await _firebase.creditApplicationsCollection.add({
+        'userId': userId,
+        'status': 'processing',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        
+        // Application data
+        'fullName': loanRequest.fullName,
+        'age': loanRequest.age,
+        'monthlyIncome': loanRequest.monthlyIncome,
+        'employmentStatus': loanRequest.employmentStatus,
+        'yearsEmployed': loanRequest.yearsEmployed,
+        'homeOwnership': loanRequest.homeOwnership,
+        'loanPurpose': loanRequest.loanPurpose,
+        'yearsCreditHistory': loanRequest.yearsCreditHistory,
+        'hasPreviousDefaults': loanRequest.hasPreviousDefaults,
+        'currentlyDefaulting': loanRequest.currentlyDefaulting,
+      });
+
+      return applicationRef.id;
+    } catch (e) {
+      throw Exception('Failed to create pending application: $e');
+    }
+  }
+
   // Submit loan application using two-step API flow
   Future<Map<String, dynamic>> submitLoanApplication({
     required String userId,

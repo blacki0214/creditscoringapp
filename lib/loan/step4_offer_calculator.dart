@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'contract_review_page.dart';
 
-class Step3OfferCalculatorPage extends StatefulWidget {
-  const Step3OfferCalculatorPage({super.key});
+class Step4OfferCalculatorPage extends StatefulWidget {
+  const Step4OfferCalculatorPage({super.key});
 
   @override
-  State<Step3OfferCalculatorPage> createState() => _Step3OfferCalculatorPageState();
+  State<Step4OfferCalculatorPage> createState() => _Step4OfferCalculatorPageState();
 }
 
-class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
+class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _totalPriceController;
@@ -92,7 +92,7 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Step 3: Loan Calculator',
+          'Step 4: Loan Calculator',
           style: TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),

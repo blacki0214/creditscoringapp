@@ -12,6 +12,7 @@ import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
 import '../auth/login_page.dart';
+import '../loan/step3_additional_info.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  ApplicationStatus? _lastKnownStatus;
+  
   @override
   void initState() {
     super.initState();
@@ -38,6 +41,32 @@ class _HomePageState extends State<HomePage> {
       if (userId != null && mounted) {
         print('HomePage: Loading user data for $userId');
         context.read<HomeViewModel>().loadAllUserData(userId);
+        
+        // Also check if loan was just scored and refresh credit score
+        _checkAndRefreshCreditScore();
+      }
+    });
+  }
+  
+  void _checkAndRefreshCreditScore() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      
+      final loanViewModel = context.read<LoanViewModel>();
+      final homeViewModel = context.read<HomeViewModel>();
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      
+      // If loan status changed to scored, refresh the credit score
+      if (loanViewModel.isApplicationScored && 
+          _lastKnownStatus != ApplicationStatus.scored &&
+          userId != null) {
+        print('HomePage: Loan scored! Refreshing credit score...');
+        homeViewModel.refreshCreditScore(userId);
+        _lastKnownStatus = ApplicationStatus.scored;
+      } else if (loanViewModel.isApplicationProcessing) {
+        _lastKnownStatus = ApplicationStatus.processing;
+      } else if (loanViewModel.isApplicationRejected) {
+        _lastKnownStatus = ApplicationStatus.rejected;
       }
     });
   }
@@ -45,6 +74,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
+    
+    // Check if we need to refresh credit score when loan status changes
+    _checkAndRefreshCreditScore();
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A1F3F),
@@ -693,8 +725,134 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Current Loan Offer Section
-        if (loanViewModel.currentOffer != null) ...[
+        // Loan Status Box
+        if (loanViewModel.isApplicationProcessing || 
+            loanViewModel.isApplicationScored || 
+            loanViewModel.isApplicationRejected) ...[
+          const Text(
+            'Score Status',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1F3F),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: loanViewModel.isApplicationProcessing
+                  ? const Color(0xFFFFF3E0)
+                  : loanViewModel.isApplicationScored
+                      ? const Color(0xFFE8F5E9)
+                      : const Color(0xFFFFEBEE),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: loanViewModel.isApplicationProcessing
+                    ? const Color(0xFFFFA726)
+                    : loanViewModel.isApplicationScored
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  loanViewModel.isApplicationProcessing
+                      ? Icons.hourglass_empty
+                      : loanViewModel.isApplicationScored
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                  color: loanViewModel.isApplicationProcessing
+                      ? const Color(0xFFFFA726)
+                      : loanViewModel.isApplicationScored
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFEF5350),
+                  size: 32,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loanViewModel.isApplicationProcessing
+                            ? 'Scoring (In Progress)'
+                            : loanViewModel.isApplicationScored
+                                ? 'Scored'
+                                : 'Rejected',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: loanViewModel.isApplicationProcessing
+                              ? const Color(0xFFFFA726)
+                              : loanViewModel.isApplicationScored
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFEF5350),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        loanViewModel.isApplicationProcessing
+                            ? 'We are calculating your credit score...'
+                            : loanViewModel.isApplicationScored
+                                ? 'Your score has been calculated successfully'
+                                : 'Your application was not approved',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      // Show loan amount in the scored box
+                      if (loanViewModel.isApplicationScored && 
+                          loanViewModel.currentOffer != null &&
+                          loanViewModel.currentOffer!['approved'] as bool) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Loan Amount',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF1A1F3F),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                currencyFormat.format(
+                                  loanViewModel.currentOffer!['loanAmountVnd'] as num,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF4CAF50),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+        
+        // Current Loan Offer Section (only show full details after Step 3 & 4 completion)
+        if (loanViewModel.currentOffer != null && 
+            loanViewModel.isApplicationScored &&
+            loanViewModel.step3Completed &&
+            loanViewModel.step4Completed) ...[
           const Text(
             'Current Loan Offer',
             style: TextStyle(
@@ -748,13 +906,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 if (loanViewModel.currentOffer!['approved'] as bool) ...[
-                  _buildLoanDetailRow(
-                    'Loan Amount',
-                    currencyFormat.format(
-                      loanViewModel.currentOffer!['loanAmountVnd'] as num,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  // Loan amount is now shown in the scored box above
                   if (loanViewModel.currentOffer!['interestRate'] != null)
                     Column(
                       children: [
@@ -820,12 +972,31 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Processing loan acceptance...'),
-                                backgroundColor: Color(0xFF4CAF50),
-                              ),
-                            );
+                            try {
+                              print('DEBUG: Accept Loan button clicked');
+                              print('DEBUG: Current route: ${ModalRoute.of(context)?.settings.name}');
+                              print('DEBUG: Navigating to Step3AdditionalInfoPage');
+                              
+                              // Navigate to Step 3 - Additional Information
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Step3AdditionalInfoPage(),
+                                ),
+                              ).then((value) {
+                                print('DEBUG: Navigation completed');
+                              }).catchError((error) {
+                                print('DEBUG: Navigation error: $error');
+                              });
+                            } catch (e) {
+                              print('DEBUG: Exception during navigation: $e');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Navigation error: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4CAF50),
@@ -866,33 +1037,9 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 32),
-        ] else if (loanViewModel.isProcessing) ...[
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF4C40F7),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Processing your loan application...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1A1F3F),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ] else ...[
+        ] else if (!loanViewModel.isApplicationProcessing && 
+                   !loanViewModel.isApplicationScored && 
+                   !loanViewModel.isApplicationRejected) ...[
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

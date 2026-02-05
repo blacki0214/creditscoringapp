@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'processing_page.dart';
+import '../home/home_page.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
   const Step2PersonalInfoPage({super.key});
@@ -457,11 +458,42 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   Future<void> _submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
     
-    // Navigate to ProcessingPage (which will handle API call)
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ProcessingPage()),
+    final vm = context.read<LoanViewModel>();
+    
+    // Submit application asynchronously
+    final success = await vm.submitApplicationAsync();
+    
+    if (!mounted) return;
+    
+    if (success) {
+      // Navigate to HomePage directly (not to '/' which goes to SplashScreen -> LoginPage)
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+        (route) => false,
+      );
+      
+      // Show snackbar to inform user
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your application is being processed. Check the Loans tab for status.'),
+          backgroundColor: Color(0xFF4C40F7),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text(vm.errorMessage ?? 'Failed to submit application'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
     }
   }

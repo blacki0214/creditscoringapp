@@ -5,6 +5,14 @@ import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
 
+// Application status enum
+enum ApplicationStatus {
+  none,       // No application submitted
+  processing, // Application submitted, waiting for API response
+  scored,     // Scoring completed successfully
+  rejected    // Application rejected
+}
+
 class LoanViewModel extends ChangeNotifier {
   // VNPT eKYC Service (singleton instance)
   final VnptEkycService _vnptService = VnptEkycService();
@@ -15,7 +23,12 @@ class LoanViewModel extends ChangeNotifier {
   bool _step1Completed = false;
   bool _step2Completed = false;
   bool _step3Completed = false;
+  bool _step4Completed = false;
   bool _isProcessing = false;
+  
+  // Application status tracking
+  ApplicationStatus _applicationStatus = ApplicationStatus.none;
+  String? _pendingApplicationId;
 
   // VNPT eKYC captured images
   Uint8List? _frontIdImageBytes;
@@ -59,10 +72,18 @@ class LoanViewModel extends ChangeNotifier {
   bool get step1Completed => _step1Completed;
   bool get step2Completed => _step2Completed;
   bool get step3Completed => _step3Completed;
+  bool get step4Completed => _step4Completed;
   bool get isProcessing => _isProcessing;
   Map<String, dynamic>? get currentOffer => _currentOffer;
   String? get errorMessage => _errorMessage;
   List<Map<String, dynamic>> get applications => _applications;
+  
+  // Application status getters
+  ApplicationStatus get applicationStatus => _applicationStatus;
+  bool get isApplicationProcessing => _applicationStatus == ApplicationStatus.processing;
+  bool get isApplicationScored => _applicationStatus == ApplicationStatus.scored;
+  bool get isApplicationRejected => _applicationStatus == ApplicationStatus.rejected;
+  String? get pendingApplicationId => _pendingApplicationId;
 
   // Legacy getter for backward compatibility
   LoanOfferResponse? get currentOfferLegacy {
@@ -132,6 +153,21 @@ class LoanViewModel extends ChangeNotifier {
     _step1Completed = true;
     notifyListeners();
   }
+  
+  void completeStep2() {
+    _step2Completed = true;
+    notifyListeners();
+  }
+  
+  void completeStep3() {
+    _step3Completed = true;
+    notifyListeners();
+  }
+  
+  void completeStep4() {
+    _step4Completed = true;
+    notifyListeners();
+  }
 
   void updatePersonalInfo({
     String? name,
@@ -166,7 +202,8 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> submitApplication() async {
+  // Submit application asynchronously - returns immediately, processes in background
+  Future<bool> submitApplicationAsync() async {
     final userId = _firebase.currentUserId;
     if (userId == null) {
       _errorMessage = 'User not authenticated';
@@ -175,35 +212,66 @@ class LoanViewModel extends ChangeNotifier {
     }
 
     _isProcessing = true;
+    _applicationStatus = ApplicationStatus.processing;
     _errorMessage = null;
     notifyListeners();
 
-    // Calculate age from DOB
-    int age = 0;
-    if (dob != null) {
-      final today = DateTime.now();
-      age = today.year - dob!.year;
-      if (today.month < dob!.month || (today.month == dob!.month && today.day < dob!.day)) {
-        age--;
+    try {
+      // Calculate age from DOB
+      int age = 0;
+      if (dob != null) {
+        final today = DateTime.now();
+        age = today.year - dob!.year;
+        if (today.month < dob!.month || (today.month == dob!.month && today.day < dob!.day)) {
+          age--;
+        }
       }
+
+      final request = SimpleLoanRequest(
+        fullName: fullName,
+        age: age,
+        monthlyIncome: monthlyIncome,
+        employmentStatus: employmentStatus,
+        yearsEmployed: yearsEmployed,
+        homeOwnership: homeOwnership,
+        loanPurpose: loanPurpose,
+        yearsCreditHistory: yearsCreditHistory,
+        hasPreviousDefaults: hasPreviousDefaults,
+        currentlyDefaulting: currentlyDefaulting,
+      );
+
+      // Create pending application in Firebase
+      final applicationId = await _loanService.createPendingApplication(
+        userId: userId,
+        loanRequest: request,
+      );
+      
+      _pendingApplicationId = applicationId;
+      _isProcessing = false;
+      notifyListeners();
+      
+      // Process in background (fire and forget)
+      _processApplicationInBackground(userId, request, applicationId);
+      
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isProcessing = false;
+      _applicationStatus = ApplicationStatus.none;
+      notifyListeners();
+      return false;
     }
+  }
 
-    final request = SimpleLoanRequest(
-      fullName: fullName,
-      age: age,
-      monthlyIncome: monthlyIncome,
-      employmentStatus: employmentStatus,
-      yearsEmployed: yearsEmployed,
-      homeOwnership: homeOwnership,
-      loanPurpose: loanPurpose,
-      yearsCreditHistory: yearsCreditHistory,
-      hasPreviousDefaults: hasPreviousDefaults,
-      currentlyDefaulting: currentlyDefaulting,
-    );
-
+  // Background processing of application
+  Future<void> _processApplicationInBackground(
+    String userId,
+    SimpleLoanRequest request,
+    String applicationId,
+  ) async {
     try {
       // Artificial delay for UX
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 3));
       
       // Submit to Firebase (which calls the two-step API and stores results)
       final result = await _loanService.submitLoanApplication(
@@ -239,20 +307,27 @@ class LoanViewModel extends ChangeNotifier {
         _currentOffer!['loanAmountVnd'] = 0;
       }
       
+      // Update status
+      _applicationStatus = limitResponse.approved 
+          ? ApplicationStatus.scored 
+          : ApplicationStatus.rejected;
+      
       // Clear draft after successful submission
       await LocalStorageService.clearDraft();
       
       _step2Completed = true;
       _step3Completed = true; // Processing done
-      _isProcessing = false;
       notifyListeners();
-      return true;
     } catch (e) {
       _errorMessage = e.toString();
-      _isProcessing = false;
+      _applicationStatus = ApplicationStatus.rejected;
       notifyListeners();
-      return false;
     }
+  }
+
+  // Legacy method for backward compatibility (synchronous processing)
+  Future<bool> submitApplication() async {
+    return submitApplicationAsync();
   }
 
   // Load user applications from Firebase

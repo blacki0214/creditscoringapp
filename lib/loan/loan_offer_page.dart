@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../home/home_page.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'step3_offer_calculator.dart';
+import 'step4_offer_calculator.dart';
 
 class LoanOfferPage extends StatelessWidget {
   const LoanOfferPage({super.key});
@@ -125,7 +125,7 @@ class LoanOfferPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const Step3OfferCalculatorPage(),
+                          builder: (_) => const Step4OfferCalculatorPage(),
                         ),
                       );
                     },
