@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_service.dart';
 import 'api_service.dart';
+import 'notification_service.dart';
 
 class FirebaseLoanService {
   final FirebaseService _firebase = FirebaseService();
   final ApiService _apiService = ApiService();
+  final NotificationService _notificationService = NotificationService();
 
   // Submit loan application using two-step API flow
   Future<Map<String, dynamic>> submitLoanApplication({
@@ -73,6 +75,15 @@ class FirebaseLoanService {
           'approvalMessage': limitResponse.message,
           'accepted': false,
         });
+
+        // Create notification for rejected loan
+        await _notificationService.createLoanNotification(
+          userId: userId,
+          applicationId: applicationRef.id,
+          approved: false,
+          creditScore: limitResponse.creditScore,
+          loanAmount: limitResponse.loanLimitVnd,
+        );
 
         return {
           'applicationId': applicationRef.id,
@@ -157,6 +168,15 @@ class FirebaseLoanService {
         },
         'performedBy': userId,
       });
+
+      // Create notification for approved loan
+      await _notificationService.createLoanNotification(
+        userId: userId,
+        applicationId: applicationRef.id,
+        approved: true,
+        creditScore: limitResponse.creditScore,
+        loanAmount: limitResponse.loanLimitVnd,
+      );
 
       return {
         'applicationId': applicationRef.id,
