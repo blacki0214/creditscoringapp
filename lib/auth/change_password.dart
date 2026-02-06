@@ -14,6 +14,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _confirmPasswordController = TextEditingController();
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
+  final Map<String, FocusNode> _fieldFocusNodes = {};
+  final Map<String, bool> _touchedFields = {};
 
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
@@ -41,6 +44,40 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       return 'Passwords do not match';
     }
     return null;
+  }
+
+  GlobalKey<FormFieldState> _fieldKey(String id) {
+    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
+  }
+
+  FocusNode _fieldFocus(String id) {
+    return _fieldFocusNodes.putIfAbsent(id, () {
+      final node = FocusNode();
+      node.addListener(() {
+        if (!node.hasFocus) {
+          _touchedFields[id] = true;
+          _fieldKeys[id]?.currentState?.validate();
+        }
+      });
+      return node;
+    });
+  }
+
+  String? _validateIfTouched(
+    String id,
+    String? Function(String?) validator,
+    String? value,
+  ) {
+    if (_touchedFields[id] != true) {
+      return null;
+    }
+    return validator(value);
+  }
+
+  void _markAllTouched(Iterable<String> ids) {
+    for (final id in ids) {
+      _touchedFields[id] = true;
+    }
   }
 
   @override
@@ -107,7 +144,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   const SizedBox(height: 32),
                   // New password field
                   TextFormField(
+                    key: _fieldKey('newPassword'),
                     controller: _newPasswordController,
+                    focusNode: _fieldFocus('newPassword'),
                     maxLength: 50,
                     obscureText: _obscureNewPassword,
                     decoration: InputDecoration(
@@ -144,12 +183,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       helperStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                       counterText: '', // Hide character counter
                     ),
-                    validator: _validatePassword,
+                    validator: (value) =>
+                        _validateIfTouched('newPassword', _validatePassword, value),
                   ),
                   const SizedBox(height: 20),
                   // Confirm password field
                   TextFormField(
+                    key: _fieldKey('confirmPassword'),
                     controller: _confirmPasswordController,
+                    focusNode: _fieldFocus('confirmPassword'),
                     maxLength: 50,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
@@ -184,7 +226,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       ),
                       counterText: '', // Hide character counter
                     ),
-                    validator: _validateConfirmPassword,
+                    validator: (value) => _validateIfTouched(
+                        'confirmPassword', _validateConfirmPassword, value),
                   ),
                   const SizedBox(height: 32),
                   // Reset password button
@@ -193,6 +236,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
+                        _markAllTouched(['newPassword', 'confirmPassword']);
                         if (_formKey.currentState!.validate()) {
                           Navigator.push(
                             context,
@@ -229,6 +273,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   void dispose() {
+    for (final node in _fieldFocusNodes.values) {
+      node.dispose();
+    }
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();

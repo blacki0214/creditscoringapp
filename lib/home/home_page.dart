@@ -22,6 +22,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isInitialized = false;
+  bool _isLoadingUserData = false;
+  String? _lastLoadedUserId;
 
   @override
   void initState() {
@@ -40,11 +42,23 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _loadUserData() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId != null && mounted) {
+      if (userId == null || !mounted) {
+        return;
+      }
+      if (_isLoadingUserData || _lastLoadedUserId == userId) {
+        return;
+      }
+      _isLoadingUserData = true;
+      _lastLoadedUserId = userId;
+      try {
         print('HomePage: Loading user data for $userId');
-        context.read<HomeViewModel>().loadAllUserData(userId);
+        await context.read<HomeViewModel>().loadAllUserData(userId);
+      } finally {
+        if (mounted) {
+          _isLoadingUserData = false;
+        }
       }
     });
   }
