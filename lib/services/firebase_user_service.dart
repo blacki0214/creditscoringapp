@@ -182,12 +182,9 @@ class FirebaseUserService {
     try {
       // Use set with merge to create document if it doesn't exist
       await _firebase.usersCollection.doc(userId).set({
-      // Use set with merge to create document if it doesn't exist
-      await _firebase.usersCollection.doc(userId).set({
         'latestCreditScore': creditScore,
         'lastCreditCheckDate': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
       }, SetOptions(merge: true));
     } catch (e) {
       print('FirebaseUserService: Error updating cached credit score: $e');
