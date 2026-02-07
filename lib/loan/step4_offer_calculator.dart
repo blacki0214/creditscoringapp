@@ -10,14 +10,11 @@ class Step4OfferCalculatorPage extends StatefulWidget {
   const Step4OfferCalculatorPage({super.key});
 
   @override
-  State<Step3OfferCalculatorPage> createState() => _Step3OfferCalculatorPageState();
+  State<Step4OfferCalculatorPage> createState() => _Step4OfferCalculatorPageState();
 }
 
-class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
+class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   final _formKey = GlobalKey<FormState>();
-  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
-  final Map<String, FocusNode> _fieldFocusNodes = {};
-  final Map<String, bool> _touchedFields = {};
 
   late TextEditingController _totalPriceController;
   late TextEditingController _downPaymentController;
@@ -53,38 +50,8 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
     }
   }
 
-  GlobalKey<FormFieldState> _fieldKey(String id) {
-    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
-  }
-
-  FocusNode _fieldFocus(String id) {
-    return _fieldFocusNodes.putIfAbsent(id, () {
-      final node = FocusNode();
-      node.addListener(() {
-        if (!node.hasFocus) {
-          _touchedFields[id] = true;
-          _fieldKeys[id]?.currentState?.validate();
-        }
-      });
-      return node;
-    });
-  }
-
-  String? _validateIfTouched(String id, String? value, String message) {
-    if (_touchedFields[id] != true) {
-      return null;
-    }
-    if (value == null || value.isEmpty) {
-      return message;
-    }
-    return null;
-  }
-
   @override
   void dispose() {
-    for (final node in _fieldFocusNodes.values) {
-      node.dispose();
-    }
     _totalPriceController.dispose();
     _downPaymentController.dispose();
     super.dispose();
@@ -126,7 +93,7 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Step 3: Loan Calculator',
+          'Step 4: Loan Calculator',
           style: TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
@@ -172,7 +139,6 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
                       // Total Price
                       _buildSectionHeader('Financing Details'),
                       _buildTextField(
-                        fieldId: 'totalPrice',
                         controller: _totalPriceController,
                         label: 'Total Price (VND)',
                         hint: '100,000,000',
@@ -181,14 +147,12 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
                           FilteringTextInputFormatter.digitsOnly,
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
-                        maxLength: 20,
                         onChanged: (val) => setState(() {}),
                       ),
 
                       const SizedBox(height: 16),
                       // Down Payment
                       _buildTextField(
-                        fieldId: 'downPayment',
                         controller: _downPaymentController,
                         label: 'Down Payment (VND)',
                         hint: '20,000,000',
@@ -197,7 +161,6 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
                           FilteringTextInputFormatter.digitsOnly,
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
-                        maxLength: 20,
                         onChanged: (val) => setState(() {}),
                       ),
 
@@ -511,25 +474,21 @@ class _Step3OfferCalculatorPageState extends State<Step3OfferCalculatorPage> {
   }
 
   Widget _buildTextField({
-    required String fieldId,
     required TextEditingController controller,
     required String label,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     Function(String)? onChanged,
-    int? maxLength,
   }) {
     return TextFormField(
-      key: _fieldKey(fieldId),
       controller: controller,
-      focusNode: _fieldFocus(fieldId),
       keyboardType: keyboardType,
-      maxLength: maxLength,
       inputFormatters: inputFormatters,
       onChanged: onChanged,
       validator: (value) {
-        return _validateIfTouched(fieldId, value, 'Please enter $label');
+        if (value == null || value.isEmpty) return 'Please enter $label';
+        return null;
       },
       decoration: InputDecoration(
         labelText: label,

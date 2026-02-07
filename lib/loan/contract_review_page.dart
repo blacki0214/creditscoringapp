@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
@@ -145,10 +144,6 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _signatureController,
-                      maxLength: 30,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z ]')),
-                      ],
                       decoration: InputDecoration(
                         hintText: 'Enter your full name',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -160,7 +155,6 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
                         ),
-                        counterText: '',
                       ),
                     ),
 

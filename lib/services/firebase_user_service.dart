@@ -180,13 +180,15 @@ class FirebaseUserService {
     int creditScore,
   ) async {
     try {
-      await _firebase.usersCollection.doc(userId).update({
+      // Use set with merge to create document if it doesn't exist
+      await _firebase.usersCollection.doc(userId).set({
         'latestCreditScore': creditScore,
         'lastCreditCheckDate': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     } catch (e) {
-      throw Exception('Failed to update cached credit score: $e');
+      print('FirebaseUserService: Error updating cached credit score: $e');
+      // Don't throw - this is a non-critical cache update
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'processing_page.dart';
+import '../home/home_page.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
   const Step2PersonalInfoPage({super.key});
@@ -14,9 +15,6 @@ class Step2PersonalInfoPage extends StatefulWidget {
 
 class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
-  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
-  final Map<String, FocusNode> _fieldFocusNodes = {};
-  final Map<String, bool> _touchedFields = {};
   
   // Credit history selection
   bool? _hasCreditHistory;
@@ -55,45 +53,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _selectedDOB = vm.dob;
   }
 
-  GlobalKey<FormFieldState> _fieldKey(String id) {
-    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
-  }
-
-  FocusNode _fieldFocus(String id) {
-    return _fieldFocusNodes.putIfAbsent(id, () {
-      final node = FocusNode();
-      node.addListener(() {
-        if (!node.hasFocus) {
-          _touchedFields[id] = true;
-          _fieldKeys[id]?.currentState?.validate();
-        }
-      });
-      return node;
-    });
-  }
-
-  String? _validateIfTouched(
-    String id,
-    String? Function(String?) validator,
-    String? value,
-  ) {
-    if (_touchedFields[id] != true) {
-      return null;
-    }
-    return validator(value);
-  }
-
-  void _markAllTouched(Iterable<String> ids) {
-    for (final id in ids) {
-      _touchedFields[id] = true;
-    }
-  }
-
   @override
   void dispose() {
-    for (final node in _fieldFocusNodes.values) {
-      node.dispose();
-    }
     _fullNameController.dispose();
     _idController.dispose();
     _monthlyIncomeController.dispose();
@@ -208,42 +169,18 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       
                       _buildSectionHeader('Personal Details'),
                       _buildTextField(
-                        fieldId: 'fullName',
                         controller: _fullNameController,
                         label: 'Full Name',
-                        maxLength: 30,
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z ]'))],
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return 'Please enter Full Name';
-                          }
-                          final nameRegex = RegExp(r'^[A-Za-z ]+$');
-                          if (!nameRegex.hasMatch(val.trim())) {
-                            return 'Name can only contain letters and spaces';
-                          }
-                          return null;
-                        },
                         onChanged: (val) => vm.updatePersonalInfo(name: val),
                       ),
                       const SizedBox(height: 16),
                       _buildDateField(),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        fieldId: 'idNumber',
                         controller: _idController,
                         label: 'ID Number (CCCD)',
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        maxLength: 12,
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return 'Please enter ID Number (CCCD)';
-                          }
-                          if (val.length != 12) {
-                            return 'ID number must be 12 digits';
-                          }
-                          return null;
-                        },
                         onChanged: (val) => vm.updatePersonalInfo(id: val),
                       ),
                       
@@ -257,17 +194,14 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
-                        fieldId: 'yearsEmployed',
                         controller: _yearsEmployedController,
                         label: 'Years Employed',
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                        maxLength: 4,
                         onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        fieldId: 'monthlyIncome',
                         controller: _monthlyIncomeController,
                         label: 'Monthly Income (VND)',
                         keyboardType: TextInputType.number,
@@ -275,7 +209,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           FilteringTextInputFormatter.digitsOnly,
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
-                        maxLength: 20,
                         onChanged: (val) {
                           // Store locally - not in ViewModel
                         },
@@ -291,12 +224,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        fieldId: 'address',
                         controller: _addressController,
                         label: 'Current Address',
-                        minLines: 2,
-                        maxLines: 4,
-                        maxLength: 200,
                         onChanged: (val) => vm.updatePersonalInfo(addr: val),
                       ),
 
@@ -315,12 +244,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       // Show credit history fields only if user has credit history
                       if (_hasCreditHistory == true) ...[
                         _buildTextField(
-                          fieldId: 'yearsCreditHistory',
                           controller: _yearsCreditHistoryController,
                           label: 'Years Credit History',
                           keyboardType: TextInputType.number,
                           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          maxLength: 2,
                           onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
                         ),
                         const SizedBox(height: 16),
@@ -422,11 +349,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         : '';
     
     return TextFormField(
-      key: _fieldKey('dob'),
       readOnly: true,
       controller: TextEditingController(text: dobText),
-      focusNode: _fieldFocus('dob'),
-      maxLength: 10,
       onTap: () async {
         final picked = await showDatePicker(
           context: context,
@@ -452,11 +376,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           context.read<LoanViewModel>().updatePersonalInfo(dob: picked);
         }
       },
-      validator: (value) => _validateIfTouched(
-        'dob',
-        (val) => _selectedDOB == null ? 'Please select your date of birth' : null,
-        value,
-      ),
+      validator: (value) {
+        if (_selectedDOB == null) return 'Please select your date of birth';
+        return null;
+      },
       decoration: InputDecoration(
         labelText: 'Date of Birth',
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
@@ -474,33 +397,21 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   }
 
   Widget _buildTextField({
-    required String fieldId,
     required TextEditingController controller,
     required String label,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     Function(String)? onChanged,
-    int minLines = 1,
-    int maxLines = 1,
-    int? maxLength,
-    String? Function(String?)? validator,
   }) {
     return TextFormField(
-      key: _fieldKey(fieldId),
       controller: controller,
-      focusNode: _fieldFocus(fieldId),
       keyboardType: keyboardType,
-      minLines: minLines,
-      maxLines: maxLines,
-      maxLength: maxLength,
       inputFormatters: inputFormatters,
       onChanged: onChanged,
-      validator: (value) => _validateIfTouched(
-        fieldId,
-        validator ??
-            (val) => val == null || val.isEmpty ? 'Please enter $label' : null,
-        value,
-      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Please enter $label';
+        return null;
+      },
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -545,22 +456,44 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   // ==================== SUBMIT HANDLER ====================
   
   Future<void> _submitApplication() async {
-    _markAllTouched([
-      'fullName',
-      'dob',
-      'idNumber',
-      'yearsEmployed',
-      'monthlyIncome',
-      'address',
-      'yearsCreditHistory',
-    ]);
     if (!_formKey.currentState!.validate()) return;
     
-    // Navigate to ProcessingPage (which will handle API call)
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ProcessingPage()),
+    final vm = context.read<LoanViewModel>();
+    
+    // Submit application asynchronously
+    final success = await vm.submitApplicationAsync();
+    
+    if (!mounted) return;
+    
+    if (success) {
+      // Navigate to HomePage directly (not to '/' which goes to SplashScreen -> LoginPage)
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+        (route) => false,
+      );
+      
+      // Show snackbar to inform user
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your application is being processed. Check the Loans tab for status.'),
+          backgroundColor: Color(0xFF4C40F7),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text(vm.errorMessage ?? 'Failed to submit application'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
     }
   }
