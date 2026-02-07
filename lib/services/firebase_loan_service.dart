@@ -57,7 +57,9 @@ class FirebaseLoanService {
         currentlyDefaulting: loanRequest.currentlyDefaulting,
       );
 
+      print('[FirebaseLoanService] Calling API Step 1: /calculate-limit...');
       final limitResponse = await _apiService.calculateLimit(limitRequest);
+      print('[FirebaseLoanService] Step 1 completed. Score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}');
 
       // If not approved, return early
       if (!limitResponse.approved) {
@@ -121,9 +123,12 @@ class FirebaseLoanService {
         creditScore: limitResponse.creditScore,
       );
 
+      print('[FirebaseLoanService] Calling API Step 2: /calculate-terms...');
       final termsResponse = await _apiService.calculateTerms(termsRequest);
+      print('[FirebaseLoanService] Step 2 completed. Interest rate: ${termsResponse.interestRate}%, Term: ${termsResponse.loanTermMonths} months');
 
       // Create application document
+      print('[FirebaseLoanService] Creating application document...');
       final applicationRef = await _firebase.creditApplicationsCollection.add({
         'userId': userId,
         'status': 'approved',
@@ -148,8 +153,10 @@ class FirebaseLoanService {
         'approved': true,
         'loanLimitVnd': limitResponse.loanLimitVnd,
       });
+      print('[FirebaseLoanService] Application document created: ${applicationRef.id}');
 
       // Create loan offer document
+      print('[FirebaseLoanService] Creating loan offer document...');
       final offerRef = await _firebase.loanOffersCollection.add({
         'userId': userId,
         'applicationId': applicationRef.id,
@@ -174,8 +181,10 @@ class FirebaseLoanService {
         // Acceptance status
         'accepted': false,
       });
+      print('[FirebaseLoanService] Loan offer document created: ${offerRef.id}');
 
       // Add to application history
+      print('[FirebaseLoanService] Creating application history...');
       await _firebase.applicationHistoryCollection.add({
         'userId': userId,
         'applicationId': applicationRef.id,
@@ -188,6 +197,8 @@ class FirebaseLoanService {
         },
         'performedBy': userId,
       });
+      print('[FirebaseLoanService] Application history created');
+      print('[FirebaseLoanService] All Firestore operations completed successfully!');
 
       return {
         'applicationId': applicationRef.id,
