@@ -24,6 +24,69 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final TextEditingController _emergencyContactRelationshipController = TextEditingController();
   final TextEditingController _referencesController = TextEditingController();
 
+  final _employerNameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _jobTitleFieldKey = GlobalKey<FormFieldState<String>>();
+  final _workPhoneFieldKey = GlobalKey<FormFieldState<String>>();
+  final _yearsAtEmployerFieldKey = GlobalKey<FormFieldState<String>>();
+  final _emergencyContactNameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _emergencyContactPhoneFieldKey = GlobalKey<FormFieldState<String>>();
+  final _emergencyContactRelationshipFieldKey = GlobalKey<FormFieldState<String>>();
+  final _referencesFieldKey = GlobalKey<FormFieldState<String>>();
+
+  final _employerNameFocusNode = FocusNode();
+  final _jobTitleFocusNode = FocusNode();
+  final _workPhoneFocusNode = FocusNode();
+  final _yearsAtEmployerFocusNode = FocusNode();
+  final _emergencyContactNameFocusNode = FocusNode();
+  final _emergencyContactPhoneFocusNode = FocusNode();
+  final _emergencyContactRelationshipFocusNode = FocusNode();
+  final _referencesFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _employerNameFocusNode.addListener(() {
+      if (!_employerNameFocusNode.hasFocus) {
+        _employerNameFieldKey.currentState?.validate();
+      }
+    });
+    _jobTitleFocusNode.addListener(() {
+      if (!_jobTitleFocusNode.hasFocus) {
+        _jobTitleFieldKey.currentState?.validate();
+      }
+    });
+    _workPhoneFocusNode.addListener(() {
+      if (!_workPhoneFocusNode.hasFocus) {
+        _workPhoneFieldKey.currentState?.validate();
+      }
+    });
+    _yearsAtEmployerFocusNode.addListener(() {
+      if (!_yearsAtEmployerFocusNode.hasFocus) {
+        _yearsAtEmployerFieldKey.currentState?.validate();
+      }
+    });
+    _emergencyContactNameFocusNode.addListener(() {
+      if (!_emergencyContactNameFocusNode.hasFocus) {
+        _emergencyContactNameFieldKey.currentState?.validate();
+      }
+    });
+    _emergencyContactPhoneFocusNode.addListener(() {
+      if (!_emergencyContactPhoneFocusNode.hasFocus) {
+        _emergencyContactPhoneFieldKey.currentState?.validate();
+      }
+    });
+    _emergencyContactRelationshipFocusNode.addListener(() {
+      if (!_emergencyContactRelationshipFocusNode.hasFocus) {
+        _emergencyContactRelationshipFieldKey.currentState?.validate();
+      }
+    });
+    _referencesFocusNode.addListener(() {
+      if (!_referencesFocusNode.hasFocus) {
+        _referencesFieldKey.currentState?.validate();
+      }
+    });
+  }
+
   @override
   void dispose() {
     _employerNameController.dispose();
@@ -34,6 +97,14 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     _emergencyContactPhoneController.dispose();
     _emergencyContactRelationshipController.dispose();
     _referencesController.dispose();
+    _employerNameFocusNode.dispose();
+    _jobTitleFocusNode.dispose();
+    _workPhoneFocusNode.dispose();
+    _yearsAtEmployerFocusNode.dispose();
+    _emergencyContactNameFocusNode.dispose();
+    _emergencyContactPhoneFocusNode.dispose();
+    _emergencyContactRelationshipFocusNode.dispose();
+    _referencesFocusNode.dispose();
     super.dispose();
   }
 
@@ -84,69 +155,124 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       
                       _buildSectionHeader('Employment Information'),
                       _buildTextField(
+                        fieldKey: _employerNameFieldKey,
                         controller: _employerNameController,
+                        focusNode: _employerNameFocusNode,
                         label: 'Employer Name',
                         icon: Icons.business,
+                        maxLength: 50,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(50),
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-\.&]')),
+                        ],
                         validator: _validateEmployerName,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _jobTitleFieldKey,
                         controller: _jobTitleController,
+                        focusNode: _jobTitleFocusNode,
                         label: 'Job Title',
                         icon: Icons.work,
+                        maxLength: 50,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(50),
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-/]')),
+                        ],
                         validator: _validateJobTitle,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _workPhoneFieldKey,
                         controller: _workPhoneController,
+                        focusNode: _workPhoneFocusNode,
                         label: 'Work Phone Number',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        maxLength: 10,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(10),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         validator: _validatePhoneNumber,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _yearsAtEmployerFieldKey,
                         controller: _yearsAtEmployerController,
+                        focusNode: _yearsAtEmployerFocusNode,
                         label: 'Years at Current Employer',
                         icon: Icons.calendar_today,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                        maxLength: 5,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(5),
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
+                        ],
                         validator: _validateYearsAtEmployer,
                       ),
                       
                       const SizedBox(height: 24),
                       _buildSectionHeader('Emergency Contact'),
                       _buildTextField(
+                        fieldKey: _emergencyContactNameFieldKey,
                         controller: _emergencyContactNameController,
+                        focusNode: _emergencyContactNameFocusNode,
                         label: 'Emergency Contact Name',
                         icon: Icons.person,
+                        maxLength: 30,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(30),
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-\.]')),
+                        ],
                         validator: _validateName,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _emergencyContactPhoneFieldKey,
                         controller: _emergencyContactPhoneController,
+                        focusNode: _emergencyContactPhoneFocusNode,
                         label: 'Emergency Contact Phone',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        maxLength: 10,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(10),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         validator: _validatePhoneNumber,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _emergencyContactRelationshipFieldKey,
                         controller: _emergencyContactRelationshipController,
+                        focusNode: _emergencyContactRelationshipFocusNode,
                         label: 'Relationship',
                         icon: Icons.family_restroom,
+                        maxLength: 30,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(30),
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-]')),
+                        ],
                         validator: _validateRelationship,
                       ),
                       
                       const SizedBox(height: 24),
                       _buildSectionHeader('References (Optional)'),
                       _buildTextField(
+                        fieldKey: _referencesFieldKey,
                         controller: _referencesController,
+                        focusNode: _referencesFocusNode,
                         label: 'References',
                         icon: Icons.people,
                         maxLines: 3,
+                        maxLength: 200,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(200),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r"[A-Za-z0-9\s,\.\-/#&()']"),
+                          ),
+                        ],
                         isRequired: false,
                       ),
                     ],
@@ -202,20 +328,26 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   }
 
   Widget _buildTextField({
+    GlobalKey<FormFieldState<String>>? fieldKey,
     required TextEditingController controller,
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
+    int? maxLength,
     bool isRequired = true,
+    FocusNode? focusNode,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
+      key: fieldKey,
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       maxLines: maxLines,
+      maxLength: maxLength,
+      focusNode: focusNode,
       validator: validator ?? (value) {
         if (isRequired && (value == null || value.isEmpty)) {
           return 'Please enter $label';
@@ -234,6 +366,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
+        counterText: '',
       ),
     );
   }

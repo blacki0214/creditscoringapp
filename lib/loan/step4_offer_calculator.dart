@@ -18,6 +18,12 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
   late TextEditingController _totalPriceController;
   late TextEditingController _downPaymentController;
+
+  final _totalPriceFieldKey = GlobalKey<FormFieldState<String>>();
+  final _downPaymentFieldKey = GlobalKey<FormFieldState<String>>();
+
+  final _totalPriceFocusNode = FocusNode();
+  final _downPaymentFocusNode = FocusNode();
   
   String _selectedPurpose = 'PERSONAL';
   double _tenor = 12; // months, default 12
@@ -48,12 +54,25 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     if (vm.currentOffer?['loanTermMonths'] != null) {
       _tenor = ((vm.currentOffer!['loanTermMonths'] as num?) ?? 12).toDouble();
     }
+
+    _totalPriceFocusNode.addListener(() {
+      if (!_totalPriceFocusNode.hasFocus) {
+        _totalPriceFieldKey.currentState?.validate();
+      }
+    });
+    _downPaymentFocusNode.addListener(() {
+      if (!_downPaymentFocusNode.hasFocus) {
+        _downPaymentFieldKey.currentState?.validate();
+      }
+    });
   }
 
   @override
   void dispose() {
     _totalPriceController.dispose();
     _downPaymentController.dispose();
+    _totalPriceFocusNode.dispose();
+    _downPaymentFocusNode.dispose();
     super.dispose();
   }
 
@@ -139,28 +158,38 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                       // Total Price
                       _buildSectionHeader('Financing Details'),
                       _buildTextField(
+                        fieldKey: _totalPriceFieldKey,
                         controller: _totalPriceController,
+                        focusNode: _totalPriceFocusNode,
                         label: 'Total Price (VND)',
                         hint: '100,000,000',
                         keyboardType: TextInputType.number,
+                        maxLength: 15,
                         inputFormatters: [
+                          LengthLimitingTextInputFormatter(15),
                           FilteringTextInputFormatter.digitsOnly,
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
+                        validator: _validateAmount,
                         onChanged: (val) => setState(() {}),
                       ),
 
                       const SizedBox(height: 16),
                       // Down Payment
                       _buildTextField(
+                        fieldKey: _downPaymentFieldKey,
                         controller: _downPaymentController,
+                        focusNode: _downPaymentFocusNode,
                         label: 'Down Payment (VND)',
                         hint: '20,000,000',
                         keyboardType: TextInputType.number,
+                        maxLength: 15,
                         inputFormatters: [
+                          LengthLimitingTextInputFormatter(15),
                           FilteringTextInputFormatter.digitsOnly,
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
+                        validator: _validateDownPayment,
                         onChanged: (val) => setState(() {}),
                       ),
 
@@ -474,19 +503,26 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   }
 
   Widget _buildTextField({
+    GlobalKey<FormFieldState<String>>? fieldKey,
     required TextEditingController controller,
     required String label,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    FocusNode? focusNode,
+    int? maxLength,
     Function(String)? onChanged,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
+      key: fieldKey,
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
+      focusNode: focusNode,
+      maxLength: maxLength,
       onChanged: onChanged,
-      validator: (value) {
+      validator: validator ?? (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
         return null;
       },
@@ -502,8 +538,23 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
+        counterText: '',
       ),
     );
+  }
+
+  String? _validateAmount(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Total Price';
+    final amount = _parseAmount(value);
+    if (amount <= 0) return 'Total Price must be greater than 0';
+    return null;
+  }
+
+  String? _validateDownPayment(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Down Payment';
+    final amount = _parseAmount(value);
+    if (amount < 0) return 'Down Payment cannot be negative';
+    return null;
   }
 
   Widget _buildDropdown({

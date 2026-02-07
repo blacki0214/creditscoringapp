@@ -26,6 +26,20 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   late TextEditingController _yearsEmployedController;
   late TextEditingController _yearsCreditHistoryController;
   late TextEditingController _addressController;
+
+  final _fullNameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _idFieldKey = GlobalKey<FormFieldState<String>>();
+  final _monthlyIncomeFieldKey = GlobalKey<FormFieldState<String>>();
+  final _yearsEmployedFieldKey = GlobalKey<FormFieldState<String>>();
+  final _yearsCreditHistoryFieldKey = GlobalKey<FormFieldState<String>>();
+  final _addressFieldKey = GlobalKey<FormFieldState<String>>();
+
+  final _fullNameFocusNode = FocusNode();
+  final _idFocusNode = FocusNode();
+  final _monthlyIncomeFocusNode = FocusNode();
+  final _yearsEmployedFocusNode = FocusNode();
+  final _yearsCreditHistoryFocusNode = FocusNode();
+  final _addressFocusNode = FocusNode();
   
   DateTime? _selectedDOB;
   
@@ -51,6 +65,37 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _yearsCreditHistoryController = TextEditingController(); 
     _addressController = TextEditingController(text: vm.address);
     _selectedDOB = vm.dob;
+
+    _fullNameFocusNode.addListener(() {
+      if (!_fullNameFocusNode.hasFocus) {
+        _fullNameFieldKey.currentState?.validate();
+      }
+    });
+    _idFocusNode.addListener(() {
+      if (!_idFocusNode.hasFocus) {
+        _idFieldKey.currentState?.validate();
+      }
+    });
+    _monthlyIncomeFocusNode.addListener(() {
+      if (!_monthlyIncomeFocusNode.hasFocus) {
+        _monthlyIncomeFieldKey.currentState?.validate();
+      }
+    });
+    _yearsEmployedFocusNode.addListener(() {
+      if (!_yearsEmployedFocusNode.hasFocus) {
+        _yearsEmployedFieldKey.currentState?.validate();
+      }
+    });
+    _yearsCreditHistoryFocusNode.addListener(() {
+      if (!_yearsCreditHistoryFocusNode.hasFocus) {
+        _yearsCreditHistoryFieldKey.currentState?.validate();
+      }
+    });
+    _addressFocusNode.addListener(() {
+      if (!_addressFocusNode.hasFocus) {
+        _addressFieldKey.currentState?.validate();
+      }
+    });
   }
 
   @override
@@ -61,6 +106,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     _yearsEmployedController.dispose();
     _yearsCreditHistoryController.dispose();
     _addressController.dispose();
+    _fullNameFocusNode.dispose();
+    _idFocusNode.dispose();
+    _monthlyIncomeFocusNode.dispose();
+    _yearsEmployedFocusNode.dispose();
+    _yearsCreditHistoryFocusNode.dispose();
+    _addressFocusNode.dispose();
     super.dispose();
   }
 
@@ -169,18 +220,33 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       
                       _buildSectionHeader('Personal Details'),
                       _buildTextField(
+                        fieldKey: _fullNameFieldKey,
                         controller: _fullNameController,
+                        focusNode: _fullNameFocusNode,
                         label: 'Full Name',
+                        maxLength: 30,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(30),
+                          FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z\s\-']")),
+                        ],
+                        validator: _validateFullName,
                         onChanged: (val) => vm.updatePersonalInfo(name: val),
                       ),
                       const SizedBox(height: 16),
                       _buildDateField(),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _idFieldKey,
                         controller: _idController,
+                        focusNode: _idFocusNode,
                         label: 'ID Number (CCCD)',
                         keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        maxLength: 12,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(12),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: _validateIdNumber,
                         onChanged: (val) => vm.updatePersonalInfo(id: val),
                       ),
                       
@@ -194,21 +260,33 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
+                        fieldKey: _yearsEmployedFieldKey,
                         controller: _yearsEmployedController,
+                        focusNode: _yearsEmployedFocusNode,
                         label: 'Years Employed',
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                        maxLength: 5,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(5),
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
+                        ],
+                        validator: _validateYearsEmployed,
                         onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _monthlyIncomeFieldKey,
                         controller: _monthlyIncomeController,
+                        focusNode: _monthlyIncomeFocusNode,
                         label: 'Monthly Income (VND)',
                         keyboardType: TextInputType.number,
+                        maxLength: 15,
                         inputFormatters: [
+                          LengthLimitingTextInputFormatter(15),
                           FilteringTextInputFormatter.digitsOnly,
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
+                        validator: _validateMonthlyIncome,
                         onChanged: (val) {
                           // Store locally - not in ViewModel
                         },
@@ -224,8 +302,18 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
+                        fieldKey: _addressFieldKey,
                         controller: _addressController,
+                        focusNode: _addressFocusNode,
                         label: 'Current Address',
+                        maxLength: 100,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(100),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r"[A-Za-z0-9\s,\.\-/#]"),
+                          ),
+                        ],
+                        validator: _validateAddress,
                         onChanged: (val) => vm.updatePersonalInfo(addr: val),
                       ),
 
@@ -244,10 +332,17 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       // Show credit history fields only if user has credit history
                       if (_hasCreditHistory == true) ...[
                         _buildTextField(
+                          fieldKey: _yearsCreditHistoryFieldKey,
                           controller: _yearsCreditHistoryController,
+                          focusNode: _yearsCreditHistoryFocusNode,
                           label: 'Years Credit History',
                           keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          maxLength: 2,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(2),
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: _validateYearsCreditHistory,
                           onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
                         ),
                         const SizedBox(height: 16),
@@ -397,18 +492,25 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   }
 
   Widget _buildTextField({
+    GlobalKey<FormFieldState<String>>? fieldKey,
     required TextEditingController controller,
     required String label,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    FocusNode? focusNode,
+    int? maxLength,
     Function(String)? onChanged,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
+      key: fieldKey,
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
+      focusNode: focusNode,
+      maxLength: maxLength,
       onChanged: onChanged,
-      validator: (value) {
+      validator: validator ?? (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
         return null;
       },
@@ -423,8 +525,66 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
+        counterText: '',
       ),
     );
+  }
+
+  String? _validateFullName(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Full Name';
+    if (value.trim().length < 2) return 'Full Name must be at least 2 characters';
+    if (!RegExp(r"^[A-Za-z\s\-']+$").hasMatch(value)) {
+      return 'Full Name can only contain letters, spaces, hyphens, and apostrophes';
+    }
+    return null;
+  }
+
+  String? _validateIdNumber(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter ID Number';
+    if (!RegExp(r'^\d{12}$').hasMatch(value)) {
+      return 'ID Number must be exactly 12 digits';
+    }
+    return null;
+  }
+
+  String? _validateYearsEmployed(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Years Employed';
+    if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
+      return 'Enter a valid number (up to 2 decimals)';
+    }
+    final years = double.tryParse(value);
+    if (years == null || years < 0 || years > 60) {
+      return 'Years Employed must be between 0 and 60';
+    }
+    return null;
+  }
+
+  String? _validateMonthlyIncome(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Monthly Income';
+    final cleaned = value.replaceAll('.', '');
+    final income = double.tryParse(cleaned);
+    if (income == null || income <= 0) {
+      return 'Monthly Income must be greater than 0';
+    }
+    return null;
+  }
+
+  String? _validateAddress(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Current Address';
+    if (value.trim().length < 5) return 'Address must be at least 5 characters';
+    if (!RegExp(r'^[A-Za-z0-9\s,\.\-/#]+$').hasMatch(value)) {
+      return 'Address contains invalid characters';
+    }
+    return null;
+  }
+
+  String? _validateYearsCreditHistory(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Years Credit History';
+    final years = int.tryParse(value);
+    if (years == null || years < 0 || years > 50) {
+      return 'Years Credit History must be between 0 and 50';
+    }
+    return null;
   }
 
   Widget _buildDropdown({
