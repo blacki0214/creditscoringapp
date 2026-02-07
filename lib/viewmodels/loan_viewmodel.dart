@@ -397,6 +397,31 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetForNewApplication() {
+    _step1Completed = false;
+    _step2Completed = false;
+    _step3Completed = false;
+    _step4Completed = false;
+    _isProcessing = false;
+    _applicationStatus = ApplicationStatus.none;
+    _pendingApplicationId = null;
+    _currentOffer = null;
+    _errorMessage = null;
+
+    _frontIdImageBytes = null;
+    _backIdImageBytes = null;
+    _selfieImageBytes = null;
+    _frontIdData = null;
+    _backIdData = null;
+    _faceMatchData = null;
+    _vnptErrorMessage = null;
+    _isVerifyingFrontId = false;
+    _isVerifyingBackId = false;
+    _isVerifyingSelfie = false;
+
+    notifyListeners();
+  }
+
   Future<void> resetLoanApplicationState() async {
     _step1Completed = false;
     _step2Completed = false;

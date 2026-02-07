@@ -151,6 +151,7 @@ class LoanOfferPage extends StatelessWidget {
                   height: 56,
                   child: OutlinedButton(
                     onPressed: () {
+                      context.read<LoanViewModel>().resetForNewApplication();
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
