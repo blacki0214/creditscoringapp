@@ -210,7 +210,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           _CurrencyInputFormatter(_currencyFormatter),
                         ],
                         onChanged: (val) {
-                          // Store locally - not in ViewModel
+                          // Remove formatting characters (dots/commas) and parse to double
+                          final cleanedValue = val.replaceAll(RegExp(r'[,.]'), '');
+                          final parsedIncome = double.tryParse(cleanedValue);
+                          if (parsedIncome != null) {
+                            vm.updatePersonalInfo(income: parsedIncome);
+                          }
                         },
                       ),
 
