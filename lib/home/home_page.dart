@@ -818,7 +818,7 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                'Loan Amount',
+                                'Limit Amount',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Color(0xFF1A1F3F),
@@ -827,7 +827,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               Text(
                                 currencyFormat.format(
-                                  loanViewModel.currentOffer!['loanAmountVnd'] as num,
+                                  loanViewModel.currentOffer!['maxAmountVnd'] as num,
                                 ),
                                 style: const TextStyle(
                                   fontSize: 14,
@@ -839,36 +839,37 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Continue button to Step 3
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Step3AdditionalInfoPage(),
+                        // Continue button to Step 3 (only show if steps 3 or 4 not completed)
+                        if (!loanViewModel.step3Completed || !loanViewModel.step4Completed)
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const Step3AdditionalInfoPage(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4C40F7),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4C40F7),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ),
-                            child: const Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                              child: const Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ],
                   ),
@@ -937,7 +938,19 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 if (loanViewModel.currentOffer!['approved'] as bool) ...[
-                  // Loan amount is now shown in the scored box above
+                  // Show the actual loan amount user chose
+                  if (loanViewModel.currentOffer!['loanAmountVnd'] != null)
+                    Column(
+                      children: [
+                        _buildLoanDetailRow(
+                          'Loan Amount',
+                          currencyFormat.format(
+                            loanViewModel.currentOffer!['loanAmountVnd'] as num,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   if (loanViewModel.currentOffer!['interestRate'] != null)
                     Column(
                       children: [
@@ -973,74 +986,6 @@ class _HomePageState extends State<HomePage> {
                   _buildLoanDetailRow(
                     'Credit Score',
                     '${loanViewModel.currentOffer!['creditScore']}',
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Viewing loan terms...'),
-                                backgroundColor: Color(0xFF4C40F7),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF4C40F7),
-                            elevation: 0,
-                            side: const BorderSide(color: Color(0xFF4C40F7)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('View Terms'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            try {
-                              print('DEBUG: Accept Loan button clicked');
-                              print('DEBUG: Current route: ${ModalRoute.of(context)?.settings.name}');
-                              print('DEBUG: Navigating to Step3AdditionalInfoPage');
-                              
-                              // Navigate to Step 3 - Additional Information
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Step3AdditionalInfoPage(),
-                                ),
-                              ).then((value) {
-                                print('DEBUG: Navigation completed');
-                              }).catchError((error) {
-                                print('DEBUG: Navigation error: $error');
-                              });
-                            } catch (e) {
-                              print('DEBUG: Exception during navigation: $e');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Navigation error: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Accept Loan'),
-                        ),
-                      ),
-                    ],
                   ),
                 ] else ...[
                   Center(

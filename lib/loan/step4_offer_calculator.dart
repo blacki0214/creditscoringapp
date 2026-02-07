@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'contract_review_page.dart';
 
+
 class Step4OfferCalculatorPage extends StatefulWidget {
   const Step4OfferCalculatorPage({super.key});
 
@@ -378,7 +379,25 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                       onPressed: (calculatedLoanAmount <= 0 || !isWithinLimit)
                           ? null
                           : () {
-                              // Navigate to Contract Review (pass data via constructor or args)
+                              // Get the loan view model
+                              final loanViewModel = context.read<LoanViewModel>();
+                              
+                              // Calculate monthly payment
+                              final interestRate = (offer['interestRate'] as num?) ?? 15.0;
+                              final monthlyPayment = (calculatedLoanAmount / _tenor.toInt()) * (1 + (interestRate / 100));
+                              
+                              // Update the loan offer with user's chosen parameters
+                              loanViewModel.updateLoanOffer(
+                                loanAmount: calculatedLoanAmount,
+                                tenor: _tenor.toInt(),
+                                monthlyPayment: monthlyPayment,
+                                loanPurpose: _selectedPurpose,
+                              );
+                              
+                              // Mark Step 4 as completed
+                              loanViewModel.completeStep4();
+                              
+                              // Navigate to Contract Review
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

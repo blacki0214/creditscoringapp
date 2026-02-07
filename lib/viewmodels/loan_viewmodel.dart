@@ -169,6 +169,35 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Update the current offer with user's chosen loan parameters from Step 4
+  void updateLoanOffer({
+    required double loanAmount,
+    required int tenor,
+    required double monthlyPayment,
+    String? loanPurpose,
+  }) {
+    if (_currentOffer != null) {
+      // Update the offer with user's chosen parameters
+      _currentOffer!['loanAmountVnd'] = loanAmount;
+      _currentOffer!['loanTermMonths'] = tenor;
+      _currentOffer!['monthlyPaymentVnd'] = monthlyPayment;
+      
+      // Calculate total payment and interest
+      final totalPayment = monthlyPayment * tenor;
+      final totalInterest = totalPayment - loanAmount;
+      _currentOffer!['totalPaymentVnd'] = totalPayment;
+      _currentOffer!['totalInterestVnd'] = totalInterest;
+      
+      // Update loan purpose if provided
+      if (loanPurpose != null) {
+        this.loanPurpose = loanPurpose;
+      }
+      
+      notifyListeners();
+    }
+  }
+
+
   void updatePersonalInfo({
     String? name,
     DateTime? dob,

@@ -296,8 +296,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                             Expanded(
                                               child: Text(
                                                 passedValidation 
-                                                    ? 'Xác thực thành công'
-                                                    : 'Xác thực thất bại',
+                                                    ? 'Face verification successful'
+                                                    : 'Face verification failed',
                                                 style: TextStyle(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w700,
@@ -311,8 +311,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                         ),
                                         const SizedBox(height: 12),
                                         _buildInfoRow(
-                                          'Trạng thái',
-                                          faceMatchData.isMatch ? '✓ Khớp' : '✗ Không khớp',
+                                          'Status',
+                                          faceMatchData.isMatch ? '✓ Match' : '✗ Not Match',
                                         ),
                                         if (!passedValidation) ...[
                                           const SizedBox(height: 12),
@@ -329,8 +329,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                                 Expanded(
                                                   child: Text(
                                                     faceMatchData.similarity != null && faceMatchData.similarity! < 0.70
-                                                        ? 'Độ tương đồng quá thấp (cần ≥70%). Vui lòng chụp lại với khuôn mặt rõ ràng.'
-                                                        : 'Khuôn mặt không khớp. Vui lòng thử lại.',
+                                                        ? 'Similarity is too low (need ≥70%). Please retake with a clear face.'
+                                                        : 'Face does not match. Please try again.',
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color: Colors.red.shade700,
@@ -367,7 +367,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Đang so sánh khuôn mặt...',
+                          'Comparing faces...',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
