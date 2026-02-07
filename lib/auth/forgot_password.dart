@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
@@ -13,15 +14,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
 
-  /// Validate email format: must have text@text pattern
+  /// Validate email format: must be a Gmail address
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
     }
-    // Check for basic email pattern: text@text.text
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    // Enforce Gmail format
+    final emailRegex = RegExp(r'^[A-Z0-9._%+-]+@gmail\.com$', caseSensitive: false);
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
+      return 'Please enter a valid Gmail address';
     }
     return null;
   }
@@ -134,6 +135,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     maxLength: 50,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(50),
+                      FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                    ],
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
