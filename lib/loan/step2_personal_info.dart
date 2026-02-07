@@ -309,7 +309,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(100),
                           FilteringTextInputFormatter.allow(
-                            RegExp(r"[\p{L}\p{M}\s]", unicode: true),
+                            RegExp(r"[\p{L}\p{M}0-9\s,\.\-/#]", unicode: true),
                           ),
                         ],
                         validator: _validateAddress,
@@ -564,8 +564,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   String? _validateAddress(String? value) {
     if (value == null || value.isEmpty) return 'Please enter Current Address';
     if (value.trim().length < 5) return 'Address must be at least 5 characters';
-    if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
-      return 'Address can only contain letters and spaces';
+    if (!RegExp(r"^[\p{L}\p{M}0-9\s,\.\-/#]+$", unicode: true).hasMatch(value)) {
+      return 'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #';
     }
     return null;
   }
