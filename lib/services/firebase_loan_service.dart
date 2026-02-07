@@ -12,10 +12,92 @@ class FirebaseLoanService {
     required SimpleLoanRequest loanRequest,
   }) async {
     try {
-      // 1. Call the credit scoring API
-      final loanOffer = await _apiService.applyForLoan(loanRequest);
+      // Step 1: Calculate credit score and loan limit
+      final limitRequest = CalculateLimitRequest(
+        fullName: loanRequest.fullName,
+        age: loanRequest.age,
+        monthlyIncome: loanRequest.monthlyIncome,
+        employmentStatus: loanRequest.employmentStatus,
+        yearsEmployed: loanRequest.yearsEmployed,
+        homeOwnership: loanRequest.homeOwnership,
+        loanPurpose: loanRequest.loanPurpose,
+        yearsCreditHistory: loanRequest.yearsCreditHistory,
+        hasPreviousDefaults: loanRequest.hasPreviousDefaults,
+        currentlyDefaulting: loanRequest.currentlyDefaulting,
+      );
 
-      // 2. Create application document
+      print('[FirebaseLoanService] Calling API Step 1: /calculate-limit...');
+      final limitResponse = await _apiService.calculateLimit(limitRequest);
+      print('[FirebaseLoanService] Step 1 completed. Score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}');
+
+      // If not approved, return early
+      if (!limitResponse.approved) {
+        // Create application document for rejected application
+        final applicationRef = await _firebase.creditApplicationsCollection.add({
+          'userId': userId,
+          'status': 'rejected',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          
+          // Application data
+          'fullName': loanRequest.fullName,
+          'age': loanRequest.age,
+          'monthlyIncome': loanRequest.monthlyIncome,
+          'employmentStatus': loanRequest.employmentStatus,
+          'yearsEmployed': loanRequest.yearsEmployed,
+          'homeOwnership': loanRequest.homeOwnership,
+          'loanPurpose': loanRequest.loanPurpose,
+          'yearsCreditHistory': loanRequest.yearsCreditHistory,
+          'hasPreviousDefaults': loanRequest.hasPreviousDefaults,
+          'currentlyDefaulting': loanRequest.currentlyDefaulting,
+          
+          // Result data
+          'creditScore': limitResponse.creditScore,
+          'riskLevel': limitResponse.riskLevel,
+          'approved': false,
+          'loanLimitVnd': limitResponse.loanLimitVnd,
+        });
+
+        // Create rejected offer document
+        final offerRef = await _firebase.loanOffersCollection.add({
+          'userId': userId,
+          'applicationId': applicationRef.id,
+          'createdAt': FieldValue.serverTimestamp(),
+          'expiresAt': Timestamp.fromDate(
+            DateTime.now().add(const Duration(days: 30)),
+          ),
+          
+          'approved': false,
+          'loanAmountVnd': 0,
+          'maxAmountVnd': limitResponse.loanLimitVnd,
+          'creditScore': limitResponse.creditScore,
+          'riskLevel': limitResponse.riskLevel,
+          'approvalMessage': limitResponse.message,
+          'accepted': false,
+        });
+
+        return {
+          'applicationId': applicationRef.id,
+          'offerId': offerRef.id,
+          'limitResponse': limitResponse,
+          'termsResponse': null,
+        };
+      }
+
+      // Step 2: Calculate loan terms for approved applications
+      // Use the loan limit as the approved amount
+      final termsRequest = CalculateTermsRequest(
+        loanAmount: limitResponse.loanLimitVnd,
+        loanPurpose: loanRequest.loanPurpose,
+        creditScore: limitResponse.creditScore,
+      );
+
+      print('[FirebaseLoanService] Calling API Step 2: /calculate-terms...');
+      final termsResponse = await _apiService.calculateTerms(termsRequest);
+      print('[FirebaseLoanService] Step 2 completed. Interest rate: ${termsResponse.interestRate}%, Term: ${termsResponse.loanTermMonths} months');
+
+      // Create application document
+      print('[FirebaseLoanService] Creating application document...');
       final applicationRef = await _firebase.creditApplicationsCollection.add({
         'userId': userId,
         'status': loanOffer.approved ? 'approved' : 'rejected',
@@ -39,8 +121,10 @@ class FirebaseLoanService {
         'riskLevel': loanOffer.riskLevel,
         'approved': loanOffer.approved,
       });
+      print('[FirebaseLoanService] Application document created: ${applicationRef.id}');
 
-      // 3. Create loan offer document
+      // Create loan offer document
+      print('[FirebaseLoanService] Creating loan offer document...');
       final offerRef = await _firebase.loanOffersCollection.add({
         'userId': userId,
         'applicationId': applicationRef.id,
@@ -65,8 +149,10 @@ class FirebaseLoanService {
         // Acceptance status
         'accepted': false,
       });
+      print('[FirebaseLoanService] Loan offer document created: ${offerRef.id}');
 
-      // 4. Add to application history
+      // Add to application history
+      print('[FirebaseLoanService] Creating application history...');
       await _firebase.applicationHistoryCollection.add({
         'userId': userId,
         'applicationId': applicationRef.id,
@@ -78,6 +164,8 @@ class FirebaseLoanService {
         },
         'performedBy': userId,
       });
+      print('[FirebaseLoanService] Application history created');
+      print('[FirebaseLoanService] All Firestore operations completed successfully!');
 
       return {
         'applicationId': applicationRef.id,

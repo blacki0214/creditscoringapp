@@ -138,6 +138,50 @@ class LoanViewModel extends ChangeNotifier {
     _step1Completed = true;
     notifyListeners();
   }
+  
+  void completeStep2() {
+    _step2Completed = true;
+    notifyListeners();
+  }
+  
+  void completeStep3() {
+    _step3Completed = true;
+    notifyListeners();
+  }
+  
+  void completeStep4() {
+    _step4Completed = true;
+    notifyListeners();
+  }
+
+  // Update the current offer with user's chosen loan parameters from Step 4
+  void updateLoanOffer({
+    required double loanAmount,
+    required int tenor,
+    required double monthlyPayment,
+    String? loanPurpose,
+  }) {
+    if (_currentOffer != null) {
+      // Update the offer with user's chosen parameters
+      _currentOffer!['loanAmountVnd'] = loanAmount;
+      _currentOffer!['loanTermMonths'] = tenor;
+      _currentOffer!['monthlyPaymentVnd'] = monthlyPayment;
+      
+      // Calculate total payment and interest
+      final totalPayment = monthlyPayment * tenor;
+      final totalInterest = totalPayment - loanAmount;
+      _currentOffer!['totalPaymentVnd'] = totalPayment;
+      _currentOffer!['totalInterestVnd'] = totalInterest;
+      
+      // Update loan purpose if provided
+      if (loanPurpose != null) {
+        this.loanPurpose = loanPurpose;
+      }
+      
+      notifyListeners();
+    }
+  }
+
 
   void updatePersonalInfo({
     String? name,
@@ -180,6 +224,7 @@ class LoanViewModel extends ChangeNotifier {
       return false;
     }
 
+    print('[LoanViewModel] Starting loan application submission...');
     _isProcessing = true;
     _errorMessage = null;
     notifyListeners();
@@ -211,12 +256,20 @@ class LoanViewModel extends ChangeNotifier {
       // Artificial delay for UX
       await Future.delayed(const Duration(seconds: 2));
       
-      // Submit to Firebase (which calls API and stores results)
+      // Submit to Firebase (which calls the two-step API and stores results)
+      print('[LoanViewModel] Calling Firebase loan service...');
       final result = await _loanService.submitLoanApplication(
         userId: userId,
         loanRequest: request,
       );
       
+      print('[LoanViewModel] Received response from Firebase service');
+      final limitResponse = result['limitResponse'] as CalculateLimitResponse;
+      final termsResponse = result['termsResponse'] as CalculateTermsResponse?;
+      
+      print('[LoanViewModel] Credit score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}');
+      
+      // Build currentOffer map from the two-step response
       _currentOffer = {
         'applicationId': result['applicationId'],
         'offerId': result['offerId'],
@@ -234,6 +287,7 @@ class LoanViewModel extends ChangeNotifier {
       };
       
       // Clear draft after successful submission
+      print('[LoanViewModel] Clearing draft...');
       await LocalStorageService.clearDraft();
       
       _step2Completed = true;
@@ -242,6 +296,7 @@ class LoanViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      print('[LoanViewModel] ERROR during submission: $e');
       _errorMessage = e.toString();
       _isProcessing = false;
       notifyListeners();
