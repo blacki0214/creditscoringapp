@@ -14,6 +14,9 @@ class DemoCalculatorPage extends StatefulWidget {
 
 class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   final _formKey = GlobalKey<FormState>();
+  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
+  final Map<String, FocusNode> _fieldFocusNodes = {};
+  final Map<String, bool> _touchedFields = {};
   
   // Credit history selection
   bool? _hasCreditHistory;
@@ -49,7 +52,49 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  GlobalKey<FormFieldState> _fieldKey(String id) {
+    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
+  }
+
+  FocusNode _fieldFocus(String id) {
+    return _fieldFocusNodes.putIfAbsent(id, () {
+      final node = FocusNode();
+      node.addListener(() {
+        if (!node.hasFocus) {
+          _touchedFields[id] = true;
+          _fieldKeys[id]?.currentState?.validate();
+        }
+      });
+      return node;
+    });
+  }
+
+  String? _validateIfTouched(
+    String id,
+    String? Function(String?) validator,
+    String? value,
+  ) {
+    if (_touchedFields[id] != true) {
+      return null;
+    }
+    return validator(value);
+  }
+
+  void _markAllTouched(Iterable<String> ids) {
+    for (final id in ids) {
+      _touchedFields[id] = true;
+    }
+  }
+
+  @override
   void dispose() {
+    for (final node in _fieldFocusNodes.values) {
+      node.dispose();
+    }
     _monthlyIncomeController.dispose();
     _yearsEmployedController.dispose();
     _yearsCreditHistoryController.dispose();
@@ -173,13 +218,16 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         ),
                         const SizedBox(height: 12),
                         _buildTextField(
+                          fieldId: 'yearsEmployed',
                           controller: _yearsEmployedController,
                           label: 'Years Employed',
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                          maxLength: 4,
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          fieldId: 'monthlyIncome',
                           controller: _monthlyIncomeController,
                           label: 'Monthly Income (VND)',
                           keyboardType: TextInputType.number,
@@ -187,6 +235,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             FilteringTextInputFormatter.digitsOnly,
                             _CurrencyInputFormatter(_currencyFormatter),
                           ],
+                          maxLength: 20,
                         ),
 
                         const SizedBox(height: 16),
@@ -200,8 +249,12 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          fieldId: 'address',
                           controller: _addressController,
                           label: 'Current Address',
+                          minLines: 2,
+                          maxLines: 4,
+                          maxLength: 200,
                         ),
 
                         const SizedBox(height: 16),
@@ -215,6 +268,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          fieldId: 'loanAmount',
                           controller: _loanAmountController,
                           label: 'Desired Loan Amount (VND)',
                           keyboardType: TextInputType.number,
@@ -222,6 +276,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             FilteringTextInputFormatter.digitsOnly,
                             _CurrencyInputFormatter(_currencyFormatter),
                           ],
+                          maxLength: 20,
                         ),
                         
                         const SizedBox(height: 16),
@@ -231,10 +286,12 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         // Show credit history fields only if user has credit history
                         if (_hasCreditHistory == true) ...[
                           _buildTextField(
+                            fieldId: 'yearsCreditHistory',
                             controller: _yearsCreditHistoryController,
                             label: 'Years Credit History',
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            maxLength: 2,
                           ),
                           const SizedBox(height: 16),
                           SwitchListTile(
@@ -340,6 +397,14 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   }
 
   Future<void> _calculateProfile() async {
+    _markAllTouched([
+      'dob',
+      'yearsEmployed',
+      'monthlyIncome',
+      'address',
+      'loanAmount',
+      'yearsCreditHistory',
+    ]);
     // Validate credit history selection first
     if (_hasCreditHistory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -498,8 +563,11 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         : '';
 
     return TextFormField(
+      key: _fieldKey('dob'),
       readOnly: true,
       controller: TextEditingController(text: dobText),
+      focusNode: _fieldFocus('dob'),
+      maxLength: 10,
       onTap: () async {
         final picked = await showDatePicker(
           context: context,
@@ -511,10 +579,11 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           setState(() => _selectedDOB = picked);
         }
       },
-      validator: (value) {
-        if (_selectedDOB == null) return 'Please select your date of birth';
-        return null;
-      },
+      validator: (value) => _validateIfTouched(
+        'dob',
+        (val) => _selectedDOB == null ? 'Please select your date of birth' : null,
+        value,
+      ),
       decoration: InputDecoration(
         labelText: 'Date of Birth',
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
@@ -532,19 +601,29 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   }
 
   Widget _buildTextField({
+    required String fieldId,
     required TextEditingController controller,
     required String label,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    int minLines = 1,
+    int maxLines = 1,
+    int? maxLength,
   }) {
     return TextFormField(
+      key: _fieldKey(fieldId),
       controller: controller,
+      focusNode: _fieldFocus(fieldId),
       keyboardType: keyboardType,
+      minLines: minLines,
+      maxLines: maxLines,
+      maxLength: maxLength,
       inputFormatters: inputFormatters,
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Please enter $label';
-        return null;
-      },
+      validator: (value) => _validateIfTouched(
+        fieldId,
+        (val) => val == null || val.isEmpty ? 'Please enter $label' : null,
+        value,
+      ),
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

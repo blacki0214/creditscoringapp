@@ -14,6 +14,9 @@ class PhoneLoginPage extends StatefulWidget {
 class _PhoneLoginPageState extends State<PhoneLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
+  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
+  final Map<String, FocusNode> _fieldFocusNodes = {};
+  final Map<String, bool> _touchedFields = {};
 
   /// Validate phone number: 10 digits starting with 0
   String? _validatePhone(String? value) {
@@ -32,6 +35,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
   }
 
   Future<void> _sendOTP() async {
+    _markAllTouched(['phone']);
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -68,8 +72,45 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
     }
   }
 
+  GlobalKey<FormFieldState> _fieldKey(String id) {
+    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
+  }
+
+  FocusNode _fieldFocus(String id) {
+    return _fieldFocusNodes.putIfAbsent(id, () {
+      final node = FocusNode();
+      node.addListener(() {
+        if (!node.hasFocus) {
+          _touchedFields[id] = true;
+          _fieldKeys[id]?.currentState?.validate();
+        }
+      });
+      return node;
+    });
+  }
+
+  String? _validateIfTouched(
+    String id,
+    String? Function(String?) validator,
+    String? value,
+  ) {
+    if (_touchedFields[id] != true) {
+      return null;
+    }
+    return validator(value);
+  }
+
+  void _markAllTouched(Iterable<String> ids) {
+    for (final id in ids) {
+      _touchedFields[id] = true;
+    }
+  }
+
   @override
   void dispose() {
+    for (final node in _fieldFocusNodes.values) {
+      node.dispose();
+    }
     _phoneController.dispose();
     super.dispose();
   }
@@ -118,7 +159,9 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                   const SizedBox(height: 40),
                   // Phone field
                   TextFormField(
+                    key: _fieldKey('phone'),
                     controller: _phoneController,
+                    focusNode: _fieldFocus('phone'),
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
                     decoration: InputDecoration(
@@ -141,7 +184,8 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                       ),
                       counterText: '',
                     ),
-                    validator: _validatePhone,
+                    validator: (value) =>
+                        _validateIfTouched('phone', _validatePhone, value),
                   ),
                   const SizedBox(height: 32),
                   // Send OTP button

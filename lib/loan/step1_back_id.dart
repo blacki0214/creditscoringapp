@@ -5,16 +5,16 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'step2_personal_info.dart';
+import 'step1_selfie.dart';
 
-class Step1SelfiePage extends StatefulWidget {
-  const Step1SelfiePage({super.key});
+class Step1BackIDPage extends StatefulWidget {
+  const Step1BackIDPage({super.key});
 
   @override
-  State<Step1SelfiePage> createState() => _Step1SelfiePageState();
+  State<Step1BackIDPage> createState() => _Step1BackIDPageState();
 }
 
-class _Step1SelfiePageState extends State<Step1SelfiePage> {
+class _Step1BackIDPageState extends State<Step1BackIDPage> {
   Uint8List? imageData;
   bool isLoading = false;
   final ImagePicker _picker = ImagePicker();
@@ -50,19 +50,12 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     }
   }
 
-  void clearImage() {
-    setState(() => imageData = null);
-  }
-
   Future<void> takePhoto() async {
     if (isLoading) return;
     setState(() => isLoading = true);
     try {
       if (_isMobile) {
-        final XFile? photo = await _picker.pickImage(
-          source: ImageSource.camera,
-          preferredCameraDevice: CameraDevice.front,
-        );
+        final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
         if (photo != null) {
           final bytes = await photo.readAsBytes();
           if (mounted) setState(() => imageData = bytes);
@@ -82,13 +75,17 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     }
   }
 
+  void clearImage() {
+    setState(() => imageData = null);
+  }
+
   Future<void> _processImage() async {
     if (imageData == null) return;
 
     final loanViewModel = context.read<LoanViewModel>();
     
-    // Call VNPT API to verify selfie (face comparison only, no navigation)
-    final success = await loanViewModel.verifySelfieWithVnpt(imageData!);
+    // Call VNPT API to verify back ID (OCR only, no navigation)
+    final success = await loanViewModel.verifyBackIdWithVnpt(imageData!);
 
     if (!mounted) return;
 
@@ -97,10 +94,10 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Verification failed'),
+          title: const Text('Authentication failed'),
           content: Text(
             loanViewModel.vnptErrorMessage ?? 
-            'Cannot verify your selfie. Please ensure good lighting and try again.',
+            'Cannot recognize the back of ID card. Please take a clearer photo.',
           ),
           actions: [
             TextButton(
@@ -126,14 +123,11 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
   }
 
   void _continueToNext() {
-    final loanViewModel = context.read<LoanViewModel>();
-    
-    // Complete Step 1 and navigate to Step 2
-    loanViewModel.completeStep1();
+    // Navigate to next step (selfie page)
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const Step2PersonalInfoPage(),
+        builder: (_) => const Step1SelfiePage(),
       ),
     );
   }
@@ -142,9 +136,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
   Widget build(BuildContext context) {
     return Consumer<LoanViewModel>(
       builder: (context, loanViewModel, child) {
-        final isVerifying = loanViewModel.isVerifyingSelfie;
-        final faceMatchData = loanViewModel.faceMatchData;
-       
+        final isVerifying = loanViewModel.isVerifyingBackId;
+        final extractedData = loanViewModel.backIdData;
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -176,7 +169,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Take your selfie for verification',
+                    'Capture the back of your ID',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -212,7 +205,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Click to capture a selfie image',
+                                'Click to capture an image\nof your ID Card (Back)',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -234,9 +227,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: faceMatchData?.isMatch == true
-                                  ? const Color(0xFF4CAF50)
-                                  : const Color(0xFF4C40F7),
+                              color: extractedData?.success == true 
+                                  ? Colors.green 
+                                  : Colors.orange,
                               width: 2,
                             ),
                           ),
@@ -250,20 +243,16 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 16),
                         
-                        // Show face match results if available
-                        if (faceMatchData != null && faceMatchData.success) ...[
+                        // Show extracted data if available
+                        if (extractedData != null && extractedData.success) ...[
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: faceMatchData.isMatch
-                                  ? const Color(0xFFE8F5E9)
-                                  : const Color(0xFFFFF3E0),
+                              color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: faceMatchData.isMatch
-                                    ? const Color(0xFF4CAF50)
-                                    : const Color(0xFFFF9800),
+                                color: const Color(0xFF4CAF50),
                                 width: 1,
                               ),
                             ),
@@ -272,50 +261,29 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(
-                                      faceMatchData.isMatch
-                                          ? Icons.check_circle
-                                          : Icons.warning,
-                                      color: faceMatchData.isMatch
-                                          ? const Color(0xFF4CAF50)
-                                          : const Color(0xFFFF9800),
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFF4CAF50),
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
-                                    Text(
-                                      'Kết quả so sánh khuôn mặt',
+                                    const Text(
+                                      'Information recognized',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: faceMatchData.isMatch
-                                            ? const Color(0xFF4CAF50)
-                                            : const Color(0xFFFF9800),
+                                        color: Color(0xFF4CAF50),
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                _buildInfoRow(
-                                  'Trạng thái',
-                                  faceMatchData.isMatch ? '✓ Khớp' : '✗ Không khớp',
-                                ),
-                                if (faceMatchData.similarity != null)
-                                  _buildInfoRow(
-                                    'Độ tương đồng',
-                                    '${(faceMatchData.similarity! * 100).toStringAsFixed(1)}%',
-                                  ),
-                                if (faceMatchData.result != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      faceMatchData.result!,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ),
+                                if (extractedData.issueDate != null)
+                                  _buildInfoRow('Issue Date', extractedData.issueDate!),
+                                if (extractedData.issuePlace != null)
+                                  _buildInfoRow('Issue Place', extractedData.issuePlace!),
+                                if (extractedData.expiryDate != null)
+                                  _buildInfoRow('Expiry Date', extractedData.expiryDate!),
                               ],
                             ),
                           ),
@@ -367,8 +335,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Đang so sánh khuôn mặt...',
-                          textAlign: TextAlign.center,
+                          'Đang xử lý mặt sau CMND/CCCD...',
                           style: TextStyle(
                             fontSize: 14,
                             color: Color(0xFF1A1F3F),
@@ -377,7 +344,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                       ],
                     )
-                  else if (faceMatchData == null || !faceMatchData.success)
+                  else if (extractedData == null || !extractedData.success)
                     // Show Process button when image is uploaded but not processed
                     Column(
                       children: [

@@ -97,6 +97,27 @@ class LoanOfferPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          // Highlight the Tier if present
+                          if (offer['loanTier'] != null) ...[
+                             Center(
+                               child: Container(
+                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                 decoration: BoxDecoration(
+                                   color: Colors.amber.withOpacity(0.2),
+                                   borderRadius: BorderRadius.circular(20),
+                                   border: Border.all(color: Colors.amber),
+                                 ),
+                                 child: Text(
+                                   '${offer['loanTier']} TIER',
+                                   style: const TextStyle(
+                                     fontWeight: FontWeight.bold,
+                                     color: Colors.deepOrange,
+                                   ),
+                                 ),
+                               ),
+                             ),
+                             const SizedBox(height: 16),
+                          ],
                           _buildDetailRow('Approved Amount', currencyFormat.format(offer['loanAmountVnd'] as num)),
                           const SizedBox(height: 16),
                           // Max eligible is redundant if same as approved, but good to show
@@ -109,6 +130,14 @@ class LoanOfferPage extends StatelessWidget {
                           _buildDetailRow('Monthly Payment', offer['monthlyPaymentVnd'] != null ? currencyFormat.format(offer['monthlyPaymentVnd'] as num) : 'N/A'),
                           const SizedBox(height: 16),
                           _buildDetailRow('Term', '${offer['loanTermMonths'] ?? 0} months'),
+                          if (offer['tierReason'] != null) ...[
+                             const SizedBox(height: 16),
+                             const Divider(),
+                             const SizedBox(height: 8),
+                             const Text('Why this tier?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+                             const SizedBox(height: 4),
+                             Text(offer['tierReason'] as String, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                          ]
                         ],
                       ),
                     ),

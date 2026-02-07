@@ -19,6 +19,21 @@ class _SignupPageState extends State<SignupPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
+  final Map<String, FocusNode> _fieldFocusNodes = {};
+  final Map<String, bool> _touchedFields = {};
+
+  /// Validate full name: letters and spaces only
+  String? _validateFullName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your name';
+    }
+    final nameRegex = RegExp(r'^[A-Za-z ]+$');
+    if (!nameRegex.hasMatch(value.trim())) {
+      return 'Name can only contain letters and spaces';
+    }
+    return null;
+  }
   
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
@@ -68,11 +83,15 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _continueToNextStep() async {
+    final viewModel = context.read<AuthViewModel>();
+    if (viewModel.signupStep == 0) {
+      _markAllTouched(['fullName', 'email', 'password']);
+    } else if (viewModel.signupStep == 1) {
+      _markAllTouched(['phone']);
+    }
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
-    final viewModel = context.read<AuthViewModel>();
     
     if (viewModel.signupStep == 0) {
       // Step 0: Email + Password entered, move to phone (optional)
@@ -131,6 +150,40 @@ class _SignupPageState extends State<SignupPage> {
         MaterialPageRoute(builder: (_) => const EmailVerificationPage()),
         (route) => false,
       );
+    }
+  }
+
+  GlobalKey<FormFieldState> _fieldKey(String id) {
+    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
+  }
+
+  FocusNode _fieldFocus(String id) {
+    return _fieldFocusNodes.putIfAbsent(id, () {
+      final node = FocusNode();
+      node.addListener(() {
+        if (!node.hasFocus) {
+          _touchedFields[id] = true;
+          _fieldKeys[id]?.currentState?.validate();
+        }
+      });
+      return node;
+    });
+  }
+
+  String? _validateIfTouched(
+    String id,
+    String? Function(String?) validator,
+    String? value,
+  ) {
+    if (_touchedFields[id] != true) {
+      return null;
+    }
+    return validator(value);
+  }
+
+  void _markAllTouched(Iterable<String> ids) {
+    for (final id in ids) {
+      _touchedFields[id] = true;
     }
   }
 
@@ -204,8 +257,10 @@ class _SignupPageState extends State<SignupPage> {
                   // Step 0: Name, Email, Password
                   if (viewModel.signupStep == 0) ...[
                     TextFormField(
+                      key: _fieldKey('fullName'),
                       controller: _nameController,
-                      maxLength: 50,
+                      focusNode: _fieldFocus('fullName'),
+                      maxLength: 30,
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         hintText: 'Enter your full name',
@@ -226,16 +281,14 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         counterText: '',
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          _validateIfTouched('fullName', _validateFullName, value),
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
+                      key: _fieldKey('email'),
                       controller: _emailController,
+                      focusNode: _fieldFocus('email'),
                       maxLength: 50,
                       decoration: InputDecoration(
                         labelText: 'Email',
@@ -257,11 +310,14 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         counterText: '',
                       ),
-                      validator: _validateEmail,
+                      validator: (value) =>
+                          _validateIfTouched('email', _validateEmail, value),
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
+                      key: _fieldKey('password'),
                       controller: _passwordController,
+                      focusNode: _fieldFocus('password'),
                       maxLength: 50,
                       obscureText: viewModel.obscurePassword,
                       decoration: InputDecoration(
@@ -294,7 +350,8 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         counterText: '',
                       ),
-                      validator: _validatePassword,
+                      validator: (value) =>
+                          _validateIfTouched('password', _validatePassword, value),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(
@@ -323,7 +380,9 @@ class _SignupPageState extends State<SignupPage> {
                   // Step 1: Phone Number (Optional)
                   if (viewModel.signupStep == 1) ...[
                     TextFormField(
+                      key: _fieldKey('phone'),
                       controller: _phoneController,
+                      focusNode: _fieldFocus('phone'),
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
                       decoration: InputDecoration(
@@ -346,7 +405,8 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         counterText: '',
                       ),
-                      validator: _validatePhone,
+                      validator: (value) =>
+                          _validateIfTouched('phone', _validatePhone, value),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(
@@ -570,6 +630,9 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   void dispose() {
+    for (final node in _fieldFocusNodes.values) {
+      node.dispose();
+    }
     _phoneController.dispose();
     _nameController.dispose();
     _emailController.dispose();

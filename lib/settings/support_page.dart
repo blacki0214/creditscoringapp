@@ -429,9 +429,11 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                 Expanded(
                   child: TextField(
                     controller: _chatController,
+                    maxLength: 500,
                     decoration: InputDecoration(
                       hintText: 'Type your message...',
                       hintStyle: TextStyle(color: Colors.grey.shade400),
+                      counterText: '',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide(color: Colors.grey.shade300),
