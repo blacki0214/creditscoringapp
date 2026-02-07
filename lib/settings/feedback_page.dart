@@ -15,9 +15,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
   late TextEditingController _emailController;
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
-  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
-  final Map<String, FocusNode> _fieldFocusNodes = {};
-  final Map<String, bool> _touchedFields = {};
   
   String _selectedCategory = 'General Feedback';
   final List<String> _categories = [
@@ -62,51 +59,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final vm = context.read<SettingsViewModel>();
     _nameController = TextEditingController(text: vm.name);
     _emailController = TextEditingController(text: vm.email);
-  }
-
-  GlobalKey<FormFieldState> _fieldKey(String id) {
-    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
-  }
-
-  FocusNode _fieldFocus(String id) {
-    return _fieldFocusNodes.putIfAbsent(id, () {
-      final node = FocusNode();
-      node.addListener(() {
-        if (!node.hasFocus) {
-          _touchedFields[id] = true;
-          _fieldKeys[id]?.currentState?.validate();
-        }
-      });
-      return node;
-    });
-  }
-
-  String? _validateIfTouched(
-    String id,
-    String? Function(String?) validator,
-    String? value,
-  ) {
-    if (_touchedFields[id] != true) {
-      return null;
-    }
-    return validator(value);
-  }
-
-  void _markAllTouched(Iterable<String> ids) {
-    for (final id in ids) {
-      _touchedFields[id] = true;
-    }
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
-    }
-    return null;
   }
 
   @override
@@ -175,10 +127,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               
               // Name field
               TextFormField(
-                key: _fieldKey('name'),
                 controller: _nameController,
-                focusNode: _fieldFocus('name'),
-                maxLength: 50,
                 decoration: InputDecoration(
                   labelText: 'Name',
                   prefixIcon: const Icon(Icons.person_outline),
@@ -197,20 +146,18 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     ),
                   ),
                 ),
-                validator: (value) => _validateIfTouched(
-                  'name',
-                  (val) => val == null || val.isEmpty ? 'Please enter your name' : null,
-                  value,
-                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               
               // Email field
               TextFormField(
-                key: _fieldKey('email'),
                 controller: _emailController,
-                focusNode: _fieldFocus('email'),
-                maxLength: 50,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   prefixIcon: const Icon(Icons.email_outlined),
@@ -229,8 +176,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     ),
                   ),
                 ),
-                validator: (value) =>
-                  _validateIfTouched('email', _validateEmail, value),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               
@@ -271,10 +222,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               
               // Subject field
               TextFormField(
-                key: _fieldKey('subject'),
                 controller: _subjectController,
-                focusNode: _fieldFocus('subject'),
-                maxLength: 100,
                 decoration: InputDecoration(
                   labelText: 'Subject',
                   prefixIcon: const Icon(Icons.subject_outlined),
@@ -293,21 +241,19 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     ),
                   ),
                 ),
-                validator: (value) => _validateIfTouched(
-                  'subject',
-                  (val) => val == null || val.isEmpty ? 'Please enter a subject' : null,
-                  value,
-                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a subject';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               
               // Message field
               TextFormField(
-                key: _fieldKey('message'),
                 controller: _messageController,
-                focusNode: _fieldFocus('message'),
                 maxLines: 6,
-                maxLength: 500,
                 decoration: InputDecoration(
                   labelText: 'Your Feedback',
                   alignLabelWithHint: true,
@@ -330,11 +276,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     ),
                   ),
                 ),
-                validator: (value) => _validateIfTouched(
-                  'message',
-                  (val) => val == null || val.isEmpty ? 'Please enter your feedback' : null,
-                  value,
-                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your feedback';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
               
@@ -574,7 +521,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 
   void _submitFeedback() {
-    _markAllTouched(['name', 'email', 'subject', 'message']);
     if (_formKey.currentState!.validate()) {
       showDialog(
         context: context,
@@ -748,9 +694,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   @override
   void dispose() {
-    for (final node in _fieldFocusNodes.values) {
-      node.dispose();
-    }
     _nameController.dispose();
     _emailController.dispose();
     _subjectController.dispose();

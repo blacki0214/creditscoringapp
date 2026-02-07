@@ -297,12 +297,10 @@ class _SecurityPageState extends State<SecurityPage> {
             TextField(
               controller: currentPasswordController,
               obscureText: true,
-              maxLength: 50,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Current Password',
                 labelStyle: const TextStyle(color: Colors.white60),
-                counterText: '',
                 enabledBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: Colors.white30),
                   borderRadius: BorderRadius.circular(8),
@@ -317,12 +315,10 @@ class _SecurityPageState extends State<SecurityPage> {
             TextField(
               controller: newPasswordController,
               obscureText: true,
-              maxLength: 50,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'New Password',
                 labelStyle: const TextStyle(color: Colors.white60),
-                counterText: '',
                 enabledBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: Colors.white30),
                   borderRadius: BorderRadius.circular(8),
@@ -337,12 +333,10 @@ class _SecurityPageState extends State<SecurityPage> {
             TextField(
               controller: confirmPasswordController,
               obscureText: true,
-              maxLength: 50,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 labelStyle: const TextStyle(color: Colors.white60),
-                counterText: '',
                 enabledBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: Colors.white30),
                   borderRadius: BorderRadius.circular(8),

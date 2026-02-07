@@ -52,6 +52,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
 
   void clearImage() {
     setState(() => imageData = null);
+    // Only clear selfie verification data, keep ID card data
+    final loanViewModel = context.read<LoanViewModel>();
+    loanViewModel.clearSelfieData();
   }
 
   Future<void> takePhoto() async {
@@ -409,8 +412,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                       ],
                     )
-                  else
-                    // Show Continue button after successful processing
+                  else if (faceMatchData.isMatch && (faceMatchData.similarity ?? 0) >= 0.70)
+                    // Show Continue button ONLY if validation passed
                     Column(
                       children: [
                         Container(
@@ -436,6 +439,37 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Show Retake button if validation failed
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE53935),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: clearImage,
+                            icon: const Icon(
+                              Icons.refresh,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Retake Photo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE53935),
                           ),
                         ),
                       ],

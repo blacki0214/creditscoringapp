@@ -12,9 +12,6 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
-  final Map<String, FocusNode> _fieldFocusNodes = {};
-  final Map<String, bool> _touchedFields = {};
 
   /// Validate email format: must have text@text pattern
   String? _validateEmail(String? value) {
@@ -30,7 +27,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Future<void> _sendResetEmail() async {
-    _markAllTouched(['email']);
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -66,40 +62,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ],
         ),
       );
-    }
-  }
-
-  GlobalKey<FormFieldState> _fieldKey(String id) {
-    return _fieldKeys.putIfAbsent(id, () => GlobalKey<FormFieldState>());
-  }
-
-  FocusNode _fieldFocus(String id) {
-    return _fieldFocusNodes.putIfAbsent(id, () {
-      final node = FocusNode();
-      node.addListener(() {
-        if (!node.hasFocus) {
-          _touchedFields[id] = true;
-          _fieldKeys[id]?.currentState?.validate();
-        }
-      });
-      return node;
-    });
-  }
-
-  String? _validateIfTouched(
-    String id,
-    String? Function(String?) validator,
-    String? value,
-  ) {
-    if (_touchedFields[id] != true) {
-      return null;
-    }
-    return validator(value);
-  }
-
-  void _markAllTouched(Iterable<String> ids) {
-    for (final id in ids) {
-      _touchedFields[id] = true;
     }
   }
 
@@ -169,9 +131,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   const SizedBox(height: 32),
                   // Email field
                   TextFormField(
-                    key: _fieldKey('email'),
                     controller: _emailController,
-                    focusNode: _fieldFocus('email'),
                     keyboardType: TextInputType.emailAddress,
                     maxLength: 50,
                     decoration: InputDecoration(
@@ -194,8 +154,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       counterText: '', // Hide character counter
                     ),
-                    validator: (value) =>
-                        _validateIfTouched('email', _validateEmail, value),
+                    validator: _validateEmail,
                   ),
                   const SizedBox(height: 32),
                   // Send reset link button
@@ -259,9 +218,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   void dispose() {
-    for (final node in _fieldFocusNodes.values) {
-      node.dispose();
-    }
     _emailController.dispose();
     super.dispose();
   }
