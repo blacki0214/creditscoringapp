@@ -759,14 +759,18 @@ class _HomePageState extends State<HomePage> {
     final loanViewModel = context.watch<LoanViewModel>();
     final applicationHistory = LocalStorageService.getApplicationHistory();
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final activeOffer = loanViewModel.currentOffer ?? loanViewModel.lastCompletedOffer;
+    final activeStatus = loanViewModel.applicationStatus != ApplicationStatus.none
+      ? loanViewModel.applicationStatus
+      : loanViewModel.lastCompletedStatus;
+    final isActiveFromHistory =
+      activeOffer != null && loanViewModel.currentOffer == null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Loan Status Box
-        if (loanViewModel.isApplicationProcessing || 
-            loanViewModel.isApplicationScored || 
-            loanViewModel.isApplicationRejected) ...[
+        if (activeStatus != ApplicationStatus.none) ...[
           const Text(
             'Score Status',
             style: TextStyle(
@@ -779,16 +783,16 @@ class _HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: loanViewModel.isApplicationProcessing
+              color: activeStatus == ApplicationStatus.processing
                   ? const Color(0xFFFFF3E0)
-                  : loanViewModel.isApplicationScored
+                  : activeStatus == ApplicationStatus.scored
                       ? const Color(0xFFE8F5E9)
                       : const Color(0xFFFFEBEE),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: loanViewModel.isApplicationProcessing
+                color: activeStatus == ApplicationStatus.processing
                     ? const Color(0xFFFFA726)
-                    : loanViewModel.isApplicationScored
+                    : activeStatus == ApplicationStatus.scored
                         ? const Color(0xFF4CAF50)
                         : const Color(0xFFEF5350),
               ),
@@ -796,14 +800,14 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               children: [
                 Icon(
-                  loanViewModel.isApplicationProcessing
+                  activeStatus == ApplicationStatus.processing
                       ? Icons.hourglass_empty
-                      : loanViewModel.isApplicationScored
+                      : activeStatus == ApplicationStatus.scored
                           ? Icons.check_circle
                           : Icons.cancel,
-                  color: loanViewModel.isApplicationProcessing
+                  color: activeStatus == ApplicationStatus.processing
                       ? const Color(0xFFFFA726)
-                      : loanViewModel.isApplicationScored
+                      : activeStatus == ApplicationStatus.scored
                           ? const Color(0xFF4CAF50)
                           : const Color(0xFFEF5350),
                   size: 32,
@@ -814,26 +818,26 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        loanViewModel.isApplicationProcessing
+                        activeStatus == ApplicationStatus.processing
                             ? 'Scoring (In Progress)'
-                            : loanViewModel.isApplicationScored
+                            : activeStatus == ApplicationStatus.scored
                                 ? 'Scored'
                                 : 'Rejected',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: loanViewModel.isApplicationProcessing
+                          color: activeStatus == ApplicationStatus.processing
                               ? const Color(0xFFFFA726)
-                              : loanViewModel.isApplicationScored
+                              : activeStatus == ApplicationStatus.scored
                                   ? const Color(0xFF4CAF50)
                                   : const Color(0xFFEF5350),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        loanViewModel.isApplicationProcessing
+                        activeStatus == ApplicationStatus.processing
                             ? 'We are calculating your credit score...'
-                            : loanViewModel.isApplicationScored
+                            : activeStatus == ApplicationStatus.scored
                                 ? 'Your score has been calculated successfully'
                                 : 'Your application was not approved',
                         style: TextStyle(
@@ -842,9 +846,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       // Show loan amount in the scored box
-                      if (loanViewModel.isApplicationScored && 
-                          loanViewModel.currentOffer != null &&
-                          loanViewModel.currentOffer!['approved'] as bool) ...[
+                      if (activeStatus == ApplicationStatus.scored &&
+                          activeOffer != null &&
+                          activeOffer['approved'] as bool) ...[
                         const SizedBox(height: 12),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -865,7 +869,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               Text(
                                 currencyFormat.format(
-                                  loanViewModel.currentOffer!['maxAmountVnd'] as num,
+                                  activeOffer['maxAmountVnd'] as num,
                                 ),
                                 style: const TextStyle(
                                   fontSize: 14,
@@ -919,10 +923,10 @@ class _HomePageState extends State<HomePage> {
         ],
         
         // Current Loan Offer Section (only show full details after Step 3 & 4 completion)
-        if (loanViewModel.currentOffer != null && 
-            loanViewModel.isApplicationScored &&
-            loanViewModel.step3Completed &&
-            loanViewModel.step4Completed) ...[
+        if (activeOffer != null &&
+          activeStatus == ApplicationStatus.scored &&
+          (isActiveFromHistory ||
+            (loanViewModel.step3Completed && loanViewModel.step4Completed))) ...[
           const Text(
             'Current Loan Offer',
             style: TextStyle(
@@ -935,12 +939,12 @@ class _HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
+              color: (activeOffer['approved'] as bool? ?? true)
                   ? const Color(0xFFE8F5E9)
                   : const Color(0xFFFFEBEE),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
+                color: (activeOffer['approved'] as bool? ?? true)
                     ? const Color(0xFF4CAF50)
                     : const Color(0xFFEF5350),
               ),
@@ -952,22 +956,22 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      (loanViewModel.currentOffer!['approved'] as bool? ?? true)
+                      (activeOffer['approved'] as bool? ?? true)
                           ? 'APPROVED'
                           : 'REJECTED',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
+                        color: (activeOffer['approved'] as bool? ?? true)
                             ? const Color(0xFF4CAF50)
                             : const Color(0xFFEF5350),
                       ),
                     ),
                     Icon(
-                      (loanViewModel.currentOffer!['approved'] as bool? ?? true)
+                      (activeOffer['approved'] as bool? ?? true)
                           ? Icons.check_circle
                           : Icons.cancel,
-                      color: (loanViewModel.currentOffer!['approved'] as bool? ?? true)
+                      color: (activeOffer['approved'] as bool? ?? true)
                           ? const Color(0xFF4CAF50)
                           : const Color(0xFFEF5350),
                       size: 24,
@@ -975,62 +979,62 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                if (loanViewModel.currentOffer!['approved'] as bool) ...[
+                if (activeOffer['approved'] as bool) ...[
                   // Show the actual loan amount user chose
-                  if (loanViewModel.currentOffer!['loanAmountVnd'] != null)
+                  if (activeOffer['loanAmountVnd'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
                           'Loan Amount',
                           currencyFormat.format(
-                            loanViewModel.currentOffer!['loanAmountVnd'] as num,
+                            activeOffer['loanAmountVnd'] as num,
                           ),
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
-                  if (loanViewModel.currentOffer!['interestRate'] != null)
+                  if (activeOffer['interestRate'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
                           'Interest Rate',
-                          '${(loanViewModel.currentOffer!['interestRate'] as num).toStringAsFixed(2)}% / year',
+                          '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / year',
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
-                  if (loanViewModel.currentOffer!['monthlyPaymentVnd'] != null)
+                  if (activeOffer['monthlyPaymentVnd'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
                           'Monthly Payment',
                           currencyFormat.format(
-                            loanViewModel.currentOffer!['monthlyPaymentVnd'] as num,
+                            activeOffer['monthlyPaymentVnd'] as num,
                           ),
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
-                  if (loanViewModel.currentOffer!['loanTermMonths'] != null)
+                  if (activeOffer['loanTermMonths'] != null)
                     Column(
                       children: [
                         _buildLoanDetailRow(
                           'Loan Term',
-                          '${loanViewModel.currentOffer!['loanTermMonths']} months',
+                          '${activeOffer['loanTermMonths']} months',
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
                   _buildLoanDetailRow(
                     'Credit Score',
-                    '${loanViewModel.currentOffer!['creditScore']}',
+                    '${activeOffer['creditScore']}',
                   ),
                 ] else ...[
                   Center(
                     child: Column(
                       children: [
                         Text(
-                          loanViewModel.currentOffer!['approvalMessage'] as String,
+                          activeOffer['approvalMessage'] as String,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFFEF5350),
@@ -1041,7 +1045,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 12),
                         _buildLoanDetailRow(
                           'Credit Score',
-                          '${loanViewModel.currentOffer!['creditScore']}',
+                          '${activeOffer['creditScore']}',
                         ),
                       ],
                     ),
@@ -1051,9 +1055,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 32),
-        ] else if (!loanViewModel.isApplicationProcessing && 
-                   !loanViewModel.isApplicationScored && 
-                   !loanViewModel.isApplicationRejected) ...[
+        ] else if (activeStatus == ApplicationStatus.none) ...[
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1118,8 +1120,9 @@ class _HomePageState extends State<HomePage> {
             itemCount: applicationHistory.length,
             itemBuilder: (context, index) {
               final app = applicationHistory[index];
-              final timestamp = app['timestamp'] != null
-                  ? DateTime.parse(app['timestamp'])
+                final timestampRaw = app['timestamp'] ?? app['submitted_at'];
+                final timestamp = timestampRaw != null
+                  ? DateTime.parse(timestampRaw)
                   : DateTime.now();
               final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
               final isApproved = app['approved'] == true;

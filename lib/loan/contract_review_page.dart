@@ -37,6 +37,11 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
   @override
   void initState() {
     super.initState();
+    _signatureController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
     _signatureFocusNode.addListener(() {
       if (!_signatureFocusNode.hasFocus) {
         _signatureFieldKey.currentState?.validate();

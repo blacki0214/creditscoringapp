@@ -126,7 +126,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () async {
-                          context.read<LoanViewModel>().resetForNewApplication();
+                          await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (_) => const HomePage()),
@@ -155,7 +155,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () async {
-                          context.read<LoanViewModel>().resetForNewApplication();
+                          await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (_) => const HomePage()),
