@@ -68,5 +68,20 @@ service cloud.firestore {
       // No updates or deletes allowed
       allow update, delete: if false;
     }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Users can create notifications for themselves
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Users can update their own notifications (for marking as read)
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       // Only allow updating the 'isRead' field
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      // Users can delete their own notifications
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
   }
 }

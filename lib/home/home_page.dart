@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
+import '../services/notification_service.dart';
+import '../models/notification_model.dart';
 import '../loan/loan_application_page.dart';
 import '../loan/demo_calculator_page.dart';
 import '../settings/settings_page.dart';
@@ -204,219 +206,255 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  // Notification with menu
-                  PopupMenuButton(
-                    offset: const Offset(0, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white,
-                    ),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        enabled: false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Notifications',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Color(0xFF1A1F3F),
-                              ),
+                  // Notification with real-time updates
+                  Builder(
+                    builder: (context) {
+                      final userId = FirebaseAuth.instance.currentUser?.uid;
+                      if (userId == null) {
+                        return const Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.white,
+                        );
+                      }
+
+                      return StreamBuilder<int>(
+                        stream: NotificationService().getUnreadCountStream(userId),
+                        builder: (context, countSnapshot) {
+                          final unreadCount = countSnapshot.data ?? 0;
+
+                          return PopupMenuButton(
+                            offset: const Offset(0, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            Divider(),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        child: SizedBox(
-                          width: 280,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF4C40F7,
-                                      ).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.check_circle,
-                                      color: Color(0xFF4CAF50),
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Loan Approved',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Your loan has been approved',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '2 hours ago',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
+                            icon: Stack(
+                              children: [
+                                const Icon(
+                                  Icons.notifications_outlined,
+                                  color: Colors.white,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        child: SizedBox(
-                          width: 280,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Divider(height: 1),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF4C40F7,
-                                      ).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.trending_up,
-                                      color: Color(0xFF4C40F7),
-                                      size: 20,
+                                if (unreadCount > 0)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 16,
+                                        minHeight: 16,
+                                      ),
+                                      child: Text(
+                                        '$unreadCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Credit Score Updated',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                              ],
+                            ),
+                            itemBuilder: (context) {
+                              return [
+                                PopupMenuItem(
+                                  enabled: false,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Notifications',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Color(0xFF1A1F3F),
+                                        ),
+                                      ),
+                                      if (unreadCount > 0)
+                                        TextButton(
+                                          onPressed: () async {
+                                            await NotificationService().markAllAsRead(userId);
+                                            // Don't close popup - let user see the updated state
+                                          },
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(0, 0),
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                          child: const Text(
+                                            'Mark all read',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF4C40F7),
+                                            ),
                                           ),
                                         ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Your score increased by 20 points',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '1 day ago',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        child: SizedBox(
-                          width: 280,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Divider(height: 1),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF4C40F7,
-                                      ).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.payment,
-                                      color: Color(0xFFFFA726),
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Payment Reminder',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Payment due in 3 days',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '3 days ago',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
+                                const PopupMenuItem(
+                                  enabled: false,
+                                  child: Divider(height: 1),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                                PopupMenuItem(
+                                  enabled: false,
+                                  child: SizedBox(
+                                    width: 300,
+                                    height: 300,
+                                    child: StreamBuilder<List<NotificationModel>>(
+                                      stream: NotificationService().getNotificationsStream(userId),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                          return const Center(
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        }
+
+                                        if (snapshot.hasError) {
+                                          return Center(
+                                            child: Text(
+                                              'Error loading notifications',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        final notifications = snapshot.data ?? [];
+
+                                        if (notifications.isEmpty) {
+                                          return Center(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.notifications_none,
+                                                  size: 48,
+                                                  color: Colors.grey.shade400,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  'No notifications yet',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+
+                                        return ListView.separated(
+                                          padding: EdgeInsets.zero,
+                                          itemCount: notifications.length,
+                                          separatorBuilder: (context, index) => const Divider(height: 1),
+                                          itemBuilder: (context, index) {
+                                            final notification = notifications[index];
+                                            return InkWell(
+                                              onTap: () async {
+                                                if (!notification.isRead) {
+                                                  await NotificationService().markAsRead(notification.id);
+                                                }
+                                                // Don't close popup - let user continue browsing notifications
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 12,
+                                                ),
+                                                color: notification.isRead
+                                                    ? Colors.white
+                                                    : const Color(0xFFF5F5F5),
+                                                child: Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: Color(notification.colorValue).withOpacity(0.1),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: Icon(
+                                                        _getNotificationIcon(notification.type),
+                                                        color: Color(notification.colorValue),
+                                                        size: 20,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              if (!notification.isRead)
+                                                                Container(
+                                                                  width: 8,
+                                                                  height: 8,
+                                                                  margin: const EdgeInsets.only(right: 6),
+                                                                  decoration: const BoxDecoration(
+                                                                    color: Color(0xFF4C40F7),
+                                                                    shape: BoxShape.circle,
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                child: Text(
+                                                                  notification.title,
+                                                                  style: TextStyle(
+                                                                    fontWeight: notification.isRead
+                                                                        ? FontWeight.w500
+                                                                        : FontWeight.w600,
+                                                                    fontSize: 14,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: 2),
+                                                          Text(
+                                                            notification.body,
+                                                            style: const TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.grey,
+                                                            ),
+                                                            maxLines: 2,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                          const SizedBox(height: 4),
+                                                          Text(
+                                                            notification.timeAgo,
+                                                            style: TextStyle(
+                                                              fontSize: 11,
+                                                              color: Colors.grey.shade500,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ];
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1862,4 +1900,20 @@ Widget _buildTipCard({
       );
     },
   );
+}
+
+/// Helper function to get icon for notification type
+IconData _getNotificationIcon(String type) {
+  switch (type) {
+    case 'loan_approved':
+      return Icons.check_circle;
+    case 'loan_rejected':
+      return Icons.cancel;
+    case 'credit_score_updated':
+      return Icons.trending_up;
+    case 'payment_reminder':
+      return Icons.payment;
+    default:
+      return Icons.notifications;
+  }
 }

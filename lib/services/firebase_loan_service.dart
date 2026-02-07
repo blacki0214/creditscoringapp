@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_service.dart';
 import 'api_service.dart';
+import 'notification_service.dart';
 
 class FirebaseLoanService {
   final FirebaseService _firebase = FirebaseService();
   final ApiService _apiService = ApiService();
+  final NotificationService _notificationService = NotificationService();
 
   // Create pending application (for async processing)
   Future<String> createPendingApplication({
@@ -107,6 +109,15 @@ class FirebaseLoanService {
           'accepted': false,
         });
 
+        // Create notification for rejected loan
+        await _notificationService.createLoanNotification(
+          userId: userId,
+          applicationId: applicationRef.id,
+          approved: false,
+          creditScore: limitResponse.creditScore,
+          loanAmount: limitResponse.loanLimitVnd,
+        );
+
         return {
           'applicationId': applicationRef.id,
           'offerId': offerRef.id,
@@ -199,6 +210,15 @@ class FirebaseLoanService {
       });
       print('[FirebaseLoanService] Application history created');
       print('[FirebaseLoanService] All Firestore operations completed successfully!');
+
+      // Create notification for approved loan
+      await _notificationService.createLoanNotification(
+        userId: userId,
+        applicationId: applicationRef.id,
+        approved: true,
+        creditScore: limitResponse.creditScore,
+        loanAmount: limitResponse.loanLimitVnd,
+      );
 
       return {
         'applicationId': applicationRef.id,
