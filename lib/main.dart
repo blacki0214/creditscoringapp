@@ -13,8 +13,6 @@ import 'services/local_storage_service.dart';
 import 'services/vnpt_ekyc_service.dart';
 import 'services/vnpt_credentials_manager.dart';
 import 'onboarding/splash_screen.dart';
-import 'loan/step3_additional_info.dart';
-import 'loan/step4_offer_calculator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,10 +116,6 @@ class VietCreditApp extends StatelessWidget {
           ),
         ),
         home: const SplashScreen(),
-        routes: {
-          '/step3_additional_info': (context) => const Step3AdditionalInfoPage(),
-          '/step4_offer_calculator': (context) => const Step4OfferCalculatorPage(),
-        },
       ),
     );
   }

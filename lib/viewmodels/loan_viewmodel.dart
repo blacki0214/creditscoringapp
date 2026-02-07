@@ -1,19 +1,17 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
-
-// Application status enum
-enum ApplicationStatus {
-  none,       // No application submitted
-  processing, // Application submitted, waiting for API response
-  scored,     // Scoring completed successfully
-  rejected    // Application rejected
-}
+import '../services/api_service.dart';
 
 class LoanViewModel extends ChangeNotifier {
+  // API Service
+  final ApiService _apiService = ApiService();
+  
   // VNPT eKYC Service (singleton instance)
   final VnptEkycService _vnptService = VnptEkycService();
   final FirebaseLoanService _loanService = FirebaseLoanService();
@@ -23,12 +21,7 @@ class LoanViewModel extends ChangeNotifier {
   bool _step1Completed = false;
   bool _step2Completed = false;
   bool _step3Completed = false;
-  bool _step4Completed = false;
   bool _isProcessing = false;
-  
-  // Application status tracking
-  ApplicationStatus _applicationStatus = ApplicationStatus.none;
-  String? _pendingApplicationId;
 
   // VNPT eKYC captured images
   Uint8List? _frontIdImageBytes;
@@ -72,18 +65,10 @@ class LoanViewModel extends ChangeNotifier {
   bool get step1Completed => _step1Completed;
   bool get step2Completed => _step2Completed;
   bool get step3Completed => _step3Completed;
-  bool get step4Completed => _step4Completed;
   bool get isProcessing => _isProcessing;
   Map<String, dynamic>? get currentOffer => _currentOffer;
   String? get errorMessage => _errorMessage;
   List<Map<String, dynamic>> get applications => _applications;
-  
-  // Application status getters
-  ApplicationStatus get applicationStatus => _applicationStatus;
-  bool get isApplicationProcessing => _applicationStatus == ApplicationStatus.processing;
-  bool get isApplicationScored => _applicationStatus == ApplicationStatus.scored;
-  bool get isApplicationRejected => _applicationStatus == ApplicationStatus.rejected;
-  String? get pendingApplicationId => _pendingApplicationId;
 
   // Legacy getter for backward compatibility
   LoanOfferResponse? get currentOfferLegacy {
@@ -231,8 +216,7 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Submit application asynchronously - returns immediately, processes in background
-  Future<bool> submitApplicationAsync() async {
+  Future<bool> submitApplication() async {
     final userId = _firebase.currentUserId;
     if (userId == null) {
       _errorMessage = 'User not authenticated';
@@ -242,66 +226,35 @@ class LoanViewModel extends ChangeNotifier {
 
     print('[LoanViewModel] Starting loan application submission...');
     _isProcessing = true;
-    _applicationStatus = ApplicationStatus.processing;
     _errorMessage = null;
     notifyListeners();
 
-    try {
-      // Calculate age from DOB
-      int age = 0;
-      if (dob != null) {
-        final today = DateTime.now();
-        age = today.year - dob!.year;
-        if (today.month < dob!.month || (today.month == dob!.month && today.day < dob!.day)) {
-          age--;
-        }
+    // Calculate age from DOB
+    int age = 0;
+    if (dob != null) {
+      final today = DateTime.now();
+      age = today.year - dob!.year;
+      if (today.month < dob!.month || (today.month == dob!.month && today.day < dob!.day)) {
+        age--;
       }
-
-      final request = SimpleLoanRequest(
-        fullName: fullName,
-        age: age,
-        monthlyIncome: monthlyIncome,
-        employmentStatus: employmentStatus,
-        yearsEmployed: yearsEmployed,
-        homeOwnership: homeOwnership,
-        loanPurpose: loanPurpose,
-        yearsCreditHistory: yearsCreditHistory,
-        hasPreviousDefaults: hasPreviousDefaults,
-        currentlyDefaulting: currentlyDefaulting,
-      );
-
-      // Create pending application in Firebase
-      final applicationId = await _loanService.createPendingApplication(
-        userId: userId,
-        loanRequest: request,
-      );
-      
-      _pendingApplicationId = applicationId;
-      _isProcessing = false;
-      notifyListeners();
-      
-      // Process in background (fire and forget)
-      _processApplicationInBackground(userId, request, applicationId);
-      
-      return true;
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isProcessing = false;
-      _applicationStatus = ApplicationStatus.none;
-      notifyListeners();
-      return false;
     }
-  }
 
-  // Background processing of application
-  Future<void> _processApplicationInBackground(
-    String userId,
-    SimpleLoanRequest request,
-    String applicationId,
-  ) async {
+    final request = SimpleLoanRequest(
+      fullName: fullName,
+      age: age,
+      monthlyIncome: monthlyIncome,
+      employmentStatus: employmentStatus,
+      yearsEmployed: yearsEmployed,
+      homeOwnership: homeOwnership,
+      loanPurpose: loanPurpose,
+      yearsCreditHistory: yearsCreditHistory,
+      hasPreviousDefaults: hasPreviousDefaults,
+      currentlyDefaulting: currentlyDefaulting,
+    );
+
     try {
       // Artificial delay for UX
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 2));
       
       // Submit to Firebase (which calls the two-step API and stores results)
       print('[LoanViewModel] Calling Firebase loan service...');
@@ -320,31 +273,18 @@ class LoanViewModel extends ChangeNotifier {
       _currentOffer = {
         'applicationId': result['applicationId'],
         'offerId': result['offerId'],
-        'approved': limitResponse.approved,
-        'creditScore': limitResponse.creditScore,
-        'loanLimitVnd': limitResponse.loanLimitVnd,
-        'maxAmountVnd': limitResponse.loanLimitVnd,
-        'riskLevel': limitResponse.riskLevel,
-        'approvalMessage': limitResponse.message,
+        'approved': (result['loanOffer'] as LoanOfferResponse).approved,
+        'creditScore': (result['loanOffer'] as LoanOfferResponse).creditScore,
+        'loanAmountVnd': (result['loanOffer'] as LoanOfferResponse).loanAmountVnd,
+        'maxAmountVnd': (result['loanOffer'] as LoanOfferResponse).maxAmountVnd,
+        'interestRate': (result['loanOffer'] as LoanOfferResponse).interestRate,
+        'monthlyPaymentVnd': (result['loanOffer'] as LoanOfferResponse).monthlyPaymentVnd,
+        'loanTermMonths': (result['loanOffer'] as LoanOfferResponse).loanTermMonths,
+        'riskLevel': (result['loanOffer'] as LoanOfferResponse).riskLevel,
+        'approvalMessage': (result['loanOffer'] as LoanOfferResponse).approvalMessage,
+        'loanTier': (result['loanOffer'] as LoanOfferResponse).loanTier,
+        'tierReason': (result['loanOffer'] as LoanOfferResponse).tierReason,
       };
-
-      // Add terms data if approved
-      if (termsResponse != null) {
-        _currentOffer!['loanAmountVnd'] = limitResponse.loanLimitVnd;
-        _currentOffer!['interestRate'] = termsResponse.interestRate;
-        _currentOffer!['monthlyPaymentVnd'] = termsResponse.monthlyPaymentVnd;
-        _currentOffer!['loanTermMonths'] = termsResponse.loanTermMonths;
-        _currentOffer!['totalPaymentVnd'] = termsResponse.totalPaymentVnd;
-        _currentOffer!['totalInterestVnd'] = termsResponse.totalInterestVnd;
-      } else {
-        // For rejected applications
-        _currentOffer!['loanAmountVnd'] = 0;
-      }
-      
-      // Update status
-      _applicationStatus = limitResponse.approved 
-          ? ApplicationStatus.scored 
-          : ApplicationStatus.rejected;
       
       // Clear draft after successful submission
       print('[LoanViewModel] Clearing draft...');
@@ -352,18 +292,16 @@ class LoanViewModel extends ChangeNotifier {
       
       _step2Completed = true;
       _step3Completed = true; // Processing done
+      _isProcessing = false;
       notifyListeners();
+      return true;
     } catch (e) {
       print('[LoanViewModel] ERROR during submission: $e');
       _errorMessage = e.toString();
-      _applicationStatus = ApplicationStatus.rejected;
+      _isProcessing = false;
       notifyListeners();
+      return false;
     }
-  }
-
-  // Legacy method for backward compatibility (synchronous processing)
-  Future<bool> submitApplication() async {
-    return submitApplicationAsync();
   }
 
   // Load user applications from Firebase
@@ -525,31 +463,9 @@ class LoanViewModel extends ChangeNotifier {
       print('[ViewModel] Face match result: ${faceMatch.matchStatus}');
       print('[ViewModel] Similarity: ${faceMatch.similarity != null ? (faceMatch.similarity! * 100).toStringAsFixed(1) : "N/A"}%');
 
-      // SECURITY: Validate face match quality
-      // Check 1: Must have MATCH status from VNPT
-      if (!faceMatch.isMatch) {
-        _vnptErrorMessage = 'Face does not match the ID card photo. Please ensure good lighting and try again.';
-        _isVerifyingSelfie = false;
-        notifyListeners();
-        return false;
-      }
-
-      // Check 2: Similarity must meet minimum threshold (70%)
-      const double minSimilarity = 0.70; // 70% threshold
-      if (faceMatch.similarity == null || faceMatch.similarity! < minSimilarity) {
-        final similarityPercent = faceMatch.similarity != null 
-            ? (faceMatch.similarity! * 100).toStringAsFixed(1) 
-            : '0.0';
-        _vnptErrorMessage = 'Face similarity too low ($similarityPercent%). Please ensure your full face is clearly visible and try again.';
-        _isVerifyingSelfie = false;
-        notifyListeners();
-        return false;
-      }
-
-      print('[ViewModel] Face verification passed all security checks');
       _isVerifyingSelfie = false;
       notifyListeners();
-      return true;
+      return faceMatch.success;
       
     } catch (e) {
       _vnptErrorMessage = e.toString();
@@ -562,15 +478,6 @@ class LoanViewModel extends ChangeNotifier {
   /// Clear VNPT error message
   void clearVnptError() {
     _vnptErrorMessage = null;
-    notifyListeners();
-  }
-
-  /// Clear only selfie verification data (for retaking selfie without losing ID card data)
-  void clearSelfieData() {
-    _selfieImageBytes = null;
-    _faceMatchData = null;
-    _vnptErrorMessage = null;
-    _isVerifyingSelfie = false;
     notifyListeners();
   }
 

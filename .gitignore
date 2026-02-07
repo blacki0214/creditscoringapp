@@ -46,7 +46,6 @@ app.*.map.json
 /flutter
 
 /.agent
-lib/config/vnpt_config.dart
 vnpt_ekyc/vnpt_ekyc.pdf
 
 # Environment variables - Do not commit credentials!

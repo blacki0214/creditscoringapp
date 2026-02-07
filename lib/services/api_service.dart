@@ -3,127 +3,6 @@ import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-// ===== Two-Step API Flow Models (API v2.0) =====
-
-/// Request model for Step 1: Calculate Limit
-class CalculateLimitRequest {
-  final String fullName;
-  final int age;
-  final double monthlyIncome;
-  final String employmentStatus;
-  final double yearsEmployed;
-  final String homeOwnership;
-  final String loanPurpose;
-  final int yearsCreditHistory;
-  final bool hasPreviousDefaults;
-  final bool currentlyDefaulting;
-
-  CalculateLimitRequest({
-    required this.fullName,
-    required this.age,
-    required this.monthlyIncome,
-    required this.employmentStatus,
-    required this.yearsEmployed,
-    required this.homeOwnership,
-    required this.loanPurpose,
-    this.yearsCreditHistory = 0,
-    this.hasPreviousDefaults = false,
-    this.currentlyDefaulting = false,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'full_name': fullName,
-      'age': age,
-      'monthly_income': monthlyIncome,
-      'employment_status': employmentStatus,
-      'years_employed': yearsEmployed,
-      'home_ownership': homeOwnership,
-      'loan_purpose': loanPurpose,
-      'years_credit_history': yearsCreditHistory,
-      'has_previous_defaults': hasPreviousDefaults,
-      'currently_defaulting': currentlyDefaulting,
-    };
-  }
-}
-
-/// Response model for Step 1: Calculate Limit
-class CalculateLimitResponse {
-  final int creditScore;
-  final double loanLimitVnd;
-  final String riskLevel;
-  final bool approved;
-  final String message;
-
-  CalculateLimitResponse({
-    required this.creditScore,
-    required this.loanLimitVnd,
-    required this.riskLevel,
-    required this.approved,
-    required this.message,
-  });
-
-  factory CalculateLimitResponse.fromJson(Map<String, dynamic> json) {
-    return CalculateLimitResponse(
-      creditScore: json['credit_score'] as int,
-      loanLimitVnd: (json['loan_limit_vnd'] as num).toDouble(),
-      riskLevel: json['risk_level'] as String,
-      approved: json['approved'] as bool,
-      message: json['message'] as String,
-    );
-  }
-}
-
-/// Request model for Step 2: Calculate Terms
-class CalculateTermsRequest {
-  final double loanAmount;
-  final String loanPurpose;
-  final int creditScore;
-
-  CalculateTermsRequest({
-    required this.loanAmount,
-    required this.loanPurpose,
-    required this.creditScore,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'loan_amount': loanAmount,
-      'loan_purpose': loanPurpose,
-      'credit_score': creditScore,
-    };
-  }
-}
-
-/// Response model for Step 2: Calculate Terms
-class CalculateTermsResponse {
-  final double interestRate;
-  final int loanTermMonths;
-  final double monthlyPaymentVnd;
-  final double totalPaymentVnd;
-  final double totalInterestVnd;
-
-  CalculateTermsResponse({
-    required this.interestRate,
-    required this.loanTermMonths,
-    required this.monthlyPaymentVnd,
-    required this.totalPaymentVnd,
-    required this.totalInterestVnd,
-  });
-
-  factory CalculateTermsResponse.fromJson(Map<String, dynamic> json) {
-    return CalculateTermsResponse(
-      interestRate: (json['interest_rate'] as num).toDouble(),
-      loanTermMonths: json['loan_term_months'] as int,
-      monthlyPaymentVnd: (json['monthly_payment_vnd'] as num).toDouble(),
-      totalPaymentVnd: (json['total_payment_vnd'] as num).toDouble(),
-      totalInterestVnd: (json['total_interest_vnd'] as num).toDouble(),
-    );
-  }
-}
-
-// ===== Legacy Models (for backward compatibility) =====
-
 class SimpleLoanRequest {
   final String fullName;
   final int age;
@@ -175,6 +54,8 @@ class LoanOfferResponse {
   final int creditScore;
   final String riskLevel;
   final String approvalMessage;
+  final String? loanTier;
+  final String? tierReason;
 
   LoanOfferResponse({
     required this.approved,
@@ -186,6 +67,8 @@ class LoanOfferResponse {
     required this.creditScore,
     required this.riskLevel,
     required this.approvalMessage,
+    this.loanTier,
+    this.tierReason,
   });
 
   factory LoanOfferResponse.fromJson(Map<String, dynamic> json) {
@@ -203,6 +86,8 @@ class LoanOfferResponse {
       creditScore: json['credit_score'] as int,
       riskLevel: json['risk_level'] as String,
       approvalMessage: json['approval_message'] as String,
+      loanTier: json['loan_tier'] as String?,
+      tierReason: json['tier_reason'] as String?,
     );
   }
 }
