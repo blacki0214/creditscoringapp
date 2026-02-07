@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -208,101 +209,195 @@ class LoanOfferResponse {
 
 class ApiService {
   static const String baseUrl = 'https://credit-scoring-h7mv.onrender.com/api';
+  
+  // Singleton HTTP client to prevent memory leaks
+  static final http.Client _sharedClient = http.Client();
   final http.Client? _client;
 
+  // Timeout configuration (matching Python demo's timeout=5)
+  static const Duration requestTimeout = Duration(seconds: 30);
+  static const int maxRetries = 3;
+  static const Duration retryDelay = Duration(seconds: 2);
+
   ApiService({http.Client? client}) : _client = client;
+
+  // Get the client to use (shared singleton or injected for testing)
+  http.Client get _activeClient => _client ?? _sharedClient;
 
   // ===== Two-Step API Flow (API v2.0) =====
 
   /// Step 1: Calculate credit score and loan limit
   Future<CalculateLimitResponse> calculateLimit(CalculateLimitRequest request) async {
-    final client = _client ?? http.Client();
     final url = Uri.parse('$baseUrl/calculate-limit');
-    try {
-      final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
-      final response = await client.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': accessToken,
-        },
-        body: jsonEncode(request.toJson()),
-      );
+    print('[ApiService] POST $url');
+    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+    
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          print('[ApiService] Retry attempt $attempt/$maxRetries');
+        }
+        
+        final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
+        final startTime = DateTime.now();
+        
+        final response = await _activeClient
+            .post(
+              url,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': accessToken,
+              },
+              body: jsonEncode(request.toJson()),
+            )
+            .timeout(requestTimeout);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return CalculateLimitResponse.fromJson(data);
-      } else {
-        throw Exception('Failed to calculate limit: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error calculating limit: $e');
-    } finally {
-      if (_client == null) {
-        client.close();
+        final duration = DateTime.now().difference(startTime);
+        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          print('[ApiService] Success: ${jsonEncode(data)}');
+          return CalculateLimitResponse.fromJson(data);
+        } else {
+          print('[ApiService] Error response: ${response.body}');
+          throw Exception('Failed to calculate limit: ${response.body}');
+        }
+      } on http.ClientException catch (e) {
+        print('[ApiService] Network error: $e');
+        // Network error - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Network error after $maxRetries attempts: $e');
+      } on TimeoutException catch (e) {
+        print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
+        // Timeout - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Request timeout after $maxRetries attempts: $e');
+      } catch (e) {
+        print('[ApiService] Unexpected error: $e');
+        // Other errors - don't retry
+        throw Exception('Error calculating limit: $e');
       }
     }
+    
+    throw Exception('Failed to calculate limit after $maxRetries attempts');
   }
 
   /// Step 2: Calculate loan terms (interest rate, monthly payment, etc.)
   Future<CalculateTermsResponse> calculateTerms(CalculateTermsRequest request) async {
-    final client = _client ?? http.Client();
     final url = Uri.parse('$baseUrl/calculate-terms');
-    try {
-      final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
-      final response = await client.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': accessToken,
-        },
-        body: jsonEncode(request.toJson()),
-      );
+    print('[ApiService] POST $url');
+    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+    
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          print('[ApiService] Retry attempt $attempt/$maxRetries');
+        }
+        
+        final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
+        final startTime = DateTime.now();
+        
+        final response = await _activeClient
+            .post(
+              url,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': accessToken,
+              },
+              body: jsonEncode(request.toJson()),
+            )
+            .timeout(requestTimeout);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return CalculateTermsResponse.fromJson(data);
-      } else {
-        throw Exception('Failed to calculate terms: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error calculating terms: $e');
-    } finally {
-      if (_client == null) {
-        client.close();
+        final duration = DateTime.now().difference(startTime);
+        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          print('[ApiService] Success: ${jsonEncode(data)}');
+          return CalculateTermsResponse.fromJson(data);
+        } else {
+          print('[ApiService] Error response: ${response.body}');
+          throw Exception('Failed to calculate terms: ${response.body}');
+        }
+      } on http.ClientException catch (e) {
+        print('[ApiService] Network error: $e');
+        // Network error - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Network error after $maxRetries attempts: $e');
+      } on TimeoutException catch (e) {
+        print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
+        // Timeout - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Request timeout after $maxRetries attempts: $e');
+      } catch (e) {
+        print('[ApiService] Unexpected error: $e');
+        // Other errors - don't retry
+        throw Exception('Error calculating terms: $e');
       }
     }
+    
+    throw Exception('Failed to calculate terms after $maxRetries attempts');
   }
 
   // ===== Legacy API (for backward compatibility) =====
 
   /// Legacy one-step loan application (still works but deprecated)
   Future<LoanOfferResponse> applyForLoan(SimpleLoanRequest request) async {
-    final client = _client ?? http.Client();
     final url = Uri.parse('$baseUrl/apply');
-    try {
-      final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
-      final response = await client.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': accessToken,
-        },
-        body: jsonEncode(request.toJson()),
-      );
+    
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
+        final response = await _activeClient
+            .post(
+              url,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': accessToken,
+              },
+              body: jsonEncode(request.toJson()),
+            )
+            .timeout(requestTimeout);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return LoanOfferResponse.fromJson(data);
-      } else {
-        throw Exception('Failed to apply for loan: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error applying for loan: $e');
-    } finally {
-      if (_client == null) {
-        client.close();
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          return LoanOfferResponse.fromJson(data);
+        } else {
+          throw Exception('Failed to apply for loan: ${response.body}');
+        }
+      } on http.ClientException catch (e) {
+        // Network error - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Network error after $maxRetries attempts: $e');
+      } on TimeoutException catch (e) {
+        // Timeout - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Request timeout after $maxRetries attempts: $e');
+      } catch (e) {
+        // Other errors - don't retry
+        throw Exception('Error applying for loan: $e');
       }
     }
+    
+    throw Exception('Failed to apply for loan after $maxRetries attempts');
   }
 }

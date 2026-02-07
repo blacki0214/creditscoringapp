@@ -240,6 +240,7 @@ class LoanViewModel extends ChangeNotifier {
       return false;
     }
 
+    print('[LoanViewModel] Starting loan application submission...');
     _isProcessing = true;
     _applicationStatus = ApplicationStatus.processing;
     _errorMessage = null;
@@ -303,13 +304,17 @@ class LoanViewModel extends ChangeNotifier {
       await Future.delayed(const Duration(seconds: 3));
       
       // Submit to Firebase (which calls the two-step API and stores results)
+      print('[LoanViewModel] Calling Firebase loan service...');
       final result = await _loanService.submitLoanApplication(
         userId: userId,
         loanRequest: request,
       );
       
+      print('[LoanViewModel] Received response from Firebase service');
       final limitResponse = result['limitResponse'] as CalculateLimitResponse;
       final termsResponse = result['termsResponse'] as CalculateTermsResponse?;
+      
+      print('[LoanViewModel] Credit score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}');
       
       // Build currentOffer map from the two-step response
       _currentOffer = {
@@ -342,12 +347,14 @@ class LoanViewModel extends ChangeNotifier {
           : ApplicationStatus.rejected;
       
       // Clear draft after successful submission
+      print('[LoanViewModel] Clearing draft...');
       await LocalStorageService.clearDraft();
       
       _step2Completed = true;
       _step3Completed = true; // Processing done
       notifyListeners();
     } catch (e) {
+      print('[LoanViewModel] ERROR during submission: $e');
       _errorMessage = e.toString();
       _applicationStatus = ApplicationStatus.rejected;
       notifyListeners();
