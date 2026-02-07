@@ -47,10 +47,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   
   final List<String> employmentOptions = ['EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED'];
   final List<String> homeOwnershipOptions = ['RENT', 'OWN', 'MORTGAGE', 'LIVING_WITH_PARENTS', 'OTHER'];
-  final List<String> loanPurposeOptions = [
-    'PERSONAL', 'EDUCATION', 'MEDICAL', 'BUSINESS', 
-    'HOME_IMPROVEMENT', 'DEBT_CONSOLIDATION', 'VENTURE', 'OTHER'
-  ];
   
   @override
   void initState() {
@@ -227,7 +223,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         maxLength: 30,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(30),
-                          FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z\s\-']")),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r"[\p{L}\p{M}\s]", unicode: true),
+                          ),
                         ],
                         validator: _validateFullName,
                         onChanged: (val) => vm.updatePersonalInfo(name: val),
@@ -306,24 +304,16 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         controller: _addressController,
                         focusNode: _addressFocusNode,
                         label: 'Current Address',
+                        maxLines: 2,
                         maxLength: 100,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(100),
                           FilteringTextInputFormatter.allow(
-                            RegExp(r"[A-Za-z0-9\s,\.\-/#]"),
+                            RegExp(r"[\p{L}\p{M}\s]", unicode: true),
                           ),
                         ],
                         validator: _validateAddress,
                         onChanged: (val) => vm.updatePersonalInfo(addr: val),
-                      ),
-
-                      const SizedBox(height: 16),
-                      _buildSectionHeader('Loan Request'),
-                      _buildDropdown(
-                        label: 'Loan Purpose',
-                        value: vm.loanPurpose,
-                        items: loanPurposeOptions,
-                        onChanged: (val) => vm.updatePersonalInfo(purpose: val!),
                       ),
 
                       const SizedBox(height: 16),
@@ -498,6 +488,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     FocusNode? focusNode,
+    int maxLines = 1,
     int? maxLength,
     Function(String)? onChanged,
     String? Function(String?)? validator,
@@ -508,6 +499,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       focusNode: focusNode,
+      maxLines: maxLines,
       maxLength: maxLength,
       onChanged: onChanged,
       validator: validator ?? (value) {
@@ -533,8 +525,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   String? _validateFullName(String? value) {
     if (value == null || value.isEmpty) return 'Please enter Full Name';
     if (value.trim().length < 2) return 'Full Name must be at least 2 characters';
-    if (!RegExp(r"^[A-Za-z\s\-']+$").hasMatch(value)) {
-      return 'Full Name can only contain letters, spaces, hyphens, and apostrophes';
+    if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
+      return 'Full Name can only contain letters and spaces';
     }
     return null;
   }
@@ -572,8 +564,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   String? _validateAddress(String? value) {
     if (value == null || value.isEmpty) return 'Please enter Current Address';
     if (value.trim().length < 5) return 'Address must be at least 5 characters';
-    if (!RegExp(r'^[A-Za-z0-9\s,\.\-/#]+$').hasMatch(value)) {
-      return 'Address contains invalid characters';
+    if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
+      return 'Address can only contain letters and spaces';
     }
     return null;
   }

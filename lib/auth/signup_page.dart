@@ -245,7 +245,7 @@ class _SignupPageState extends State<SignupPage> {
                       inputFormatters: [
                         LengthLimitingTextInputFormatter(30),
                         FilteringTextInputFormatter.allow(
-                          RegExp(r"[A-Za-z\s\-']"),
+                          RegExp(r"[\p{L}\p{M}\s]", unicode: true),
                         ),
                       ],
                       decoration: InputDecoration(
@@ -271,6 +271,13 @@ class _SignupPageState extends State<SignupPage> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your name';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Name must be at least 2 characters';
+                        }
+                        if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true)
+                            .hasMatch(value)) {
+                          return 'Name can only contain letters and spaces';
                         }
                         return null;
                       },

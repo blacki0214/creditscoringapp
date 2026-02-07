@@ -263,11 +263,12 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                           controller: _addressController,
                           focusNode: _addressFocusNode,
                           label: 'Current Address',
+                          maxLines: 2,
                           maxLength: 100,
                           inputFormatters: [
                             LengthLimitingTextInputFormatter(100),
                             FilteringTextInputFormatter.allow(
-                              RegExp(r"[A-Za-z0-9\s,\.\-/#]"),
+                              RegExp(r"[\p{L}\p{M}\s]", unicode: true),
                             ),
                           ],
                           validator: _validateAddress,
@@ -619,6 +620,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     FocusNode? focusNode,
+    int maxLines = 1,
     int? maxLength,
     String? Function(String?)? validator,
   }) {
@@ -628,6 +630,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       focusNode: focusNode,
+      maxLines: maxLines,
       maxLength: maxLength,
       validator: validator ?? (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
@@ -684,8 +687,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   String? _validateAddress(String? value) {
     if (value == null || value.isEmpty) return 'Please enter Current Address';
     if (value.trim().length < 5) return 'Address must be at least 5 characters';
-    if (!RegExp(r'^[A-Za-z0-9\s,\.\-/#]+$').hasMatch(value)) {
-      return 'Address contains invalid characters';
+    if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
+      return 'Address can only contain letters and spaces';
     }
     return null;
   }
