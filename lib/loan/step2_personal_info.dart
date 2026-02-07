@@ -286,7 +286,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         ],
                         validator: _validateMonthlyIncome,
                         onChanged: (val) {
-                          // Store locally - not in ViewModel
+                          // Remove formatting characters (dots) and parse to double
+                          final cleaned = val.replaceAll('.', '').replaceAll(',', '');
+                          final parsedIncome = double.tryParse(cleaned);
+                          if (parsedIncome != null) {
+                            vm.updatePersonalInfo(income: parsedIncome);
+                          }
                         },
                       ),
 
