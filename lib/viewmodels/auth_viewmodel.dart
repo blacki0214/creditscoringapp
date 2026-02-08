@@ -163,10 +163,21 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  // Send password reset email
+  // Send password reset email (with email existence check)
   Future<bool> sendPasswordResetEmail(String email) async {
     try {
       _setLoading(true);
+      
+      // Check if email can reset password (not OAuth account)
+      final checkResult = await _authService.checkEmailForPasswordReset(email);
+      
+      if (!checkResult['canReset']) {
+        _setError(checkResult['message']);
+        _setLoading(false);
+        return false;
+      }
+      
+      // Email exists and uses password auth, send reset link
       await _authService.sendPasswordResetEmail(email);
       _setLoading(false);
       return true;
@@ -225,6 +236,29 @@ class AuthViewModel extends ChangeNotifier {
     try {
       _setLoading(true);
       await _authService.sendPasswordResetEmail(email);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // Check if user has password authentication
+  Future<bool> checkUserHasPassword() async {
+    try {
+      return await _authService.userHasPassword();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Link password to OAuth account
+  Future<bool> linkPassword(String password) async {
+    try {
+      _setLoading(true);
+      await _authService.linkPasswordToAccount(password);
       _setLoading(false);
       return true;
     } catch (e) {

@@ -15,6 +15,8 @@ import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
 import '../auth/login_page.dart';
 import '../loan/step3_additional_info.dart';
+import '../widgets/add_password_dialog.dart';
+import '../viewmodels/auth_viewmodel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadUserData();
+    _checkAndPromptAddPassword();
   }
 
   // REMOVED didChangeDependencies - it was causing infinite loop!
@@ -48,6 +51,86 @@ class _HomePageState extends State<HomePage> {
         _checkAndRefreshCreditScore();
       }
     });
+  }
+
+  Future<void> _checkAndPromptAddPassword() async {
+    // Check if user signed in with Google and doesn't have password
+    await Future.delayed(const Duration(seconds: 2)); // Wait for UI to settle
+    
+    if (!mounted) return;
+    
+    final authViewModel = context.read<AuthViewModel>();
+    final hasPassword = await authViewModel.checkUserHasPassword();
+    
+    // Check if user already dismissed this prompt
+    final hasSeenPrompt = await LocalStorageService.hasSeenAddPasswordPrompt();
+    
+    if (!hasPassword && !hasSeenPrompt && mounted) {
+      _showAddPasswordPrompt();
+    }
+  }
+
+  void _showAddPasswordPrompt() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_outline, color: Color(0xFF4C40F7)),
+            SizedBox(width: 8),
+            Text('Add a Password'),
+          ],
+        ),
+        content: const Text(
+          'You\'re signed in with Google. Would you like to add a password for easier access?\n\n'
+          'Benefits:\n'
+          '✓ Sign in without Google\n'
+          '✓ Use "Forgot Password"\n'
+          '✓ Backup sign-in method',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await LocalStorageService.setAddPasswordPromptSeen();
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showAddPasswordDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4C40F7),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Add Password',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAddPasswordDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const AddPasswordDialog(),
+    );
+
+    if (result == true && mounted) {
+      // Password was successfully added, mark prompt as seen
+      await LocalStorageService.setAddPasswordPromptSeen();
+    }
   }
   
   void _checkAndRefreshCreditScore() {

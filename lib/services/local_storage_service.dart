@@ -128,4 +128,19 @@ class LocalStorageService {
       return false;
     }
   }
+
+  // Add password prompt tracking
+  static const String _addPasswordPromptKey = 'add_password_prompt_seen';
+
+  static Future<void> setAddPasswordPromptSeen() async {
+    await prefs.setBool(_addPasswordPromptKey, true);
+  }
+
+  static Future<bool> hasSeenAddPasswordPrompt() async {
+    return prefs.getBool(_addPasswordPromptKey) ?? false;
+  }
+
+  static Future<void> clearAddPasswordPromptFlag() async {
+    await prefs.remove(_addPasswordPromptKey);
+  }
 }
