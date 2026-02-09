@@ -582,15 +582,17 @@ class _HomePageState extends State<HomePage> {
                             _buildPeriodChip(
                               context,
                               viewModel,
-                              'Current year',
+                              'Overall',
                             ),
                             const SizedBox(width: 8),
-                            _buildPeriodChip(context, viewModel, 'Loans'),
+                            _buildPeriodChip(context, viewModel, 'Scoring Status'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip(context, viewModel, 'Loan History'),
                           ],
                         ),
                         const SizedBox(height: 32),
                         // Content based on selected period
-                        if (viewModel.selectedPeriod == 'Current year') ...[
+                        if (viewModel.selectedPeriod == 'Overall') ...[
                           // Credit score gauge
                           if (viewModel.creditScore != null) ...[
                             Center(
@@ -788,9 +790,11 @@ class _HomePageState extends State<HomePage> {
                             context,
                             creditScore: viewModel.creditScore,
                           ),
-                        ] else if (viewModel.selectedPeriod == 'Loans') ...[
+                        ] else if (viewModel.selectedPeriod == 'Scoring Status') ...[
                           // Loan display section
                           _buildLoanDisplay(context),
+                        ] else if (viewModel.selectedPeriod == 'Loan History') ...[
+                          _buildLoanHistoryDisplay(context),
                         ],
                       ],
                     ),
@@ -840,7 +844,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
-    final applicationHistory = LocalStorageService.getApplicationHistory();
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     final activeOffer = loanViewModel.currentOffer ?? loanViewModel.lastCompletedOffer;
     final activeStatus = loanViewModel.applicationStatus != ApplicationStatus.none
@@ -848,12 +851,14 @@ class _HomePageState extends State<HomePage> {
       : loanViewModel.lastCompletedStatus;
     final isActiveFromHistory =
       activeOffer != null && loanViewModel.currentOffer == null;
+    final showScoreStatus = loanViewModel.currentOffer != null ||
+        activeStatus == ApplicationStatus.processing;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Loan Status Box
-        if (activeStatus != ApplicationStatus.none) ...[
+        if (showScoreStatus) ...[
           const Text(
             'Score Status',
             style: TextStyle(
@@ -964,8 +969,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Continue button to Step 3 (only show if steps 3 or 4 not completed)
-                        if (!loanViewModel.step3Completed || !loanViewModel.step4Completed)
+                        // Continue button to Step 3 (only show for active flow)
+                        if (!isActiveFromHistory &&
+                            (!loanViewModel.step3Completed || !loanViewModel.step4Completed))
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -1185,93 +1191,104 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
-        // Application History Section
-        if (applicationHistory.isNotEmpty) ...[
-          const SizedBox(height: 32),
-          const Text(
-            'Application History',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1F3F),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: applicationHistory.length,
-            itemBuilder: (context, index) {
-              final app = applicationHistory[index];
-                final timestampRaw = app['timestamp'] ?? app['submitted_at'];
-                final timestamp = timestampRaw != null
-                  ? DateTime.parse(timestampRaw)
-                  : DateTime.now();
-              final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
-              final isApproved = app['approved'] == true;
+      ],
+    );
+  }
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
+  Widget _buildLoanHistoryDisplay(BuildContext context) {
+    final applicationHistory = LocalStorageService.getApplicationHistory();
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
+    if (applicationHistory.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'No History Yet',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Complete a loan to see history here',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Application History',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1F3F),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: applicationHistory.length,
+          itemBuilder: (context, index) {
+            final app = applicationHistory[index];
+            final timestampRaw = app['timestamp'] ?? app['submitted_at'];
+            final timestamp = timestampRaw != null
+                ? DateTime.parse(timestampRaw)
+                : DateTime.now();
+            final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
+            final isApproved = app['approved'] == true;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isApproved
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFEF5350),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isApproved ? Icons.check_circle : Icons.cancel,
                     color: isApproved
                         ? const Color(0xFF4CAF50)
                         : const Color(0xFFEF5350),
-                    width: 1.5,
+                    size: 24,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isApproved ? Icons.check_circle : Icons.cancel,
-                      color: isApproved
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFEF5350),
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isApproved ? 'Approved' : 'Rejected',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isApproved
-                                  ? const Color(0xFF4CAF50)
-                                  : const Color(0xFFEF5350),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            dateStr,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Score: ${app['creditScore'] ?? 'N/A'}',
-                          style: const TextStyle(
-                            fontSize: 12,
+                          isApproved ? 'Approved' : 'Rejected',
+                          style: TextStyle(
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A1F3F),
+                            color: isApproved
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFEF5350),
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Amount: ${app['loanAmount'] != null ? currencyFormat.format(app['loanAmount']) : 'N/A'}',
+                          dateStr,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -1279,12 +1296,33 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Score: ${app['creditScore'] ?? 'N/A'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1F3F),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Amount: ${app['loanAmount'] != null ? currencyFormat.format(app['loanAmount']) : 'N/A'}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -1331,17 +1369,30 @@ class _HomePageState extends State<HomePage> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1A1F3F) : Colors.grey.shade200,
+          color: isSelected ? const Color(0xFF1A1F3F) : const Color(0xFFE6E9F2),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF1A1F3F) : const Color(0xFFC9D1E6),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF1A1F3F).withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey.shade700,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : const Color(0xFF2B335A),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

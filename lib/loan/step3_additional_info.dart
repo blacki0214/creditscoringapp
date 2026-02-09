@@ -21,7 +21,6 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final TextEditingController _yearsAtEmployerController = TextEditingController();
   final TextEditingController _emergencyContactNameController = TextEditingController();
   final TextEditingController _emergencyContactPhoneController = TextEditingController();
-  final TextEditingController _emergencyContactRelationshipController = TextEditingController();
   final TextEditingController _referencesController = TextEditingController();
 
   final _employerNameFieldKey = GlobalKey<FormFieldState<String>>();
@@ -30,7 +29,6 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final _yearsAtEmployerFieldKey = GlobalKey<FormFieldState<String>>();
   final _emergencyContactNameFieldKey = GlobalKey<FormFieldState<String>>();
   final _emergencyContactPhoneFieldKey = GlobalKey<FormFieldState<String>>();
-  final _emergencyContactRelationshipFieldKey = GlobalKey<FormFieldState<String>>();
   final _referencesFieldKey = GlobalKey<FormFieldState<String>>();
 
   final _employerNameFocusNode = FocusNode();
@@ -39,8 +37,19 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final _yearsAtEmployerFocusNode = FocusNode();
   final _emergencyContactNameFocusNode = FocusNode();
   final _emergencyContactPhoneFocusNode = FocusNode();
-  final _emergencyContactRelationshipFocusNode = FocusNode();
   final _referencesFocusNode = FocusNode();
+
+  String? _selectedRelationship;
+  final List<String> _relationshipOptions = [
+    'Mother',
+    'Father',
+    'Brother',
+    'Sister',
+    'Spouse',
+    'Child',
+    'Guardian',
+    'Other',
+  ];
 
   @override
   void initState() {
@@ -75,11 +84,6 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
         _emergencyContactPhoneFieldKey.currentState?.validate();
       }
     });
-    _emergencyContactRelationshipFocusNode.addListener(() {
-      if (!_emergencyContactRelationshipFocusNode.hasFocus) {
-        _emergencyContactRelationshipFieldKey.currentState?.validate();
-      }
-    });
     _referencesFocusNode.addListener(() {
       if (!_referencesFocusNode.hasFocus) {
         _referencesFieldKey.currentState?.validate();
@@ -95,7 +99,6 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     _yearsAtEmployerController.dispose();
     _emergencyContactNameController.dispose();
     _emergencyContactPhoneController.dispose();
-    _emergencyContactRelationshipController.dispose();
     _referencesController.dispose();
     _employerNameFocusNode.dispose();
     _jobTitleFocusNode.dispose();
@@ -103,7 +106,6 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     _yearsAtEmployerFocusNode.dispose();
     _emergencyContactNameFocusNode.dispose();
     _emergencyContactPhoneFocusNode.dispose();
-    _emergencyContactRelationshipFocusNode.dispose();
     _referencesFocusNode.dispose();
     super.dispose();
   }
@@ -243,18 +245,49 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         validator: _validatePhoneNumber,
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(
-                        fieldKey: _emergencyContactRelationshipFieldKey,
-                        controller: _emergencyContactRelationshipController,
-                        focusNode: _emergencyContactRelationshipFocusNode,
-                        label: 'Relationship',
-                        icon: Icons.family_restroom,
-                        maxLength: 30,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(30),
-                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-]')),
-                        ],
-                        validator: _validateRelationship,
+                      DropdownButtonFormField<String>(
+                        value: _selectedRelationship,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Relationship',
+                          prefixIcon: const Icon(
+                            Icons.family_restroom,
+                            color: Color(0xFF4C40F7),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF4C40F7),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        items: _relationshipOptions
+                            .map(
+                              (option) => DropdownMenuItem(
+                                value: option,
+                                child: Text(option),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedRelationship = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select relationship';
+                          }
+                          return null;
+                        },
                       ),
                       
                       const SizedBox(height: 24),
@@ -442,18 +475,6 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     return null;
   }
   
-  String? _validateRelationship(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter relationship';
-    }
-    if (value.length < 2) {
-      return 'Relationship must be at least 2 characters';
-    }
-    if (!RegExp(r'^[a-zA-Z\s\-]+$').hasMatch(value)) {
-      return 'Relationship can only contain letters, spaces, and hyphens';
-    }
-    return null;
-  }
 
   void _continueToOfferCalculator() {
     if (!_formKey.currentState!.validate()) return;

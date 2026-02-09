@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import '../viewmodels/auth_viewmodel.dart';
 import 'signup_page.dart';
 import 'forgot_password.dart';
 import 'phone_login_page.dart';
+import 'termOfService.dart';
 import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -20,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _tosLinkRecognizer = TapGestureRecognizer();
   bool _isTosDialogVisible = false;
   bool _tosDialogShown = false;
 
@@ -79,25 +82,45 @@ class _LoginPageState extends State<LoginPage> {
                 color: Color(0xFF1A1F3F),
               ),
             ),
-            content: const SingleChildScrollView(
-              child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '
-                'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris '
-                'nisi ut aliquip ex ea commodo consequat.\n\n'
-                'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum '
-                'dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat '
-                'non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                style: TextStyle(
+            content: RichText(
+              text: TextSpan(
+                style: const TextStyle(
                   fontSize: 14,
                   height: 1.4,
                   color: Color(0xFF3E4566),
                 ),
+                children: [
+                  const TextSpan(text: 'I agree to '),
+                  TextSpan(
+                    text: 'Terms of Service',
+                    style: const TextStyle(
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4C40F7),
+                    ),
+                    recognizer: _tosLinkRecognizer
+                      ..onTap = () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const TermOfServicePage(),
+                          ),
+                        );
+                      },
+                  ),
+                ],
               ),
             ),
             actions: [
-              TextButton(
+              OutlinedButton(
                 onPressed: () => Navigator.of(context).pop(false),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  minimumSize: const Size(110, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
                 child: const Text(
                   'Decline',
                   style: TextStyle(
@@ -113,9 +136,11 @@ class _LoginPageState extends State<LoginPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  minimumSize: const Size(130, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
                 child: const Text(
-                  'Accept',
+                  'Agree to all',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -471,6 +496,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _tosLinkRecognizer.dispose();
     super.dispose();
   }
 }
