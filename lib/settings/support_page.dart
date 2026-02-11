@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/support_viewmodel.dart';
 
 class SupportPage extends StatefulWidget {
   const SupportPage({super.key});
@@ -10,7 +12,6 @@ class SupportPage extends StatefulWidget {
 class _SupportPageState extends State<SupportPage> with SingleTickerProviderStateMixin {
   bool _isChatOpen = false;
   final TextEditingController _chatController = TextEditingController();
-  final List<ChatMessage> _messages = [];
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -60,6 +61,11 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    
+    // Initialize chat when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SupportViewModel>().initializeChat();
+    });
   }
 
   @override
@@ -376,42 +382,71 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
           Expanded(
             child: Container(
               color: Colors.grey.shade50,
-              child: _messages.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 48,
-                            color: Colors.grey.shade400,
+              child: Consumer<SupportViewModel>(
+                builder: (context, supportVM, child) {
+                  return StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: supportVM.getMessagesStream(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Start a conversation',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                            ),
+                        );
+                      }
+
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline,
+                                size: 48,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Start a conversation',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Our support team is here to help',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Our support team is here to help',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        return _buildMessageBubble(_messages[index]);
-                      },
-                    ),
+                        );
+                      }
+
+                      final messages = snapshot.data!;
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isUser = message['senderType'] == 'user';
+                          final text = message['message'] ?? '';
+                          final timestamp = message['timestamp'];
+                          
+                          return _buildMessageBubble(
+                            isUser: isUser,
+                            message: text,
+                            timestamp: timestamp,
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
           
@@ -473,8 +508,11 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
-    final isUser = message.isUser;
+  Widget _buildMessageBubble({
+    required bool isUser,
+    required String message,
+    dynamic timestamp,
+  }) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -494,7 +532,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
           maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
         child: Text(
-          message.text,
+          message,
           style: TextStyle(
             color: isUser ? Colors.white : Colors.black87,
             fontSize: 14,
@@ -504,29 +542,14 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
     );
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_chatController.text.trim().isEmpty) return;
 
-    setState(() {
-      _messages.add(ChatMessage(
-        text: _chatController.text.trim(),
-        isUser: true,
-      ));
-    });
-
-    // Simulate assistant response
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _messages.add(ChatMessage(
-            text: 'Thank you for your message. A support agent will assist you shortly.',
-            isUser: false,
-          ));
-        });
-      }
-    });
-
+    final message = _chatController.text.trim();
     _chatController.clear();
+
+    // Send message via ViewModel
+    await context.read<SupportViewModel>().sendMessage(message);
   }
 
   @override
@@ -542,11 +565,4 @@ class FAQItem {
   final String answer;
 
   FAQItem({required this.question, required this.answer});
-}
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-
-  ChatMessage({required this.text, required this.isUser});
 }

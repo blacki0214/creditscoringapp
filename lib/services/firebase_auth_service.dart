@@ -262,6 +262,48 @@ class FirebaseAuthService {
     }
   }
 
+  // Reauthenticate user with password (required before sensitive operations)
+  Future<void> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final user = _firebase.auth.currentUser;
+      if (user == null) {
+        throw Exception('No authenticated user found');
+      }
+
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  // Update user password
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      final user = _firebase.auth.currentUser;
+      if (user == null) {
+        throw Exception('No authenticated user found');
+      }
+
+      await user.updatePassword(newPassword);
+      
+      // Update Firestore to track password change
+      await _firebase.usersCollection.doc(user.uid).update({
+        'passwordUpdatedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
   // Sign in with phone number (OTP)
   Future<void> verifyPhoneNumber({
     required String phoneNumber,
