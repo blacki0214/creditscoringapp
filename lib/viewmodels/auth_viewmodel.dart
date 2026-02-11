@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firebase_user_service.dart';
+import '../services/local_storage_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final FirebaseAuthService _authService = FirebaseAuthService();
@@ -307,6 +308,46 @@ class AuthViewModel extends ChangeNotifier {
     try {
       _setLoading(true);
       _phoneNumber = phoneNumber;
+
+      const maxAttempts = 10;
+      const cooldownMinutes = 10;
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final throttle = LocalStorageService.getOtpThrottle(phoneNumber);
+      var attemptCount = (throttle['count'] as int?) ?? 0;
+      var blockedUntilMs = throttle['blocked_until'] as int?;
+
+      if (blockedUntilMs != null && nowMs < blockedUntilMs) {
+        final remainingMs = blockedUntilMs - nowMs;
+        final remainingMinutes = (remainingMs / 60000).ceil();
+        _setError('Too many OTP requests. Try again in $remainingMinutes minutes.');
+        _setLoading(false);
+        return false;
+      }
+
+      if (blockedUntilMs != null && nowMs >= blockedUntilMs) {
+        attemptCount = 0;
+        blockedUntilMs = null;
+        await LocalStorageService.clearOtpThrottle(phoneNumber);
+      }
+
+      if (attemptCount >= maxAttempts) {
+        blockedUntilMs = nowMs + (cooldownMinutes * 60 * 1000);
+        await LocalStorageService.setOtpThrottle(
+          phoneNumber,
+          count: 0,
+          blockedUntilMs: blockedUntilMs,
+        );
+        _setError('Too many OTP requests. Please wait $cooldownMinutes minutes.');
+        _setLoading(false);
+        return false;
+      }
+
+      attemptCount += 1;
+      await LocalStorageService.setOtpThrottle(
+        phoneNumber,
+        count: attemptCount,
+        blockedUntilMs: blockedUntilMs,
+      );
       
       await _authService.sendPhoneOTP(
         phoneNumber: phoneNumber,
