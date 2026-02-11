@@ -6,7 +6,7 @@
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Ready-FFCA28?logo=firebase&logoColor=black)
-![XGBoost](https://img.shields.io/badge/XGBoost-ML-FF6600?logo=xgboost&logoColor=white)
+![LightGBM](https://img.shields.io/badge/LightGBM-ML-02D9F7?logo=lightgbm&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
 ![Material Design](https://img.shields.io/badge/Material-Design%203-757575?logo=material-design&logoColor=white)
 
@@ -33,11 +33,11 @@
 
 ## 🎯 Overview
 
-This credit scoring application provides users with instant credit limit calculations and personalized loan terms based on machine learning models. The app integrates with a Python-based Credit Scoring API (v2.0) that uses **XGBoost** for risk assessment and credit scoring.
+This credit scoring application provides users with instant credit limit calculations and personalized loan terms based on machine learning models. The app integrates with a Python-based Credit Scoring API (v1.0) that uses **LightGBM** for risk assessment and credit scoring.
 
 ### Key Capabilities
 
-- 📊 **ML-Powered Credit Scoring**: XGBoost model trained on comprehensive financial data
+- 📊 **ML-Powered Credit Scoring**: LightGBM model trained on comprehensive financial data
 - 💰 **Instant Loan Limit Calculation**: Real-time credit limit assessment
 - 📱 **Multi-Step Loan Application**: Streamlined user experience with progress tracking
 - 🔐 **Secure Authentication**: Email/password and Google OAuth with biometric support
@@ -175,7 +175,7 @@ lib/
 | Category | Technology |
 |----------|------------|
 | ⚡ **Framework** | Flask |
-| 🤖 **ML Model** | XGBoost Classifier |
+| 🤖 **ML Model** | LightGBM Classifier |
 | 📊 **Data Processing** | Pandas, NumPy |
 | 💾 **Model Format** | Pickle serialization |
 | 🔒 **Security** | API key authentication, rate limiting |
@@ -446,7 +446,7 @@ service cloud.firestore {
 
 | Component | Details |
 |-----------|----------|
-| **Algorithm** | XGBoost Classifier |
+| **Algorithm** | LightGBM Classifier |
 | **Features** | 64 engineered features |
 | **Optimization** | Threshold tuning (0.860 precision) |
 | **Validation** | Cross-validation + holdout testing |
