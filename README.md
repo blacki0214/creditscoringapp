@@ -1,6 +1,6 @@
 <div align="center">
 
-# � Credit Scoring App
+# Credit Scoring App
 
 **AI-Powered Mobile Loan Application Platform**
 
