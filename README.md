@@ -74,44 +74,90 @@ This credit scoring application provides users with instant credit limit calcula
 
 ### 💳 Loan Application Flow
 
-> **Simple 3-step process to get your credit limit and loan terms**
+> **Two pathways to get your credit score and loan limit**
+
+#### **Choose Your Path**
 
 <table>
 <tr>
-<td width="33%" valign="top">
+<td width="50%" valign="top">
 
-**Step 1️: Purpose**
-- 🎯 Choose loan purpose
-  - 🚗 Vehicle
-  - 🎓 Education
-  - 🏠 Home improvement
-  - 💼 Business
-  - 🛍️ Personal
-- 💰 Enter desired amount
-
-</td>
-<td width="33%" valign="top">
-
-**Step 2️: Your Info**
-- 💵 Monthly income
-- 👔 Years employed
-- 📊 Credit history
-- ✅ Real-time validation
-- 🎨 Currency formatting
+**🎫 eKYC Verification**
+- ✅ Full verification process
+- 🆔 Auto-filled personal data
+  - Name, DOB, Address
+  - ID card number
+- 📊 Complete credit scoring
+- 💯 Higher loan limits
 
 </td>
-<td width="33%" valign="top">
+<td width="50%" valign="top">
 
-**Step 3️: Results**
-- 🎉 Approved credit limit
-- 💳 Loan amount
-- 📈 Interest rate
-- 📅 Monthly payment
-- ⏱️ Instant calculation
+**🧪 Simulation Mode**
+- � Quick estimation
+- ✏️ Manual data entry
+- � Simulated credit score
+- 💡 No commitment required
 
 </td>
 </tr>
 </table>
+
+---
+
+#### � **Step-by-Step Process**
+
+**Step 1️: Initial Setup**
+- Choose verification method (eKYC or Simulation)
+- If eKYC: Auto-populate verified data
+- If Simulation: Proceed with manual entry
+
+**Step 2️: Personal Information**
+- 💵 **Monthly Income** - with currency formatting
+- 👔 **Employment Status** - dropdown selection (Employed, Self-employed, etc.)
+- � **Years Employed** - work experience
+- 🏠 **Home Ownership** - Rent, Own, Mortgage, etc.
+- 📍 **Current Address** - residential information
+- 📊 **Credit History** - optional for new borrowers
+  - Years of credit history
+  - Previous defaults (if any)
+  - Current default status
+
+**Step 3️: Processing & Scoring** ⏳
+- 🔄 Application submitted to API
+- 🤖 LightGBM model analyzes your data
+- 📊 Credit score calculated
+- 💰 Loan limit determined
+- � Navigate to Home page
+- ⏱️ Wait for scoring completion
+- 🔔 Receive notification when ready
+
+**Step 4️: Additional Information** (Optional - for loan application)
+- 🏢 **Employment Details**
+  - Employer name
+  - Job title
+  - Work phone number
+  - Years at current employer
+- 🆘 **Emergency Contact**
+  - Contact name
+  - Phone number
+  - Relationship
+- 👥 **References** (optional)
+
+**Step 5️: Loan Offer**
+- 🎯 **Choose Loan Purpose**
+  - 🚗 Vehicle
+  - 🎓 Education
+  - � Home improvement
+  - 💼 Business
+  - 🛍️ Personal
+- 💰 **Enter Loan Amount** (within your limit)
+- � **View Loan Terms**
+  - Interest rate
+  - Loan term (ký hạn)
+  - Monthly payment
+  - Total amount
+- ✅ **Accept Offer** and complete application
 
 ### 📊 Dashboard Features
 
