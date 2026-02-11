@@ -1,6 +1,18 @@
-# 💳 Credit Scoring App
+<div align="center">
 
-A comprehensive Flutter-based credit scoring and loan application platform with ML-powered risk assessment, real-time notifications, and secure authentication.
+# � Credit Scoring App
+
+**AI-Powered Mobile Loan Application Platform**
+
+![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-Ready-FFCA28?logo=firebase&logoColor=black)
+![XGBoost](https://img.shields.io/badge/XGBoost-ML-FF6600?logo=xgboost&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
+![Material Design](https://img.shields.io/badge/Material-Design%203-757575?logo=material-design&logoColor=white)
+
+📱 [Download APK](#) • 📚 [Documentation](#-documentation) • 🚀 [Getting Started](#-getting-started)
+
+</div>
 
 ---
 
