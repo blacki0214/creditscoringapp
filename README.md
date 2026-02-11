@@ -32,43 +32,83 @@ This credit scoring application provides users with instant credit limit calcula
 - 🔔 **Real-Time Notifications**: Firebase Cloud Messaging integration
 - 📈 **Application Tracking**: Complete loan application history and status monitoring
 
+### 📱 App Screenshots
+
+<!-- TODO: Add app screenshots here -->
+<!-- Recommended screenshots:
+- Login/Signup screens
+- Home dashboard
+- Loan application flow (Step 1, 2, 3)
+- Application history
+- Profile and settings
+- Notification center
+-->
+
 ---
 
 ## ✨ Features
 
 ### 🔐 Authentication & Security
 
-- **Email/Password Authentication** with email verification
-- **Google OAuth Integration** for seamless sign-in
-- **Biometric Authentication** (fingerprint/face ID) using `local_auth` package
-- **Password Reset** via email-based flow
-- **Email Verification** required before login
-- **Secure Password Change** functionality
-- **Biometric Preferences** stored in Firestore
+| Feature | Description |
+|---------|-------------|
+| 📧 **Email/Password** | Secure authentication with mandatory email verification |
+| 🔑 **Google OAuth** | One-tap sign-in with Google account |
+| 👆 **Biometric Login** | Fingerprint & Face ID support via `local_auth` |
+| 🔄 **Password Reset** | Email-based password recovery (no OTP) |
+| ✉️ **Email Verification** | Required before accessing the app |
+| 🔒 **Password Change** | Secure in-app password update |
+| 💾 **Preferences Sync** | Biometric settings stored in Firestore |
 
 ### 💳 Loan Application Flow
 
-**Step 1: Purpose Selection**
-- Choose loan purpose (vehicle, education, home improvement, etc.)
-- Input desired loan amount
+> **Simple 3-step process to get your credit limit and loan terms**
 
-**Step 2: Personal Information**
-- Monthly income input with currency formatting
-- Years employed
-- Years of credit history
-- Real-time validation
+<table>
+<tr>
+<td width="33%" valign="top">
 
-**Step 3: Credit Limit Calculation**
-- API integration with `/api/calculate-limit` endpoint
-- Display approved credit limit
-- Show personalized loan terms (amount, interest rate, monthly payment)
+**Step 1️: Purpose**
+- 🎯 Choose loan purpose
+  - 🚗 Vehicle
+  - 🎓 Education
+  - 🏠 Home improvement
+  - 💼 Business
+  - 🛍️ Personal
+- 💰 Enter desired amount
+
+</td>
+<td width="33%" valign="top">
+
+**Step 2️: Your Info**
+- 💵 Monthly income
+- 👔 Years employed
+- 📊 Credit history
+- ✅ Real-time validation
+- 🎨 Currency formatting
+
+</td>
+<td width="33%" valign="top">
+
+**Step 3️: Results**
+- 🎉 Approved credit limit
+- 💳 Loan amount
+- 📈 Interest rate
+- 📅 Monthly payment
+- ⏱️ Instant calculation
+
+</td>
+</tr>
+</table>
 
 ### 📊 Dashboard Features
 
-- **Application History**: View all past loan applications
-- **Notification Center**: Real-time updates on application status
-- **Profile Management**: Update personal information
-- **Security Settings**: Manage password and biometric authentication
+| Feature | What You Can Do |
+|---------|-----------------|
+| 📜 **Application History** | View all past loan applications with status tracking |
+| 🔔 **Notification Center** | Get real-time updates on your applications |
+| 👤 **Profile Management** | Update personal information anytime |
+| 🛡️ **Security Settings** | Manage passwords and biometric authentication |
 
 ---
 
@@ -90,65 +130,99 @@ lib/
 └── widgets/         # Reusable UI components
 ```
 
-### Data Flow
+### 📊 Architecture Diagrams
 
-```
-User Input → ViewModel → API Service → Credit Scoring API (Python)
-                ↓
-         Firestore Database
-                ↓
-         Real-time Updates → UI
-```
-
-### System Architecture
-
-The application follows a **client-server architecture**:
-
-1. **Flutter Frontend**: Cross-platform mobile application
-2. **Firebase Backend**: Authentication, Firestore database, Cloud Messaging
-3. **Python API**: Credit scoring engine with XGBoost ML model
-4. **Data Pipeline**: Feature engineering and model training infrastructure
+<!-- TODO: Add architecture diagrams here -->
+<!-- Recommended diagrams:
+- System Architecture Diagram (Flutter App ↔ Firebase ↔ Python API)
+- Data Flow Diagram (User Input → Processing → Response)
+- Database ERD (Users, Loan Applications, Notifications)
+- Loan Application Workflow (Step-by-step user journey)
+- Data Pipeline (Raw Data → Feature Engineering → ML Model)
+-->
 
 ---
 
 ## 🛠️ Technology Stack
 
-### Frontend (Flutter)
+### 📱 Frontend (Flutter)
 
-- **Framework**: Flutter 3.x
-- **State Management**: Provider pattern with ViewModels
-- **UI Components**: Material Design 3
-- **Authentication**: Firebase Auth
-- **Database**: Cloud Firestore
-- **Notifications**: Firebase Cloud Messaging
-- **Biometrics**: `local_auth` package
-- **HTTP Client**: `http` package
+| Category | Technology |
+|----------|------------|
+| 🎯 **Framework** | Flutter 3.x |
+| 🔄 **State Management** | Provider pattern with ViewModels (MVVM) |
+| 🎨 **UI Components** | Material Design 3 |
+| 🔐 **Authentication** | Firebase Auth |
+| 💾 **Database** | Cloud Firestore |
+| 🔔 **Notifications** | Firebase Cloud Messaging (FCM) |
+| 👆 **Biometrics** | `local_auth` package |
+| 🌐 **HTTP Client** | `http` package |
 
-### Backend (Python API)
+### 🐍 Backend (Python API)
 
-- **Framework**: Flask
-- **ML Model**: XGBoost
-- **Data Processing**: Pandas, NumPy
-- **Model Format**: Pickle serialization
-- **Security**: API key authentication, rate limiting
-- **Deployment**: Cloud-ready with health check endpoint
+| Category | Technology |
+|----------|------------|
+| ⚡ **Framework** | Flask |
+| 🤖 **ML Model** | XGBoost Classifier |
+| 📊 **Data Processing** | Pandas, NumPy |
+| 💾 **Model Format** | Pickle serialization |
+| 🔒 **Security** | API key authentication, rate limiting |
+| ☁️ **Deployment** | Cloud-ready with health check endpoint |
 
-### Database Schema
+### 🗄️ Database Schema
 
-**Users Collection**
-- `uid`, `email`, `displayName`, `photoURL`
-- `createdAt`, `lastLogin`
-- `biometricEnabled`, `notificationsEnabled`
+<table>
+<tr>
+<td width="33%" valign="top">
 
-**Loan Applications Collection**
-- `userId`, `purpose`, `requestedAmount`
-- `monthlyIncome`, `yearsEmployed`, `yearsOfCreditHistory`
-- `approvedLimit`, `interestRate`, `monthlyPayment`
-- `status`, `createdAt`, `updatedAt`
+**👥 Users Collection**
+```
+uid
+email
+displayName
+photoURL
+createdAt
+lastLogin
+biometricEnabled
+notificationsEnabled
+```
 
-**Notifications Collection**
-- `userId`, `title`, `message`, `type`
-- `isRead`, `createdAt`, `applicationId`
+</td>
+<td width="33%" valign="top">
+
+**💳 Loan Applications**
+```
+userId
+purpose
+requestedAmount
+monthlyIncome
+yearsEmployed
+yearsOfCreditHistory
+approvedLimit
+interestRate
+monthlyPayment
+status
+createdAt
+updatedAt
+```
+
+</td>
+<td width="33%" valign="top">
+
+**🔔 Notifications**
+```
+userId
+title
+message
+type
+isRead
+createdAt
+applicationId
+```
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -156,40 +230,50 @@ The application follows a **client-server architecture**:
 
 ### Prerequisites
 
-- Flutter SDK (3.x or higher)
-- Dart SDK
-- Firebase project with:
-  - Authentication enabled (Email/Password, Google)
-  - Firestore database
-  - Cloud Messaging
-- Python 3.8+ (for API)
-- Credit Scoring API running and accessible
+Before you begin, make sure you have:
 
-### Installation
+- ✔️ **Flutter SDK** (3.x or higher)
+- ✔️ **Dart SDK**
+- ✔️ **Firebase project** with:
+  - 🔐 Authentication enabled (Email/Password, Google)
+  - 💾 Firestore database
+  - 🔔 Cloud Messaging
+- ✔️ **Python 3.8+** (for API)
+- ✔️ **Credit Scoring API** running and accessible
 
-**Step 1: Clone the Repository**
+---
+
+### 📦 Installation
+
+#### **Step 1️: Clone the Repository**
 
 ```bash
 git clone <repository-url>
 cd creditscoringapp
 ```
 
-**Step 2: Install Dependencies**
+#### **Step 2️: Install Dependencies**
 
 ```bash
 flutter pub get
 ```
 
-**Step 3: Firebase Configuration**
+> 💡 This will download all required Flutter packages
 
-1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-2. Add Android/iOS apps to your Firebase project
-3. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-4. Place configuration files in appropriate directories
-5. Enable Authentication methods (Email/Password, Google)
-6. Create Firestore database with security rules
+#### **Step 3️: Firebase Configuration**
 
-**Step 4: Configure API Endpoint**
+1. 🌐 Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. 📱 Add Android/iOS apps to your Firebase project
+3. 📥 Download configuration files:
+   - `google-services.json` (Android) → `android/app/`
+   - `GoogleService-Info.plist` (iOS) → `ios/Runner/`
+4. 🔐 Enable Authentication methods:
+   - Email/Password
+   - Google Sign-In
+5. 💾 Create Firestore database
+6. 🛡️ Set up Firestore security rules (see [Security Features](#-security-features))
+
+#### **Step 4️: Configure API Endpoint**
 
 Update the API URL in your configuration:
 
@@ -199,11 +283,15 @@ static const String baseUrl = 'YOUR_API_URL';
 static const String apiKey = 'YOUR_API_KEY';
 ```
 
-**Step 5: Run the Application**
+> ⚠️ **Important**: Never commit your API key to version control!
+
+#### **Step 5️: Run the Application**
 
 ```bash
 flutter run
 ```
+
+> 🎉 **Success!** Your app should now be running on your device/emulator
 
 ---
 
@@ -280,41 +368,54 @@ The application integrates with a Python-based Credit Scoring API that provides 
 
 ## 🔒 Security Features
 
-### Authentication Security
+### 🔐 Authentication Security
 
-✅ **Email Verification Required**: Users must verify email before accessing the app  
-✅ **Secure Password Storage**: Firebase Auth handles password hashing  
-✅ **Password Reset Flow**: Email-based password reset (no OTP)  
-✅ **Google OAuth**: Secure third-party authentication  
-✅ **Session Management**: Automatic token refresh and expiration  
+| Security Feature | Implementation |
+|------------------|----------------|
+| ✉️ **Email Verification** | Users must verify email before accessing the app |
+| 🔒 **Password Storage** | Firebase Auth handles secure password hashing |
+| 🔄 **Password Reset** | Email-based password reset (no OTP) |
+| 🔑 **Google OAuth** | Secure third-party authentication |
+| ⏱️ **Session Management** | Automatic token refresh and expiration |
 
-### Biometric Authentication
+### 👆 Biometric Authentication
 
-✅ **Local Authentication**: Fingerprint and Face ID support  
-✅ **Preference Storage**: Biometric settings stored in Firestore  
-✅ **Fallback Options**: Password authentication always available  
-✅ **Device Security**: Leverages platform-native biometric APIs  
+| Feature | Details |
+|---------|---------|
+| 📱 **Local Authentication** | Fingerprint and Face ID support |
+| 💾 **Preference Storage** | Biometric settings stored in Firestore |
+| 🔄 **Fallback Options** | Password authentication always available |
+| 🛡️ **Device Security** | Leverages platform-native biometric APIs |
 
-### Data Security
+### 🛡️ Data Security
 
-✅ **Firestore Security Rules**: Role-based access control  
-✅ **API Key Protection**: Secure API communication  
-✅ **HTTPS Only**: All network requests encrypted  
-✅ **Input Sanitization**: Protection against injection attacks  
+| Protection Layer | Description |
+|------------------|-------------|
+| 🔐 **Firestore Security Rules** | Role-based access control |
+| 🔑 **API Key Protection** | Secure API communication |
+| 🌐 **HTTPS Only** | All network requests encrypted |
+| 🧹 **Input Sanitization** | Protection against injection attacks |
 
-### Firestore Security Rules
+### 📜 Firestore Security Rules
+
+> **Example security rules to protect user data**
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Users can only read/write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    
+    // Users can only access their own loan applications
     match /loan_applications/{applicationId} {
       allow read, write: if request.auth != null && 
         resource.data.userId == request.auth.uid;
     }
+    
+    // Users can only access their own notifications
     match /notifications/{notificationId} {
       allow read, write: if request.auth != null && 
         resource.data.userId == request.auth.uid;
@@ -323,69 +424,84 @@ service cloud.firestore {
 }
 ```
 
+> ⚠️ **Important**: Deploy these rules to your Firebase project to ensure data security!
+
 ---
 
 ## 📊 Data Pipeline
 
-### Feature Engineering
+### 🤖 ML Model Overview
 
-The ML model uses 64 engineered features derived from:
+| Component | Details |
+|-----------|----------|
+| **Algorithm** | XGBoost Classifier |
+| **Features** | 64 engineered features |
+| **Optimization** | Threshold tuning (0.860 precision) |
+| **Validation** | Cross-validation + holdout testing |
+| **Format** | Pickle serialization |
 
-- **Application Data**: Income, employment history, credit history
-- **Bureau Data**: Credit bureau reports and scores
-- **Credit Card Balance**: Payment patterns and utilization
-- **Installment Payments**: Historical payment behavior
+### 📚 Data Dictionaries
 
-### Model Training
+Comprehensive feature documentation available in `docs/data-dictionaries/`:
 
-- **Algorithm**: XGBoost Classifier
-- **Optimization**: Threshold tuning for precision (0.860)
-- **Validation**: Cross-validation and holdout testing
-- **Format**: Serialized pickle model
-
-### Data Dictionaries
-
-Comprehensive data dictionaries available in `docs/data-dictionaries/`:
-
-- `application_train_features.md`
-- `bureau_features.md`
-- `credit_card_balance_features.md`
-- `installments_payments_features.md`
+- 📄 `application_train_features.md`
+- 📄 `bureau_features.md`
+- 📄 `credit_card_balance_features.md`
+- 📄 `installments_payments_features.md`
 
 ---
 
 ## 🔄 Recent Development
 
-### Latest Updates (February 2026)
+### 📅 Latest Updates (February 2026)
 
-#### ✅ Security Enhancements
-- Implemented real password change functionality
-- Added biometric authentication with `local_auth` package
-- Integrated biometric preferences with Firestore
-- Updated login page to support biometric login
+<table>
+<tr>
+<td width="50%" valign="top">
 
-#### ✅ API Integration Improvements
-- Migrated to Credit Scoring API v2.0
-- Implemented two-step API flow (calculate-limit → calculate-terms)
-- Removed deprecated `loan_tier` and `tier_reason` fields
-- Updated UI to reflect new API response structure
+#### 🔐 Security Enhancements
+- Real password change functionality
+- Biometric authentication (`local_auth`)
+- Biometric preferences in Firestore
+- Biometric login support
 
-#### ✅ Bug Fixes
-- Fixed monthly income input not updating ViewModel
-- Resolved API memory issues causing crashes
-- Fixed infinite loop on HomePage causing excessive Firebase queries
-- Corrected password reset logic for users with multiple auth providers
+#### 🔌 API Integration
+- Migrated to API v2.0
+- Two-step API flow
+- Removed deprecated fields
+- Updated UI for new API
 
-#### ✅ Documentation
-- Created comprehensive data dictionaries for all datasets
-- Generated architecture diagrams (data pipeline, ERD, workflow)
-- Updated README with complete feature documentation
+</td>
+<td width="50%" valign="top">
 
-#### ✅ UI/UX Improvements
+#### 🐛 Bug Fixes
+- Monthly income input fix
+- API memory issues resolved
+- HomePage infinite loop fixed
+- Password reset logic corrected
+
+#### 📚 Documentation
+- Data dictionaries created
+- Architecture diagrams
+- Complete README update
+
+</td>
+</tr>
+</table>
+
+#### 🎨 UI/UX Improvements
 - Enhanced README with icons and visual elements
 - Improved form validation and error handling
 - Added currency formatting for monetary inputs
 - Implemented loading states and progress indicators
+
+<!-- TODO: Add before/after UI screenshots here -->
+<!-- Recommended screenshots:
+- Updated security page with biometric toggle
+- Loan application form with currency formatting
+- Loading states and progress indicators
+- Error handling examples
+-->
 
 ---
 
