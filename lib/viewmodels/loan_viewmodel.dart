@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
@@ -153,10 +154,68 @@ class LoanViewModel extends ChangeNotifier {
   }
 
   // Actions
-  void completeStep1() {
+  void completeStep1() async {
     _step1Completed = true;
     notifyListeners();
+    
+    // Save eKYC data to user profile in Firestore
+    await _saveEkycDataToProfile();
   }
+  
+  // Save eKYC extracted data to user profile
+  Future<void> _saveEkycDataToProfile() async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) {
+      print('[LoanViewModel] Cannot save eKYC data: No user ID');
+      return;
+    }
+
+    try {
+      final updateData = <String, dynamic>{};
+      
+      // Add data if available from eKYC verification
+      if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
+        updateData['fullName'] = fullName;
+      }
+      
+      if (dob != null) {
+        updateData['dateOfBirth'] = Timestamp.fromDate(dob!);
+      }
+      
+      if (idNumber.isNotEmpty && idNumber != '079...') {
+        updateData['nationalId'] = idNumber;
+      }
+      
+      if (address.isNotEmpty && address != '123 Street...') {
+        updateData['address'] = address;
+      }
+      
+      if (phoneNumber.isNotEmpty && phoneNumber != '(+84) 901234567') {
+        updateData['phoneNumber'] = phoneNumber;
+      }
+      
+      // Only update if we have data to save
+      if (updateData.isNotEmpty) {
+        updateData['updatedAt'] = FieldValue.serverTimestamp();
+        
+        print('[LoanViewModel] Saving eKYC data to user profile: ${updateData.keys.join(', ')}');
+        
+        // Use set with merge to create/update document
+        await _firebase.usersCollection.doc(userId).set(
+          updateData,
+          SetOptions(merge: true),
+        );
+        
+        print('[LoanViewModel] eKYC data saved successfully');
+      } else {
+        print('[LoanViewModel] No eKYC data to save');
+      }
+    } catch (e) {
+      print('[LoanViewModel] Error saving eKYC data to profile: $e');
+      // Don't throw - this is non-critical, user can still continue
+    }
+  }
+
   
   void completeStep2() {
     _step2Completed = true;
