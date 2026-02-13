@@ -25,6 +25,7 @@ class FirebaseService {
   CollectionReference get creditApplicationsCollection => _firestore.collection('credit_applications');
   CollectionReference get loanOffersCollection => _firestore.collection('loan_offers');
   CollectionReference get applicationHistoryCollection => _firestore.collection('application_history');
+  CollectionReference get feedbackCollection => _firestore.collection('feedback');
 
   // Current user
   User? get currentUser => _auth.currentUser;

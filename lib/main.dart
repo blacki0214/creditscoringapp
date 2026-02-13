@@ -10,6 +10,8 @@ import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/onboarding_viewmodel.dart';
 import 'viewmodels/loan_viewmodel.dart';
 import 'viewmodels/settings_viewmodel.dart';
+import 'viewmodels/feedback_viewmodel.dart';
+import 'viewmodels/support_viewmodel.dart';
 import 'services/local_storage_service.dart';
 import 'services/vnpt_ekyc_service.dart';
 import 'services/vnpt_credentials_manager.dart';
@@ -77,6 +79,8 @@ class VietCreditApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
         ChangeNotifierProvider(create: (_) => LoanViewModel()),
         ChangeNotifierProvider(create: (_) => SettingsViewModel()),
+        ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
+        ChangeNotifierProvider(create: (_) => SupportViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_viewmodel.dart';
 
 class SecurityPage extends StatefulWidget {
   const SecurityPage({super.key});
@@ -281,95 +283,189 @@ class _SecurityPageState extends State<SecurityPage> {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+    bool isLoading = false;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF252B4C),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Change Password',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Current Password',
-                labelStyle: const TextStyle(color: Colors.white60),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.white30),
-                  borderRadius: BorderRadius.circular(8),
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF252B4C),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text(
+              'Change Password',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: currentPasswordController,
+                  obscureText: true,
+                  enabled: !isLoading,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Color(0xFF4C40F7)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white10),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Color(0xFF4C40F7)),
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: true,
+                  enabled: !isLoading,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    helperText: 'Min 8 chars, uppercase, lowercase, number, special char',
+                    helperStyle: const TextStyle(color: Colors.white38, fontSize: 11),
+                    helperMaxLines: 2,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Color(0xFF4C40F7)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white10),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  enabled: !isLoading,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Color(0xFF4C40F7)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white10),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                if (isLoading) ...[
+                  const SizedBox(height: 16),
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: isLoading ? Colors.white30 : Colors.white60,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'New Password',
-                labelStyle: const TextStyle(color: Colors.white60),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.white30),
-                  borderRadius: BorderRadius.circular(8),
+              ElevatedButton(
+                onPressed: isLoading ? null : () async {
+                  // Validate inputs
+                  if (currentPasswordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter your current password'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (newPasswordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a new password'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (newPasswordController.text != confirmPasswordController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Passwords do not match'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Show loading
+                  setState(() {
+                    isLoading = true;
+                  });
+
+                  // Call AuthViewModel to change password
+                  final authVM = context.read<AuthViewModel>();
+                  final result = await authVM.changePassword(
+                    currentPassword: currentPasswordController.text,
+                    newPassword: newPasswordController.text,
+                  );
+
+                  // Hide loading
+                  setState(() {
+                    isLoading = false;
+                  });
+
+                  // Close dialog
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+
+                  // Show result
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result['message']),
+                        backgroundColor: result['success']
+                            ? const Color(0xFF4CAF50)
+                            : Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isLoading
+                      ? const Color(0xFF4C40F7).withOpacity(0.5)
+                      : const Color(0xFF4C40F7),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Color(0xFF4C40F7)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                child: const Text('Update'),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                labelStyle: const TextStyle(color: Colors.white60),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.white30),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Color(0xFF4C40F7)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Password updated successfully'),
-                  backgroundColor: Color(0xFF4CAF50),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C40F7),
-            ),
-            child: const Text('Update'),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

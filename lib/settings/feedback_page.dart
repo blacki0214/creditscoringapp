@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../viewmodels/settings_viewmodel.dart';
+import '../viewmodels/feedback_viewmodel.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -26,32 +29,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     'Other',
   ];
 
-  final List<FeedbackItem> _previousFeedback = [
-    FeedbackItem(
-      id: '#FB001',
-      subject: 'Login page is very slow',
-      category: 'Bug Report',
-      date: '20/11/2025',
-      status: FeedbackStatus.solved,
-      message: 'The login page takes too long to load...',
-    ),
-    FeedbackItem(
-      id: '#FB002',
-      subject: 'Add dark mode feature',
-      category: 'Feature Request',
-      date: '18/11/2025',
-      status: FeedbackStatus.inProgress,
-      message: 'It would be great to have a dark mode option...',
-    ),
-    FeedbackItem(
-      id: '#FB003',
-      subject: 'Great customer service',
-      category: 'Compliment',
-      date: '15/11/2025',
-      status: FeedbackStatus.solved,
-      message: 'The support team was very helpful...',
-    ),
-  ];
+  // Removed hardcoded feedback - now using real-time data from Firestore
 
   @override
   void initState() {
@@ -315,9 +293,57 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 
   Widget _buildMyFeedbackTab() {
+    final vm = context.watch<FeedbackViewModel>();
+
     return SafeArea(
-      child: _previousFeedback.isEmpty
-          ? Center(
+      child: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: vm.getUserFeedbackStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF4C40F7),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 80,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading feedback',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    snapshot.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final feedbackList = snapshot.data ?? [];
+
+          if (feedbackList.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -345,19 +371,50 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ),
                 ],
               ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(24),
-              itemCount: _previousFeedback.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                return _buildFeedbackCard(_previousFeedback[index]);
-              },
-            ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(24),
+            itemCount: feedbackList.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              return _buildFeedbackCard(feedbackList[index]);
+            },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildFeedbackCard(FeedbackItem feedback) {
+  Widget _buildFeedbackCard(Map<String, dynamic> feedbackData) {
+    // Parse feedback data
+    final id = feedbackData['id'] ?? 'N/A';
+    final subject = feedbackData['subject'] ?? 'No subject';
+    final category = feedbackData['category'] ?? 'General';
+    final message = feedbackData['message'] ?? '';
+    final statusStr = feedbackData['status'] ?? 'pending';
+    
+    // Parse date
+    String dateStr = 'N/A';
+    if (feedbackData['createdAt'] != null) {
+      final timestamp = feedbackData['createdAt'] as Timestamp;
+      final date = timestamp.toDate();
+      dateStr = DateFormat('dd/MM/yyyy').format(date);
+    }
+    
+    // Parse status
+    FeedbackStatus status;
+    switch (statusStr) {
+      case 'inProgress':
+        status = FeedbackStatus.inProgress;
+        break;
+      case 'solved':
+        status = FeedbackStatus.solved;
+        break;
+      default:
+        status = FeedbackStatus.pending;
+    }
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -380,7 +437,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             children: [
               Expanded(
                 child: Text(
-                  feedback.subject,
+                  subject,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -388,7 +445,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ),
                 ),
               ),
-              _buildStatusBadge(feedback.status),
+              _buildStatusBadge(status),
             ],
           ),
           const SizedBox(height: 8),
@@ -401,7 +458,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  feedback.category,
+                  category,
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF4C40F7),
@@ -411,7 +468,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
               const SizedBox(width: 12),
               Text(
-                feedback.id,
+                '#${id.substring(0, 8).toUpperCase()}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade600,
@@ -422,7 +479,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            feedback.message,
+            message,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade700,
@@ -444,7 +501,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    feedback.date,
+                    dateStr,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -454,7 +511,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
               TextButton(
                 onPressed: () {
-                  _showFeedbackDetails(feedback);
+                  _showFeedbackDetails(feedbackData, status, dateStr);
                 },
                 child: const Text(
                   'View Details',
@@ -520,84 +577,109 @@ class _FeedbackPageState extends State<FeedbackPage> {
     );
   }
 
-  void _submitFeedback() {
+  Future<void> _submitFeedback() async {
     if (_formKey.currentState!.validate()) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.1),
-                    shape: BoxShape.circle,
+      final vm = context.read<FeedbackViewModel>();
+
+      final success = await vm.submitFeedback(
+        userName: _nameController.text,
+        userEmail: _emailController.text,
+        category: _selectedCategory,
+        subject: _subjectController.text,
+        message: _messageController.text,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF4CAF50),
+                      size: 60,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.check_circle,
-                    color: Color(0xFF4CAF50),
-                    size: 60,
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Thank You!',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1F3F),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Thank You!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1F3F),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Your feedback has been submitted successfully. We\'ll review it and get back to you soon.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      height: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Your feedback has been submitted successfully. We\'ll review it and get back to you soon.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                    height: 1.5,
+                ],
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _subjectController.clear();
+                      _messageController.clear();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4C40F7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
-            ),
-            actions: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _subjectController.clear();
-                    _messageController.clear();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Done',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      );
+            );
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(vm.errorMessage ?? 'Failed to submit feedback'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  void _showFeedbackDetails(FeedbackItem feedback) {
+  void _showFeedbackDetails(Map<String, dynamic> feedbackData, FeedbackStatus status, String dateStr) {
+    final id = feedbackData['id'] ?? 'N/A';
+    final subject = feedbackData['subject'] ?? 'No subject';
+    final category = feedbackData['category'] ?? 'General';
+    final message = feedbackData['message'] ?? '';
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -615,7 +697,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   color: Color(0xFF1A1F3F),
                 ),
               ),
-              _buildStatusBadge(feedback.status),
+              _buildStatusBadge(status),
             ],
           ),
           content: SingleChildScrollView(
@@ -623,13 +705,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDetailRow('ID', feedback.id),
+                _buildDetailRow('ID', '#${id.substring(0, 8).toUpperCase()}'),
                 const Divider(height: 24),
-                _buildDetailRow('Subject', feedback.subject),
+                _buildDetailRow('Subject', subject),
                 const Divider(height: 24),
-                _buildDetailRow('Category', feedback.category),
+                _buildDetailRow('Category', category),
                 const Divider(height: 24),
-                _buildDetailRow('Date', feedback.date),
+                _buildDetailRow('Date', dateStr),
                 const Divider(height: 24),
                 const Text(
                   'Message',
@@ -641,7 +723,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  feedback.message,
+                  message,
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF1A1F3F),

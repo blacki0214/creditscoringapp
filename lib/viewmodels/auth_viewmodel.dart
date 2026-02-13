@@ -269,6 +269,111 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // Change password (requires current password for reauthentication)
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      _setLoading(true);
+      
+      // Validate new password
+      final validation = _validatePassword(newPassword);
+      if (!validation['isValid']) {
+        _setError(validation['message']);
+        _setLoading(false);
+        return {
+          'success': false,
+          'message': validation['message'],
+        };
+      }
+      
+      final user = _authService.currentUser;
+      if (user == null || user.email == null) {
+        _setError('No authenticated user found');
+        _setLoading(false);
+        return {
+          'success': false,
+          'message': 'No authenticated user found',
+        };
+      }
+      
+      // Reauthenticate with current password
+      try {
+        await _authService.reauthenticateWithPassword(
+          email: user.email!,
+          password: currentPassword,
+        );
+      } catch (e) {
+        _setError('Current password is incorrect');
+        _setLoading(false);
+        return {
+          'success': false,
+          'message': 'Current password is incorrect',
+        };
+      }
+      
+      // Update password
+      await _authService.updatePassword(newPassword);
+      
+      _setLoading(false);
+      return {
+        'success': true,
+        'message': 'Password updated successfully',
+      };
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return {
+        'success': false,
+        'message': e.toString(),
+      };
+    }
+  }
+
+  // Validate password strength
+  Map<String, dynamic> _validatePassword(String password) {
+    if (password.length < 8) {
+      return {
+        'isValid': false,
+        'message': 'Password must be at least 8 characters long',
+      };
+    }
+    
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      return {
+        'isValid': false,
+        'message': 'Password must contain at least one uppercase letter',
+      };
+    }
+    
+    if (!password.contains(RegExp(r'[a-z]'))) {
+      return {
+        'isValid': false,
+        'message': 'Password must contain at least one lowercase letter',
+      };
+    }
+    
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      return {
+        'isValid': false,
+        'message': 'Password must contain at least one number',
+      };
+    }
+    
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return {
+        'isValid': false,
+        'message': 'Password must contain at least one special character',
+      };
+    }
+    
+    return {
+      'isValid': true,
+      'message': 'Password is valid',
+    };
+  }
+
   // Legacy methods for backward compatibility
   Future<bool> login(String email, String password) async {
     return signInWithEmail(email: email, password: password);

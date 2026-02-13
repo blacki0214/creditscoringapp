@@ -23,13 +23,20 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    final vm = context.read<SettingsViewModel>();
-    _nameController.text = vm.name;
-    _emailController.text = vm.email;
-    _phoneController.text = vm.phone;
-    _addressController.text = vm.address;
-    _idController.text = vm.idNumber;
-    _dobController.text = vm.dob;
+    
+    // Load user profile data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<SettingsViewModel>();
+      vm.loadUserProfile();
+      
+      // Initialize controllers with loaded data
+      _nameController.text = vm.name;
+      _emailController.text = vm.email;
+      _phoneController.text = vm.phone;
+      _addressController.text = vm.address;
+      _idController.text = vm.idNumber;
+      _dobController.text = vm.dob;
+    });
   }
 
   @override
@@ -256,14 +263,29 @@ class _ProfilePageState extends State<ProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildAccountStat('Member Since', '2023'),
-                          _buildAccountStat('Credit Score', '620'),
-                          _buildAccountStat('Active Loans', '1'),
+                          _buildAccountStat(
+                            'Member Since',
+                            settingsViewModel.memberSince?.year.toString() ?? 'N/A',
+                          ),
+                          _buildAccountStat(
+                            'Credit Score',
+                            settingsViewModel.latestCreditScore?.toString() ?? 'N/A',
+                          ),
+                          _buildAccountStat(
+                            'Applications',
+                            settingsViewModel.totalApplications.toString(),
+                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 32),
+                
+                // Credit Score Section
+                _buildSectionTitle('Credit Status'),
+                const SizedBox(height: 16),
+                _buildCreditScoreCard(settingsViewModel),
               ],
             ),
           ),
@@ -294,17 +316,26 @@ class _ProfilePageState extends State<ProfilePage> {
     TextInputType? keyboardType,
     int maxLines = 1,
   }) {
+    // Show placeholder text when field is empty and not editing
+    final bool isEmpty = controller.text.isEmpty;
+    
     return TextFormField(
       controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
       maxLines: maxLines,
       style: TextStyle(
-        color: enabled ? Colors.black : Colors.grey.shade700,
+        color: enabled ? Colors.black : (isEmpty ? Colors.grey.shade500 : Colors.grey.shade700),
         fontSize: 16,
+        fontStyle: isEmpty && !enabled ? FontStyle.italic : FontStyle.normal,
       ),
       decoration: InputDecoration(
         labelText: label,
+        hintText: !enabled && isEmpty ? 'Not available' : null,
+        hintStyle: TextStyle(
+          color: Colors.grey.shade400,
+          fontStyle: FontStyle.italic,
+        ),
         prefixIcon: Icon(
           icon,
           color: enabled ? const Color(0xFF4C40F7) : Colors.grey.shade500,
@@ -331,12 +362,12 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      validator: (value) {
+      validator: enabled ? (value) {
         if (value == null || value.isEmpty) {
           return 'This field is required';
         }
         return null;
-      },
+      } : null,
     );
   }
 
@@ -360,6 +391,126 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCreditScoreCard(SettingsViewModel vm) {
+    if (vm.latestCreditScore == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.info_outline, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              'No Credit Score Yet',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Complete a loan application to get your credit score',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Determine score color and label
+    Color scoreColor;
+    String scoreLabel;
+    if (vm.latestCreditScore! >= 700) {
+      scoreColor = const Color(0xFF4CAF50); // Green
+      scoreLabel = 'Excellent';
+    } else if (vm.latestCreditScore! >= 600) {
+      scoreColor = const Color(0xFFFFA726); // Orange
+      scoreLabel = 'Good';
+    } else {
+      scoreColor = const Color(0xFFEF5350); // Red
+      scoreLabel = 'Fair';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [scoreColor.withOpacity(0.8), scoreColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Credit Score',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  vm.latestCreditScore.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  scoreLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (vm.riskLevel != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Risk Level: ${vm.riskLevel}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.stars,
+              color: Colors.white,
+              size: 40,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
