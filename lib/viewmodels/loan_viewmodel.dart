@@ -28,6 +28,7 @@ class LoanViewModel extends ChangeNotifier {
   
   // Application status tracking
   ApplicationStatus _applicationStatus = ApplicationStatus.none;
+  ApplicationStatus _lastCompletedStatus = ApplicationStatus.none;
   String? _pendingApplicationId;
 
   // VNPT eKYC captured images
@@ -65,6 +66,7 @@ class LoanViewModel extends ChangeNotifier {
 
   // Response Data
   Map<String, dynamic>? _currentOffer;
+  Map<String, dynamic>? _lastCompletedOffer;
   String? _errorMessage;
   List<Map<String, dynamic>> _applications = [];
 
@@ -75,11 +77,13 @@ class LoanViewModel extends ChangeNotifier {
   bool get step4Completed => _step4Completed;
   bool get isProcessing => _isProcessing;
   Map<String, dynamic>? get currentOffer => _currentOffer;
+  Map<String, dynamic>? get lastCompletedOffer => _lastCompletedOffer;
   String? get errorMessage => _errorMessage;
   List<Map<String, dynamic>> get applications => _applications;
   
   // Application status getters
   ApplicationStatus get applicationStatus => _applicationStatus;
+  ApplicationStatus get lastCompletedStatus => _lastCompletedStatus;
   bool get isApplicationProcessing => _applicationStatus == ApplicationStatus.processing;
   bool get isApplicationScored => _applicationStatus == ApplicationStatus.scored;
   bool get isApplicationRejected => _applicationStatus == ApplicationStatus.rejected;
@@ -394,6 +398,88 @@ class LoanViewModel extends ChangeNotifier {
   
   void resetError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> finalizeAndResetForNewApplication() async {
+    if (_currentOffer != null) {
+      _lastCompletedOffer = Map<String, dynamic>.from(_currentOffer!);
+      _lastCompletedStatus = _applicationStatus;
+
+      await LocalStorageService.saveApplicationHistory({
+        'approved': _currentOffer!['approved'],
+        'creditScore': _currentOffer!['creditScore'],
+        'loanAmount': _currentOffer!['loanAmountVnd'],
+        'maxAmount': _currentOffer!['maxAmountVnd'],
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    }
+
+    resetForNewApplication();
+  }
+
+  void resetForNewApplication() {
+    _step1Completed = false;
+    _step2Completed = false;
+    _step3Completed = false;
+    _step4Completed = false;
+    _isProcessing = false;
+    _applicationStatus = ApplicationStatus.none;
+    _pendingApplicationId = null;
+    _currentOffer = null;
+    _errorMessage = null;
+
+    _frontIdImageBytes = null;
+    _backIdImageBytes = null;
+    _selfieImageBytes = null;
+    _frontIdData = null;
+    _backIdData = null;
+    _faceMatchData = null;
+    _vnptErrorMessage = null;
+    _isVerifyingFrontId = false;
+    _isVerifyingBackId = false;
+    _isVerifyingSelfie = false;
+
+    notifyListeners();
+  }
+
+  Future<void> resetLoanApplicationState() async {
+    _step1Completed = false;
+    _step2Completed = false;
+    _step3Completed = false;
+    _step4Completed = false;
+    _isProcessing = false;
+    _applicationStatus = ApplicationStatus.none;
+    _pendingApplicationId = null;
+    _currentOffer = null;
+    _errorMessage = null;
+
+    _frontIdImageBytes = null;
+    _backIdImageBytes = null;
+    _selfieImageBytes = null;
+    _frontIdData = null;
+    _backIdData = null;
+    _faceMatchData = null;
+    _vnptErrorMessage = null;
+    _isVerifyingFrontId = false;
+    _isVerifyingBackId = false;
+    _isVerifyingSelfie = false;
+
+    fullName = '';
+    dob = null;
+    phoneNumber = '';
+    idNumber = '';
+    address = '';
+    employmentStatus = 'EMPLOYED';
+    yearsEmployed = 0;
+    monthlyIncome = 0;
+    homeOwnership = 'RENT';
+    loanPurpose = 'PERSONAL';
+    yearsCreditHistory = 0;
+    hasPreviousDefaults = false;
+    currentlyDefaulting = false;
+
+    await LocalStorageService.clearDraft();
     notifyListeners();
   }
 

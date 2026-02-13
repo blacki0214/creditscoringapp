@@ -125,8 +125,8 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Mark as completed and navigate home
+                        onPressed: () async {
+                          await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (_) => const HomePage()),
@@ -154,7 +154,8 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (_) => const HomePage()),

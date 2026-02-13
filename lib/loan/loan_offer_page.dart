@@ -146,41 +146,13 @@ class LoanOfferPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      'Decline',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF4C40F7),
-                      ),
-                    ),
-                  ),
-                ),
               ] else ...[
                  SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                       await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
                        context.read<LoanViewModel>().resetError();
                        Navigator.pop(context); // Go back to try again
                     },

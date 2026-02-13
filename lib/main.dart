@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,6 +22,10 @@ void main() async {
   
   // Initialize local storage
   await LocalStorageService.init();
+
+  if (kDebugMode) {
+    await LocalStorageService.clearTosAccepted();
+  }
   
   // Load environment variables
   await dotenv.load(fileName: ".env");
