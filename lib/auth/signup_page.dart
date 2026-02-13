@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
@@ -19,6 +20,39 @@ class _SignupPageState extends State<SignupPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _emailFieldKey = GlobalKey<FormFieldState<String>>();
+  final _passwordFieldKey = GlobalKey<FormFieldState<String>>();
+  final _phoneFieldKey = GlobalKey<FormFieldState<String>>();
+  final _nameFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _phoneFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameFocusNode.addListener(() {
+      if (!_nameFocusNode.hasFocus) {
+        _nameFieldKey.currentState?.validate();
+      }
+    });
+    _emailFocusNode.addListener(() {
+      if (!_emailFocusNode.hasFocus) {
+        _emailFieldKey.currentState?.validate();
+      }
+    });
+    _passwordFocusNode.addListener(() {
+      if (!_passwordFocusNode.hasFocus) {
+        _passwordFieldKey.currentState?.validate();
+      }
+    });
+    _phoneFocusNode.addListener(() {
+      if (!_phoneFocusNode.hasFocus) {
+        _phoneFieldKey.currentState?.validate();
+      }
+    });
+  }
   
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
@@ -37,15 +71,15 @@ class _SignupPageState extends State<SignupPage> {
     return null;
   }
 
-  /// Validate email format: must have text@text pattern (required)
+  /// Validate email format: must be a Gmail address (required)
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
     }
-    // Check for basic email pattern: text@text.text
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    // Enforce Gmail format
+    final emailRegex = RegExp(r'^[A-Z0-9._%+-]+@gmail\.com$', caseSensitive: false);
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
+      return 'Please enter a valid Gmail address';
     }
     return null;
   }
@@ -204,8 +238,16 @@ class _SignupPageState extends State<SignupPage> {
                   // Step 0: Name, Email, Password
                   if (viewModel.signupStep == 0) ...[
                     TextFormField(
+                      key: _nameFieldKey,
                       controller: _nameController,
-                      maxLength: 50,
+                      focusNode: _nameFocusNode,
+                      maxLength: 30,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(30),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r"[\p{L}\p{M}\s]", unicode: true),
+                        ),
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         hintText: 'Enter your full name',
@@ -230,13 +272,27 @@ class _SignupPageState extends State<SignupPage> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your name';
                         }
+                        if (value.trim().length < 2) {
+                          return 'Name must be at least 2 characters';
+                        }
+                        if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true)
+                            .hasMatch(value)) {
+                          return 'Name can only contain letters and spaces';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
+                      key: _emailFieldKey,
                       controller: _emailController,
                       maxLength: 50,
+                      keyboardType: TextInputType.emailAddress,
+                      focusNode: _emailFocusNode,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(50),
+                        FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Email',
                         hintText: 'Enter your email',
@@ -261,8 +317,14 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
+                      key: _passwordFieldKey,
                       controller: _passwordController,
                       maxLength: 50,
+                      focusNode: _passwordFocusNode,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(50),
+                        FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                      ],
                       obscureText: viewModel.obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -323,9 +385,15 @@ class _SignupPageState extends State<SignupPage> {
                   // Step 1: Phone Number (Optional)
                   if (viewModel.signupStep == 1) ...[
                     TextFormField(
+                      key: _phoneFieldKey,
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
+                      focusNode: _phoneFocusNode,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(10),
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Phone Number (Optional)',
                         hintText: 'Enter your phone number',
@@ -574,6 +642,10 @@ class _SignupPageState extends State<SignupPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _nameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _phoneFocusNode.dispose();
     super.dispose();
   }
 }

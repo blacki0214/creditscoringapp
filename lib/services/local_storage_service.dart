@@ -6,6 +6,8 @@ class LocalStorageService {
   static const String _keyApplicationHistory = 'application_history';
   static const String _keyLastSaved = 'last_saved_timestamp';
   static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
+  static const String _keyHasAcceptedTos = 'has_accepted_tos';
+  static const String _keyOtpThrottle = 'otp_throttle_map';
 
   static SharedPreferences? _prefs;
 
@@ -127,5 +129,89 @@ class LocalStorageService {
       print('Error marking onboarding as seen: $e');
       return false;
     }
+  }
+
+  /// Check if user has accepted the Terms of Service
+  /// Returns true if accepted, false otherwise
+  static bool hasAcceptedTos() {
+    return prefs.getBool(_keyHasAcceptedTos) ?? false;
+  }
+
+  /// Persist Terms of Service acceptance
+  static Future<bool> markTosAccepted() async {
+    try {
+      await prefs.setBool(_keyHasAcceptedTos, true);
+      return true;
+    } catch (e) {
+      print('Error marking TOS as accepted: $e');
+      return false;
+    }
+  }
+
+  static Future<void> clearTosAccepted() async {
+    await prefs.remove(_keyHasAcceptedTos);
+  }
+
+  static Map<String, dynamic> getOtpThrottle(String phoneNumber) {
+    final raw = prefs.getString(_keyOtpThrottle);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        final entry = decoded[phoneNumber];
+        if (entry is Map<String, dynamic>) return entry;
+      }
+      return {};
+    } catch (e) {
+      print('Error reading OTP throttle: $e');
+      return {};
+    }
+  }
+
+  static Future<void> setOtpThrottle(
+    String phoneNumber, {
+    required int count,
+    int? blockedUntilMs,
+  }) async {
+    try {
+      final raw = prefs.getString(_keyOtpThrottle);
+      final map = raw == null || raw.isEmpty
+          ? <String, dynamic>{}
+          : (jsonDecode(raw) as Map<String, dynamic>);
+      map[phoneNumber] = {
+        'count': count,
+        'blocked_until': blockedUntilMs,
+      };
+      await prefs.setString(_keyOtpThrottle, jsonEncode(map));
+    } catch (e) {
+      print('Error writing OTP throttle: $e');
+    }
+  }
+
+  static Future<void> clearOtpThrottle(String phoneNumber) async {
+    try {
+      final raw = prefs.getString(_keyOtpThrottle);
+      if (raw == null || raw.isEmpty) return;
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      map.remove(phoneNumber);
+      await prefs.setString(_keyOtpThrottle, jsonEncode(map));
+    } catch (e) {
+      print('Error clearing OTP throttle: $e');
+    }
+  }
+
+  // Add password prompt tracking
+  static const String _addPasswordPromptKey = 'add_password_prompt_seen';
+
+  static Future<void> setAddPasswordPromptSeen() async {
+    await prefs.setBool(_addPasswordPromptKey, true);
+  }
+
+  static Future<bool> hasSeenAddPasswordPrompt() async {
+    return prefs.getBool(_addPasswordPromptKey) ?? false;
+  }
+
+  static Future<void> clearAddPasswordPromptFlag() async {
+    await prefs.remove(_addPasswordPromptKey);
   }
 }

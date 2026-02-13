@@ -24,6 +24,18 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   final _yearsCreditHistoryController = TextEditingController();
   final _loanAmountController = TextEditingController();
   final _addressController = TextEditingController();
+
+  final _yearsEmployedFieldKey = GlobalKey<FormFieldState<String>>();
+  final _monthlyIncomeFieldKey = GlobalKey<FormFieldState<String>>();
+  final _loanAmountFieldKey = GlobalKey<FormFieldState<String>>();
+  final _addressFieldKey = GlobalKey<FormFieldState<String>>();
+  final _yearsCreditHistoryFieldKey = GlobalKey<FormFieldState<String>>();
+
+  final _yearsEmployedFocusNode = FocusNode();
+  final _monthlyIncomeFocusNode = FocusNode();
+  final _loanAmountFocusNode = FocusNode();
+  final _addressFocusNode = FocusNode();
+  final _yearsCreditHistoryFocusNode = FocusNode();
   
   DateTime? _selectedDOB;
   
@@ -49,12 +61,47 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _yearsEmployedFocusNode.addListener(() {
+      if (!_yearsEmployedFocusNode.hasFocus) {
+        _yearsEmployedFieldKey.currentState?.validate();
+      }
+    });
+    _monthlyIncomeFocusNode.addListener(() {
+      if (!_monthlyIncomeFocusNode.hasFocus) {
+        _monthlyIncomeFieldKey.currentState?.validate();
+      }
+    });
+    _loanAmountFocusNode.addListener(() {
+      if (!_loanAmountFocusNode.hasFocus) {
+        _loanAmountFieldKey.currentState?.validate();
+      }
+    });
+    _addressFocusNode.addListener(() {
+      if (!_addressFocusNode.hasFocus) {
+        _addressFieldKey.currentState?.validate();
+      }
+    });
+    _yearsCreditHistoryFocusNode.addListener(() {
+      if (!_yearsCreditHistoryFocusNode.hasFocus) {
+        _yearsCreditHistoryFieldKey.currentState?.validate();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _monthlyIncomeController.dispose();
     _yearsEmployedController.dispose();
     _yearsCreditHistoryController.dispose();
     _loanAmountController.dispose();
     _addressController.dispose();
+    _yearsEmployedFocusNode.dispose();
+    _monthlyIncomeFocusNode.dispose();
+    _loanAmountFocusNode.dispose();
+    _addressFocusNode.dispose();
+    _yearsCreditHistoryFocusNode.dispose();
     super.dispose();
   }
 
@@ -173,20 +220,32 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         ),
                         const SizedBox(height: 12),
                         _buildTextField(
+                          fieldKey: _yearsEmployedFieldKey,
                           controller: _yearsEmployedController,
+                          focusNode: _yearsEmployedFocusNode,
                           label: 'Years Employed',
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
+                          maxLength: 5,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(5),
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
+                          ],
+                          validator: _validateYearsEmployed,
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          fieldKey: _monthlyIncomeFieldKey,
                           controller: _monthlyIncomeController,
+                          focusNode: _monthlyIncomeFocusNode,
                           label: 'Monthly Income (VND)',
                           keyboardType: TextInputType.number,
+                          maxLength: 15,
                           inputFormatters: [
+                            LengthLimitingTextInputFormatter(15),
                             FilteringTextInputFormatter.digitsOnly,
                             _CurrencyInputFormatter(_currencyFormatter),
                           ],
+                          validator: _validateMonthlyIncome,
                         ),
 
                         const SizedBox(height: 16),
@@ -200,8 +259,19 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          fieldKey: _addressFieldKey,
                           controller: _addressController,
+                          focusNode: _addressFocusNode,
                           label: 'Current Address',
+                          maxLines: 2,
+                          maxLength: 100,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(100),
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r"[\p{L}\p{M}0-9\s,\.\-/#]", unicode: true),
+                            ),
+                          ],
+                          validator: _validateAddress,
                         ),
 
                         const SizedBox(height: 16),
@@ -215,13 +285,18 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          fieldKey: _loanAmountFieldKey,
                           controller: _loanAmountController,
+                          focusNode: _loanAmountFocusNode,
                           label: 'Desired Loan Amount (VND)',
                           keyboardType: TextInputType.number,
+                          maxLength: 15,
                           inputFormatters: [
+                            LengthLimitingTextInputFormatter(15),
                             FilteringTextInputFormatter.digitsOnly,
                             _CurrencyInputFormatter(_currencyFormatter),
                           ],
+                          validator: _validateLoanAmount,
                         ),
                         
                         const SizedBox(height: 16),
@@ -231,10 +306,17 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         // Show credit history fields only if user has credit history
                         if (_hasCreditHistory == true) ...[
                           _buildTextField(
+                            fieldKey: _yearsCreditHistoryFieldKey,
                             controller: _yearsCreditHistoryController,
+                            focusNode: _yearsCreditHistoryFocusNode,
                             label: 'Years Credit History',
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            maxLength: 2,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: _validateYearsCreditHistory,
                           ),
                           const SizedBox(height: 16),
                           SwitchListTile(
@@ -532,16 +614,25 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   }
 
   Widget _buildTextField({
+    GlobalKey<FormFieldState<String>>? fieldKey,
     required TextEditingController controller,
     required String label,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    FocusNode? focusNode,
+    int maxLines = 1,
+    int? maxLength,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
+      key: fieldKey,
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      validator: (value) {
+      focusNode: focusNode,
+      maxLines: maxLines,
+      maxLength: maxLength,
+      validator: validator ?? (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
         return null;
       },
@@ -556,8 +647,59 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
+        counterText: '',
       ),
     );
+  }
+
+  String? _validateYearsEmployed(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Years Employed';
+    if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
+      return 'Enter a valid number (up to 2 decimals)';
+    }
+    final years = double.tryParse(value);
+    if (years == null || years < 0 || years > 60) {
+      return 'Years Employed must be between 0 and 60';
+    }
+    return null;
+  }
+
+  String? _validateMonthlyIncome(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Monthly Income';
+    final cleaned = value.replaceAll('.', '');
+    final income = double.tryParse(cleaned);
+    if (income == null || income <= 0) {
+      return 'Monthly Income must be greater than 0';
+    }
+    return null;
+  }
+
+  String? _validateLoanAmount(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Desired Loan Amount';
+    final cleaned = value.replaceAll('.', '');
+    final amount = double.tryParse(cleaned);
+    if (amount == null || amount <= 0) {
+      return 'Loan Amount must be greater than 0';
+    }
+    return null;
+  }
+
+  String? _validateAddress(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Current Address';
+    if (value.trim().length < 5) return 'Address must be at least 5 characters';
+    if (!RegExp(r"^[\p{L}\p{M}0-9\s,\.\-/#]+$", unicode: true).hasMatch(value)) {
+      return 'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #';
+    }
+    return null;
+  }
+
+  String? _validateYearsCreditHistory(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter Years Credit History';
+    final years = int.tryParse(value);
+    if (years == null || years < 0 || years > 50) {
+      return 'Years Credit History must be between 0 and 50';
+    }
+    return null;
   }
 
   Widget _buildDropdown({

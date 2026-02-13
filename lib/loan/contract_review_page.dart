@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
@@ -24,6 +25,8 @@ class ContractReviewPage extends StatefulWidget {
 
 class _ContractReviewPageState extends State<ContractReviewPage> {
   final _signatureController = TextEditingController();
+  final _signatureFieldKey = GlobalKey<FormFieldState<String>>();
+  final _signatureFocusNode = FocusNode();
   bool _agreedToTerms = false;
   bool _agreedToDeduction = false;
   bool _agreedToConsent = false;
@@ -32,8 +35,24 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
   final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
   @override
+  void initState() {
+    super.initState();
+    _signatureController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    _signatureFocusNode.addListener(() {
+      if (!_signatureFocusNode.hasFocus) {
+        _signatureFieldKey.currentState?.validate();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _signatureController.dispose();
+    _signatureFocusNode.dispose();
     super.dispose();
   }
 
@@ -143,7 +162,15 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      key: _signatureFieldKey,
                       controller: _signatureController,
+                      focusNode: _signatureFocusNode,
+                      maxLength: 50,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(50),
+                        FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z\s\-']")),
+                      ],
+                      validator: _validateSignature,
                       decoration: InputDecoration(
                         hintText: 'Enter your full name',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -155,6 +182,7 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
                         ),
+                        counterText: '',
                       ),
                     ),
 
@@ -428,5 +456,14 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
     if (widget.loanAmount <= 0) return 0;
     final interestRate = (offer['interestRate'] as num?) ?? 15.0;
     return (widget.loanAmount / widget.tenor) * (1 + (interestRate / 100));
+  }
+
+  String? _validateSignature(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter your signature';
+    if (value.trim().length < 2) return 'Signature must be at least 2 characters';
+    if (!RegExp(r"^[A-Za-z\s\-']+$").hasMatch(value)) {
+      return 'Signature can only contain letters, spaces, hyphens, and apostrophes';
+    }
+    return null;
   }
 }

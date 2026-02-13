@@ -5,7 +5,7 @@ class HomeViewModel extends ChangeNotifier {
   final FirebaseUserService _userService = FirebaseUserService();
 
   int _selectedIndex = 0;
-  String _selectedPeriod = 'Current year';
+  String _selectedPeriod = 'Overall';
   
   // User profile data
   String? _userName;
