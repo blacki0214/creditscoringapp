@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../services/local_storage_service.dart';
 import 'signup_page.dart';
 import 'forgot_password.dart';
 import 'phone_login_page.dart';
@@ -30,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_tosDialogShown) {
+      if (mounted && !_tosDialogShown && !LocalStorageService.hasAcceptedTos()) {
         _showTosDialog();
       }
     });
@@ -157,7 +158,9 @@ class _LoginPageState extends State<LoginPage> {
       _isTosDialogVisible = false;
     });
 
-    if (accepted != true) {
+    if (accepted == true) {
+      await LocalStorageService.markTosAccepted();
+    } else {
       SystemNavigator.pop();
     }
   }
