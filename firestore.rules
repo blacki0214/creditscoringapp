@@ -57,6 +57,25 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if request.auth != null &&
+                     resource.data.userId == request.auth.uid;
+      
+      // Users can create notifications for themselves
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own notifications (e.g. mark as read)
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own notifications
+      allow delete: if request.auth != null &&
+                       resource.data.userId == request.auth.uid;
+    }
+    
     // Support chats
     match /support_chats/{chatId} {
       // Users can read their own chats

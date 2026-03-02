@@ -45,9 +45,16 @@ class VnptCredentials {
 /// Priority: Secure Storage > .env file
 class VnptCredentialsManager {
   static const String _storageKeyPrefix = 'vnpt_';
+  // Primary storage: encrypted (preferred on supported devices)
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
+    ),
+  );
+  // Fallback storage: non-encrypted (used when Keystore is unavailable, e.g. Android 16 beta)
+  static const FlutterSecureStorage _fallbackStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: false,
     ),
   );
 
@@ -89,26 +96,30 @@ class VnptCredentialsManager {
 
   /// Load credentials from Flutter Secure Storage
   static Future<VnptCredentials?> _loadFromSecureStorage() async {
-    try {
-      final tokenId = await _secureStorage.read(key: '${_storageKeyPrefix}token_id');
-      final tokenKey = await _secureStorage.read(key: '${_storageKeyPrefix}token_key');
-      final publicKeyCa = await _secureStorage.read(key: '${_storageKeyPrefix}public_key_ca');
-      final accessToken = await _secureStorage.read(key: '${_storageKeyPrefix}access_token');
+    // Try encrypted storage first, fall back to non-encrypted if Keystore fails
+    for (final storage in [_secureStorage, _fallbackStorage]) {
+      try {
+        final tokenId = await storage.read(key: '${_storageKeyPrefix}token_id');
+        final tokenKey = await storage.read(key: '${_storageKeyPrefix}token_key');
+        final publicKeyCa = await storage.read(key: '${_storageKeyPrefix}public_key_ca');
+        final accessToken = await storage.read(key: '${_storageKeyPrefix}access_token');
 
-      if (tokenId == null || tokenKey == null || publicKeyCa == null || accessToken == null) {
-        return null;
+        if (tokenId == null || tokenKey == null || publicKeyCa == null || accessToken == null) {
+          continue; // Try next storage option
+        }
+
+        return VnptCredentials(
+          tokenId: tokenId,
+          tokenKey: tokenKey,
+          publicKeyCa: publicKeyCa,
+          accessToken: accessToken,
+        );
+      } catch (e) {
+        print('[VnptCredentials] Error reading from storage, trying fallback: $e');
+        continue;
       }
-
-      return VnptCredentials(
-        tokenId: tokenId,
-        tokenKey: tokenKey,
-        publicKeyCa: publicKeyCa,
-        accessToken: accessToken,
-      );
-    } catch (e) {
-      print('[VnptCredentials] Error loading from secure storage: $e');
-      return null;
     }
+    return null;
   }
 
   /// Load credentials from .env file

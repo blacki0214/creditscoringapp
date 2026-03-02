@@ -21,6 +21,13 @@ import 'loan/step4_offer_calculator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global Flutter error handler — prevents framework errors from killing the app
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    // Log the error but DO NOT rethrow — keep the app alive
+    print('[FlutterError] ${details.exceptionAsString()}');
+  };
   
   // Initialize local storage
   await LocalStorageService.init();
@@ -32,19 +39,23 @@ void main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
   
-  // Initialize VNPT eKYC service with credentials from .env
+  // Initialize VNPT eKYC service — non-fatal: if this fails, eKYC features
+  // will show an error when used, but the rest of the app still loads.
   try {
     await VnptEkycService.initialize();
   } catch (e) {
-    // If token is expired, clear cache and reload from .env
     if (e.toString().contains('HẾT HẠN') || e.toString().contains('expired')) {
-      print('[VNPT] Token expired, clearing cache and reloading from .env...');
-      await VnptCredentialsManager.clearCredentials();
-      
-      // Retry initialization (will load from .env this time)
-      await VnptEkycService.initialize();
+      print('[VNPT] Token expired, clearing cache and retrying from .env...');
+      try {
+        await VnptCredentialsManager.clearCredentials();
+        await VnptEkycService.initialize();
+      } catch (retryError) {
+        // Still failed after retry — warn but continue app startup
+        print('[VNPT] Retry failed: $retryError. eKYC will be unavailable.');
+      }
     } else {
-      rethrow;
+      // Any other error (missing credentials, parse error, etc.) — warn and continue
+      print('[VNPT] Initialization failed: $e. eKYC features will be unavailable.');
     }
   }
   
@@ -59,7 +70,7 @@ void main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
   
-  // Initialize local storage
+  // Initialize local storage (called again after Firebase in case of dependency)
   await LocalStorageService.init();
   
   runApp(const VietCreditApp());
