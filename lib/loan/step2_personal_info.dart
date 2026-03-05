@@ -338,7 +338,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           validator: _validateYearsCreditHistory,
-                          onChanged: (val) => vm.updatePersonalInfo(history: int.tryParse(val)),
+                          onChanged: (val) => vm.updatePersonalInfo(history: double.tryParse(val)),
                         ),
                         const SizedBox(height: 16),
                         SwitchListTile(

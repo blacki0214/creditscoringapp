@@ -466,7 +466,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       }
       
       // Parse credit history only if user has credit history
-      int creditYears = 0;
+      double creditYears = 0;
       if (_hasCreditHistory == true) {
         final creditYearsText = _yearsCreditHistoryController.text;
         if (creditYearsText.isEmpty) {
@@ -480,7 +480,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           );
           return;
         }
-        creditYears = int.parse(creditYearsText);
+        creditYears = double.parse(creditYearsText);
       }
       
       // Calculate age

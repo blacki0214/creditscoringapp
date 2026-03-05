@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 // ===== Two-Step API Flow Models (API v2.0) =====
@@ -13,8 +14,9 @@ class CalculateLimitRequest {
   final String employmentStatus;
   final double yearsEmployed;
   final String homeOwnership;
-  final String loanPurpose;
-  final int yearsCreditHistory;
+  // loanPurpose kept for Firestore storage but NOT sent to API v2
+  final String? loanPurpose;
+  final double yearsCreditHistory;
   final bool hasPreviousDefaults;
   final bool currentlyDefaulting;
 
@@ -25,12 +27,13 @@ class CalculateLimitRequest {
     required this.employmentStatus,
     required this.yearsEmployed,
     required this.homeOwnership,
-    required this.loanPurpose,
+    this.loanPurpose,
     this.yearsCreditHistory = 0,
     this.hasPreviousDefaults = false,
     this.currentlyDefaulting = false,
   });
 
+  /// API v2: loan_purpose is NOT sent to /api/calculate-limit.
   Map<String, dynamic> toJson() {
     return {
       'full_name': fullName,
@@ -39,7 +42,6 @@ class CalculateLimitRequest {
       'employment_status': employmentStatus,
       'years_employed': yearsEmployed,
       'home_ownership': homeOwnership,
-      'loan_purpose': loanPurpose,
       'years_credit_history': yearsCreditHistory,
       'has_previous_defaults': hasPreviousDefaults,
       'currently_defaulting': currentlyDefaulting,
@@ -97,27 +99,39 @@ class CalculateTermsRequest {
 
 /// Response model for Step 2: Calculate Terms
 class CalculateTermsResponse {
+  final double loanAmountVnd;
+  final String loanPurpose;
   final double interestRate;
   final int loanTermMonths;
   final double monthlyPaymentVnd;
   final double totalPaymentVnd;
   final double totalInterestVnd;
+  final String rateExplanation;
+  final String termExplanation;
 
   CalculateTermsResponse({
+    required this.loanAmountVnd,
+    required this.loanPurpose,
     required this.interestRate,
     required this.loanTermMonths,
     required this.monthlyPaymentVnd,
     required this.totalPaymentVnd,
     required this.totalInterestVnd,
+    required this.rateExplanation,
+    required this.termExplanation,
   });
 
   factory CalculateTermsResponse.fromJson(Map<String, dynamic> json) {
     return CalculateTermsResponse(
+      loanAmountVnd: (json['loan_amount_vnd'] as num).toDouble(),
+      loanPurpose: json['loan_purpose'] as String,
       interestRate: (json['interest_rate'] as num).toDouble(),
       loanTermMonths: json['loan_term_months'] as int,
       monthlyPaymentVnd: (json['monthly_payment_vnd'] as num).toDouble(),
       totalPaymentVnd: (json['total_payment_vnd'] as num).toDouble(),
       totalInterestVnd: (json['total_interest_vnd'] as num).toDouble(),
+      rateExplanation: json['rate_explanation'] as String? ?? '',
+      termExplanation: json['term_explanation'] as String? ?? '',
     );
   }
 }
@@ -132,7 +146,7 @@ class SimpleLoanRequest {
   final double yearsEmployed;
   final String homeOwnership;
   final String loanPurpose;
-  final int yearsCreditHistory;
+  final double yearsCreditHistory;
   final bool hasPreviousDefaults;
   final bool currentlyDefaulting;
 
@@ -144,7 +158,7 @@ class SimpleLoanRequest {
     required this.yearsEmployed,
     required this.homeOwnership,
     required this.loanPurpose,
-    this.yearsCreditHistory = 0,
+    this.yearsCreditHistory = 0.0,
     this.hasPreviousDefaults = false,
     this.currentlyDefaulting = false,
   });
@@ -208,7 +222,10 @@ class LoanOfferResponse {
 }
 
 class ApiService {
-  static const String baseUrl = 'https://credit-scoring-h7mv.onrender.com/api';
+  /// Reads the GCP Cloud Run base URL from .env at runtime.
+  /// Falls back to the old Render URL if env var is missing.
+  static String get baseUrl =>
+      dotenv.env['GCP_API_URL'] ?? 'https://credit-scoring-h7mv.onrender.com/api';
   
   // Singleton HTTP client to prevent memory leaks
   static final http.Client _sharedClient = http.Client();
@@ -224,6 +241,24 @@ class ApiService {
   // Get the client to use (shared singleton or injected for testing)
   http.Client get _activeClient => _client ?? _sharedClient;
 
+  static const _secureStorage = FlutterSecureStorage();
+  static const _apiKeyStorageKey = 'ml_api_key';
+
+  /// Returns the ML API key.
+  /// On first call: reads from .env and caches in flutter_secure_storage.
+  /// On subsequent calls: reads directly from secure storage.
+  static Future<String> _getApiKey() async {
+    var key = await _secureStorage.read(key: _apiKeyStorageKey);
+    if (key == null || key.isEmpty) {
+      // Bootstrap from .env (only happens once after fresh install)
+      key = dotenv.env['ML_API_KEY'] ?? '';
+      if (key.isNotEmpty) {
+        await _secureStorage.write(key: _apiKeyStorageKey, value: key);
+      }
+    }
+    return key;
+  }
+
   // ===== Two-Step API Flow (API v2.0) =====
 
   /// Step 1: Calculate credit score and loan limit
@@ -238,7 +273,7 @@ class ApiService {
           print('[ApiService] Retry attempt $attempt/$maxRetries');
         }
         
-        final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
+        final apiKey = await _getApiKey();
         final startTime = DateTime.now();
         
         final response = await _activeClient
@@ -246,7 +281,7 @@ class ApiService {
               url,
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': accessToken,
+                'X-API-Key': apiKey,
               },
               body: jsonEncode(request.toJson()),
             )
@@ -301,7 +336,7 @@ class ApiService {
           print('[ApiService] Retry attempt $attempt/$maxRetries');
         }
         
-        final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
+        final apiKey = await _getApiKey();
         final startTime = DateTime.now();
         
         final response = await _activeClient
@@ -309,7 +344,7 @@ class ApiService {
               url,
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': accessToken,
+                'X-API-Key': apiKey,
               },
               body: jsonEncode(request.toJson()),
             )
