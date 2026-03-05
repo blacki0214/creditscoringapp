@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 // ===== Two-Step API Flow Models (API v2.0) =====
@@ -241,22 +241,13 @@ class ApiService {
   // Get the client to use (shared singleton or injected for testing)
   http.Client get _activeClient => _client ?? _sharedClient;
 
-  static const _secureStorage = FlutterSecureStorage();
-  static const _apiKeyStorageKey = 'ml_api_key';
-
-  /// Returns the ML API key.
-  /// On first call: reads from .env and caches in flutter_secure_storage.
-  /// On subsequent calls: reads directly from secure storage.
-  static Future<String> _getApiKey() async {
-    var key = await _secureStorage.read(key: _apiKeyStorageKey);
-    if (key == null || key.isEmpty) {
-      // Bootstrap from .env (only happens once after fresh install)
-      key = dotenv.env['ML_API_KEY'] ?? '';
-      if (key.isNotEmpty) {
-        await _secureStorage.write(key: _apiKeyStorageKey, value: key);
-      }
-    }
-    return key;
+  /// Gets a fresh Firebase ID token for the current signed-in user.
+  /// forceRefresh:true ensures stale tokens (> 1h) are renewed automatically.
+  static Future<String> _getAuthToken() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not authenticated — please sign in first');
+    final token = await user.getIdToken(true); // forceRefresh
+    return 'Bearer $token';
   }
 
   // ===== Two-Step API Flow (API v2.0) =====
@@ -273,7 +264,7 @@ class ApiService {
           print('[ApiService] Retry attempt $attempt/$maxRetries');
         }
         
-        final apiKey = await _getApiKey();
+        final authToken = await _getAuthToken();
         final startTime = DateTime.now();
         
         final response = await _activeClient
@@ -281,7 +272,7 @@ class ApiService {
               url,
               headers: {
                 'Content-Type': 'application/json',
-                'X-API-Key': apiKey,
+                'Authorization': authToken,
               },
               body: jsonEncode(request.toJson()),
             )
@@ -336,7 +327,7 @@ class ApiService {
           print('[ApiService] Retry attempt $attempt/$maxRetries');
         }
         
-        final apiKey = await _getApiKey();
+        final authToken = await _getAuthToken();
         final startTime = DateTime.now();
         
         final response = await _activeClient
@@ -344,7 +335,7 @@ class ApiService {
               url,
               headers: {
                 'Content-Type': 'application/json',
-                'X-API-Key': apiKey,
+                'Authorization': authToken,
               },
               body: jsonEncode(request.toJson()),
             )
