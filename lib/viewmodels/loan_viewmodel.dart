@@ -61,7 +61,7 @@ class LoanViewModel extends ChangeNotifier {
   
   String homeOwnership = 'RENT';
   String loanPurpose = 'PERSONAL';
-  int yearsCreditHistory = 2;
+  double yearsCreditHistory = 2;
   bool hasPreviousDefaults = false;
   bool currentlyDefaulting = false;
 
@@ -272,7 +272,7 @@ class LoanViewModel extends ChangeNotifier {
     double? income,
     String? home,
     String? purpose,
-    int? history,
+    double? history,
     bool? defaults,
     bool? currentDefault,
   }) {
