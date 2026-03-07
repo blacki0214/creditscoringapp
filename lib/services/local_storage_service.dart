@@ -9,6 +9,7 @@ class LocalStorageService {
   static const String _keyHasAcceptedTos = 'has_accepted_tos';
   static const String _keyOtpThrottle = 'otp_throttle_map';
   static const String _keyHasCompletedEkyc = 'has_completed_ekyc';
+  static const String _keyEkycPrefill = 'ekyc_prefill_data';
 
   static SharedPreferences? _prefs;
 
@@ -228,5 +229,36 @@ class LocalStorageService {
 
   static Future<bool> clearEkycCompletion() async {
     return await prefs.remove(_keyHasCompletedEkyc);
+  }
+
+  // Persist minimal eKYC profile data for Step 2 prefill when Step 1 is skipped.
+  static Future<bool> saveEkycPrefill(Map<String, dynamic> data) async {
+    try {
+      await prefs.setString(_keyEkycPrefill, jsonEncode(data));
+      return true;
+    } catch (e) {
+      print('Error saving eKYC prefill: $e');
+      return false;
+    }
+  }
+
+  static Map<String, dynamic>? loadEkycPrefill() {
+    try {
+      final raw = prefs.getString(_keyEkycPrefill);
+      if (raw == null || raw.isEmpty) return null;
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (e) {
+      print('Error loading eKYC prefill: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> clearEkycPrefill() async {
+    try {
+      return await prefs.remove(_keyEkycPrefill);
+    } catch (e) {
+      print('Error clearing eKYC prefill: $e');
+      return false;
+    }
   }
 }

@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import '../viewmodels/home_viewmodel.dart';
 import '../services/local_storage_service.dart';
 
-class Step5DisbursementPage extends StatefulWidget {
-  const Step5DisbursementPage({super.key});
+class Step6DisbursementPage extends StatefulWidget {
+  const Step6DisbursementPage({super.key});
 
   @override
-  State<Step5DisbursementPage> createState() => _Step5DisbursementPageState();
+  State<Step6DisbursementPage> createState() => _Step6DisbursementPageState();
 }
 
-class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
+class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
   final _formKey = GlobalKey<FormState>();
   final _bankAccountController = TextEditingController();
   final _bankNameController = TextEditingController();
@@ -53,10 +52,13 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
     try {
       final loanViewModel = context.read<LoanViewModel>();
 
-      // Mark step 5 as completed
-      await loanViewModel.completeStep5();
+      // Mark step 6 as completed.
+      await loanViewModel.completeStep6();
 
-      // Mark eKYC as permanently completed (won't need to redo for future applications)
+      // Persist ID-derived fields locally so Step 2 can be pre-filled on future skips.
+      await loanViewModel.persistEkycPrefill();
+
+      // Mark eKYC as permanently completed (won't need to redo for future applications).
       await LocalStorageService.markEkycCompleted();
 
       if (mounted) {
@@ -68,7 +70,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
           ),
         );
 
-        // Navigate back to home with all steps completed
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {
@@ -102,7 +103,7 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Step 5: Disbursement',
+          'Step 6: Disbursement',
           style: TextStyle(color: Colors.black),
         ),
       ),
@@ -117,7 +118,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
                       const Text(
                         'Loan Disbursement',
                         style: TextStyle(
@@ -136,7 +136,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Loan Amount Summary
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -168,7 +167,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Bank Details Form
                       const Text(
                         'Bank Account Details',
                         style: TextStyle(
@@ -179,7 +177,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Account Holder Name
                       TextFormField(
                         controller: _accountHolderController,
                         decoration: InputDecoration(
@@ -199,7 +196,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Bank Name
                       TextFormField(
                         controller: _bankNameController,
                         decoration: InputDecoration(
@@ -219,7 +215,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Account Number
                       TextFormField(
                         controller: _bankAccountController,
                         decoration: InputDecoration(
@@ -243,7 +238,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Agreement Checkbox
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -285,7 +279,6 @@ class _Step5DisbursementPageState extends State<Step5DisbursementPage> {
               ),
             ),
 
-            // Submit Button
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(

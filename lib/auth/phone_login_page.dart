@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
-import '../home/home_page.dart';
+import '../home/main_shell.dart';
 
 class PhoneLoginPage extends StatefulWidget {
   const PhoneLoginPage({super.key});
@@ -22,7 +22,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
       return 'Please enter your phone number';
     }
     final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
-    
+
     if (cleaned.length != 10) {
       return 'Phone number must be 10 digits';
     }
@@ -39,12 +39,12 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
 
     final viewModel = context.read<AuthViewModel>();
     viewModel.clearError();
-    
+
     // Convert Vietnamese phone to international format
     final phoneNumber = _phoneController.text.trim();
     final cleaned = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
     final internationalPhone = '+84${cleaned.substring(1)}';
-    
+
     final success = await viewModel.sendPhoneOTP(internationalPhone);
 
     if (success && mounted) {
@@ -59,7 +59,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
               // Navigate to home page and remove all previous routes
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
+                MaterialPageRoute(builder: (_) => const MainShell()),
                 (route) => false,
               );
             },
@@ -111,10 +111,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                   const SizedBox(height: 8),
                   Text(
                     'Enter your phone number to receive OTP',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 40),
                   // Phone field
@@ -185,7 +182,11 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red.shade700,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

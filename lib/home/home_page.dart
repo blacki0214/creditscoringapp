@@ -9,11 +9,9 @@ import '../services/local_storage_service.dart';
 import '../services/notification_service.dart';
 import '../models/notification_model.dart';
 import '../loan/loan_application_page.dart';
-import '../loan/demo_calculator_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
-import '../auth/login_page.dart';
 import '../loan/step3_additional_info.dart';
 import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
@@ -164,439 +162,491 @@ class _HomePageState extends State<HomePage> {
     _checkAndRefreshCreditScore();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1F3F),
+      backgroundColor: const Color(0xFF5A57F8),
       body: SafeArea(
         child: Column(
           children: [
             // Top bar
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Avatar with menu
-                  PopupMenuButton(
-                    offset: const Offset(0, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white24,
-                      backgroundImage: viewModel.userAvatar != null
-                          ? NetworkImage(viewModel.userAvatar!)
-                          : null,
-                      child: viewModel.userAvatar == null
-                          ? const Icon(Icons.person, color: Colors.white)
-                          : null,
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.settings_outlined,
-                              color: Colors.grey.shade700,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Settings'),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.person_outline,
-                              color: Colors.grey.shade700,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Profile'),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ProfilePage(),
-                            ),
-                          );
-                        },
-                      ),
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.support_agent_outlined,
-                              color: Colors.grey.shade700,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Support'),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SupportPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.logout,
-                              color: Colors.red,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Logout',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          // Handle logout - navigate to login page
-                          Navigator.of(
-                            context,
-                          ).pushNamedAndRemoveUntil('/', (route) => false);
-                        },
-                      ),
-                    ],
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4D4AF9), Color(0xFF6D7CFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  Column(
-                    children: [
-                      Text(
-                        viewModel.userName ?? 'User',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4D4AF9).withOpacity(0.25),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Avatar with menu
+                    PopupMenuButton(
+                      offset: const Offset(0, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.8),
+                            width: 2,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white24,
+                          backgroundImage: viewModel.userAvatar != null
+                              ? NetworkImage(viewModel.userAvatar!)
+                              : null,
+                          child: viewModel.userAvatar == null
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
                         ),
                       ),
-                    ],
-                  ),
-                  // Notification with real-time updates
-                  Builder(
-                    builder: (context) {
-                      final userId = FirebaseAuth.instance.currentUser?.uid;
-                      if (userId == null) {
-                        return const Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                        );
-                      }
-
-                      return StreamBuilder<int>(
-                        stream: NotificationService().getUnreadCountStream(
-                          userId,
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.settings_outlined,
+                                color: Colors.grey.shade700,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Settings'),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsPage(),
+                              ),
+                            );
+                          },
                         ),
-                        builder: (context, countSnapshot) {
-                          final unreadCount = countSnapshot.data ?? 0;
-
-                          return PopupMenuButton(
-                            offset: const Offset(0, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        PopupMenuItem(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                color: Colors.grey.shade700,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Profile'),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ProfilePage(),
+                              ),
+                            );
+                          },
+                        ),
+                        PopupMenuItem(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.support_agent_outlined,
+                                color: Colors.grey.shade700,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Support'),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SupportPage(),
+                              ),
+                            );
+                          },
+                        ),
+                        PopupMenuItem(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.logout,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Logout',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            // Handle logout - navigate to login page
+                            Navigator.of(
+                              context,
+                            ).pushNamedAndRemoveUntil('/', (route) => false);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (viewModel.userName ?? 'User').toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
                             ),
-                            icon: Stack(
-                              children: [
-                                const Icon(
-                                  Icons.notifications_outlined,
-                                  color: Colors.white,
-                                ),
-                                if (unreadCount > 0)
-                                  Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 16,
-                                        minHeight: 16,
-                                      ),
-                                      child: Text(
-                                        '$unreadCount',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            FirebaseAuth.instance.currentUser?.email ?? '',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.78),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Notification with real-time updates
+                    Builder(
+                      builder: (context) {
+                        final userId = FirebaseAuth.instance.currentUser?.uid;
+                        if (userId == null) {
+                          return const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.white,
+                          );
+                        }
+
+                        return StreamBuilder<int>(
+                          stream: NotificationService().getUnreadCountStream(
+                            userId,
+                          ),
+                          builder: (context, countSnapshot) {
+                            final unreadCount = countSnapshot.data ?? 0;
+
+                            return PopupMenuButton(
+                              offset: const Offset(0, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              icon: Stack(
+                                children: [
+                                  const Icon(
+                                    Icons.notifications_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  if (unreadCount > 0)
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
                                         ),
-                                        textAlign: TextAlign.center,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Text(
+                                          '$unreadCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
-                            itemBuilder: (context) {
-                              return [
-                                PopupMenuItem(
-                                  enabled: false,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text(
-                                        'Notifications',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Color(0xFF1A1F3F),
-                                        ),
-                                      ),
-                                      if (unreadCount > 0)
-                                        TextButton(
-                                          onPressed: () async {
-                                            await NotificationService()
-                                                .markAllAsRead(userId);
-                                            // Don't close popup - let user see the updated state
-                                          },
-                                          style: TextButton.styleFrom(
-                                            padding: EdgeInsets.zero,
-                                            minimumSize: const Size(0, 0),
-                                            tapTargetSize: MaterialTapTargetSize
-                                                .shrinkWrap,
+                                ],
+                              ),
+                              itemBuilder: (context) {
+                                return [
+                                  PopupMenuItem(
+                                    enabled: false,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Notifications',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Color(0xFF1A1F3F),
                                           ),
-                                          child: const Text(
-                                            'Mark all read',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF4C40F7),
+                                        ),
+                                        if (unreadCount > 0)
+                                          TextButton(
+                                            onPressed: () async {
+                                              await NotificationService()
+                                                  .markAllAsRead(userId);
+                                              // Don't close popup - let user see the updated state
+                                            },
+                                            style: TextButton.styleFrom(
+                                              padding: EdgeInsets.zero,
+                                              minimumSize: const Size(0, 0),
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
                                             ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  enabled: false,
-                                  child: Divider(height: 1),
-                                ),
-                                PopupMenuItem(
-                                  enabled: false,
-                                  child: SizedBox(
-                                    width: 300,
-                                    height: 300,
-                                    child: StreamBuilder<List<NotificationModel>>(
-                                      stream: NotificationService()
-                                          .getNotificationsStream(userId),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const Center(
-                                            child: CircularProgressIndicator(),
-                                          );
-                                        }
-
-                                        if (snapshot.hasError) {
-                                          return Center(
-                                            child: Text(
-                                              'Error loading notifications',
+                                            child: const Text(
+                                              'Mark all read',
                                               style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 14,
+                                                fontSize: 12,
+                                                color: Color(0xFF4C40F7),
                                               ),
                                             ),
-                                          );
-                                        }
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    enabled: false,
+                                    child: Divider(height: 1),
+                                  ),
+                                  PopupMenuItem(
+                                    enabled: false,
+                                    child: SizedBox(
+                                      width: 300,
+                                      height: 300,
+                                      child: StreamBuilder<List<NotificationModel>>(
+                                        stream: NotificationService()
+                                            .getNotificationsStream(userId),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            );
+                                          }
 
-                                        final notifications =
-                                            snapshot.data ?? [];
-
-                                        if (notifications.isEmpty) {
-                                          return Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.notifications_none,
-                                                  size: 48,
-                                                  color: Colors.grey.shade400,
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  'No notifications yet',
-                                                  style: TextStyle(
-                                                    color: Colors.grey.shade600,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }
-
-                                        return ListView.separated(
-                                          padding: EdgeInsets.zero,
-                                          itemCount: notifications.length,
-                                          separatorBuilder: (context, index) =>
-                                              const Divider(height: 1),
-                                          itemBuilder: (context, index) {
-                                            final notification =
-                                                notifications[index];
-                                            return InkWell(
-                                              onTap: () async {
-                                                if (!notification.isRead) {
-                                                  await NotificationService()
-                                                      .markAsRead(
-                                                        notification.id,
-                                                      );
-                                                }
-                                                // Don't close popup - let user continue browsing notifications
-                                              },
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 12,
-                                                    ),
-                                                color: notification.isRead
-                                                    ? Colors.white
-                                                    : const Color(0xFFF5F5F5),
-                                                child: Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Container(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            8,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color: Color(
-                                                          notification
-                                                              .colorValue,
-                                                        ).withOpacity(0.1),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              8,
-                                                            ),
-                                                      ),
-                                                      child: Icon(
-                                                        _getNotificationIcon(
-                                                          notification.type,
-                                                        ),
-                                                        color: Color(
-                                                          notification
-                                                              .colorValue,
-                                                        ),
-                                                        size: 20,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 12),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              if (!notification
-                                                                  .isRead)
-                                                                Container(
-                                                                  width: 8,
-                                                                  height: 8,
-                                                                  margin:
-                                                                      const EdgeInsets.only(
-                                                                        right:
-                                                                            6,
-                                                                      ),
-                                                                  decoration: const BoxDecoration(
-                                                                    color: Color(
-                                                                      0xFF4C40F7,
-                                                                    ),
-                                                                    shape: BoxShape
-                                                                        .circle,
-                                                                  ),
-                                                                ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  notification
-                                                                      .title,
-                                                                  style: TextStyle(
-                                                                    fontWeight:
-                                                                        notification
-                                                                            .isRead
-                                                                        ? FontWeight
-                                                                              .w500
-                                                                        : FontWeight
-                                                                              .w600,
-                                                                    fontSize:
-                                                                        14,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 2,
-                                                          ),
-                                                          Text(
-                                                            notification.body,
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 12,
-                                                                  color: Colors
-                                                                      .grey,
-                                                                ),
-                                                            maxLines: 2,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            notification
-                                                                .timeAgo,
-                                                            style: TextStyle(
-                                                              fontSize: 11,
-                                                              color: Colors
-                                                                  .grey
-                                                                  .shade500,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
+                                          if (snapshot.hasError) {
+                                            return Center(
+                                              child: Text(
+                                                'Error loading notifications',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 14,
                                                 ),
                                               ),
                                             );
-                                          },
-                                        );
-                                      },
+                                          }
+
+                                          final notifications =
+                                              snapshot.data ?? [];
+
+                                          if (notifications.isEmpty) {
+                                            return Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.notifications_none,
+                                                    size: 48,
+                                                    color: Colors.grey.shade400,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'No notifications yet',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }
+
+                                          return ListView.separated(
+                                            padding: EdgeInsets.zero,
+                                            itemCount: notifications.length,
+                                            separatorBuilder:
+                                                (context, index) =>
+                                                    const Divider(height: 1),
+                                            itemBuilder: (context, index) {
+                                              final notification =
+                                                  notifications[index];
+                                              return InkWell(
+                                                onTap: () async {
+                                                  if (!notification.isRead) {
+                                                    await NotificationService()
+                                                        .markAsRead(
+                                                          notification.id,
+                                                        );
+                                                  }
+                                                  // Don't close popup - let user continue browsing notifications
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 12,
+                                                      ),
+                                                  color: notification.isRead
+                                                      ? Colors.white
+                                                      : const Color(0xFFF5F5F5),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              8,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: Color(
+                                                            notification
+                                                                .colorValue,
+                                                          ).withOpacity(0.1),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                        child: Icon(
+                                                          _getNotificationIcon(
+                                                            notification.type,
+                                                          ),
+                                                          color: Color(
+                                                            notification
+                                                                .colorValue,
+                                                          ),
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                if (!notification
+                                                                    .isRead)
+                                                                  Container(
+                                                                    width: 8,
+                                                                    height: 8,
+                                                                    margin:
+                                                                        const EdgeInsets.only(
+                                                                          right:
+                                                                              6,
+                                                                        ),
+                                                                    decoration: const BoxDecoration(
+                                                                      color: Color(
+                                                                        0xFF4C40F7,
+                                                                      ),
+                                                                      shape: BoxShape
+                                                                          .circle,
+                                                                    ),
+                                                                  ),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    notification
+                                                                        .title,
+                                                                    style: TextStyle(
+                                                                      fontWeight:
+                                                                          notification
+                                                                              .isRead
+                                                                          ? FontWeight.w500
+                                                                          : FontWeight.w600,
+                                                                      fontSize:
+                                                                          14,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 2,
+                                                            ),
+                                                            Text(
+                                                              notification.body,
+                                                              style:
+                                                                  const TextStyle(
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                        .grey,
+                                                                  ),
+                                                              maxLines: 2,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 4,
+                                                            ),
+                                                            Text(
+                                                              notification
+                                                                  .timeAgo,
+                                                              style: TextStyle(
+                                                                fontSize: 11,
+                                                                color: Colors
+                                                                    .grey
+                                                                    .shade500,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ];
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
+                                ];
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             // Main content card

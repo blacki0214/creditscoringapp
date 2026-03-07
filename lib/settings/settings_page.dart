@@ -42,10 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('Settings', style: TextStyle(color: Colors.black)),
       ),
       body: SafeArea(
         child: Column(
@@ -60,7 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF4C40F7), Color(0xFF6C5CE7)],
+                          colors: [Color(0xFF4D4AF9), Color(0xFF6D7CFF)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -84,7 +81,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     child: const Icon(
                                       Icons.person,
                                       size: 40,
-                                      color: Color(0xFF4C40F7),
+                                      color: Color(0xFF4D4AF9),
                                     ),
                                   ),
                           ),
@@ -250,48 +247,50 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'VietCredit Score',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Version 1.0.0',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '© 2025 VietCredit. All rights reserved.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            // Footer with version info
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'VietCredit Score',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Version 1.0.0',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '© 2025 VietCredit. All rights reserved.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox.shrink(),
           ],
         ),
       ),
@@ -320,14 +319,10 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF4C40F7).withOpacity(0.1),
+                color: const Color(0xFF4D4AF9).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF4C40F7),
-                size: 24,
-              ),
+              child: Icon(icon, color: const Color(0xFF4D4AF9), size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -345,10 +340,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -399,14 +391,12 @@ class _SettingsPageState extends State<SettingsPage> {
             ElevatedButton(
               onPressed: () {
                 // Perform logout via AuthViewModel
-                context.read<AuthViewModel>().reset(); 
-                
+                context.read<AuthViewModel>().reset();
+
                 Navigator.of(context).pop();
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
                   (route) => false,
                 );
               },

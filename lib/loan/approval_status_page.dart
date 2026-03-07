@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import '../home/home_page.dart';
+import '../home/main_shell.dart';
 
 class ApprovalStatusPage extends StatefulWidget {
   final double loanAmount;
@@ -21,7 +21,10 @@ class ApprovalStatusPage extends StatefulWidget {
 }
 
 class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'vi_VN',
+    symbol: '₫',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +32,16 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
     final offer = vm.currentOffer;
 
     if (offer == null) {
-      return const Scaffold(
-        body: Center(child: Text('Error: No offer data.')),
-      );
+      return const Scaffold(body: Center(child: Text('Error: No offer data.')));
     }
 
     // Determine approval status based on offer
     final isApproved = (offer['approved'] as bool?) ?? true;
     final statusIcon = isApproved ? Icons.check_circle : Icons.cancel;
     final statusColor = isApproved ? const Color(0xFF4CAF50) : Colors.red;
-    final statusTitle = isApproved ? 'Application Approved' : 'Application Rejected';
+    final statusTitle = isApproved
+        ? 'Application Approved'
+        : 'Application Rejected';
     final statusMessage = isApproved
         ? 'Your loan has been approved and is ready for disbursement.'
         : 'Unfortunately, your application could not be approved at this time.';
@@ -59,7 +62,10 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -72,11 +78,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                         color: statusColor.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        statusIcon,
-                        size: 70,
-                        color: statusColor,
-                      ),
+                      child: Icon(statusIcon, size: 70, color: statusColor),
                     ),
                     const SizedBox(height: 24),
 
@@ -126,10 +128,14 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () async {
-                          await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
+                          await context
+                              .read<LoanViewModel>()
+                              .finalizeAndResetForNewApplication();
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (_) => const HomePage()),
+                            MaterialPageRoute(
+                              builder: (_) => const MainShell(),
+                            ),
                             (route) => false,
                           );
                         },
@@ -155,10 +161,14 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () async {
-                          await context.read<LoanViewModel>().finalizeAndResetForNewApplication();
+                          await context
+                              .read<LoanViewModel>()
+                              .finalizeAndResetForNewApplication();
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (_) => const HomePage()),
+                            MaterialPageRoute(
+                              builder: (_) => const MainShell(),
+                            ),
                             (route) => false,
                           );
                         },
@@ -188,13 +198,18 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                         // Contact support
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Support team will contact you soon.'),
+                            content: Text(
+                              'Support team will contact you soon.',
+                            ),
                             backgroundColor: Colors.blue,
                           ),
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+                        side: const BorderSide(
+                          color: Color(0xFF4C40F7),
+                          width: 2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -227,9 +242,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
       decoration: BoxDecoration(
         color: const Color(0xFF4CAF50).withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF4CAF50).withOpacity(0.3),
-        ),
+        border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,8 +261,14 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailBox('Loan Amount', _currencyFormat.format(widget.loanAmount)),
-              _buildDetailBox('Monthly Payment', _currencyFormat.format(_calculateMonthlyPayment(offer))),
+              _buildDetailBox(
+                'Loan Amount',
+                _currencyFormat.format(widget.loanAmount),
+              ),
+              _buildDetailBox(
+                'Monthly Payment',
+                _currencyFormat.format(_calculateMonthlyPayment(offer)),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -257,7 +276,10 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDetailBox('Term', '${widget.tenor} months'),
-              _buildDetailBox('Interest Rate', '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}%'),
+              _buildDetailBox(
+                'Interest Rate',
+                '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}%',
+              ),
             ],
           ),
 
@@ -279,7 +301,8 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
           _buildTimelineStep(
             number: 1,
             title: 'Disbursement Processing',
-            description: 'Your loan amount will be transferred to your registered bank account',
+            description:
+                'Your loan amount will be transferred to your registered bank account',
             timestamp: 'Within 3 business days',
           ),
           const SizedBox(height: 16),
@@ -287,13 +310,16 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
             number: 2,
             title: 'First Payment',
             description: 'Your first monthly payment will be due',
-            timestamp: dateFormat.format(disbursementDate.add(const Duration(days: 30))),
+            timestamp: dateFormat.format(
+              disbursementDate.add(const Duration(days: 30)),
+            ),
           ),
           const SizedBox(height: 16),
           _buildTimelineStep(
             number: 3,
             title: 'Auto-Deduction',
-            description: 'Monthly payments will be automatically deducted from your account',
+            description:
+                'Monthly payments will be automatically deducted from your account',
             timestamp: 'Every month on the same date',
           ),
 
@@ -335,9 +361,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
       decoration: BoxDecoration(
         color: Colors.red.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.red.withOpacity(0.3),
-        ),
+        border: Border.all(color: Colors.red.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +376,8 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            (offer['approvalMessage'] as String?) ?? 'Your application did not meet our lending criteria at this time.',
+            (offer['approvalMessage'] as String?) ??
+                'Your application did not meet our lending criteria at this time.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade700,
@@ -370,7 +395,11 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 18),
+                const Icon(
+                  Icons.lightbulb_outline,
+                  color: Colors.blue,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -483,10 +512,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
               Text(
