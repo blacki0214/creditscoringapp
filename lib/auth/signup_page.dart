@@ -5,7 +5,6 @@ import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
 import 'login_page.dart';
 import 'email_verification_page.dart';
-import '../home/home_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});

@@ -345,13 +345,13 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           title: const Text('Have you ever defaulted?'),
                           value: vm.hasPreviousDefaults,
                           onChanged: (val) => vm.updatePersonalInfo(defaults: val),
-                          activeColor: const Color(0xFF4C40F7),
+                          activeThumbColor: const Color(0xFF4C40F7),
                         ),
                         SwitchListTile(
                           title: const Text('Currently defaulting?'),
                           value: vm.currentlyDefaulting,
                           onChanged: (val) => vm.updatePersonalInfo(currentDefault: val),
-                          activeColor: const Color(0xFF4C40F7),
+                          activeThumbColor: const Color(0xFF4C40F7),
                         ),
                       ] else if (_hasCreditHistory == false) ...[
                         Container(
@@ -591,7 +591,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     required Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,

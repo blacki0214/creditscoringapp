@@ -287,7 +287,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
             number: 2,
             title: 'First Payment',
             description: 'Your first monthly payment will be due',
-            timestamp: '${dateFormat.format(disbursementDate.add(const Duration(days: 30)))}',
+            timestamp: dateFormat.format(disbursementDate.add(const Duration(days: 30))),
           ),
           const SizedBox(height: 16),
           _buildTimelineStep(

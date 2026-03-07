@@ -317,14 +317,14 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                 value: _hasPreviousDefaults,
                                 onChanged: (val) =>
                                     setState(() => _hasPreviousDefaults = val),
-                                activeColor: const Color(0xFF4C40F7),
+                                activeThumbColor: const Color(0xFF4C40F7),
                               ),
                               SwitchListTile(
                                 title: const Text('Currently defaulting?'),
                                 value: _currentlyDefaulting,
                                 onChanged: (val) =>
                                     setState(() => _currentlyDefaulting = val),
-                                activeColor: const Color(0xFF4C40F7),
+                                activeThumbColor: const Color(0xFF4C40F7),
                               ),
                             ] else if (_hasCreditHistory == false) ...[
                               Container(
@@ -677,7 +677,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     required Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,

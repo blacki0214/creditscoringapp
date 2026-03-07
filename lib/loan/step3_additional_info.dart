@@ -246,7 +246,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: _selectedRelationship,
+                        initialValue: _selectedRelationship,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Relationship',
