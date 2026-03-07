@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'contract_review_page.dart';
-
+import 'step5_contractreview.dart';
 
 class Step4OfferCalculatorPage extends StatefulWidget {
   const Step4OfferCalculatorPage({super.key});
 
   @override
-  State<Step4OfferCalculatorPage> createState() => _Step4OfferCalculatorPageState();
+  State<Step4OfferCalculatorPage> createState() =>
+      _Step4OfferCalculatorPageState();
 }
 
 class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
@@ -24,32 +24,44 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
   final _totalPriceFocusNode = FocusNode();
   final _downPaymentFocusNode = FocusNode();
-  
+
   String _selectedPurpose = 'PERSONAL';
   double _tenor = 12; // months, default 12
-  
+
   // Local state - not persisted to ViewModel
   final double _calculatedLoanAmount = 0;
   final double _downPayment = 0;
-  
+
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'vi_VN',
+    symbol: '₫',
+  );
 
   final List<String> loanPurposeOptions = [
-    'ELECTRONICS', 'VEHICLE', 'HOME', 'PERSONAL', 'EDUCATION', 
-    'MEDICAL', 'BUSINESS', 'HOME_IMPROVEMENT', 'DEBT_CONSOLIDATION', 'VENTURE', 'OTHER'
+    'ELECTRONICS',
+    'VEHICLE',
+    'HOME',
+    'PERSONAL',
+    'EDUCATION',
+    'MEDICAL',
+    'BUSINESS',
+    'HOME_IMPROVEMENT',
+    'DEBT_CONSOLIDATION',
+    'VENTURE',
+    'OTHER',
   ];
 
   @override
   void initState() {
     super.initState();
     final vm = context.read<LoanViewModel>();
-    
+
     // Initialize from user input (empty by default)
     _totalPriceController = TextEditingController(text: '');
     _downPaymentController = TextEditingController(text: '0');
     _selectedPurpose = vm.loanPurpose;
-    
+
     // Set tenor from offer if available
     if (vm.currentOffer?['loanTermMonths'] != null) {
       _tenor = ((vm.currentOffer!['loanTermMonths'] as num?) ?? 12).toDouble();
@@ -90,14 +102,18 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     // Parse inputs
     final totalPrice = _parseAmount(_totalPriceController.text);
     final downPayment = _parseAmount(_downPaymentController.text);
-    final calculatedLoanAmount = (totalPrice - downPayment).clamp(0.0, double.infinity);
-    
+    final calculatedLoanAmount = (totalPrice - downPayment).clamp(
+      0.0,
+      double.infinity,
+    );
+
     // Loan Limit comes from the scoring API (based on income/credit score)
     final loanLimit = offer['maxAmountVnd'] as num;
     final isWithinLimit = calculatedLoanAmount <= loanLimit;
 
     // Calculate monthly payment based on tenor
-    final interestRate = (offer['interestRate'] as num?) ?? 15.0; // Default 15% if null
+    final interestRate =
+        (offer['interestRate'] as num?) ?? 15.0; // Default 15% if null
     final monthlyPayment = calculatedLoanAmount > 0
         ? (calculatedLoanAmount / _tenor.toInt()) * (1 + (interestRate / 100))
         : 0.0;
@@ -141,7 +157,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                       const SizedBox(height: 8),
                       Text(
                         'Select your loan purpose and financing options.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -151,7 +170,8 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                         label: 'What are you financing?',
                         value: _selectedPurpose,
                         items: loanPurposeOptions,
-                        onChanged: (val) => setState(() => _selectedPurpose = val!),
+                        onChanged: (val) =>
+                            setState(() => _selectedPurpose = val!),
                       ),
 
                       const SizedBox(height: 24),
@@ -204,7 +224,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                           ),
                           child: Text(
                             'Down Payment: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% of total price',
-                            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade700,
+                            ),
                           ),
                         ),
 
@@ -229,7 +252,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                 ),
                                 Text(
                                   '(${(_tenor / 12).toStringAsFixed(1)} years)',
-                                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -245,12 +271,27 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                               inactiveColor: Colors.grey.shade300,
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('6m', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                                  Text('60m', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                  Text(
+                                    '6m',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '60m',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -290,8 +331,12 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                               Row(
                                 children: [
                                   Icon(
-                                    isWithinLimit ? Icons.check_circle : Icons.error,
-                                    color: isWithinLimit ? const Color(0xFF4CAF50) : Colors.red,
+                                    isWithinLimit
+                                        ? Icons.check_circle
+                                        : Icons.error,
+                                    color: isWithinLimit
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.red,
                                     size: 24,
                                   ),
                                   const SizedBox(width: 12),
@@ -321,7 +366,8 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                 child: Column(
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'Your Loan Limit:',
@@ -342,7 +388,8 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                     ),
                                     const SizedBox(height: 8),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'Requested Amount:',
@@ -352,7 +399,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                           ),
                                         ),
                                         Text(
-                                          _currencyFormat.format(calculatedLoanAmount),
+                                          _currencyFormat.format(
+                                            calculatedLoanAmount,
+                                          ),
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
@@ -371,7 +420,11 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                                    const Icon(
+                                      Icons.info_outline,
+                                      color: Colors.orange,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
@@ -409,12 +462,16 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                           ? null
                           : () {
                               // Get the loan view model
-                              final loanViewModel = context.read<LoanViewModel>();
-                              
+                              final loanViewModel = context
+                                  .read<LoanViewModel>();
+
                               // Calculate monthly payment
-                              final interestRate = (offer['interestRate'] as num?) ?? 15.0;
-                              final monthlyPayment = (calculatedLoanAmount / _tenor.toInt()) * (1 + (interestRate / 100));
-                              
+                              final interestRate =
+                                  (offer['interestRate'] as num?) ?? 15.0;
+                              final monthlyPayment =
+                                  (calculatedLoanAmount / _tenor.toInt()) *
+                                  (1 + (interestRate / 100));
+
                               // Update the loan offer with user's chosen parameters
                               loanViewModel.updateLoanOffer(
                                 loanAmount: calculatedLoanAmount,
@@ -422,15 +479,15 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                 monthlyPayment: monthlyPayment,
                                 loanPurpose: _selectedPurpose,
                               );
-                              
+
                               // Mark Step 4 as completed
                               loanViewModel.completeStep4();
-                              
-                              // Navigate to Contract Review
+
+                              // Navigate to Step 5 - Contract Review
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => ContractReviewPage(
+                                  builder: (_) => Step5ContractReviewPage(
                                     loanAmount: calculatedLoanAmount,
                                     tenor: _tenor.toInt(),
                                     downPayment: downPayment,
@@ -440,7 +497,8 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                               );
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: (calculatedLoanAmount <= 0 || !isWithinLimit)
+                        backgroundColor:
+                            (calculatedLoanAmount <= 0 || !isWithinLimit)
                             ? Colors.grey.shade400
                             : const Color(0xFF4C40F7),
                         shape: RoundedRectangleBorder(
@@ -448,7 +506,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                         ),
                       ),
                       child: Text(
-                        isWithinLimit ? 'Accept Offer & Continue' : 'Reduce Loan Amount',
+                        isWithinLimit
+                            ? 'Accept Offer & Continue'
+                            : 'Reduce Loan Amount',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -464,7 +524,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+                        side: const BorderSide(
+                          color: Color(0xFF4C40F7),
+                          width: 2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -522,10 +585,12 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
       focusNode: focusNode,
       maxLength: maxLength,
       onChanged: onChanged,
-      validator: validator ?? (value) {
-        if (value == null || value.isEmpty) return 'Please enter $label';
-        return null;
-      },
+      validator:
+          validator ??
+          (value) {
+            if (value == null || value.isEmpty) return 'Please enter $label';
+            return null;
+          },
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -577,7 +642,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
       ),
-      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
       onChanged: onChanged,
     );
   }
@@ -627,7 +694,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailChip('Loan Amount', _currencyFormat.format(calculatedLoanAmount)),
+              _buildDetailChip(
+                'Loan Amount',
+                _currencyFormat.format(calculatedLoanAmount),
+              ),
               _buildDetailChip('Term', '$tenor months'),
             ],
           ),
@@ -635,7 +705,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailChip('Interest Rate', '${(offer['interestRate'] as num).toStringAsFixed(2)}%'),
+              _buildDetailChip(
+                'Interest Rate',
+                '${(offer['interestRate'] as num).toStringAsFixed(2)}%',
+              ),
               _buildDetailChip('Credit Score', '${offer['creditScore']}'),
             ],
           ),
@@ -685,7 +758,10 @@ class _CurrencyInputFormatter extends TextInputFormatter {
   _CurrencyInputFormatter(this.formatter);
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
     final number = int.tryParse(newValue.text);
     if (number == null) return oldValue;

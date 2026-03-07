@@ -1,25 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import '../services/local_storage_service.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step1_id_capture.dart';
+import 'step2_personal_info.dart';
 
-class LoanApplicationPage extends StatelessWidget {
+class LoanApplicationPage extends StatefulWidget {
   const LoanApplicationPage({super.key});
+
+  @override
+  State<LoanApplicationPage> createState() => _LoanApplicationPageState();
+}
+
+class _LoanApplicationPageState extends State<LoanApplicationPage> {
+  int _step1ResetTapCount = 0;
+  DateTime? _lastStep1ResetTap;
+
+  Future<void> _handleStep1IconTapForDemo() async {
+    final now = DateTime.now();
+    final withinWindow =
+        _lastStep1ResetTap != null &&
+        now.difference(_lastStep1ResetTap!) <= const Duration(seconds: 3);
+
+    _step1ResetTapCount = withinWindow ? _step1ResetTapCount + 1 : 1;
+    _lastStep1ResetTap = now;
+
+    if (_step1ResetTapCount < 3) return;
+
+    _step1ResetTapCount = 0;
+    await LocalStorageService.clearEkycCompletion();
+
+    if (!mounted) return;
+
+    context.read<LoanViewModel>().clearStep1CompletionForDemo();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Demo reset: Step 1 verification will be required again.',
+        ),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Apply for Loan',
-          style: TextStyle(color: Colors.black),
+          'Start Your Loan Application',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1A1F3F),
+          ),
         ),
       ),
       body: SafeArea(
@@ -30,23 +76,11 @@ class LoanApplicationPage extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Start Your Loan Application',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1F3F),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Text(
                     'Complete the following steps to apply for your loan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
                   Expanded(
                     child: ListView(
                       children: [
@@ -54,8 +88,10 @@ class LoanApplicationPage extends StatelessWidget {
                           context,
                           icon: Icons.verified_user_outlined,
                           title: 'Step 1: Verify Identity',
-                          description: 'Confirm your identity with ID and selfie',
+                          description:
+                              'Confirm your identity with ID and selfie',
                           isCompleted: viewModel.step1Completed,
+                          onIconTap: _handleStep1IconTapForDemo,
                         ),
                         const SizedBox(height: 16),
                         _buildStepCard(
@@ -71,7 +107,9 @@ class LoanApplicationPage extends StatelessWidget {
                           icon: Icons.analytics_outlined,
                           title: 'Step 3: Processing',
                           description: 'We\'ll process your application',
-                          isCompleted: viewModel.step2Completed && viewModel.step3Completed, // Logic can be improved
+                          isCompleted:
+                              viewModel.step2Completed &&
+                              viewModel.step3Completed,
                         ),
                         const SizedBox(height: 16),
                         _buildStepCard(
@@ -79,52 +117,104 @@ class LoanApplicationPage extends StatelessWidget {
                           icon: Icons.check_circle_outline,
                           title: 'Step 4: Loan Offer',
                           description: 'Review your loan offer',
-                          isCompleted: false,
+                          isCompleted: viewModel.step4Completed,
                         ),
+                        const SizedBox(height: 16),
+                        _buildStepCard(
+                          context,
+                          icon: Icons.description_outlined,
+                          title: 'Step 5: Contract Review',
+                          description: 'Read and sign your loan contract',
+                          isCompleted: viewModel.step6Completed,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildStepCard(
+                          context,
+                          icon: Icons.account_balance_wallet_outlined,
+                          title: 'Step 6: Disbursement',
+                          description: 'Provide bank details to receive funds',
+                          isCompleted: viewModel.step6Completed,
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (LocalStorageService.hasCompletedEkyc()) {
+                                viewModel.applySavedEkycPrefill();
+                                if (!viewModel.step1Completed) {
+                                  viewModel.completeStep1();
+                                }
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const Step2PersonalInfoPage(),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              final cameraStatus = await Permission.camera
+                                  .request();
+                              if (!context.mounted) return;
+
+                              if (!cameraStatus.isGranted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      'Camera permission is required to auto-scan your ID.',
+                                    ),
+                                    action: cameraStatus.isPermanentlyDenied
+                                        ? SnackBarAction(
+                                            label: 'Open Settings',
+                                            onPressed: openAppSettings,
+                                          )
+                                        : null,
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (!viewModel.step1Completed) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const Step1IDCapturePage(),
+                                  ),
+                                );
+                              } else if (!viewModel.step2Completed) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const Step2PersonalInfoPage(),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4D4AF9),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              viewModel.step1Completed
+                                  ? 'Continue Application'
+                                  : 'Start Application',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                       ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Logic to decide which page to open based on progress?
-                        // For now keep it simple: Start/Continue goes to Step 1 or Step 2
-                        if (!viewModel.step1Completed) {
-                           Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const Step1IDCapturePage(),
-                            ),
-                          );
-                        } else if (!viewModel.step2Completed) {
-                           // TODO: Navigate to Step 2
-                           // Since Step 1 usually leads to Step 2 via its own flow, 
-                           // we might just want to restart at Step 1 or verify where user left off.
-                           // For this refactor, let's just go to Step 1 which has logic to proceed.
-                           Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const Step1IDCapturePage(),
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        viewModel.step1Completed ? 'Continue Application' : 'Start Application',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -142,13 +232,16 @@ class LoanApplicationPage extends StatelessWidget {
     required String title,
     required String description,
     required bool isCompleted,
+    VoidCallback? onIconTap,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isCompleted ? const Color(0xFF4CAF50) : Colors.grey.shade200),
+        border: Border.all(
+          color: isCompleted ? const Color(0xFF4CAF50) : Colors.grey.shade200,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -159,19 +252,25 @@ class LoanApplicationPage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: isCompleted 
-                ? const Color(0xFF4CAF50).withOpacity(0.1)
-                : const Color(0xFF4C40F7).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: isCompleted ? const Color(0xFF4CAF50) : const Color(0xFF4C40F7),
-              size: 28,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onIconTap,
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: isCompleted
+                    ? const Color(0xFF4CAF50).withOpacity(0.1)
+                    : const Color(0xFF4D4AF9).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isCompleted
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFF4D4AF9),
+                size: 28,
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -190,20 +289,13 @@ class LoanApplicationPage extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ),
           if (isCompleted)
-            const Icon(
-              Icons.check_circle,
-              color: Color(0xFF4CAF50),
-              size: 28,
-            ),
+            const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 28),
         ],
       ),
     );

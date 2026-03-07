@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'processing_page.dart';
-import '../home/home_page.dart';
+import '../home/main_shell.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
   const Step2PersonalInfoPage({super.key});
@@ -15,10 +14,12 @@ class Step2PersonalInfoPage extends StatefulWidget {
 
 class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Credit history selection
   bool? _hasCreditHistory;
-  
+
+  bool get _isCreditHistoryChosen => _hasCreditHistory != null;
+
   // Controllers
   late TextEditingController _fullNameController;
   late TextEditingController _idController;
@@ -40,25 +41,37 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   final _yearsEmployedFocusNode = FocusNode();
   final _yearsCreditHistoryFocusNode = FocusNode();
   final _addressFocusNode = FocusNode();
-  
+
   DateTime? _selectedDOB;
-  
+
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
-  
-  final List<String> employmentOptions = ['EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED'];
-  final List<String> homeOwnershipOptions = ['RENT', 'OWN', 'MORTGAGE', 'LIVING_WITH_PARENTS', 'OTHER'];
-  
+
+  final List<String> employmentOptions = [
+    'EMPLOYED',
+    'SELF_EMPLOYED',
+    'UNEMPLOYED',
+    'STUDENT',
+    'RETIRED',
+  ];
+  final List<String> homeOwnershipOptions = [
+    'RENT',
+    'OWN',
+    'MORTGAGE',
+    'LIVING_WITH_PARENTS',
+    'OTHER',
+  ];
+
   @override
   void initState() {
     super.initState();
-    
+
     // Load from ViewModel
     final vm = context.read<LoanViewModel>();
     _fullNameController = TextEditingController(text: vm.fullName);
     _idController = TextEditingController(text: vm.idNumber);
-    _monthlyIncomeController = TextEditingController(); 
-    _yearsEmployedController = TextEditingController(); 
-    _yearsCreditHistoryController = TextEditingController(); 
+    _monthlyIncomeController = TextEditingController();
+    _yearsEmployedController = TextEditingController();
+    _yearsCreditHistoryController = TextEditingController();
     _addressController = TextEditingController(text: vm.address);
     _selectedDOB = vm.dob;
 
@@ -155,17 +168,22 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       const SizedBox(height: 8),
                       Text(
                         'Please provide accurate information for credit scoring.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Credit History Selection (Radio)
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4C40F7).withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.2)),
+                          border: Border.all(
+                            color: const Color(0xFF4C40F7).withOpacity(0.2),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,10 +201,13 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                               children: [
                                 Expanded(
                                   child: RadioListTile<bool>(
-                                    title: const Text('Yes, I have credit history'),
+                                    title: const Text(
+                                      'Yes, I have credit history',
+                                    ),
                                     value: true,
                                     groupValue: _hasCreditHistory,
-                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    onChanged: (val) =>
+                                        setState(() => _hasCreditHistory = val),
                                     activeColor: const Color(0xFF4C40F7),
                                     contentPadding: EdgeInsets.zero,
                                   ),
@@ -200,7 +221,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                                     title: const Text('No, I\'m new to credit'),
                                     value: false,
                                     groupValue: _hasCreditHistory,
-                                    onChanged: (val) => setState(() => _hasCreditHistory = val),
+                                    onChanged: (val) =>
+                                        setState(() => _hasCreditHistory = val),
                                     activeColor: const Color(0xFF4C40F7),
                                     contentPadding: EdgeInsets.zero,
                                   ),
@@ -210,176 +232,198 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           ],
                         ),
                       ),
-                      
+
                       if (_hasCreditHistory != null) ...[
                         const SizedBox(height: 24),
-                      
-                      _buildSectionHeader('Personal Details'),
-                      _buildTextField(
-                        fieldKey: _fullNameFieldKey,
-                        controller: _fullNameController,
-                        focusNode: _fullNameFocusNode,
-                        label: 'Full Name',
-                        maxLength: 30,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(30),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r"[\p{L}\p{M}\s]", unicode: true),
-                          ),
-                        ],
-                        validator: _validateFullName,
-                        onChanged: (val) => vm.updatePersonalInfo(name: val),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDateField(),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        fieldKey: _idFieldKey,
-                        controller: _idController,
-                        focusNode: _idFocusNode,
-                        label: 'ID Number (CCCD)',
-                        keyboardType: TextInputType.number,
-                        maxLength: 12,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(12),
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: _validateIdNumber,
-                        onChanged: (val) => vm.updatePersonalInfo(id: val),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      _buildSectionHeader('Employment & Income'),
-                      _buildDropdown(
-                        label: 'Employment Status',
-                        value: vm.employmentStatus,
-                        items: employmentOptions,
-                        onChanged: (val) => vm.updatePersonalInfo(employment: val!),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        fieldKey: _yearsEmployedFieldKey,
-                        controller: _yearsEmployedController,
-                        focusNode: _yearsEmployedFocusNode,
-                        label: 'Years Employed',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        maxLength: 5,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(5),
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
-                        ],
-                        validator: _validateYearsEmployed,
-                        onChanged: (val) => vm.updatePersonalInfo(yearsEmp: double.tryParse(val)),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        fieldKey: _monthlyIncomeFieldKey,
-                        controller: _monthlyIncomeController,
-                        focusNode: _monthlyIncomeFocusNode,
-                        label: 'Monthly Income (VND)',
-                        keyboardType: TextInputType.number,
-                        maxLength: 15,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(15),
-                          FilteringTextInputFormatter.digitsOnly,
-                          _CurrencyInputFormatter(_currencyFormatter),
-                        ],
-                        validator: _validateMonthlyIncome,
-                        onChanged: (val) {
-                          // Remove formatting characters (dots) and parse to double
-                          final cleaned = val.replaceAll('.', '').replaceAll(',', '');
-                          final parsedIncome = double.tryParse(cleaned);
-                          if (parsedIncome != null) {
-                            vm.updatePersonalInfo(income: parsedIncome);
-                          }
-                        },
-                      ),
 
-                      const SizedBox(height: 16),
-                      _buildSectionHeader('Residence & Assets'),
-                      _buildDropdown(
-                        label: 'Home Ownership',
-                        value: vm.homeOwnership,
-                        items: homeOwnershipOptions,
-                        onChanged: (val) => vm.updatePersonalInfo(home: val!),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        fieldKey: _addressFieldKey,
-                        controller: _addressController,
-                        focusNode: _addressFocusNode,
-                        label: 'Current Address',
-                        maxLines: 2,
-                        maxLength: 100,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(100),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r"[\p{L}\p{M}0-9\s,\.\-/#]", unicode: true),
-                          ),
-                        ],
-                        validator: _validateAddress,
-                        onChanged: (val) => vm.updatePersonalInfo(addr: val),
-                      ),
-
-                      const SizedBox(height: 16),
-                      _buildSectionHeader('Credit History'),
-                      
-                      // Show credit history fields only if user has credit history
-                      if (_hasCreditHistory == true) ...[
+                        _buildSectionHeader('Personal Details'),
                         _buildTextField(
-                          fieldKey: _yearsCreditHistoryFieldKey,
-                          controller: _yearsCreditHistoryController,
-                          focusNode: _yearsCreditHistoryFocusNode,
-                          label: 'Years Credit History',
-                          keyboardType: TextInputType.number,
-                          maxLength: 2,
+                          fieldKey: _fullNameFieldKey,
+                          controller: _fullNameController,
+                          focusNode: _fullNameFocusNode,
+                          label: 'Full Name',
+                          maxLength: 30,
                           inputFormatters: [
-                            LengthLimitingTextInputFormatter(2),
-                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(30),
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r"[\p{L}\p{M}\s]", unicode: true),
+                            ),
                           ],
-                          validator: _validateYearsCreditHistory,
-                          onChanged: (val) => vm.updatePersonalInfo(history: double.tryParse(val)),
+                          validator: _validateFullName,
+                          onChanged: (val) => vm.updatePersonalInfo(name: val),
                         ),
                         const SizedBox(height: 16),
-                        SwitchListTile(
-                          title: const Text('Have you ever defaulted?'),
-                          value: vm.hasPreviousDefaults,
-                          onChanged: (val) => vm.updatePersonalInfo(defaults: val),
-                          activeThumbColor: const Color(0xFF4C40F7),
+                        _buildDateField(),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          fieldKey: _idFieldKey,
+                          controller: _idController,
+                          focusNode: _idFocusNode,
+                          label: 'ID Number (CCCD)',
+                          keyboardType: TextInputType.number,
+                          maxLength: 12,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(12),
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: _validateIdNumber,
+                          onChanged: (val) => vm.updatePersonalInfo(id: val),
                         ),
-                        SwitchListTile(
-                          title: const Text('Currently defaulting?'),
-                          value: vm.currentlyDefaulting,
-                          onChanged: (val) => vm.updatePersonalInfo(currentDefault: val),
-                          activeThumbColor: const Color(0xFF4C40F7),
+
+                        const SizedBox(height: 16),
+                        _buildSectionHeader('Employment & Income'),
+                        _buildDropdown(
+                          label: 'Employment Status',
+                          value: vm.employmentStatus,
+                          items: employmentOptions,
+                          onChanged: (val) =>
+                              vm.updatePersonalInfo(employment: val!),
                         ),
-                      ] else if (_hasCreditHistory == false) ...[
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          fieldKey: _yearsEmployedFieldKey,
+                          controller: _yearsEmployedController,
+                          focusNode: _yearsEmployedFocusNode,
+                          label: 'Years Employed',
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'No problem! We\'ll evaluate your application based on your income and employment.',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade700,
+                          maxLength: 5,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(5),
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9\.]'),
+                            ),
+                          ],
+                          validator: _validateYearsEmployed,
+                          onChanged: (val) => vm.updatePersonalInfo(
+                            yearsEmp: double.tryParse(val),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          fieldKey: _monthlyIncomeFieldKey,
+                          controller: _monthlyIncomeController,
+                          focusNode: _monthlyIncomeFocusNode,
+                          label: 'Monthly Income (VND)',
+                          keyboardType: TextInputType.number,
+                          maxLength: 15,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(15),
+                            FilteringTextInputFormatter.digitsOnly,
+                            _CurrencyInputFormatter(_currencyFormatter),
+                          ],
+                          validator: _validateMonthlyIncome,
+                          onChanged: (val) {
+                            // Remove formatting characters (dots) and parse to double
+                            final cleaned = val
+                                .replaceAll('.', '')
+                                .replaceAll(',', '');
+                            final parsedIncome = double.tryParse(cleaned);
+                            if (parsedIncome != null) {
+                              vm.updatePersonalInfo(income: parsedIncome);
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+                        _buildSectionHeader('Residence & Assets'),
+                        _buildDropdown(
+                          label: 'Home Ownership',
+                          value: vm.homeOwnership,
+                          items: homeOwnershipOptions,
+                          onChanged: (val) => vm.updatePersonalInfo(home: val!),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          fieldKey: _addressFieldKey,
+                          controller: _addressController,
+                          focusNode: _addressFocusNode,
+                          label: 'Current Address',
+                          maxLines: 2,
+                          maxLength: 100,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(100),
+                            FilteringTextInputFormatter.allow(
+                              RegExp(
+                                r"[\p{L}\p{M}0-9\s,\.\-/#]",
+                                unicode: true,
+                              ),
+                            ),
+                          ],
+                          validator: _validateAddress,
+                          onChanged: (val) => vm.updatePersonalInfo(addr: val),
+                        ),
+
+                        const SizedBox(height: 16),
+                        _buildSectionHeader('Credit History'),
+
+                        // Show credit history fields only if user has credit history
+                        if (_hasCreditHistory == true) ...[
+                          _buildTextField(
+                            fieldKey: _yearsCreditHistoryFieldKey,
+                            controller: _yearsCreditHistoryController,
+                            focusNode: _yearsCreditHistoryFocusNode,
+                            label: 'Years Credit History',
+                            keyboardType: TextInputType.number,
+                            maxLength: 2,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: _validateYearsCreditHistory,
+                            onChanged: (val) => vm.updatePersonalInfo(
+                              history: double.tryParse(val),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SwitchListTile(
+                            title: const Text('Have you ever defaulted?'),
+                            value: vm.hasPreviousDefaults,
+                            onChanged: (val) =>
+                                vm.updatePersonalInfo(defaults: val),
+                            activeThumbColor: const Color(0xFF4C40F7),
+                          ),
+                          SwitchListTile(
+                            title: const Text('Currently defaulting?'),
+                            value: vm.currentlyDefaulting,
+                            onChanged: (val) =>
+                                vm.updatePersonalInfo(currentDefault: val),
+                            activeThumbColor: const Color(0xFF4C40F7),
+                          ),
+                        ] else if (_hasCreditHistory == false) ...[
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.blue.withOpacity(0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline,
+                                  color: Colors.blue,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'No problem! We\'ll evaluate your application based on your income and employment.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ],
-                  ],
                   ),
                 ),
               ),
@@ -393,15 +437,21 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: vm.isProcessing ? null : _submitApplication,
+                  onPressed: vm.isProcessing || !_isCreditHistoryChosen
+                      ? null
+                      : _submitApplication,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4C40F7),
+                    disabledBackgroundColor: Colors.grey.shade400,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   child: vm.isProcessing
-                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        )
                       : const Text(
                           'Submit Application',
                           style: TextStyle(
@@ -434,10 +484,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   }
 
   Widget _buildDateField() {
-    final dobText = _selectedDOB != null 
+    final dobText = _selectedDOB != null
         ? '${_selectedDOB!.day.toString().padLeft(2, '0')}/${_selectedDOB!.month.toString().padLeft(2, '0')}/${_selectedDOB!.year}'
         : '';
-    
+
     return TextFormField(
       readOnly: true,
       controller: TextEditingController(text: dobText),
@@ -507,10 +557,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       maxLines: maxLines,
       maxLength: maxLength,
       onChanged: onChanged,
-      validator: validator ?? (value) {
-        if (value == null || value.isEmpty) return 'Please enter $label';
-        return null;
-      },
+      validator:
+          validator ??
+          (value) {
+            if (value == null || value.isEmpty) return 'Please enter $label';
+            return null;
+          },
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -529,7 +581,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
 
   String? _validateFullName(String? value) {
     if (value == null || value.isEmpty) return 'Please enter Full Name';
-    if (value.trim().length < 2) return 'Full Name must be at least 2 characters';
+    if (value.trim().length < 2)
+      return 'Full Name must be at least 2 characters';
     if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
       return 'Full Name can only contain letters and spaces';
     }
@@ -569,14 +622,18 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   String? _validateAddress(String? value) {
     if (value == null || value.isEmpty) return 'Please enter Current Address';
     if (value.trim().length < 5) return 'Address must be at least 5 characters';
-    if (!RegExp(r"^[\p{L}\p{M}0-9\s,\.\-/#]+$", unicode: true).hasMatch(value)) {
+    if (!RegExp(
+      r"^[\p{L}\p{M}0-9\s,\.\-/#]+$",
+      unicode: true,
+    ).hasMatch(value)) {
       return 'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #';
     }
     return null;
   }
 
   String? _validateYearsCreditHistory(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Years Credit History';
+    if (value == null || value.isEmpty)
+      return 'Please enter Years Credit History';
     final years = int.tryParse(value);
     if (years == null || years < 0 || years > 50) {
       return 'Years Credit History must be between 0 and 50';
@@ -605,34 +662,53 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
       ),
-      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, overflow: TextOverflow.ellipsis,))).toList(),
+      items: items
+          .map(
+            (item) => DropdownMenuItem(
+              value: item,
+              child: Text(item, overflow: TextOverflow.ellipsis),
+            ),
+          )
+          .toList(),
       onChanged: onChanged,
     );
   }
 
   // ==================== SUBMIT HANDLER ====================
-  
+
   Future<void> _submitApplication() async {
+    if (!_isCreditHistoryChosen) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please choose your credit history before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
-    
+
     final vm = context.read<LoanViewModel>();
-    
+
     // Submit application asynchronously
     final success = await vm.submitApplicationAsync();
-    
+
     if (!mounted) return;
-    
+
     if (success) {
-      // Navigate to HomePage directly (not to '/' which goes to SplashScreen -> LoginPage)
+      // Navigate to MainShell so the bottom navigation bar remains visible.
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (context) => const MainShell()),
         (route) => false,
       );
-      
+
       // Show snackbar to inform user
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Your application is being processed. Check the Loans tab for status.'),
+          content: Text(
+            'Your application is being processed. Check the Loans tab for status.',
+          ),
           backgroundColor: Color(0xFF4C40F7),
           duration: Duration(seconds: 3),
         ),
@@ -654,7 +730,6 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       );
     }
   }
-
 }
 
 // Currency input formatter
@@ -663,7 +738,10 @@ class _CurrencyInputFormatter extends TextInputFormatter {
   _CurrencyInputFormatter(this.formatter);
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
     final number = int.tryParse(newValue.text);
     if (number == null) return oldValue;

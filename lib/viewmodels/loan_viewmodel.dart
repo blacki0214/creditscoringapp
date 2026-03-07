@@ -8,10 +8,10 @@ import '../services/vnpt_ekyc_service.dart';
 
 // Application status enum
 enum ApplicationStatus {
-  none,       // No application submitted
+  none, // No application submitted
   processing, // Application submitted, waiting for API response
-  scored,     // Scoring completed successfully
-  rejected    // Application rejected
+  scored, // Scoring completed successfully
+  rejected, // Application rejected
 }
 
 class LoanViewModel extends ChangeNotifier {
@@ -25,8 +25,9 @@ class LoanViewModel extends ChangeNotifier {
   bool _step2Completed = false;
   bool _step3Completed = false;
   bool _step4Completed = false;
+  bool _step6Completed = false;
   bool _isProcessing = false;
-  
+
   // Application status tracking
   ApplicationStatus _applicationStatus = ApplicationStatus.none;
   ApplicationStatus _lastCompletedStatus = ApplicationStatus.none;
@@ -54,11 +55,11 @@ class LoanViewModel extends ChangeNotifier {
   String phoneNumber = '(+84) 901234567';
   String idNumber = '079...';
   String address = '123 Street...';
-  
+
   String employmentStatus = 'EMPLOYED';
   double yearsEmployed = 5;
   double monthlyIncome = 15000000;
-  
+
   String homeOwnership = 'RENT';
   String loanPurpose = 'PERSONAL';
   double yearsCreditHistory = 2;
@@ -76,18 +77,22 @@ class LoanViewModel extends ChangeNotifier {
   bool get step2Completed => _step2Completed;
   bool get step3Completed => _step3Completed;
   bool get step4Completed => _step4Completed;
+  bool get step6Completed => _step6Completed;
   bool get isProcessing => _isProcessing;
   Map<String, dynamic>? get currentOffer => _currentOffer;
   Map<String, dynamic>? get lastCompletedOffer => _lastCompletedOffer;
   String? get errorMessage => _errorMessage;
   List<Map<String, dynamic>> get applications => _applications;
-  
+
   // Application status getters
   ApplicationStatus get applicationStatus => _applicationStatus;
   ApplicationStatus get lastCompletedStatus => _lastCompletedStatus;
-  bool get isApplicationProcessing => _applicationStatus == ApplicationStatus.processing;
-  bool get isApplicationScored => _applicationStatus == ApplicationStatus.scored;
-  bool get isApplicationRejected => _applicationStatus == ApplicationStatus.rejected;
+  bool get isApplicationProcessing =>
+      _applicationStatus == ApplicationStatus.processing;
+  bool get isApplicationScored =>
+      _applicationStatus == ApplicationStatus.scored;
+  bool get isApplicationRejected =>
+      _applicationStatus == ApplicationStatus.rejected;
   String? get pendingApplicationId => _pendingApplicationId;
 
   // Legacy getter for backward compatibility
@@ -132,7 +137,11 @@ class LoanViewModel extends ChangeNotifier {
       hasPreviousDefaults = draft['hasPreviousDefaults'] ?? hasPreviousDefaults;
       currentlyDefaulting = draft['currentlyDefaulting'] ?? currentlyDefaulting;
       notifyListeners();
+      return;
     }
+
+    // If there is no draft, try restoring from persisted eKYC prefill.
+    applySavedEkycPrefill(notify: true);
   }
 
   void _saveDraft() {
@@ -157,11 +166,95 @@ class LoanViewModel extends ChangeNotifier {
   void completeStep1() async {
     _step1Completed = true;
     notifyListeners();
-    
+
     // Save eKYC data to user profile in Firestore
     await _saveEkycDataToProfile();
+
+    // Persist local eKYC fields for future Step 1 skip -> Step 2 prefill.
+    await persistEkycPrefill();
   }
-  
+
+  Future<void> persistEkycPrefill() async {
+    final payload = <String, dynamic>{};
+
+    if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
+      payload['fullName'] = fullName;
+    }
+    if (dob != null) {
+      payload['dob'] = dob!.toIso8601String();
+    }
+    if (phoneNumber.isNotEmpty && phoneNumber != '(+84) 901234567') {
+      payload['phoneNumber'] = phoneNumber;
+    }
+    if (idNumber.isNotEmpty && idNumber != '079...') {
+      payload['idNumber'] = idNumber;
+    }
+    if (address.isNotEmpty && address != '123 Street...') {
+      payload['address'] = address;
+    }
+
+    if (payload.isNotEmpty) {
+      await LocalStorageService.saveEkycPrefill(payload);
+    }
+  }
+
+  void applySavedEkycPrefill({bool notify = true}) {
+    final data = LocalStorageService.loadEkycPrefill();
+    if (data == null) return;
+
+    bool changed = false;
+
+    final savedName = (data['fullName'] as String?)?.trim();
+    if ((fullName.isEmpty || fullName == 'Nguyen Van A') &&
+        savedName != null &&
+        savedName.isNotEmpty) {
+      fullName = savedName;
+      changed = true;
+    }
+
+    final savedDobRaw = data['dob'] as String?;
+    if (dob == null && savedDobRaw != null) {
+      final parsed = DateTime.tryParse(savedDobRaw);
+      if (parsed != null) {
+        dob = parsed;
+        changed = true;
+      }
+    }
+
+    final savedPhone = (data['phoneNumber'] as String?)?.trim();
+    if ((phoneNumber.isEmpty || phoneNumber == '(+84) 901234567') &&
+        savedPhone != null &&
+        savedPhone.isNotEmpty) {
+      phoneNumber = savedPhone;
+      changed = true;
+    }
+
+    final savedId = (data['idNumber'] as String?)?.trim();
+    if ((idNumber.isEmpty || idNumber == '079...') &&
+        savedId != null &&
+        savedId.isNotEmpty) {
+      idNumber = savedId;
+      changed = true;
+    }
+
+    final savedAddress = (data['address'] as String?)?.trim();
+    if ((address.isEmpty || address == '123 Street...') &&
+        savedAddress != null &&
+        savedAddress.isNotEmpty) {
+      address = savedAddress;
+      changed = true;
+    }
+
+    if (changed && notify) {
+      notifyListeners();
+    }
+  }
+
+  void clearStep1CompletionForDemo() {
+    _step1Completed = false;
+    notifyListeners();
+  }
+
   // Save eKYC extracted data to user profile
   Future<void> _saveEkycDataToProfile() async {
     final userId = _firebase.currentUserId;
@@ -172,40 +265,41 @@ class LoanViewModel extends ChangeNotifier {
 
     try {
       final updateData = <String, dynamic>{};
-      
+
       // Add data if available from eKYC verification
       if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
         updateData['fullName'] = fullName;
       }
-      
+
       if (dob != null) {
         updateData['dateOfBirth'] = Timestamp.fromDate(dob!);
       }
-      
+
       if (idNumber.isNotEmpty && idNumber != '079...') {
         updateData['nationalId'] = idNumber;
       }
-      
+
       if (address.isNotEmpty && address != '123 Street...') {
         updateData['address'] = address;
       }
-      
+
       if (phoneNumber.isNotEmpty && phoneNumber != '(+84) 901234567') {
         updateData['phoneNumber'] = phoneNumber;
       }
-      
+
       // Only update if we have data to save
       if (updateData.isNotEmpty) {
         updateData['updatedAt'] = FieldValue.serverTimestamp();
-        
-        print('[LoanViewModel] Saving eKYC data to user profile: ${updateData.keys.join(', ')}');
-        
-        // Use set with merge to create/update document
-        await _firebase.usersCollection.doc(userId).set(
-          updateData,
-          SetOptions(merge: true),
+
+        print(
+          '[LoanViewModel] Saving eKYC data to user profile: ${updateData.keys.join(', ')}',
         );
-        
+
+        // Use set with merge to create/update document
+        await _firebase.usersCollection
+            .doc(userId)
+            .set(updateData, SetOptions(merge: true));
+
         print('[LoanViewModel] eKYC data saved successfully');
       } else {
         print('[LoanViewModel] No eKYC data to save');
@@ -216,20 +310,30 @@ class LoanViewModel extends ChangeNotifier {
     }
   }
 
-  
   void completeStep2() {
     _step2Completed = true;
     notifyListeners();
   }
-  
+
   void completeStep3() {
     _step3Completed = true;
     notifyListeners();
   }
-  
+
   void completeStep4() {
     _step4Completed = true;
     notifyListeners();
+  }
+
+  Future<void> completeStep6() async {
+    _step6Completed = true;
+    notifyListeners();
+    await finalizeAndResetForNewApplication();
+  }
+
+  // Backward compatibility for older call sites.
+  Future<void> completeStep5() async {
+    await completeStep6();
   }
 
   // Update the current offer with user's chosen loan parameters from Step 4
@@ -244,22 +348,21 @@ class LoanViewModel extends ChangeNotifier {
       _currentOffer!['loanAmountVnd'] = loanAmount;
       _currentOffer!['loanTermMonths'] = tenor;
       _currentOffer!['monthlyPaymentVnd'] = monthlyPayment;
-      
+
       // Calculate total payment and interest
       final totalPayment = monthlyPayment * tenor;
       final totalInterest = totalPayment - loanAmount;
       _currentOffer!['totalPaymentVnd'] = totalPayment;
       _currentOffer!['totalInterestVnd'] = totalInterest;
-      
+
       // Update loan purpose if provided
       if (loanPurpose != null) {
         this.loanPurpose = loanPurpose;
       }
-      
+
       notifyListeners();
     }
   }
-
 
   void updatePersonalInfo({
     String? name,
@@ -289,7 +392,7 @@ class LoanViewModel extends ChangeNotifier {
     if (history != null) yearsCreditHistory = history;
     if (defaults != null) hasPreviousDefaults = defaults;
     if (currentDefault != null) currentlyDefaulting = currentDefault;
-    
+
     _saveDraft(); // Auto-save on every change
     notifyListeners();
   }
@@ -315,7 +418,8 @@ class LoanViewModel extends ChangeNotifier {
       if (dob != null) {
         final today = DateTime.now();
         age = today.year - dob!.year;
-        if (today.month < dob!.month || (today.month == dob!.month && today.day < dob!.day)) {
+        if (today.month < dob!.month ||
+            (today.month == dob!.month && today.day < dob!.day)) {
           age--;
         }
       }
@@ -338,14 +442,14 @@ class LoanViewModel extends ChangeNotifier {
         userId: userId,
         loanRequest: request,
       );
-      
+
       _pendingApplicationId = applicationId;
       _isProcessing = false;
       notifyListeners();
-      
+
       // Process in background (fire and forget)
       _processApplicationInBackground(userId, request, applicationId);
-      
+
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -365,20 +469,22 @@ class LoanViewModel extends ChangeNotifier {
     try {
       // Artificial delay for UX
       await Future.delayed(const Duration(seconds: 3));
-      
+
       // Submit to Firebase (which calls the two-step API and stores results)
       print('[LoanViewModel] Calling Firebase loan service...');
       final result = await _loanService.submitLoanApplication(
         userId: userId,
         loanRequest: request,
       );
-      
+
       print('[LoanViewModel] Received response from Firebase service');
       final limitResponse = result['limitResponse'] as CalculateLimitResponse;
       final termsResponse = result['termsResponse'] as CalculateTermsResponse?;
-      
-      print('[LoanViewModel] Credit score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}');
-      
+
+      print(
+        '[LoanViewModel] Credit score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}',
+      );
+
       // Build currentOffer map from the two-step response
       _currentOffer = {
         'applicationId': result['applicationId'],
@@ -403,16 +509,16 @@ class LoanViewModel extends ChangeNotifier {
         // For rejected applications
         _currentOffer!['loanAmountVnd'] = 0;
       }
-      
+
       // Update status
-      _applicationStatus = limitResponse.approved 
-          ? ApplicationStatus.scored 
+      _applicationStatus = limitResponse.approved
+          ? ApplicationStatus.scored
           : ApplicationStatus.rejected;
-      
+
       // Clear draft after successful submission
       print('[LoanViewModel] Clearing draft...');
       await LocalStorageService.clearDraft();
-      
+
       _step2Completed = true;
       _step3Completed = true; // Processing done
       notifyListeners();
@@ -454,7 +560,7 @@ class LoanViewModel extends ChangeNotifier {
       return false;
     }
   }
-  
+
   void resetError() {
     _errorMessage = null;
     notifyListeners();
@@ -482,6 +588,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = false;
     _step3Completed = false;
     _step4Completed = false;
+    _step6Completed = false;
     _isProcessing = false;
     _applicationStatus = ApplicationStatus.none;
     _pendingApplicationId = null;
@@ -507,6 +614,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = false;
     _step3Completed = false;
     _step4Completed = false;
+    _step6Completed = false;
     _isProcessing = false;
     _applicationStatus = ApplicationStatus.none;
     _pendingApplicationId = null;
@@ -548,7 +656,9 @@ class LoanViewModel extends ChangeNotifier {
   }
 
   // Demo mode: Call API without storage/state management (sandbox)
-  Future<LoanOfferResponse?> getDemoCalculation(SimpleLoanRequest request) async {
+  Future<LoanOfferResponse?> getDemoCalculation(
+    SimpleLoanRequest request,
+  ) async {
     try {
       final apiService = ApiService();
       final response = await apiService.applyForLoan(request);
@@ -571,11 +681,12 @@ class LoanViewModel extends ChangeNotifier {
       // Step 1: Classify ID type
       print('[ViewModel] Step 1: Classifying ID type...');
       final classifyResult = await _vnptService.classifyIdCard(imageBytes);
-      
-      if (classifyResult.success) {
-        print('[ViewModel] ID Type: ${classifyResult.typeDescription} (${classifyResult.typeId})');
-      }
 
+      if (classifyResult.success) {
+        print(
+          '[ViewModel] ID Type: ${classifyResult.typeDescription} (${classifyResult.typeId})',
+        );
+      }
 
       print('[ViewModel] Step 2: Card liveness check SKIPPED (testing mode)');
 
@@ -589,12 +700,14 @@ class LoanViewModel extends ChangeNotifier {
         if (response.fullName != null) fullName = response.fullName!;
         if (response.idNumber != null) idNumber = response.idNumber!;
         if (response.dateOfBirth != null) dob = response.dateOfBirth;
-        if (response.placeOfResidence != null) address = response.placeOfResidence!;
-        
+        if (response.placeOfResidence != null)
+          address = response.placeOfResidence!;
+
         _saveDraft();
         print('[ViewModel] OCR successful, data auto-filled');
       } else {
-        _vnptErrorMessage = response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
+        _vnptErrorMessage =
+            response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
       }
 
       _isVerifyingFrontId = false;
@@ -620,7 +733,8 @@ class LoanViewModel extends ChangeNotifier {
       _backIdData = response;
 
       if (!response.success) {
-        _vnptErrorMessage = response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
+        _vnptErrorMessage =
+            response.errorMessage ?? 'Cannot regcognized CMND/CCCD';
       }
 
       _isVerifyingBackId = false;
@@ -651,7 +765,7 @@ class LoanViewModel extends ChangeNotifier {
       }
 
       print('[ViewModel] Comparing faces...');
-      
+
       // Compare face on ID card with selfie
       final faceMatch = await _vnptService.compareFaces(
         idCardImageBytes: _frontIdImageBytes!,
@@ -668,12 +782,15 @@ class LoanViewModel extends ChangeNotifier {
       }
 
       print('[ViewModel] Face match result: ${faceMatch.matchStatus}');
-      print('[ViewModel] Similarity: ${faceMatch.similarity != null ? (faceMatch.similarity! * 100).toStringAsFixed(1) : "N/A"}%');
+      print(
+        '[ViewModel] Similarity: ${faceMatch.similarity != null ? (faceMatch.similarity! * 100).toStringAsFixed(1) : "N/A"}%',
+      );
 
       // SECURITY: Validate face match quality
       // Check 1: Must have MATCH status from VNPT
       if (!faceMatch.isMatch) {
-        _vnptErrorMessage = 'Face does not match the ID card photo. Please ensure good lighting and try again.';
+        _vnptErrorMessage =
+            'Face does not match the ID card photo. Please ensure good lighting and try again.';
         _isVerifyingSelfie = false;
         notifyListeners();
         return false;
@@ -681,11 +798,13 @@ class LoanViewModel extends ChangeNotifier {
 
       // Check 2: Similarity must meet minimum threshold (70%)
       const double minSimilarity = 0.70; // 70% threshold
-      if (faceMatch.similarity == null || faceMatch.similarity! < minSimilarity) {
-        final similarityPercent = faceMatch.similarity != null 
-            ? (faceMatch.similarity! * 100).toStringAsFixed(1) 
+      if (faceMatch.similarity == null ||
+          faceMatch.similarity! < minSimilarity) {
+        final similarityPercent = faceMatch.similarity != null
+            ? (faceMatch.similarity! * 100).toStringAsFixed(1)
             : '0.0';
-        _vnptErrorMessage = 'Face similarity too low ($similarityPercent%). Please ensure your full face is clearly visible and try again.';
+        _vnptErrorMessage =
+            'Face similarity too low ($similarityPercent%). Please ensure your full face is clearly visible and try again.';
         _isVerifyingSelfie = false;
         notifyListeners();
         return false;
@@ -695,7 +814,6 @@ class LoanViewModel extends ChangeNotifier {
       _isVerifyingSelfie = false;
       notifyListeners();
       return true;
-      
     } catch (e) {
       _vnptErrorMessage = e.toString();
       _isVerifyingSelfie = false;
@@ -737,4 +855,3 @@ class LoanViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
-

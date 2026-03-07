@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to scan your ID card for eKYC verification.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is required to upload ID card images for verification.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photo library access may be used to save captured verification images.</string>
 </dict>
 </plist>

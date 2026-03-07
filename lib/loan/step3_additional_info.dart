@@ -8,19 +8,27 @@ class Step3AdditionalInfoPage extends StatefulWidget {
   const Step3AdditionalInfoPage({super.key});
 
   @override
-  State<Step3AdditionalInfoPage> createState() => _Step3AdditionalInfoPageState();
+  State<Step3AdditionalInfoPage> createState() =>
+      _Step3AdditionalInfoPageState();
 }
 
 class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final TextEditingController _employerNameController = TextEditingController();
   final TextEditingController _jobTitleController = TextEditingController();
   final TextEditingController _workPhoneController = TextEditingController();
-  final TextEditingController _yearsAtEmployerController = TextEditingController();
-  final TextEditingController _emergencyContactNameController = TextEditingController();
-  final TextEditingController _emergencyContactPhoneController = TextEditingController();
+  final TextEditingController _yearsAtEmployerController =
+      TextEditingController();
+  final TextEditingController _emergencyContactNameController =
+      TextEditingController();
+  final TextEditingController _emergencyContactPhoneController =
+      TextEditingController();
+  final TextEditingController _emergencyContact2NameController =
+      TextEditingController();
+  final TextEditingController _emergencyContact2PhoneController =
+      TextEditingController();
   final TextEditingController _referencesController = TextEditingController();
 
   final _employerNameFieldKey = GlobalKey<FormFieldState<String>>();
@@ -29,6 +37,8 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final _yearsAtEmployerFieldKey = GlobalKey<FormFieldState<String>>();
   final _emergencyContactNameFieldKey = GlobalKey<FormFieldState<String>>();
   final _emergencyContactPhoneFieldKey = GlobalKey<FormFieldState<String>>();
+  final _emergencyContact2NameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _emergencyContact2PhoneFieldKey = GlobalKey<FormFieldState<String>>();
   final _referencesFieldKey = GlobalKey<FormFieldState<String>>();
 
   final _employerNameFocusNode = FocusNode();
@@ -37,9 +47,12 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final _yearsAtEmployerFocusNode = FocusNode();
   final _emergencyContactNameFocusNode = FocusNode();
   final _emergencyContactPhoneFocusNode = FocusNode();
+  final _emergencyContact2NameFocusNode = FocusNode();
+  final _emergencyContact2PhoneFocusNode = FocusNode();
   final _referencesFocusNode = FocusNode();
 
-  String? _selectedRelationship;
+  String? _selectedRelationship1;
+  String? _selectedRelationship2;
   final List<String> _relationshipOptions = [
     'Mother',
     'Father',
@@ -84,6 +97,16 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
         _emergencyContactPhoneFieldKey.currentState?.validate();
       }
     });
+    _emergencyContact2NameFocusNode.addListener(() {
+      if (!_emergencyContact2NameFocusNode.hasFocus) {
+        _emergencyContact2NameFieldKey.currentState?.validate();
+      }
+    });
+    _emergencyContact2PhoneFocusNode.addListener(() {
+      if (!_emergencyContact2PhoneFocusNode.hasFocus) {
+        _emergencyContact2PhoneFieldKey.currentState?.validate();
+      }
+    });
     _referencesFocusNode.addListener(() {
       if (!_referencesFocusNode.hasFocus) {
         _referencesFieldKey.currentState?.validate();
@@ -99,6 +122,8 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     _yearsAtEmployerController.dispose();
     _emergencyContactNameController.dispose();
     _emergencyContactPhoneController.dispose();
+    _emergencyContact2NameController.dispose();
+    _emergencyContact2PhoneController.dispose();
     _referencesController.dispose();
     _employerNameFocusNode.dispose();
     _jobTitleFocusNode.dispose();
@@ -106,6 +131,8 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     _yearsAtEmployerFocusNode.dispose();
     _emergencyContactNameFocusNode.dispose();
     _emergencyContactPhoneFocusNode.dispose();
+    _emergencyContact2NameFocusNode.dispose();
+    _emergencyContact2PhoneFocusNode.dispose();
     _referencesFocusNode.dispose();
     super.dispose();
   }
@@ -151,10 +178,13 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       const SizedBox(height: 8),
                       Text(
                         'Please provide additional information to complete your loan application.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       _buildSectionHeader('Employment Information'),
                       _buildTextField(
                         fieldKey: _employerNameFieldKey,
@@ -165,7 +195,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         maxLength: 50,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(50),
-                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-\.&]')),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z\s\-\.&]'),
+                          ),
                         ],
                         validator: _validateEmployerName,
                       ),
@@ -179,7 +211,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         maxLength: 50,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(50),
-                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-/]')),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z\s\-/]'),
+                          ),
                         ],
                         validator: _validateJobTitle,
                       ),
@@ -205,7 +239,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         focusNode: _yearsAtEmployerFocusNode,
                         label: 'Years at Current Employer',
                         icon: Icons.calendar_today,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         maxLength: 5,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(5),
@@ -213,19 +249,21 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         ],
                         validator: _validateYearsAtEmployer,
                       ),
-                      
+
                       const SizedBox(height: 24),
                       _buildSectionHeader('Emergency Contact'),
                       _buildTextField(
                         fieldKey: _emergencyContactNameFieldKey,
                         controller: _emergencyContactNameController,
                         focusNode: _emergencyContactNameFocusNode,
-                        label: 'Emergency Contact Name',
+                        label: 'Emergency Contact 1 Name',
                         icon: Icons.person,
                         maxLength: 30,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(30),
-                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\-\.]')),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z\s\-\.]'),
+                          ),
                         ],
                         validator: _validateName,
                       ),
@@ -234,7 +272,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _emergencyContactPhoneFieldKey,
                         controller: _emergencyContactPhoneController,
                         focusNode: _emergencyContactPhoneFocusNode,
-                        label: 'Emergency Contact Phone',
+                        label: 'Emergency Contact 1 Phone',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 10,
@@ -245,51 +283,65 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         validator: _validatePhoneNumber,
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedRelationship,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          labelText: 'Relationship',
-                          prefixIcon: const Icon(
-                            Icons.family_restroom,
-                            color: Color(0xFF4C40F7),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF4C40F7),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        items: _relationshipOptions
-                            .map(
-                              (option) => DropdownMenuItem(
-                                value: option,
-                                child: Text(option),
-                              ),
-                            )
-                            .toList(),
+                      _buildRelationshipDropdown(
+                        label: 'Relationship 1',
+                        value: _selectedRelationship1,
                         onChanged: (value) {
                           setState(() {
-                            _selectedRelationship = value;
+                            _selectedRelationship1 = value;
+                            if (_selectedRelationship2 == value) {
+                              _selectedRelationship2 = null;
+                            }
                           });
                         },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select relationship';
-                          }
-                          return null;
+                      ),
+
+                      const SizedBox(height: 20),
+                      _buildTextField(
+                        fieldKey: _emergencyContact2NameFieldKey,
+                        controller: _emergencyContact2NameController,
+                        focusNode: _emergencyContact2NameFocusNode,
+                        label: 'Emergency Contact 2 Name',
+                        icon: Icons.person,
+                        maxLength: 30,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(30),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z\s\-\.]'),
+                          ),
+                        ],
+                        validator: _validateName,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        fieldKey: _emergencyContact2PhoneFieldKey,
+                        controller: _emergencyContact2PhoneController,
+                        focusNode: _emergencyContact2PhoneFocusNode,
+                        label: 'Emergency Contact 2 Phone',
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 10,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(10),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: _validatePhoneNumber,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildRelationshipDropdown(
+                        label: 'Relationship 2',
+                        value: _selectedRelationship2,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedRelationship2 = value;
+                          });
+                        },
+                        disabledValues: {
+                          if (_selectedRelationship1 != null)
+                            _selectedRelationship1!,
                         },
                       ),
-                      
+
                       const SizedBox(height: 24),
                       _buildSectionHeader('References (Optional)'),
                       _buildTextField(
@@ -381,12 +433,14 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       maxLines: maxLines,
       maxLength: maxLength,
       focusNode: focusNode,
-      validator: validator ?? (value) {
-        if (isRequired && (value == null || value.isEmpty)) {
-          return 'Please enter $label';
-        }
-        return null;
-      },
+      validator:
+          validator ??
+          (value) {
+            if (isRequired && (value == null || value.isEmpty)) {
+              return 'Please enter $label';
+            }
+            return null;
+          },
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
@@ -404,8 +458,56 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     );
   }
 
+  Widget _buildRelationshipDropdown({
+    required String label,
+    required String? value,
+    required ValueChanged<String?> onChanged,
+    Set<String> disabledValues = const <String>{},
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: const Icon(Icons.family_restroom, color: Color(0xFF4C40F7)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+        ),
+      ),
+      items: _relationshipOptions.map((option) {
+        final isDisabled = disabledValues.contains(option);
+        return DropdownMenuItem(
+          value: option,
+          enabled: !isDisabled,
+          child: Text(
+            option,
+            style: TextStyle(
+              color: isDisabled ? Colors.grey.shade400 : Colors.black,
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      validator: (selected) {
+        if (selected == null || selected.isEmpty) {
+          return 'Please select $label';
+        }
+        if (disabledValues.contains(selected)) {
+          return '$label cannot duplicate another selected relationship';
+        }
+        return null;
+      },
+    );
+  }
+
   // ==================== VALIDATION FUNCTIONS ====================
-  
+
   String? _validateEmployerName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter employer name';
@@ -418,7 +520,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     }
     return null;
   }
-  
+
   String? _validateJobTitle(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter job title';
@@ -431,7 +533,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     }
     return null;
   }
-  
+
   String? _validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter phone number';
@@ -444,7 +546,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     }
     return null;
   }
-  
+
   String? _validateYearsAtEmployer(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter years at employer';
@@ -461,7 +563,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     }
     return null;
   }
-  
+
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter contact name';
@@ -474,23 +576,48 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     }
     return null;
   }
-  
 
-  void _continueToOfferCalculator() {
+  Future<void> _continueToOfferCalculator() async {
     if (!_formKey.currentState!.validate()) return;
-    
+    if (_selectedRelationship1 == _selectedRelationship2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Emergency contacts must have different relationships'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     // Mark Step 3 as completed
     final loanViewModel = context.read<LoanViewModel>();
+
+    final isRejected =
+        loanViewModel.isApplicationRejected ||
+        (loanViewModel.currentOffer?['approved'] == false);
+    if (isRejected) {
+      await loanViewModel.resetLoanApplicationState();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Your previous application was rejected. Data has been cleared. Please submit a new application.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
     loanViewModel.completeStep3();
-    
+
     // TODO: Save additional info to ViewModel/Firebase
-    
+
     // Navigate to Step 4 - Offer Calculator
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const Step4OfferCalculatorPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const Step4OfferCalculatorPage()),
     );
   }
 }

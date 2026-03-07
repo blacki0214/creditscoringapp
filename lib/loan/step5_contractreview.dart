@@ -3,15 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
-import 'approval_status_page.dart';
+import 'step6_disbursement.dart';
 
-class ContractReviewPage extends StatefulWidget {
+class Step5ContractReviewPage extends StatefulWidget {
   final double loanAmount;
   final int tenor;
   final double downPayment;
   final String loanPurpose;
 
-  const ContractReviewPage({
+  const Step5ContractReviewPage({
     super.key,
     required this.loanAmount,
     required this.tenor,
@@ -20,10 +20,11 @@ class ContractReviewPage extends StatefulWidget {
   });
 
   @override
-  State<ContractReviewPage> createState() => _ContractReviewPageState();
+  State<Step5ContractReviewPage> createState() =>
+      _Step5ContractReviewPageState();
 }
 
-class _ContractReviewPageState extends State<ContractReviewPage> {
+class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
   final _signatureController = TextEditingController();
   final _signatureFieldKey = GlobalKey<FormFieldState<String>>();
   final _signatureFocusNode = FocusNode();
@@ -32,7 +33,10 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
   bool _agreedToConsent = false;
   bool _isSigning = false;
 
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'vi_VN',
+    symbol: '₫',
+  );
 
   @override
   void initState() {
@@ -62,9 +66,7 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
     final offer = vm.currentOffer;
 
     if (offer == null) {
-      return const Scaffold(
-        body: Center(child: Text('No offer available.')),
-      );
+      return const Scaffold(body: Center(child: Text('No offer available.')));
     }
 
     return Scaffold(
@@ -77,7 +79,7 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Step 4: Review & Sign Contract',
+          'Step 5: Review & Sign Contract',
           style: TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
@@ -86,7 +88,10 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -101,56 +106,75 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                     const SizedBox(height: 8),
                     Text(
                       'Please review the contract terms and sign to proceed.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                     const SizedBox(height: 24),
 
-                    // Contract Summary Card
                     _buildContractSummaryCard(offer),
 
                     const SizedBox(height: 24),
-                    // Loan Terms Details
                     _buildSectionHeader('Loan Terms'),
-                    _buildTermRow('Loan Amount', _currencyFormat.format(widget.loanAmount)),
+                    _buildTermRow(
+                      'Loan Amount',
+                      _currencyFormat.format(widget.loanAmount),
+                    ),
                     const SizedBox(height: 12),
-                    _buildTermRow('Interest Rate', '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}% per annum'),
+                    _buildTermRow(
+                      'Interest Rate',
+                      '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}% per annum',
+                    ),
                     const SizedBox(height: 12),
                     _buildTermRow('Loan Term', '${widget.tenor} months'),
                     const SizedBox(height: 12),
-                    _buildTermRow('Monthly Payment', _currencyFormat.format(_calculateMonthlyPayment(offer))),
+                    _buildTermRow(
+                      'Monthly Payment',
+                      _currencyFormat.format(_calculateMonthlyPayment(offer)),
+                    ),
 
                     const SizedBox(height: 24),
-                    // Fees and Insurance (if available)
                     _buildSectionHeader('Additional Charges'),
                     _buildTermRow('Origination Fee', 'Included in rate'),
                     const SizedBox(height: 12),
-                    _buildTermRow('Insurance', 'Optional - will be presented post-approval'),
+                    _buildTermRow(
+                      'Insurance',
+                      'Optional - will be presented post-approval',
+                    ),
                     const SizedBox(height: 12),
-                    _buildTermRow('Late Payment Fee', '2% per month after due date'),
+                    _buildTermRow(
+                      'Late Payment Fee',
+                      '2% per month after due date',
+                    ),
 
                     const SizedBox(height: 24),
-                    // Legal Agreements - Checkboxes
                     _buildSectionHeader('Legal Agreements'),
                     _buildAgreementCheckbox(
-                      label: 'I agree to the Terms and Conditions of this Loan Agreement',
+                      label:
+                          'I agree to the Terms and Conditions of this Loan Agreement',
                       value: _agreedToTerms,
-                      onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
+                      onChanged: (val) =>
+                          setState(() => _agreedToTerms = val ?? false),
                     ),
                     const SizedBox(height: 12),
                     _buildAgreementCheckbox(
-                      label: 'I authorize the lender to deduct monthly payments from my registered bank account',
+                      label:
+                          'I authorize the lender to deduct monthly payments from my registered bank account',
                       value: _agreedToDeduction,
-                      onChanged: (val) => setState(() => _agreedToDeduction = val ?? false),
+                      onChanged: (val) =>
+                          setState(() => _agreedToDeduction = val ?? false),
                     ),
                     const SizedBox(height: 12),
                     _buildAgreementCheckbox(
-                      label: 'I consent to sharing my credit information with credit bureaus',
+                      label:
+                          'I consent to sharing my credit information with credit bureaus',
                       value: _agreedToConsent,
-                      onChanged: (val) => setState(() => _agreedToConsent = val ?? false),
+                      onChanged: (val) =>
+                          setState(() => _agreedToConsent = val ?? false),
                     ),
 
                     const SizedBox(height: 24),
-                    // Digital Signature
                     _buildSectionHeader('Digital Signature'),
                     const Text(
                       'Type your full name as signature:',
@@ -168,26 +192,32 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                       maxLength: 50,
                       inputFormatters: [
                         LengthLimitingTextInputFormatter(50),
-                        FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z\s\-']")),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r"[A-Za-z\s\-']"),
+                        ),
                       ],
                       validator: _validateSignature,
                       decoration: InputDecoration(
                         hintText: 'Enter your full name',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF4C40F7),
+                            width: 2,
+                          ),
                         ),
                         counterText: '',
                       ),
                     ),
 
                     const SizedBox(height: 24),
-                    // Legal notice
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -198,7 +228,11 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                          const Icon(
+                            Icons.info_outline,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -227,7 +261,9 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isSigningEnabled() && !_isSigning ? _signContract : null,
+                      onPressed: _isSigningEnabled() && !_isSigning
+                          ? _signContract
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isSigningEnabled() && !_isSigning
                             ? const Color(0xFF4C40F7)
@@ -237,9 +273,12 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                         ),
                       ),
                       child: _isSigning
-                          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            )
                           : const Text(
-                              'Sign & Submit Contract',
+                              'Sign & Continue',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -253,9 +292,14 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
                     width: double.infinity,
                     height: 56,
                     child: OutlinedButton(
-                      onPressed: _isSigning ? null : () => Navigator.pop(context),
+                      onPressed: _isSigning
+                          ? null
+                          : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+                        side: const BorderSide(
+                          color: Color(0xFF4C40F7),
+                          width: 2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -280,32 +324,25 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
   }
 
   bool _isSigningEnabled() {
-    return _agreedToTerms && _agreedToDeduction && _agreedToConsent && _signatureController.text.isNotEmpty;
+    return _agreedToTerms &&
+        _agreedToDeduction &&
+        _agreedToConsent &&
+        _signatureController.text.isNotEmpty;
   }
 
   Future<void> _signContract() async {
     setState(() => _isSigning = true);
 
-    // Simulate contract signing API call
     await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
 
     setState(() => _isSigning = false);
 
-    // Navigate to Approval Status Page (pass data via constructor)
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ApprovalStatusPage(
-            loanAmount: widget.loanAmount,
-            tenor: widget.tenor,
-            signature: _signatureController.text,
-          ),
-        ),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const Step6DisbursementPage()),
+    );
   }
 
   Widget _buildContractSummaryCard(dynamic offer) {
@@ -316,53 +353,52 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.3)),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Loan Status',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Approved',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF4CAF50),
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                'Loan Status',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Credit Score',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Approved',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4CAF50),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${offer['creditScore']}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF4C40F7),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Credit Score',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${offer['creditScore']}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4C40F7),
+                ),
               ),
             ],
           ),
@@ -419,7 +455,9 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: value ? const Color(0xFF4C40F7).withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+          color: value
+              ? const Color(0xFF4C40F7).withOpacity(0.05)
+              : Colors.grey.withOpacity(0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: value ? const Color(0xFF4C40F7) : Colors.grey.shade300,
@@ -460,7 +498,9 @@ class _ContractReviewPageState extends State<ContractReviewPage> {
 
   String? _validateSignature(String? value) {
     if (value == null || value.isEmpty) return 'Please enter your signature';
-    if (value.trim().length < 2) return 'Signature must be at least 2 characters';
+    if (value.trim().length < 2) {
+      return 'Signature must be at least 2 characters';
+    }
     if (!RegExp(r"^[A-Za-z\s\-']+$").hasMatch(value)) {
       return 'Signature can only contain letters, spaces, hyphens, and apostrophes';
     }

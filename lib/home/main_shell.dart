@@ -32,6 +32,8 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    // Keep Home highlighted on first load before any tap animation runs.
+    _animationController.value = 1.0;
   }
 
   @override
@@ -75,7 +77,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     final isCurrentlySelected = _selectedIndex == index;
     final wasPreviouslySelected = _previousIndex == index;
     final inactiveColor = Colors.grey.shade600;
-    const activeColor = Color(0xFF4C40F7);
+    const activeColor = Color(0xFF4D4AF9);
 
     return GestureDetector(
       onTap: () {
