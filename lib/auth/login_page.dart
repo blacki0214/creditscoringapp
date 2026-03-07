@@ -10,7 +10,7 @@ import 'signup_page.dart';
 import 'forgot_password.dart';
 import 'phone_login_page.dart';
 import 'termOfService.dart';
-import '../home/home_page.dart';
+import '../home/main_shell.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,7 +31,9 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_tosDialogShown && !LocalStorageService.hasAcceptedTos()) {
+      if (mounted &&
+          !_tosDialogShown &&
+          !LocalStorageService.hasAcceptedTos()) {
         _showTosDialog();
       }
     });
@@ -75,7 +77,9 @@ class _LoginPageState extends State<LoginPage> {
         return WillPopScope(
           onWillPop: () async => false,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Text(
               'Terms of Service',
               style: TextStyle(
@@ -83,72 +87,78 @@ class _LoginPageState extends State<LoginPage> {
                 color: Color(0xFF1A1F3F),
               ),
             ),
-            content: RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 1.4,
-                  color: Color(0xFF3E4566),
-                ),
-                children: [
-                  const TextSpan(text: 'I agree to '),
-                  TextSpan(
-                    text: 'Terms of Service',
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                RichText(
+                  text: TextSpan(
                     style: const TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF4C40F7),
+                      fontSize: 14,
+                      height: 1.4,
+                      color: Color(0xFF3E4566),
                     ),
-                    recognizer: _tosLinkRecognizer
-                      ..onTap = () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const TermOfServicePage(),
-                          ),
-                        );
-                      },
+                    children: [
+                      const TextSpan(text: 'I agree to '),
+                      TextSpan(
+                        text: 'Terms of Service',
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4C40F7),
+                        ),
+                        recognizer: _tosLinkRecognizer
+                          ..onTap = () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const TermOfServicePage(),
+                              ),
+                            );
+                          },
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4C40F7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: const Size(double.infinity, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text(
+                    'Agree to all',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: const Size(double.infinity, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text(
+                    'Decline',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.redAccent, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  minimumSize: const Size(110, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                child: const Text(
-                  'Decline',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4C40F7),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  minimumSize: const Size(130, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                child: const Text(
-                  'Agree to all',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
           ),
         );
       },
@@ -182,19 +192,14 @@ class _LoginPageState extends State<LoginPage> {
             labelText: 'Email',
             hintText: 'Enter your email',
             prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF4C40F7),
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
             ),
             counterText: '',
           ),
@@ -224,19 +229,14 @@ class _LoginPageState extends State<LoginPage> {
                 context.read<AuthViewModel>().togglePasswordVisibility();
               },
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF4C40F7),
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
             ),
             counterText: '',
           ),
@@ -250,9 +250,7 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ForgotPasswordPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
               );
             },
             child: const Text(
@@ -283,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
                       if (success && mounted) {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => const HomePage()),
+                          MaterialPageRoute(builder: (_) => const MainShell()),
                         );
                       }
                     }
@@ -317,9 +315,7 @@ class _LoginPageState extends State<LoginPage> {
                 : () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const PhoneLoginPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const PhoneLoginPage()),
                     );
                   },
             icon: const Icon(Icons.phone_outlined, color: Color(0xFF4C40F7)),
@@ -348,14 +344,13 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: viewModel.isLoading
                 ? null
                 : () async {
-                    final success =
-                        await context.read<AuthViewModel>().signInWithGoogle();
+                    final success = await context
+                        .read<AuthViewModel>()
+                        .signInWithGoogle();
                     if (success && context.mounted) {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const HomePage(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const MainShell()),
                       );
                     }
                   },
@@ -427,56 +422,56 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  const SizedBox(height: 40),
-                  // Title
-                  const Text(
-                    'Sign in',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1F3F),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Welcome back',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  _buildSignInOptions(viewModel),
-                  const SizedBox(height: 32),
-                  // Sign up link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: TextStyle(color: Colors.grey.shade700),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // Reset view model state before navigating
-                          context.read<AuthViewModel>().reset();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SignupPage(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'Sign up',
-                          style: TextStyle(
-                            color: Color(0xFF4C40F7),
-                            fontWeight: FontWeight.w600,
-                          ),
+                      const SizedBox(height: 40),
+                      // Title
+                      const Text(
+                        'Sign in',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1F3F),
                         ),
                       ),
-                    ],
-                  ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Welcome back',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      _buildSignInOptions(viewModel),
+                      const SizedBox(height: 32),
+                      // Sign up link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // Reset view model state before navigating
+                              context.read<AuthViewModel>().reset();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SignupPage(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'Sign up',
+                              style: TextStyle(
+                                color: Color(0xFF4C40F7),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

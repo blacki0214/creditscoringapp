@@ -8,6 +8,7 @@ class LocalStorageService {
   static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
   static const String _keyHasAcceptedTos = 'has_accepted_tos';
   static const String _keyOtpThrottle = 'otp_throttle_map';
+  static const String _keyHasCompletedEkyc = 'has_completed_ekyc';
 
   static SharedPreferences? _prefs;
 
@@ -17,7 +18,9 @@ class LocalStorageService {
 
   static SharedPreferences get prefs {
     if (_prefs == null) {
-      throw Exception('LocalStorageService not initialized. Call init() first.');
+      throw Exception(
+        'LocalStorageService not initialized. Call init() first.',
+      );
     }
     return _prefs!;
   }
@@ -67,19 +70,21 @@ class LocalStorageService {
   }
 
   // Save application to history
-  static Future<bool> saveApplicationHistory(Map<String, dynamic> application) async {
+  static Future<bool> saveApplicationHistory(
+    Map<String, dynamic> application,
+  ) async {
     try {
       final history = getApplicationHistory();
       history.insert(0, {
         ...application,
         'submitted_at': DateTime.now().toIso8601String(),
       });
-      
+
       // Keep only last 20 applications
       if (history.length > 20) {
         history.removeRange(20, history.length);
       }
-      
+
       final json = jsonEncode(history);
       await prefs.setString(_keyApplicationHistory, json);
       return true;
@@ -178,10 +183,7 @@ class LocalStorageService {
       final map = raw == null || raw.isEmpty
           ? <String, dynamic>{}
           : (jsonDecode(raw) as Map<String, dynamic>);
-      map[phoneNumber] = {
-        'count': count,
-        'blocked_until': blockedUntilMs,
-      };
+      map[phoneNumber] = {'count': count, 'blocked_until': blockedUntilMs};
       await prefs.setString(_keyOtpThrottle, jsonEncode(map));
     } catch (e) {
       print('Error writing OTP throttle: $e');
@@ -213,5 +215,18 @@ class LocalStorageService {
 
   static Future<void> clearAddPasswordPromptFlag() async {
     await prefs.remove(_addPasswordPromptKey);
+  }
+
+  // eKYC completion tracking for skipping Step 2 on future applications
+  static Future<bool> markEkycCompleted() async {
+    return await prefs.setBool(_keyHasCompletedEkyc, true);
+  }
+
+  static bool hasCompletedEkyc() {
+    return prefs.getBool(_keyHasCompletedEkyc) ?? false;
+  }
+
+  static Future<bool> clearEkycCompletion() async {
+    return await prefs.remove(_keyHasCompletedEkyc);
   }
 }

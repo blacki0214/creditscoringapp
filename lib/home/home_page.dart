@@ -27,7 +27,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ApplicationStatus? _lastKnownStatus;
-  
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
       if (userId != null && mounted) {
         print('HomePage: Loading user data for $userId');
         context.read<HomeViewModel>().loadAllUserData(userId);
-        
+
         // Also check if loan was just scored and refresh credit score
         _checkAndRefreshCreditScore();
       }
@@ -56,15 +56,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> _checkAndPromptAddPassword() async {
     // Check if user signed in with Google and doesn't have password
     await Future.delayed(const Duration(seconds: 2)); // Wait for UI to settle
-    
+
     if (!mounted) return;
-    
+
     final authViewModel = context.read<AuthViewModel>();
     final hasPassword = await authViewModel.checkUserHasPassword();
-    
+
     // Check if user already dismissed this prompt
     final hasSeenPrompt = await LocalStorageService.hasSeenAddPasswordPrompt();
-    
+
     if (!hasPassword && !hasSeenPrompt && mounted) {
       _showAddPasswordPrompt();
     }
@@ -132,17 +132,17 @@ class _HomePageState extends State<HomePage> {
       await LocalStorageService.setAddPasswordPromptSeen();
     }
   }
-  
+
   void _checkAndRefreshCreditScore() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       final loanViewModel = context.read<LoanViewModel>();
       final homeViewModel = context.read<HomeViewModel>();
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      
+
       // If loan status changed to scored, refresh the credit score
-      if (loanViewModel.isApplicationScored && 
+      if (loanViewModel.isApplicationScored &&
           _lastKnownStatus != ApplicationStatus.scored &&
           userId != null) {
         print('HomePage: Loan scored! Refreshing credit score...');
@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
-    
+
     // Check if we need to refresh credit score when loan status changes
     _checkAndRefreshCreditScore();
 
@@ -301,7 +301,9 @@ class _HomePageState extends State<HomePage> {
                       }
 
                       return StreamBuilder<int>(
-                        stream: NotificationService().getUnreadCountStream(userId),
+                        stream: NotificationService().getUnreadCountStream(
+                          userId,
+                        ),
                         builder: (context, countSnapshot) {
                           final unreadCount = countSnapshot.data ?? 0;
 
@@ -348,7 +350,8 @@ class _HomePageState extends State<HomePage> {
                                 PopupMenuItem(
                                   enabled: false,
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
                                         'Notifications',
@@ -361,13 +364,15 @@ class _HomePageState extends State<HomePage> {
                                       if (unreadCount > 0)
                                         TextButton(
                                           onPressed: () async {
-                                            await NotificationService().markAllAsRead(userId);
+                                            await NotificationService()
+                                                .markAllAsRead(userId);
                                             // Don't close popup - let user see the updated state
                                           },
                                           style: TextButton.styleFrom(
                                             padding: EdgeInsets.zero,
                                             minimumSize: const Size(0, 0),
-                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            tapTargetSize: MaterialTapTargetSize
+                                                .shrinkWrap,
                                           ),
                                           child: const Text(
                                             'Mark all read',
@@ -390,9 +395,11 @@ class _HomePageState extends State<HomePage> {
                                     width: 300,
                                     height: 300,
                                     child: StreamBuilder<List<NotificationModel>>(
-                                      stream: NotificationService().getNotificationsStream(userId),
+                                      stream: NotificationService()
+                                          .getNotificationsStream(userId),
                                       builder: (context, snapshot) {
-                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
                                           return const Center(
                                             child: CircularProgressIndicator(),
                                           );
@@ -410,12 +417,14 @@ class _HomePageState extends State<HomePage> {
                                           );
                                         }
 
-                                        final notifications = snapshot.data ?? [];
+                                        final notifications =
+                                            snapshot.data ?? [];
 
                                         if (notifications.isEmpty) {
                                           return Center(
                                             child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
                                                 Icon(
                                                   Icons.notifications_none,
@@ -438,85 +447,133 @@ class _HomePageState extends State<HomePage> {
                                         return ListView.separated(
                                           padding: EdgeInsets.zero,
                                           itemCount: notifications.length,
-                                          separatorBuilder: (context, index) => const Divider(height: 1),
+                                          separatorBuilder: (context, index) =>
+                                              const Divider(height: 1),
                                           itemBuilder: (context, index) {
-                                            final notification = notifications[index];
+                                            final notification =
+                                                notifications[index];
                                             return InkWell(
                                               onTap: () async {
                                                 if (!notification.isRead) {
-                                                  await NotificationService().markAsRead(notification.id);
+                                                  await NotificationService()
+                                                      .markAsRead(
+                                                        notification.id,
+                                                      );
                                                 }
                                                 // Don't close popup - let user continue browsing notifications
                                               },
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 12,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 12,
+                                                    ),
                                                 color: notification.isRead
                                                     ? Colors.white
                                                     : const Color(0xFFF5F5F5),
                                                 child: Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Container(
-                                                      padding: const EdgeInsets.all(8),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            8,
+                                                          ),
                                                       decoration: BoxDecoration(
-                                                        color: Color(notification.colorValue).withOpacity(0.1),
-                                                        borderRadius: BorderRadius.circular(8),
+                                                        color: Color(
+                                                          notification
+                                                              .colorValue,
+                                                        ).withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
                                                       ),
                                                       child: Icon(
-                                                        _getNotificationIcon(notification.type),
-                                                        color: Color(notification.colorValue),
+                                                        _getNotificationIcon(
+                                                          notification.type,
+                                                        ),
+                                                        color: Color(
+                                                          notification
+                                                              .colorValue,
+                                                        ),
                                                         size: 20,
                                                       ),
                                                     ),
                                                     const SizedBox(width: 12),
                                                     Expanded(
                                                       child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
                                                           Row(
                                                             children: [
-                                                              if (!notification.isRead)
+                                                              if (!notification
+                                                                  .isRead)
                                                                 Container(
                                                                   width: 8,
                                                                   height: 8,
-                                                                  margin: const EdgeInsets.only(right: 6),
+                                                                  margin:
+                                                                      const EdgeInsets.only(
+                                                                        right:
+                                                                            6,
+                                                                      ),
                                                                   decoration: const BoxDecoration(
-                                                                    color: Color(0xFF4C40F7),
-                                                                    shape: BoxShape.circle,
+                                                                    color: Color(
+                                                                      0xFF4C40F7,
+                                                                    ),
+                                                                    shape: BoxShape
+                                                                        .circle,
                                                                   ),
                                                                 ),
                                                               Expanded(
                                                                 child: Text(
-                                                                  notification.title,
+                                                                  notification
+                                                                      .title,
                                                                   style: TextStyle(
-                                                                    fontWeight: notification.isRead
-                                                                        ? FontWeight.w500
-                                                                        : FontWeight.w600,
-                                                                    fontSize: 14,
+                                                                    fontWeight:
+                                                                        notification
+                                                                            .isRead
+                                                                        ? FontWeight
+                                                                              .w500
+                                                                        : FontWeight
+                                                                              .w600,
+                                                                    fontSize:
+                                                                        14,
                                                                   ),
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
-                                                          const SizedBox(height: 2),
+                                                          const SizedBox(
+                                                            height: 2,
+                                                          ),
                                                           Text(
                                                             notification.body,
-                                                            style: const TextStyle(
-                                                              fontSize: 12,
-                                                              color: Colors.grey,
-                                                            ),
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 12,
+                                                                  color: Colors
+                                                                      .grey,
+                                                                ),
                                                             maxLines: 2,
-                                                            overflow: TextOverflow.ellipsis,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                           ),
-                                                          const SizedBox(height: 4),
+                                                          const SizedBox(
+                                                            height: 4,
+                                                          ),
                                                           Text(
-                                                            notification.timeAgo,
+                                                            notification
+                                                                .timeAgo,
                                                             style: TextStyle(
                                                               fontSize: 11,
-                                                              color: Colors.grey.shade500,
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade500,
                                                             ),
                                                           ),
                                                         ],
@@ -579,15 +636,19 @@ class _HomePageState extends State<HomePage> {
                         // Period selector
                         Row(
                           children: [
+                            _buildPeriodChip(context, viewModel, 'Overall'),
+                            const SizedBox(width: 8),
                             _buildPeriodChip(
                               context,
                               viewModel,
-                              'Overall',
+                              'Scoring Status',
                             ),
                             const SizedBox(width: 8),
-                            _buildPeriodChip(context, viewModel, 'Scoring Status'),
-                            const SizedBox(width: 8),
-                            _buildPeriodChip(context, viewModel, 'Loan History'),
+                            _buildPeriodChip(
+                              context,
+                              viewModel,
+                              'Loan History',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 32),
@@ -720,7 +781,7 @@ class _HomePageState extends State<HomePage> {
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: viewModel.scoreChange >= 0 
+                                        color: viewModel.scoreChange >= 0
                                             ? const Color(0xFF4CAF50)
                                             : const Color(0xFFEF5350),
                                       ),
@@ -735,15 +796,20 @@ class _HomePageState extends State<HomePage> {
                           Center(
                             child: ElevatedButton(
                               onPressed: () async {
-                                final userId = FirebaseAuth.instance.currentUser?.uid;
+                                final userId =
+                                    FirebaseAuth.instance.currentUser?.uid;
                                 if (userId != null) {
                                   if (viewModel.creditScore != null) {
                                     // Refresh credit score
                                     await viewModel.refreshCreditScore(userId);
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content: Text('Credit score updated!'),
+                                          content: Text(
+                                            'Credit score updated!',
+                                          ),
                                           backgroundColor: Color(0xFF4CAF50),
                                           duration: Duration(seconds: 2),
                                         ),
@@ -754,7 +820,8 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => const LoanApplicationPage(),
+                                        builder: (_) =>
+                                            const LoanApplicationPage(),
                                       ),
                                     );
                                   }
@@ -780,7 +847,9 @@ class _HomePageState extends State<HomePage> {
                                 viewModel.creditScore != null
                                     ? 'Update your credit score'
                                     : 'Apply for loan now',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -790,10 +859,12 @@ class _HomePageState extends State<HomePage> {
                             context,
                             creditScore: viewModel.creditScore,
                           ),
-                        ] else if (viewModel.selectedPeriod == 'Scoring Status') ...[
+                        ] else if (viewModel.selectedPeriod ==
+                            'Scoring Status') ...[
                           // Loan display section
                           _buildLoanDisplay(context),
-                        ] else if (viewModel.selectedPeriod == 'Loan History') ...[
+                        ] else if (viewModel.selectedPeriod ==
+                            'Loan History') ...[
                           _buildLoanHistoryDisplay(context),
                         ],
                       ],
@@ -805,53 +876,22 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(context, viewModel, Icons.home, 'Home', 0),
-                _buildNavItem(
-                  context,
-                  viewModel,
-                  Icons.upload_file,
-                  'Upload',
-                  1,
-                ),
-                _buildNavItem(context, viewModel, Icons.calculate, 'Demo', 2),
-                _buildNavItem(
-                  context,
-                  viewModel,
-                  Icons.settings_outlined,
-                  'Settings',
-                  3,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    final activeOffer = loanViewModel.currentOffer ?? loanViewModel.lastCompletedOffer;
-    final activeStatus = loanViewModel.applicationStatus != ApplicationStatus.none
-      ? loanViewModel.applicationStatus
-      : loanViewModel.lastCompletedStatus;
+    final activeOffer =
+        loanViewModel.currentOffer ?? loanViewModel.lastCompletedOffer;
+    final activeStatus =
+        loanViewModel.applicationStatus != ApplicationStatus.none
+        ? loanViewModel.applicationStatus
+        : loanViewModel.lastCompletedStatus;
     final isActiveFromHistory =
-      activeOffer != null && loanViewModel.currentOffer == null;
-    final showScoreStatus = loanViewModel.currentOffer != null ||
+        activeOffer != null && loanViewModel.currentOffer == null;
+    final showScoreStatus =
+        loanViewModel.currentOffer != null ||
         activeStatus == ApplicationStatus.processing;
 
     return Column(
@@ -874,15 +914,15 @@ class _HomePageState extends State<HomePage> {
               color: activeStatus == ApplicationStatus.processing
                   ? const Color(0xFFFFF3E0)
                   : activeStatus == ApplicationStatus.scored
-                      ? const Color(0xFFE8F5E9)
-                      : const Color(0xFFFFEBEE),
+                  ? const Color(0xFFE8F5E9)
+                  : const Color(0xFFFFEBEE),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: activeStatus == ApplicationStatus.processing
                     ? const Color(0xFFFFA726)
                     : activeStatus == ApplicationStatus.scored
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFEF5350),
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFEF5350),
               ),
             ),
             child: Row(
@@ -891,13 +931,13 @@ class _HomePageState extends State<HomePage> {
                   activeStatus == ApplicationStatus.processing
                       ? Icons.hourglass_empty
                       : activeStatus == ApplicationStatus.scored
-                          ? Icons.check_circle
-                          : Icons.cancel,
+                      ? Icons.check_circle
+                      : Icons.cancel,
                   color: activeStatus == ApplicationStatus.processing
                       ? const Color(0xFFFFA726)
                       : activeStatus == ApplicationStatus.scored
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFEF5350),
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFEF5350),
                   size: 32,
                 ),
                 const SizedBox(width: 16),
@@ -909,16 +949,16 @@ class _HomePageState extends State<HomePage> {
                         activeStatus == ApplicationStatus.processing
                             ? 'Scoring (In Progress)'
                             : activeStatus == ApplicationStatus.scored
-                                ? 'Scored'
-                                : 'Rejected',
+                            ? 'Scored'
+                            : 'Rejected',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: activeStatus == ApplicationStatus.processing
                               ? const Color(0xFFFFA726)
                               : activeStatus == ApplicationStatus.scored
-                                  ? const Color(0xFF4CAF50)
-                                  : const Color(0xFFEF5350),
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFEF5350),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -926,8 +966,8 @@ class _HomePageState extends State<HomePage> {
                         activeStatus == ApplicationStatus.processing
                             ? 'We are calculating your credit score...'
                             : activeStatus == ApplicationStatus.scored
-                                ? 'Your score has been calculated successfully'
-                                : 'Your application was not approved',
+                            ? 'Your score has been calculated successfully'
+                            : 'Your application was not approved',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -939,7 +979,10 @@ class _HomePageState extends State<HomePage> {
                           activeOffer['approved'] as bool) ...[
                         const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
@@ -971,7 +1014,8 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 12),
                         // Continue button to Step 3 (only show for active flow)
                         if (!isActiveFromHistory &&
-                            (!loanViewModel.step3Completed || !loanViewModel.step4Completed))
+                            (!loanViewModel.step3Completed ||
+                                !loanViewModel.step4Completed))
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -979,14 +1023,17 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const Step3AdditionalInfoPage(),
+                                    builder: (context) =>
+                                        const Step3AdditionalInfoPage(),
                                   ),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4C40F7),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -1010,12 +1057,13 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 24),
         ],
-        
+
         // Current Loan Offer Section (only show full details after Step 3 & 4 completion)
         if (activeOffer != null &&
-          activeStatus == ApplicationStatus.scored &&
-          (isActiveFromHistory ||
-            (loanViewModel.step3Completed && loanViewModel.step4Completed))) ...[
+            activeStatus == ApplicationStatus.scored &&
+            (isActiveFromHistory ||
+                (loanViewModel.step3Completed &&
+                    loanViewModel.step4Completed))) ...[
           const Text(
             'Current Loan Offer',
             style: TextStyle(
@@ -1369,12 +1417,14 @@ class _HomePageState extends State<HomePage> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF1A1F3F) : const Color(0xFFE6E9F2),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1A1F3F) : const Color(0xFFC9D1E6),
+            color: isSelected
+                ? const Color(0xFF1A1F3F)
+                : const Color(0xFFC9D1E6),
             width: 1,
           ),
           boxShadow: isSelected
@@ -1519,68 +1569,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  Widget _buildNavItem(
-    BuildContext context,
-    HomeViewModel viewModel,
-    IconData icon,
-    String label,
-    int index,
-  ) {
-    final isSelected = viewModel.selectedIndex == index;
-    return InkWell(
-      onTap: () {
-        if (index == 1) {
-          // Navigate to loan application
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const LoanApplicationPage()),
-          );
-        } else if (index == 2) {
-          // Navigate to demo calculator
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DemoCalculatorPage()),
-          );
-        } else if (index == 3) {
-          // Navigate to settings
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SettingsPage()),
-          );
-        } else {
-          viewModel.setIndex(index);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4C40F7) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.grey.shade600,
-              size: 24,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class CreditScoreGaugePainter extends CustomPainter {
@@ -1614,9 +1602,17 @@ class CreditScoreGaugePainter extends CustomPainter {
       // Color segments for score ranges
       final segments = [
         {'color': const Color(0xFFFF5252), 'start': 0.0, 'sweep': 0.25}, // Poor
-        {'color': const Color(0xFFFFA726), 'start': 0.25, 'sweep': 0.25}, // Fair
+        {
+          'color': const Color(0xFFFFA726),
+          'start': 0.25,
+          'sweep': 0.25,
+        }, // Fair
         {'color': const Color(0xFFFFEB3B), 'start': 0.5, 'sweep': 0.25}, // Good
-        {'color': const Color(0xFF4CAF50), 'start': 0.75, 'sweep': 0.25}, // Excellent
+        {
+          'color': const Color(0xFF4CAF50),
+          'start': 0.75,
+          'sweep': 0.25,
+        }, // Excellent
       ];
 
       for (var segment in segments) {
@@ -1683,40 +1679,43 @@ class CreditScoreGaugePainter extends CustomPainter {
 }
 
 // Widget to build credit score tips section
-Widget _buildCreditScoreTips(BuildContext context, {required int? creditScore}) {
+Widget _buildCreditScoreTips(
+  BuildContext context, {
+  required int? creditScore,
+}) {
   final score = creditScore;
   final hasScore = score != null;
-  final isLow = hasScore && score! < 580;
-  final isMid = hasScore && score! >= 580 && score < 700;
-  final isGood = hasScore && score! >= 700;
+  final isLow = hasScore && score < 580;
+  final isMid = hasScore && score >= 580 && score < 700;
+  final isGood = hasScore && score >= 700;
 
   final Color accentColor = !hasScore
       ? Colors.grey
       : isLow
-          ? const Color(0xFFD32F2F)
-          : isMid
-              ? const Color(0xFFF57C00)
-              : const Color(0xFF2E7D32);
+      ? const Color(0xFFD32F2F)
+      : isMid
+      ? const Color(0xFFF57C00)
+      : const Color(0xFF2E7D32);
 
   final IconData headerIcon = !hasScore
       ? Icons.info_outline
       : isGood
-          ? Icons.verified
-          : Icons.lightbulb_outline;
+      ? Icons.verified
+      : Icons.lightbulb_outline;
 
   final String headerTitle = !hasScore
       ? 'Credit Score Tips'
       : isGood
-          ? 'Congratulations'
-          : 'How to Improve Your Credit Score';
+      ? 'Congratulations'
+      : 'How to Improve Your Credit Score';
 
   final String subtitleText = !hasScore
       ? 'We need more information to generate personalized tips.'
       : isGood
-          ? 'Your credit score is perfect. Keep up the great habits!'
-          : isLow
-              ? 'Your score is low. Try these steps to improve it.'
-              : 'Your score is fair. These tips can help you move higher.';
+      ? 'Your credit score is perfect. Keep up the great habits!'
+      : isLow
+      ? 'Your score is low. Try these steps to improve it.'
+      : 'Your score is fair. These tips can help you move higher.';
 
   // This returns a Column widget which stacks widgets vertically
   return Column(
@@ -1734,20 +1733,18 @@ Widget _buildCreditScoreTips(BuildContext context, {required int? creditScore}) 
               color: accentColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              headerIcon,
-              color: accentColor,
-              size: 24,
-            ),
+            child: Icon(headerIcon, color: accentColor, size: 24),
           ),
           const SizedBox(width: 12),
           // Title text
-          Text(
-            headerTitle,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1F3F),
+          Expanded(
+            child: Text(
+              headerTitle,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1F3F),
+              ),
             ),
           ),
         ],
@@ -1756,10 +1753,7 @@ Widget _buildCreditScoreTips(BuildContext context, {required int? creditScore}) 
       // Subtitle/description
       Text(
         subtitleText,
-        style: TextStyle(
-          fontSize: 14,
-          color: Colors.grey.shade600,
-        ),
+        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
       ),
       const SizedBox(height: 20),
 
@@ -1796,7 +1790,11 @@ Widget _buildCreditScoreTips(BuildContext context, {required int? creditScore}) 
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.check_circle, color: Color(0xFF2E7D32), size: 22),
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF2E7D32),
+                size: 22,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -1875,168 +1873,167 @@ Widget _buildTipCard({
   required String description,
   required List<String> tips,
 }) {
-  // StatefulBuilder allows this widget to have its own state
-  // even though the parent widget is stateless
-  return StatefulBuilder(
-    builder: (BuildContext context, StateSetter setState) {
-      // isExpanded tracks whether this tip card is open or closed
-      bool isExpanded = false;
+  return TipCard(
+    icon: icon,
+    iconColor: iconColor,
+    iconBgColor: iconBgColor,
+    title: title,
+    description: description,
+    tips: tips,
+  );
+}
 
-      // Return a Container that wraps the entire card
-      return Container(
-        // decoration gives the card its appearance
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey.shade200,
-            width: 1,
+class TipCard extends StatefulWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBgColor;
+  final String title;
+  final String description;
+  final List<String> tips;
+
+  const TipCard({
+    super.key,
+    required this.icon,
+    required this.iconColor,
+    required this.iconBgColor,
+    required this.title,
+    required this.description,
+    required this.tips,
+  });
+
+  @override
+  State<TipCard> createState() => _TipCardState();
+}
+
+class _TipCardState extends State<TipCard> {
+  bool isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          // boxShadow creates the shadow effect
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        // ClipRRect ensures children respect rounded corners
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          // Material provides the ink splash effect on tap
-          child: Material(
-            color: Colors.transparent,
-            // InkWell makes the card tappable/clickable
-            child: InkWell(
-              // onTap defines what happens when user taps the card
-              onTap: () {
-                // setState rebuilds this widget with new isExpanded value
-                setState(() {
-                  isExpanded = !isExpanded; // Toggle between true/false
-                });
-              },
-              // Padding adds space inside the card
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                // Column stacks the card content vertically
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header row with icon and title
-                    Row(
-                      children: [
-                        // Icon container
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: iconBgColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            icon,
-                            color: iconColor,
-                            size: 24,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                isExpanded = !isExpanded;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: widget.iconBgColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          widget.icon,
+                          color: widget.iconColor,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F3F),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Expanded makes the text take remaining space
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1F3F),
+                      ),
+                      Icon(
+                        isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: Colors.grey.shade600,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      height: 1.5,
+                    ),
+                  ),
+                  AnimatedCrossFade(
+                    firstChild: const SizedBox.shrink(),
+                    secondChild: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        Divider(color: Colors.grey.shade300, thickness: 1),
+                        const SizedBox(height: 12),
+                        ...widget.tips.map(
+                          (tip) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(
+                                    top: 6,
+                                    right: 12,
+                                  ),
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: widget.iconColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    tip,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade700,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        // Expand/collapse icon - changes based on isExpanded
-                        Icon(
-                          isExpanded
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_down,
-                          color: Colors.grey.shade600,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Description text
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                        height: 1.5, // Line height for readability
-                      ),
-                    ),
-                    // AnimatedCrossFade smoothly shows/hides the tips list
-                    AnimatedCrossFade(
-                      // firstChild is shown when isExpanded is false
-                      firstChild: const SizedBox.shrink(), // Empty widget
-                      // secondChild is shown when isExpanded is true
-                      secondChild: Column(
-                        children: [
-                          const SizedBox(height: 12),
-                          // Divider line
-                          Divider(
-                            color: Colors.grey.shade300,
-                            thickness: 1,
-                          ),
-                          const SizedBox(height: 12),
-                          // Loop through each tip and create a list item
-                          ...tips.map(
-                            (tip) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Bullet point
-                                  Container(
-                                    margin: const EdgeInsets.only(
-                                      top: 6,
-                                      right: 12,
-                                    ),
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: iconColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  // Tip text
-                                  Expanded(
-                                    child: Text(
-                                      tip,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade700,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // crossFadeState determines which child to show
-                      crossFadeState: isExpanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      // duration controls animation speed
-                      duration: const Duration(milliseconds: 300),
-                    ),
-                  ],
-                ),
+                    crossFadeState: isExpanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 300),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      );
-    },
-  );
+      ),
+    );
+  }
 }
 
 /// Helper function to get icon for notification type

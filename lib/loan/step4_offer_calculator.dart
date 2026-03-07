@@ -29,8 +29,8 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   double _tenor = 12; // months, default 12
   
   // Local state - not persisted to ViewModel
-  double _calculatedLoanAmount = 0;
-  double _downPayment = 0;
+  final double _calculatedLoanAmount = 0;
+  final double _downPayment = 0;
   
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
   final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
@@ -564,7 +564,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     required Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

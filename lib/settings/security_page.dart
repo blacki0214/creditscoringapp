@@ -185,7 +185,7 @@ class _SecurityPageState extends State<SecurityPage> {
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: const Color(0xFF4C40F7),
+          activeThumbColor: const Color(0xFF4C40F7),
         ),
       ),
     );
