@@ -112,10 +112,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.pop(context),
-            ),
+            automaticallyImplyLeading: false,
             title: const Text(
               'Demo: Financial Calculator',
               style: TextStyle(color: Colors.black, fontSize: 16),
@@ -458,7 +455,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ),
                       SizedBox(height: 20),
                       Text(
-                        'Calculating your score…',
+                        'Analyzing your profile…',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -467,7 +464,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ),
                       SizedBox(height: 6),
                       Text(
-                        'Please wait a moment.',
+                        'This may take up to 30 seconds.',
                         style: TextStyle(fontSize: 13, color: Colors.grey),
                       ),
                     ],
@@ -513,6 +510,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       _limitResult = null;
       _errorMessage = null;
     });
+
+    // Artificial 30-second processing delay to simulate analysis
+    await Future.delayed(const Duration(seconds: 30));
+    if (!mounted) return;
 
     try {
       final incomeText =

@@ -576,6 +576,12 @@ class LoanViewModel extends ChangeNotifier {
         'creditScore': _currentOffer!['creditScore'],
         'loanAmount': _currentOffer!['loanAmountVnd'],
         'maxAmount': _currentOffer!['maxAmountVnd'],
+        'loanTermMonths': _currentOffer!['loanTermMonths'],
+        'monthlyPaymentVnd': _currentOffer!['monthlyPaymentVnd'],
+        'interestRate': _currentOffer!['interestRate'],
+        'contractStatus': _currentOffer!['approved'] == true
+            ? 'Active'
+            : 'Rejected',
         'timestamp': DateTime.now().toIso8601String(),
       });
     }

@@ -31,6 +31,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   // Local state - not persisted to ViewModel
   final double _calculatedLoanAmount = 0;
   final double _downPayment = 0;
+  bool _isProceeding = false;
 
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
   final NumberFormat _currencyFormat = NumberFormat.currency(
@@ -118,7 +119,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
         ? (calculatedLoanAmount / _tenor.toInt()) * (1 + (interestRate / 100))
         : 0.0;
 
-    return Scaffold(
+    return Stack(
+      children: [
+      Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -452,102 +455,124 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                 horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
                 vertical: 16,
               ),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: (calculatedLoanAmount <= 0 || !isWithinLimit)
-                          ? null
-                          : () {
-                              // Get the loan view model
-                              final loanViewModel = context
-                                  .read<LoanViewModel>();
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: (calculatedLoanAmount <= 0 || !isWithinLimit || _isProceeding)
+                      ? null
+                      : () async {
+                          setState(() => _isProceeding = true);
 
-                              // Calculate monthly payment
-                              final interestRate =
-                                  (offer['interestRate'] as num?) ?? 15.0;
-                              final monthlyPayment =
-                                  (calculatedLoanAmount / _tenor.toInt()) *
-                                  (1 + (interestRate / 100));
+                          // 10-second processing delay
+                          await Future.delayed(const Duration(seconds: 10));
+                          if (!mounted) return;
 
-                              // Update the loan offer with user's chosen parameters
-                              loanViewModel.updateLoanOffer(
+                          // Get the loan view model
+                          final loanViewModel = context
+                              .read<LoanViewModel>();
+
+                          // Calculate monthly payment
+                          final interestRate =
+                              (offer['interestRate'] as num?) ?? 15.0;
+                          final monthlyPayment =
+                              (calculatedLoanAmount / _tenor.toInt()) *
+                              (1 + (interestRate / 100));
+
+                          // Update the loan offer with user's chosen parameters
+                          loanViewModel.updateLoanOffer(
+                            loanAmount: calculatedLoanAmount,
+                            tenor: _tenor.toInt(),
+                            monthlyPayment: monthlyPayment,
+                            loanPurpose: _selectedPurpose,
+                          );
+
+                          // Mark Step 4 as completed
+                          loanViewModel.completeStep4();
+
+                          if (!mounted) return;
+                          setState(() => _isProceeding = false);
+
+                          // Navigate to Step 5 - Contract Review
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => Step5ContractReviewPage(
                                 loanAmount: calculatedLoanAmount,
                                 tenor: _tenor.toInt(),
-                                monthlyPayment: monthlyPayment,
+                                downPayment: downPayment,
                                 loanPurpose: _selectedPurpose,
-                              );
-
-                              // Mark Step 4 as completed
-                              loanViewModel.completeStep4();
-
-                              // Navigate to Step 5 - Contract Review
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => Step5ContractReviewPage(
-                                    loanAmount: calculatedLoanAmount,
-                                    tenor: _tenor.toInt(),
-                                    downPayment: downPayment,
-                                    loanPurpose: _selectedPurpose,
-                                  ),
-                                ),
-                              );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            (calculatedLoanAmount <= 0 || !isWithinLimit)
-                            ? Colors.grey.shade400
-                            : const Color(0xFF4C40F7),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        isWithinLimit
-                            ? 'Accept Offer & Continue'
-                            : 'Reduce Loan Amount',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
+                              ),
+                            ),
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        (calculatedLoanAmount <= 0 || !isWithinLimit)
+                        ? Colors.grey.shade400
+                        : const Color(0xFF4C40F7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                          color: Color(0xFF4C40F7),
-                          width: 2,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Adjust Amount',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4C40F7),
-                        ),
-                      ),
+                  child: Text(
+                    isWithinLimit
+                        ? 'Accept Offer & Continue'
+                        : 'Reduce Loan Amount',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],
         ),
       ),
+    ),
+
+      // Full-screen loading overlay
+      if (_isProceeding)
+        Container(
+          color: Colors.black54,
+          child: const Center(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Color(0xFF4C40F7),
+                      strokeWidth: 3,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Processing your offer…',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1F3F),
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Please wait a moment.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -55,10 +55,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
         shadowColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Start Your Loan Application',
           style: TextStyle(
