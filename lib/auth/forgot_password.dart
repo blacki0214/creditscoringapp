@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../utils/app_localization.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -17,12 +18,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   /// Validate email format: must be a Gmail address
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return context.t('Please enter your email', 'Vui lòng nhập email');
     }
     // Enforce Gmail format
     final emailRegex = RegExp(r'^[A-Z0-9._%+-]+@gmail\.com$', caseSensitive: false);
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid Gmail address';
+      return context.t(
+        'Please enter a valid Gmail address',
+        'Vui lòng nhập địa chỉ Gmail hợp lệ',
+      );
     }
     return null;
   }
@@ -42,9 +46,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Email Sent!'),
-          content: const Text(
-            'We\'ve sent a password reset link to your email. Please check your inbox and follow the instructions to reset your password.',
+          title: Text(context.t('Email Sent!', 'Đã gửi email!')),
+          content: Text(
+            context.t(
+              'We\'ve sent a password reset link to your email. Please check your inbox and follow the instructions to reset your password.',
+              'Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư và làm theo hướng dẫn để đặt lại mật khẩu.',
+            ),
           ),
           actions: [
             TextButton(
@@ -52,9 +59,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Go back to login
               },
-              child: const Text(
-                'OK',
-                style: TextStyle(
+              child: Text(
+                context.t('OK', 'Đồng ý'),
+                style: const TextStyle(
                   color: Color(0xFF4C40F7),
                   fontWeight: FontWeight.w600,
                 ),
@@ -79,9 +86,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Forgot password',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          context.t('Forgot password', 'Quên mật khẩu'),
+          style: const TextStyle(color: Colors.black),
         ),
       ),
       body: SafeArea(
@@ -112,9 +119,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   const SizedBox(height: 40),
                   // Title
-                  const Text(
-                    'Reset Password',
-                    style: TextStyle(
+                  Text(
+                    context.t('Reset Password', 'Đặt lại mật khẩu'),
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
@@ -122,7 +129,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Enter your email address and we\'ll send you a link to reset your password.',
+                    context.t(
+                      'Enter your email address and we\'ll send you a link to reset your password.',
+                      'Nhập email của bạn, chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.',
+                    ),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -140,8 +150,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       FilteringTextInputFormatter.deny(RegExp(r'\s')),
                     ],
                     decoration: InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
+                      labelText: context.t('Email', 'Email'),
+                      hintText: context.t('Enter your email', 'Nhập email của bạn'),
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -176,9 +186,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       child: viewModel.isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Send Reset Link',
-                              style: TextStyle(
+                            : Text(
+                              context.t('Send Reset Link', 'Gửi liên kết đặt lại'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,

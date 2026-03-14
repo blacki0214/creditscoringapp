@@ -16,6 +16,7 @@ import '../loan/step3_additional_info.dart';
 import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'application_contract_status_page.dart';
+import '../utils/app_localization.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -399,9 +400,12 @@ class _HomePageState extends State<HomePage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
-                                          'Notifications',
-                                          style: TextStyle(
+                                        Text(
+                                          context.t(
+                                            'Notifications',
+                                            'Thông báo',
+                                          ),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                             color: Color(0xFF1A1F3F),
@@ -421,9 +425,12 @@ class _HomePageState extends State<HomePage> {
                                                   MaterialTapTargetSize
                                                       .shrinkWrap,
                                             ),
-                                            child: const Text(
-                                              'Mark all read',
-                                              style: TextStyle(
+                                            child: Text(
+                                              context.t(
+                                                'Mark all read',
+                                                'Đánh dấu đã đọc',
+                                              ),
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF4C40F7),
                                               ),
@@ -456,7 +463,10 @@ class _HomePageState extends State<HomePage> {
                                           if (snapshot.hasError) {
                                             return Center(
                                               child: Text(
-                                                'Error loading notifications',
+                                                context.t(
+                                                  'Error loading notifications',
+                                                  'Lỗi khi tải thông báo',
+                                                ),
                                                 style: TextStyle(
                                                   color: Colors.grey.shade600,
                                                   fontSize: 14,
@@ -481,7 +491,10 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   const SizedBox(height: 8),
                                                   Text(
-                                                    'No notifications yet',
+                                                    context.t(
+                                                      'No notifications yet',
+                                                      'Chưa có thông báo',
+                                                    ),
                                                     style: TextStyle(
                                                       color:
                                                           Colors.grey.shade600,
@@ -698,7 +711,10 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         // Greeting
                         Text(
-                          'Hello, ${viewModel.userName ?? "User"}',
+                          context.t(
+                            'Hello, ${viewModel.userName ?? "User"}',
+                            'Xin chào, ${viewModel.userName ?? "Bạn"}',
+                          ),
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -707,7 +723,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Here is your credit rate',
+                          context.t(
+                            'Here is your credit rate',
+                            'Đây là mức tín dụng của bạn',
+                          ),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,

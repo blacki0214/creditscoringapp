@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
 import '../home/main_shell.dart';
+import '../utils/app_localization.dart';
 
 class PhoneLoginPage extends StatefulWidget {
   const PhoneLoginPage({super.key});
@@ -19,15 +20,15 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
   /// Validate phone number: 10 digits starting with 0
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your phone number';
+      return context.t('Please enter your phone number', 'Vui lòng nhập số điện thoại');
     }
     final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
 
     if (cleaned.length != 10) {
-      return 'Phone number must be 10 digits';
+      return context.t('Phone number must be 10 digits', 'Số điện thoại phải có 10 chữ số');
     }
     if (!cleaned.startsWith('0')) {
-      return 'Phone number must start with 0';
+      return context.t('Phone number must start with 0', 'Số điện thoại phải bắt đầu bằng 0');
     }
     return null;
   }
@@ -100,9 +101,9 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                 children: [
                   const SizedBox(height: 40),
                   // Title
-                  const Text(
-                    'Sign in with Phone',
-                    style: TextStyle(
+                  Text(
+                    context.t('Sign in with Phone', 'Đăng nhập bằng số điện thoại'),
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
@@ -110,7 +111,10 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Enter your phone number to receive OTP',
+                    context.t(
+                      'Enter your phone number to receive OTP',
+                      'Nhập số điện thoại để nhận mã OTP',
+                    ),
                     style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 40),
@@ -124,8 +128,8 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                       FilteringTextInputFormatter.digitsOnly,
                     ],
                     decoration: InputDecoration(
-                      labelText: 'Phone Number',
-                      hintText: 'Enter your phone number',
+                      labelText: context.t('Phone Number', 'Số điện thoại'),
+                      hintText: context.t('Enter your phone number', 'Nhập số điện thoại của bạn'),
                       prefixIcon: const Icon(Icons.phone_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -160,9 +164,9 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                       ),
                       child: viewModel.isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Send OTP',
-                              style: TextStyle(
+                            : Text(
+                              context.t('Send OTP', 'Gửi OTP'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,

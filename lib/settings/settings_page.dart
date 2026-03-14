@@ -131,8 +131,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.person_outline,
-                      title: 'Profile',
-                      subtitle: 'Manage your personal information',
+                      title: isVietnamese ? 'Hồ sơ' : 'Profile',
+                      subtitle: isVietnamese
+                          ? 'Quản lý thông tin cá nhân'
+                          : 'Manage your personal information',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -146,8 +148,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.support_agent_outlined,
-                      title: 'Support',
-                      subtitle: 'Get help and contact us',
+                      title: isVietnamese ? 'Hỗ trợ' : 'Support',
+                      subtitle: isVietnamese
+                          ? 'Nhận trợ giúp và liên hệ'
+                          : 'Get help and contact us',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -161,8 +165,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.feedback_outlined,
-                      title: 'Feedback',
-                      subtitle: 'Share your thoughts with us',
+                      title: isVietnamese ? 'Phản hồi' : 'Feedback',
+                      subtitle: isVietnamese
+                          ? 'Chia sẻ ý kiến của bạn'
+                          : 'Share your thoughts with us',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -176,8 +182,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.notifications_outlined,
-                      title: 'Notifications',
-                      subtitle: 'Manage notification preferences',
+                      title: isVietnamese ? 'Thông báo' : 'Notifications',
+                      subtitle: isVietnamese
+                          ? 'Quản lý tùy chọn thông báo'
+                          : 'Manage notification preferences',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -191,8 +199,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.security,
-                      title: 'Security',
-                      subtitle: 'Password, biometric, 2FA',
+                      title: isVietnamese ? 'Bảo mật' : 'Security',
+                      subtitle: isVietnamese
+                          ? 'Mật khẩu, sinh trắc học, 2FA'
+                          : 'Password, biometric, 2FA',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -206,8 +216,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy Policy',
-                      subtitle: 'How we handle your data',
+                      title: isVietnamese
+                        ? 'Chính sách bảo mật'
+                        : 'Privacy Policy',
+                      subtitle: isVietnamese
+                        ? 'Cách chúng tôi xử lý dữ liệu'
+                        : 'How we handle your data',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -221,8 +235,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.description_outlined,
-                      title: 'Terms & Conditions',
-                      subtitle: 'Read our terms and conditions',
+                      title: isVietnamese
+                        ? 'Điều khoản & Điều kiện'
+                        : 'Terms & Conditions',
+                      subtitle: isVietnamese
+                        ? 'Đọc điều khoản và điều kiện'
+                        : 'Read our terms and conditions',
                       onTap: () {
                         // Navigate to terms
                       },

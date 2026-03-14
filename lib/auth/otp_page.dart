@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'change_password.dart';
 import 'login_page.dart';
+import '../utils/app_localization.dart';
 
 class OTPPage extends StatefulWidget {
   final bool isForResetPassword;
@@ -88,7 +89,9 @@ class _OTPPageState extends State<OTPPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.isForResetPassword ? 'Forgot password' : 'Verify OTP',
+          widget.isForResetPassword
+              ? context.t('Forgot password', 'Quên mật khẩu')
+              : context.t('Verify OTP', 'Xác thực OTP'),
           style: const TextStyle(color: Colors.black),
         ),
       ),
@@ -101,9 +104,9 @@ class _OTPPageState extends State<OTPPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-                  const Text(
-                    'Enter OTP Code',
-                    style: TextStyle(
+                  Text(
+                    context.t('Enter OTP Code', 'Nhập mã OTP'),
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
@@ -112,8 +115,14 @@ class _OTPPageState extends State<OTPPage> {
                   const SizedBox(height: 12),
                   Text(
                     widget.phoneNumber != null
-                        ? 'Verification code sent to\n${widget.phoneNumber}'
-                        : 'We texted you a code to verify\nyour phone number',
+                        ? context.t(
+                            'Verification code sent to\n${widget.phoneNumber}',
+                            'Mã xác thực đã gửi đến\n${widget.phoneNumber}',
+                          )
+                        : context.t(
+                            'We texted you a code to verify\nyour phone number',
+                            'Chúng tôi đã gửi mã để xác thực\nsố điện thoại của bạn',
+                          ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -189,15 +198,18 @@ class _OTPPageState extends State<OTPPage> {
                   if (widget.onVerified != null) ...[
                     if (viewModel.otpResendTime > 0)
                       Text(
-                        'Resend OTP in ${viewModel.otpResendTime}s',
+                        context.t(
+                          'Resend OTP in ${viewModel.otpResendTime}s',
+                          'Gửi lại OTP sau ${viewModel.otpResendTime}s',
+                        ),
                         style: TextStyle(color: Colors.grey.shade600),
                       )
                     else
                       TextButton(
                         onPressed: viewModel.isLoading ? null : _resendOTP,
-                        child: const Text(
-                          'Resend OTP',
-                          style: TextStyle(
+                        child: Text(
+                          context.t('Resend OTP', 'Gửi lại OTP'),
+                          style: const TextStyle(
                             color: Color(0xFF4C40F7),
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
@@ -207,9 +219,9 @@ class _OTPPageState extends State<OTPPage> {
                   ] else
                     TextButton(
                       onPressed: () {},
-                      child: const Text(
-                        'Resend',
-                        style: TextStyle(
+                      child: Text(
+                        context.t('Resend', 'Gửi lại'),
+                        style: const TextStyle(
                           color: Color(0xFF4C40F7),
                           fontWeight: FontWeight.w600,
                           fontSize: 16,

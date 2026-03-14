@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'login_page.dart';
+import '../utils/app_localization.dart';
 
 class EmailVerificationPage extends StatefulWidget {
   const EmailVerificationPage({super.key});
@@ -29,15 +30,25 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         (route) => false,
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email verified! You can now login.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Email verified! You can now login.',
+              'Email đã được xác thực! Bạn có thể đăng nhập ngay.',
+            ),
+          ),
           backgroundColor: Color(0xFF4CAF50),
         ),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email not verified yet. Please check your inbox.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Email not verified yet. Please check your inbox.',
+              'Email chưa được xác thực. Vui lòng kiểm tra hộp thư của bạn.',
+            ),
+          ),
           backgroundColor: Color(0xFFEF5350),
         ),
       );
@@ -50,8 +61,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification email sent! Check your inbox.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Verification email sent! Check your inbox.',
+              'Đã gửi email xác thực! Vui lòng kiểm tra hộp thư của bạn.',
+            ),
+          ),
           backgroundColor: Color(0xFF4CAF50),
         ),
       );
@@ -85,9 +101,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               ),
               const SizedBox(height: 32),
               // Title
-              const Text(
-                'Verify Your Email',
-                style: TextStyle(
+              Text(
+                context.t('Verify Your Email', 'Xác thực email của bạn'),
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -97,7 +113,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               const SizedBox(height: 16),
               // Description
               Text(
-                'We\'ve sent a verification link to your email address. Please check your inbox and click the link to verify your account.',
+                context.t(
+                  'We\'ve sent a verification link to your email address. Please check your inbox and click the link to verify your account.',
+                  'Chúng tôi đã gửi liên kết xác thực đến email của bạn. Vui lòng kiểm tra hộp thư và nhấn vào liên kết để xác thực tài khoản.',
+                ),
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -120,9 +139,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   ),
                   child: _isChecking
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'I\'ve Verified My Email',
-                          style: TextStyle(
+                      : Text(
+                          context.t(
+                            'I\'ve Verified My Email',
+                            'Tôi đã xác thực email',
+                          ),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -134,9 +156,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               // Resend button
               TextButton(
                 onPressed: viewModel.isLoading ? null : _resendVerification,
-                child: const Text(
-                  'Resend Verification Email',
-                  style: TextStyle(
+                child: Text(
+                  context.t(
+                    'Resend Verification Email',
+                    'Gửi lại email xác thực',
+                  ),
+                  style: const TextStyle(
                     color: Color(0xFF4C40F7),
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -154,7 +179,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   );
                 },
                 child: Text(
-                  'Back to Login',
+                  context.t('Back to Login', 'Quay lại đăng nhập'),
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 14,

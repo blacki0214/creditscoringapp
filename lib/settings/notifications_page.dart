@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/settings_viewmodel.dart';
+import '../utils/app_localization.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -33,9 +34,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          context.t('Notifications', 'Thông báo'),
+          style: const TextStyle(color: Colors.black),
         ),
       ),
       body: SafeArea(
@@ -45,9 +46,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              const Text(
-                'Notification Settings',
-                style: TextStyle(
+              Text(
+                context.t('Notification Settings', 'Cài đặt thông báo'),
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -55,7 +56,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Manage how you receive notifications',
+                context.t(
+                  'Manage how you receive notifications',
+                  'Quản lý cách bạn nhận thông báo',
+                ),
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -66,10 +70,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
               // Master notification toggle
               _buildSwitchCard(
                 icon: Icons.notifications_active,
-                title: 'Push Notifications',
+                title: context.t('Push Notifications', 'Thông báo đẩy'),
                 subtitle: settingsVM.pushEnabled 
-                    ? 'Notifications are enabled' 
-                    : 'Notifications are disabled',
+                    ? context.t(
+                        'Notifications are enabled',
+                        'Thông báo đang bật',
+                      )
+                    : context.t(
+                        'Notifications are disabled',
+                        'Thông báo đang tắt',
+                      ),
                 value: settingsVM.pushEnabled,
                 onChanged: (value) {
                   settingsVM.updateNotificationSetting('pushEnabled', value);
@@ -81,10 +91,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               // Sound toggle
               _buildSwitchCard(
                 icon: Icons.volume_up,
-                title: 'Notification Sound',
+                title: context.t('Notification Sound', 'Âm thanh thông báo'),
                 subtitle: settingsVM.soundEnabled 
-                    ? 'Sound is on' 
-                    : 'Sound is off',
+                  ? context.t('Sound is on', 'Âm thanh đang bật')
+                  : context.t('Sound is off', 'Âm thanh đang tắt'),
                 value: settingsVM.soundEnabled,
                 onChanged: settingsVM.pushEnabled ? (value) {
                   settingsVM.updateNotificationSetting('soundEnabled', value);
@@ -96,10 +106,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               // Vibration toggle
               _buildSwitchCard(
                 icon: Icons.vibration,
-                title: 'Vibration',
+                title: context.t('Vibration', 'Rung'),
                 subtitle: settingsVM.vibrationEnabled 
-                    ? 'Vibration is on' 
-                    : 'Vibration is off',
+                  ? context.t('Vibration is on', 'Rung đang bật')
+                  : context.t('Vibration is off', 'Rung đang tắt'),
                 value: settingsVM.vibrationEnabled,
                 onChanged: settingsVM.pushEnabled ? (value) {
                   settingsVM.updateNotificationSetting('vibrationEnabled', value);
@@ -109,9 +119,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
               const SizedBox(height: 32),
 
               // Snooze section
-              const Text(
-                'Snooze Notifications',
-                style: TextStyle(
+              Text(
+                context.t('Snooze Notifications', 'Tạm dừng thông báo'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -119,7 +129,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Temporarily turn off notifications',
+                context.t(
+                  'Temporarily turn off notifications',
+                  'Tạm thời tắt thông báo',
+                ),
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -136,32 +149,65 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 child: Column(
                   children: [
-                    _buildSnoozeOption('None', 'Notifications are active'),
+                    _buildSnoozeOption(
+                      context.t('None', 'Không'),
+                      context.t(
+                        'Notifications are active',
+                        'Thông báo đang hoạt động',
+                      ),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('1 Hour', 'Mute for 1 hour'),
+                    _buildSnoozeOption(
+                      context.t('1 Hour', '1 giờ'),
+                      context.t('Mute for 1 hour', 'Tắt trong 1 giờ'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('2 Hours', 'Mute for 2 hours'),
+                    _buildSnoozeOption(
+                      context.t('2 Hours', '2 giờ'),
+                      context.t('Mute for 2 hours', 'Tắt trong 2 giờ'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('4 Hours', 'Mute for 4 hours'),
+                    _buildSnoozeOption(
+                      context.t('4 Hours', '4 giờ'),
+                      context.t('Mute for 4 hours', 'Tắt trong 4 giờ'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('8 Hours', 'Mute for 8 hours'),
+                    _buildSnoozeOption(
+                      context.t('8 Hours', '8 giờ'),
+                      context.t('Mute for 8 hours', 'Tắt trong 8 giờ'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('1 Day', 'Mute for 1 day'),
+                    _buildSnoozeOption(
+                      context.t('1 Day', '1 ngày'),
+                      context.t('Mute for 1 day', 'Tắt trong 1 ngày'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('2 Days', 'Mute for 2 days'),
+                    _buildSnoozeOption(
+                      context.t('2 Days', '2 ngày'),
+                      context.t('Mute for 2 days', 'Tắt trong 2 ngày'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('1 Week', 'Mute for 1 week'),
+                    _buildSnoozeOption(
+                      context.t('1 Week', '1 tuần'),
+                      context.t('Mute for 1 week', 'Tắt trong 1 tuần'),
+                    ),
                     const Divider(height: 24),
-                    _buildSnoozeOption('Forever', 'Disable all notifications'),
+                    _buildSnoozeOption(
+                      context.t('Forever', 'Mãi mãi'),
+                      context.t(
+                        'Disable all notifications',
+                        'Tắt tất cả thông báo',
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 32),
 
               // Notification channels
-              const Text(
-                'Notification Channels',
-                style: TextStyle(
+              Text(
+                context.t('Notification Channels', 'Kênh thông báo'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -171,8 +217,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
               _buildSwitchCard(
                 icon: Icons.email_outlined,
-                title: 'Email Notifications',
-                subtitle: 'Receive notifications via email',
+                title: context.t('Email Notifications', 'Thông báo Email'),
+                subtitle: context.t(
+                  'Receive notifications via email',
+                  'Nhận thông báo qua email',
+                ),
                 value: settingsVM.emailNotifications,
                 onChanged: (value) {
                   settingsVM.updateNotificationSetting('emailNotifications', value);
@@ -183,8 +232,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
               _buildSwitchCard(
                 icon: Icons.sms_outlined,
-                title: 'SMS Notifications',
-                subtitle: 'Receive notifications via SMS',
+                title: context.t('SMS Notifications', 'Thông báo SMS'),
+                subtitle: context.t(
+                  'Receive notifications via SMS',
+                  'Nhận thông báo qua SMS',
+                ),
                 value: settingsVM.smsNotifications,
                 onChanged: (value) {
                   settingsVM.updateNotificationSetting('smsNotifications', value);
@@ -194,9 +246,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
               const SizedBox(height: 32),
 
               // Notification types
-              const Text(
-                'Notification Types',
-                style: TextStyle(
+              Text(
+                context.t('Notification Types', 'Loại thông báo'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -206,8 +258,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
               _buildSwitchCard(
                 icon: Icons.account_balance_wallet_outlined,
-                title: 'Loan Updates',
-                subtitle: 'Application status and loan approvals',
+                title: context.t('Loan Updates', 'Cập nhật khoản vay'),
+                subtitle: context.t(
+                  'Application status and loan approvals',
+                  'Trạng thái hồ sơ và phê duyệt khoản vay',
+                ),
                 value: settingsVM.loanUpdates,
                 onChanged: settingsVM.pushEnabled ? (value) {
                   settingsVM.updateNotificationSetting('loanUpdates', value);
@@ -218,8 +273,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
               _buildSwitchCard(
                 icon: Icons.trending_up,
-                title: 'Credit Score Updates',
-                subtitle: 'Changes in your credit score',
+                title: context.t(
+                  'Credit Score Updates',
+                  'Cập nhật điểm tín dụng',
+                ),
+                subtitle: context.t(
+                  'Changes in your credit score',
+                  'Thay đổi điểm tín dụng của bạn',
+                ),
                 value: settingsVM.creditScoreUpdates,
                 onChanged: settingsVM.pushEnabled ? (value) {
                   settingsVM.updateNotificationSetting('creditScoreUpdates', value);
@@ -230,8 +291,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
               _buildSwitchCard(
                 icon: Icons.payment,
-                title: 'Payment Reminders',
-                subtitle: 'Upcoming payment due dates',
+                title: context.t('Payment Reminders', 'Nhắc nhở thanh toán'),
+                subtitle: context.t(
+                  'Upcoming payment due dates',
+                  'Ngày đến hạn thanh toán sắp tới',
+                ),
                 value: settingsVM.paymentReminders,
                 onChanged: settingsVM.pushEnabled ? (value) {
                   settingsVM.updateNotificationSetting('paymentReminders', value);
@@ -242,8 +306,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
               _buildSwitchCard(
                 icon: Icons.local_offer_outlined,
-                title: 'Promotional Offers',
-                subtitle: 'Special offers and promotions',
+                title: context.t('Promotional Offers', 'Ưu đãi khuyến mãi'),
+                subtitle: context.t(
+                  'Special offers and promotions',
+                  'Ưu đãi và khuyến mãi đặc biệt',
+                ),
                 value: settingsVM.promotionalOffers,
                 onChanged: settingsVM.pushEnabled ? (value) {
                   settingsVM.updateNotificationSetting('promotionalOffers', value);
@@ -272,7 +339,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Some notifications may still be delivered for important account activities and security alerts.',
+                        context.t(
+                          'Some notifications may still be delivered for important account activities and security alerts.',
+                          'Một số thông báo quan trọng về tài khoản và bảo mật vẫn có thể được gửi.',
+                        ),
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade700,

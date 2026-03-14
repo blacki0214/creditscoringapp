@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'success_page.dart';
+import '../utils/app_localization.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -18,16 +19,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter a password';
+      return context.t('Please enter a password', 'Vui lòng nhập mật khẩu');
     }
     if (value.length < 8) {
-      return 'Password must be at least 8 characters';
+      return context.t('Password must be at least 8 characters', 'Mật khẩu phải có ít nhất 8 ký tự');
     }
     if (!value.contains(RegExp(r'[A-Z]'))) {
-      return 'Password must contain at least 1 uppercase letter';
+      return context.t('Password must contain at least 1 uppercase letter', 'Mật khẩu phải có ít nhất 1 chữ in hoa');
     }
     if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Password must contain at least 1 number';
+      return context.t('Password must contain at least 1 number', 'Mật khẩu phải có ít nhất 1 chữ số');
     }
     return null;
   }
@@ -35,10 +36,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   /// Validate confirm password matches new password
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return context.t('Please confirm your password', 'Vui lòng xác nhận mật khẩu');
     }
     if (value != _newPasswordController.text) {
-      return 'Passwords do not match';
+      return context.t('Passwords do not match', 'Mật khẩu xác nhận không khớp');
     }
     return null;
   }
@@ -54,9 +55,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Change password',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          context.t('Change password', 'Đổi mật khẩu'),
+          style: const TextStyle(color: Colors.black),
         ),
       ),
       body: SafeArea(
@@ -87,9 +88,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                   const SizedBox(height: 40),
                   // Title
-                  const Text(
-                    'Create New Password',
-                    style: TextStyle(
+                  Text(
+                    context.t('Create New Password', 'Tạo mật khẩu mới'),
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
@@ -97,7 +98,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Your new password must be different from previously used passwords.',
+                    context.t(
+                      'Your new password must be different from previously used passwords.',
+                      'Mật khẩu mới của bạn phải khác các mật khẩu đã dùng trước đó.',
+                    ),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -111,8 +115,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     maxLength: 50,
                     obscureText: _obscureNewPassword,
                     decoration: InputDecoration(
-                      labelText: 'New Password',
-                      hintText: 'Enter new password',
+                      labelText: context.t('New Password', 'Mật khẩu mới'),
+                      hintText: context.t('Enter new password', 'Nhập mật khẩu mới'),
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -140,7 +144,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           width: 2,
                         ),
                       ),
-                      helperText: 'At least 8 characters, 1 uppercase letter, 1 number',
+                      helperText: context.t(
+                        'At least 8 characters, 1 uppercase letter, 1 number',
+                        'Ít nhất 8 ký tự, 1 chữ in hoa, 1 chữ số',
+                      ),
                       helperStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                       counterText: '', // Hide character counter
                     ),
@@ -153,8 +160,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     maxLength: 50,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      hintText: 'Re-enter password',
+                      labelText: context.t('Confirm Password', 'Xác nhận mật khẩu'),
+                      hintText: context.t('Re-enter password', 'Nhập lại mật khẩu'),
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -208,9 +215,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'Reset Password',
-                        style: TextStyle(
+                      child: Text(
+                        context.t('Reset Password', 'Đặt lại mật khẩu'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
