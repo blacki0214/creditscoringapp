@@ -49,6 +49,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: Container(
+        constraints: const BoxConstraints(minHeight: 76),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -57,7 +58,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -80,6 +81,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     const activeColor = Color(0xFF4D4AF9);
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         setState(() {
           _previousIndex = _selectedIndex;
@@ -87,28 +89,34 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
         });
         _animationController.forward(from: 0.0);
       },
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          double animationValue;
+      child: SizedBox(
+        width: 64,
+        height: 52,
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              double animationValue;
 
-          if (isCurrentlySelected) {
-            // Item becoming selected: animate from grey to blue
-            animationValue = _animationController.value;
-          } else if (wasPreviouslySelected) {
-            // Item being deselected: animate from blue to grey
-            animationValue = 1.0 - _animationController.value;
-          } else {
-            // Item not involved in animation: stay grey
-            animationValue = 0.0;
-          }
+              if (isCurrentlySelected) {
+                // Item becoming selected: animate from grey to blue
+                animationValue = _animationController.value;
+              } else if (wasPreviouslySelected) {
+                // Item being deselected: animate from blue to grey
+                animationValue = 1.0 - _animationController.value;
+              } else {
+                // Item not involved in animation: stay grey
+                animationValue = 0.0;
+              }
 
-          return Icon(
-            icon,
-            color: Color.lerp(inactiveColor, activeColor, animationValue),
-            size: 24,
-          );
-        },
+              return Icon(
+                icon,
+                color: Color.lerp(inactiveColor, activeColor, animationValue),
+                size: 26,
+              );
+            },
+          ),
+        ),
       ),
     );
   }

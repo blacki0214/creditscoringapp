@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firebase_user_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/test_account_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final FirebaseAuthService _authService = FirebaseAuthService();
@@ -141,6 +142,7 @@ class AuthViewModel extends ChangeNotifier {
         email: email,
         password: password,
       );
+      await TestAccountService.applyLoginMode(email);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -228,6 +230,7 @@ class AuthViewModel extends ChangeNotifier {
 
   // Sign out
   Future<void> signOut() async {
+    await TestAccountService.clearOnSignOut();
     await _authService.signOut();
     notifyListeners();
   }
@@ -588,6 +591,9 @@ class AuthViewModel extends ChangeNotifier {
       _setLoading(true);
       
       final result = await _authService.signInWithGoogle();
+      if (result != null) {
+        await TestAccountService.applyLoginMode(result.user?.email);
+      }
       
       _setLoading(false);
       

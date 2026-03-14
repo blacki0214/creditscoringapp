@@ -15,6 +15,7 @@ import '../settings/support_page.dart';
 import '../loan/step3_additional_info.dart';
 import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import 'application_contract_status_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -518,8 +519,8 @@ class _HomePageState extends State<HomePage> {
                                                         vertical: 12,
                                                       ),
                                                   color: notification.isRead
-                                                      ? Colors.white
-                                                      : const Color(0xFFF5F5F5),
+                                                      ? const Color(0xFFF5F5F5)
+                                                      : Colors.white,
                                                   child: Row(
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment
@@ -590,6 +591,13 @@ class _HomePageState extends State<HomePage> {
                                                                           : FontWeight.w600,
                                                                       fontSize:
                                                                           14,
+                                                                      color: notification
+                                                                              .isRead
+                                                                          ? Colors.grey
+                                                                              .shade700
+                                                                          : const Color(
+                                                                              0xFF1A1F3F,
+                                                                            ),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -600,13 +608,17 @@ class _HomePageState extends State<HomePage> {
                                                             ),
                                                             Text(
                                                               notification.body,
-                                                              style:
-                                                                  const TextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: Colors
-                                                                        .grey,
-                                                                  ),
+                                                              style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: notification
+                                                                  .isRead
+                                                                ? Colors
+                                                                  .grey
+                                                                  .shade600
+                                                                : Colors
+                                                                  .grey
+                                                                  .shade800,
+                                                              ),
                                                               maxLines: 2,
                                                               overflow:
                                                                   TextOverflow
@@ -1305,7 +1317,7 @@ class _HomePageState extends State<HomePage> {
             Icon(Icons.history, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'No History Yet',
+              'No Applications Yet',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1314,7 +1326,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Complete a loan to see history here',
+              'Your loan applications will appear here',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
@@ -1347,76 +1359,113 @@ class _HomePageState extends State<HomePage> {
             final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
             final isApproved = app['approved'] == true;
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isApproved
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFEF5350),
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    isApproved ? Icons.check_circle : Icons.cancel,
+            return InkWell(
+              onTap: isApproved
+                  ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ApplicationContractStatusPage(
+                            application: Map<String, dynamic>.from(app),
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
                     color: isApproved
                         ? const Color(0xFF4CAF50)
                         : const Color(0xFFEF5350),
-                    size: 24,
+                    width: 1.5,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isApproved ? Icons.check_circle : Icons.cancel,
+                      color: isApproved
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFEF5350),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isApproved ? 'Approved' : 'Rejected',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isApproved
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFEF5350),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          if (isApproved) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'Tap to view contract status',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          isApproved ? 'Approved' : 'Rejected',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: isApproved
-                                ? const Color(0xFF4CAF50)
-                                : const Color(0xFFEF5350),
+                        if (isApproved &&
+                            app['loanAmount'] != null &&
+                            (app['loanAmount'] as num) > 0)
+                          Text(
+                            currencyFormat.format(app['loanAmount']),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1F3F),
+                            ),
+                          )
+                        else if (!isApproved)
+                          Text(
+                            'Not approved',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade500,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          dateStr,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
                       ],
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Score: ${app['creditScore'] ?? 'N/A'}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Amount: ${app['loanAmount'] != null ? currencyFormat.format(app['loanAmount']) : 'N/A'}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
+                    if (isApproved) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Colors.grey.shade500,
                       ),
                     ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -1458,13 +1507,6 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () {
         viewModel.setPeriod(label);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Viewing $label data'),
-            backgroundColor: const Color(0xFF4C40F7),
-            duration: const Duration(seconds: 1),
-          ),
-        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
