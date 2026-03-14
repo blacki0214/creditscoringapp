@@ -10,6 +10,7 @@ class LocalStorageService {
   static const String _keyOtpThrottle = 'otp_throttle_map';
   static const String _keyHasCompletedEkyc = 'has_completed_ekyc';
   static const String _keyEkycPrefill = 'ekyc_prefill_data';
+  static const String _keyIsTestAccountMode = 'is_test_account_mode';
 
   static SharedPreferences? _prefs;
 
@@ -258,6 +259,29 @@ class LocalStorageService {
       return await prefs.remove(_keyEkycPrefill);
     } catch (e) {
       print('Error clearing eKYC prefill: $e');
+      return false;
+    }
+  }
+
+  // Test account mode tracking to safely isolate test-only bypasses.
+  static Future<bool> setTestAccountMode(bool enabled) async {
+    try {
+      return await prefs.setBool(_keyIsTestAccountMode, enabled);
+    } catch (e) {
+      print('Error setting test account mode: $e');
+      return false;
+    }
+  }
+
+  static bool isTestAccountMode() {
+    return prefs.getBool(_keyIsTestAccountMode) ?? false;
+  }
+
+  static Future<bool> clearTestAccountMode() async {
+    try {
+      return await prefs.remove(_keyIsTestAccountMode);
+    } catch (e) {
+      print('Error clearing test account mode: $e');
       return false;
     }
   }

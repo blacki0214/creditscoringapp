@@ -138,7 +138,8 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (LocalStorageService.hasCompletedEkyc()) {
+                              if (LocalStorageService.hasCompletedEkyc() ||
+                                  LocalStorageService.isTestAccountMode()) {
                                 viewModel.applySavedEkycPrefill();
                                 if (!viewModel.step1Completed) {
                                   viewModel.completeStep1();

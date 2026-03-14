@@ -57,3 +57,5 @@ vnpt_ekyc/vnpt_ekyc.pdf
 lib/firebase_options.dart
 android/app/google-services.json
 lib/config/vnpt_config.dart
+
+.github/skills/**/*.md
