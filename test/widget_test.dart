@@ -13,5 +13,6 @@ void main() {
 
     // Dispose the widget to cancel the pending Timer in SplashScreen
     await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 4));
   });
 }

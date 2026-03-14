@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import '../config/app_environment.dart';
 import '../services/local_storage_service.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step1_id_capture.dart';
@@ -138,8 +139,12 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (LocalStorageService.hasCompletedEkyc() ||
-                                  LocalStorageService.isTestAccountMode()) {
+                              if (AppEnvironment.shouldSkipEkyc(
+                                hasCompletedEkyc:
+                                    LocalStorageService.hasCompletedEkyc(),
+                                isTestAccountMode:
+                                    LocalStorageService.isTestAccountMode(),
+                              )) {
                                 viewModel.applySavedEkycPrefill();
                                 if (!viewModel.step1Completed) {
                                   viewModel.completeStep1();

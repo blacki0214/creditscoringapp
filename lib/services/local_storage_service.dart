@@ -11,6 +11,7 @@ class LocalStorageService {
   static const String _keyHasCompletedEkyc = 'has_completed_ekyc';
   static const String _keyEkycPrefill = 'ekyc_prefill_data';
   static const String _keyIsTestAccountMode = 'is_test_account_mode';
+  static const String _keyAppLanguage = 'app_language';
 
   static SharedPreferences? _prefs;
 
@@ -284,5 +285,18 @@ class LocalStorageService {
       print('Error clearing test account mode: $e');
       return false;
     }
+  }
+
+  static Future<bool> setAppLanguage(String languageCode) async {
+    try {
+      return await prefs.setString(_keyAppLanguage, languageCode);
+    } catch (e) {
+      print('Error saving app language: $e');
+      return false;
+    }
+  }
+
+  static String getAppLanguage() {
+    return prefs.getString(_keyAppLanguage) ?? 'en';
   }
 }

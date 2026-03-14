@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +13,7 @@ import 'viewmodels/loan_viewmodel.dart';
 import 'viewmodels/settings_viewmodel.dart';
 import 'viewmodels/feedback_viewmodel.dart';
 import 'viewmodels/support_viewmodel.dart';
+import 'viewmodels/language_viewmodel.dart';
 import 'services/local_storage_service.dart';
 import 'services/vnpt_ekyc_service.dart';
 import 'services/vnpt_credentials_manager.dart';
@@ -92,56 +94,68 @@ class VietCreditApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SettingsViewModel()),
         ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
         ChangeNotifierProvider(create: (_) => SupportViewModel()),
+        ChangeNotifierProvider(create: (_) => LanguageViewModel()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          scaffoldBackgroundColor: Colors.white,
-          fontFamily: 'Inter',
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: primaryGreen,
-            primary: primaryGreen,
-          ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: primaryGreen,
-            foregroundColor: Colors.white,
-            centerTitle: true,
-            elevation: 0,
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+      child: Consumer<LanguageViewModel>(
+        builder: (context, languageVm, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: languageVm.locale,
+          supportedLocales: const [Locale('en'), Locale('vi')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: ThemeData(
+            scaffoldBackgroundColor: Colors.white,
+            fontFamily: 'Inter',
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: primaryGreen,
+              primary: primaryGreen,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: primaryGreen, width: 1.4),
-            ),
-            labelStyle: const TextStyle(color: Color(0xFF9E9E9E)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
+            appBarTheme: const AppBarTheme(
               backgroundColor: primaryGreen,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              centerTitle: true,
               elevation: 0,
             ),
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: primaryGreen, width: 1.4),
+              ),
+              labelStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
           ),
+          home: const SplashScreen(),
+          routes: {
+            '/step3_additional_info': (context) =>
+                const Step3AdditionalInfoPage(),
+            '/step4_offer_calculator': (context) =>
+                const Step4OfferCalculatorPage(),
+          },
         ),
-        home: const SplashScreen(),
-        routes: {
-          '/step3_additional_info': (context) => const Step3AdditionalInfoPage(),
-          '/step4_offer_calculator': (context) => const Step4OfferCalculatorPage(),
-        },
       ),
     );
   }

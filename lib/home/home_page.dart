@@ -540,6 +540,18 @@ class _HomePageState extends State<HomePage> {
                                                               BorderRadius.circular(
                                                                 8,
                                                               ),
+                                                          border: notification
+                                                                  .isRead
+                                                              ? null
+                                                              : Border.all(
+                                                                  color: Color(
+                                                                    notification
+                                                                        .colorValue,
+                                                                  ).withOpacity(
+                                                                    0.35,
+                                                                  ),
+                                                                  width: 1.2,
+                                                                ),
                                                         ),
                                                         child: Icon(
                                                           _getNotificationIcon(
@@ -549,7 +561,10 @@ class _HomePageState extends State<HomePage> {
                                                             notification
                                                                 .colorValue,
                                                           ),
-                                                          size: 20,
+                                                          size: notification
+                                                                  .isRead
+                                                              ? 20
+                                                              : 22,
                                                         ),
                                                       ),
                                                       const SizedBox(width: 12),
@@ -588,7 +603,7 @@ class _HomePageState extends State<HomePage> {
                                                                           notification
                                                                               .isRead
                                                                           ? FontWeight.w500
-                                                                          : FontWeight.w600,
+                                                                        : FontWeight.w700,
                                                                       fontSize:
                                                                           14,
                                                                       color: notification
@@ -610,6 +625,10 @@ class _HomePageState extends State<HomePage> {
                                                               notification.body,
                                                               style: TextStyle(
                                                               fontSize: 12,
+                                                              fontWeight: notification
+                                                                  .isRead
+                                                                ? FontWeight.w400
+                                                                : FontWeight.w600,
                                                               color: notification
                                                                   .isRead
                                                                 ? Colors
