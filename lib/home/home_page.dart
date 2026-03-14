@@ -519,8 +519,8 @@ class _HomePageState extends State<HomePage> {
                                                         vertical: 12,
                                                       ),
                                                   color: notification.isRead
-                                                      ? Colors.white
-                                                      : const Color(0xFFF5F5F5),
+                                                      ? const Color(0xFFF5F5F5)
+                                                      : Colors.white,
                                                   child: Row(
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment
@@ -591,6 +591,13 @@ class _HomePageState extends State<HomePage> {
                                                                           : FontWeight.w600,
                                                                       fontSize:
                                                                           14,
+                                                                      color: notification
+                                                                              .isRead
+                                                                          ? Colors.grey
+                                                                              .shade700
+                                                                          : const Color(
+                                                                              0xFF1A1F3F,
+                                                                            ),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -601,13 +608,17 @@ class _HomePageState extends State<HomePage> {
                                                             ),
                                                             Text(
                                                               notification.body,
-                                                              style:
-                                                                  const TextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: Colors
-                                                                        .grey,
-                                                                  ),
+                                                              style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: notification
+                                                                  .isRead
+                                                                ? Colors
+                                                                  .grey
+                                                                  .shade600
+                                                                : Colors
+                                                                  .grey
+                                                                  .shade800,
+                                                              ),
                                                               maxLines: 2,
                                                               overflow:
                                                                   TextOverflow
