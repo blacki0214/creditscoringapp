@@ -58,13 +58,13 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/logo.png',
+              'assets/images/SwinCredit_logo.png',
               width: 350,
               height: 350,
             ),
             const SizedBox(height: 24),
             const Text(
-              'VietCredit',
+              'SwinCredit',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,

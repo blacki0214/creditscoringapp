@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step4_offer_calculator.dart';
+import '../utils/app_localization.dart';
 
 class Step3AdditionalInfoPage extends StatefulWidget {
   const Step3AdditionalInfoPage({super.key});
@@ -148,9 +149,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Step 3: Additional Information',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Step 3: Additional Information', 'Bước 3: Thông tin bổ sung'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -167,9 +168,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Additional Details',
-                        style: TextStyle(
+                      Text(
+                        context.t('Additional Details', 'Chi tiết bổ sung'),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1F3F),
@@ -177,7 +178,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Please provide additional information to complete your loan application.',
+                        context.t('Please provide additional information to complete your loan application.', 'Vui lòng cung cấp thêm thông tin để hoàn tất hồ sơ vay.'),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -185,12 +186,12 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      _buildSectionHeader('Employment Information'),
+                      _buildSectionHeader(context.t('Employment Information', 'Thông tin công việc')),
                       _buildTextField(
                         fieldKey: _employerNameFieldKey,
                         controller: _employerNameController,
                         focusNode: _employerNameFocusNode,
-                        label: 'Employer Name',
+                        label: context.t('Employer Name', 'Tên công ty'),
                         icon: Icons.business,
                         maxLength: 50,
                         inputFormatters: [
@@ -206,7 +207,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _jobTitleFieldKey,
                         controller: _jobTitleController,
                         focusNode: _jobTitleFocusNode,
-                        label: 'Job Title',
+                        label: context.t('Job Title', 'Chức danh công việc'),
                         icon: Icons.work,
                         maxLength: 50,
                         inputFormatters: [
@@ -222,7 +223,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _workPhoneFieldKey,
                         controller: _workPhoneController,
                         focusNode: _workPhoneFocusNode,
-                        label: 'Work Phone Number',
+                        label: context.t('Work Phone Number', 'Số điện thoại công việc'),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 10,

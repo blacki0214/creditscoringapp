@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/app_localization.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -14,9 +15,9 @@ class PrivacyPolicyPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Privacy Policy',
-          style: TextStyle(
+        title: Text(
+          context.t('Privacy Policy', 'Chính sách bảo mật'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -42,7 +43,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                 const Icon(Icons.update, color: Color(0xFF4C40F7), size: 20),
                 const SizedBox(width: 12),
                 Text(
-                  'Last updated: November 24, 2025',
+                  context.t('Last updated: November 24, 2025', 'Cập nhật lần cuối: 24/11/2025'),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 14,
@@ -148,14 +149,14 @@ class PrivacyPolicyPage extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Privacy policy downloaded'),
+                      SnackBar(
+                        content: Text(context.t('Privacy policy downloaded', 'Đã tải chính sách bảo mật')),
                         backgroundColor: Color(0xFF4CAF50),
                       ),
                     );
                   },
                   icon: const Icon(Icons.download_outlined, size: 20),
-                  label: const Text('Download PDF'),
+                  label: Text(context.t('Download PDF', 'Tải PDF')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF4C40F7),
                     side: const BorderSide(color: Color(0xFF4C40F7)),
@@ -173,7 +174,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                     Navigator.pop(context);
                   },
                   icon: const Icon(Icons.check, size: 20),
-                  label: const Text('Accept'),
+                  label: Text(context.t('Accept', 'Đồng ý')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4C40F7),
                     foregroundColor: Colors.white,

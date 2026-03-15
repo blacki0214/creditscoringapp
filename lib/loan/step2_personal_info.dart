@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../home/main_shell.dart';
+import '../utils/app_localization.dart';
 
 class Step2PersonalInfoPage extends StatefulWidget {
   const Step2PersonalInfoPage({super.key});
@@ -138,9 +139,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Step 2: Personal Information',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Step 2: Personal Information', 'Bước 2: Thông tin cá nhân'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -157,9 +158,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Complete your profile',
-                        style: TextStyle(
+                      Text(
+                        context.t('Complete your profile', 'Hoàn thiện hồ sơ của bạn'),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1F3F),
@@ -167,7 +168,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Please provide accurate information for credit scoring.',
+                        context.t('Please provide accurate information for credit scoring.', 'Vui lòng cung cấp thông tin chính xác để chấm điểm tín dụng.'),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -188,9 +189,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Do you have credit history?',
-                              style: TextStyle(
+                            Text(
+                              context.t('Do you have credit history?', 'Bạn có lịch sử tín dụng không?'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF1A1F3F),
@@ -201,9 +202,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                               children: [
                                 Expanded(
                                   child: RadioListTile<bool>(
-                                    title: const Text(
-                                      'Yes, I have credit history',
-                                    ),
+                                    title: Text(context.t('Yes, I have credit history', 'Có, tôi có lịch sử tín dụng')),
                                     value: true,
                                     groupValue: _hasCreditHistory,
                                     onChanged: (val) =>
@@ -218,7 +217,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                               children: [
                                 Expanded(
                                   child: RadioListTile<bool>(
-                                    title: const Text('No, I\'m new to credit'),
+                                    title: Text(context.t('No, I\'m new to credit', 'Không, tôi mới bắt đầu tín dụng')),
                                     value: false,
                                     groupValue: _hasCreditHistory,
                                     onChanged: (val) =>

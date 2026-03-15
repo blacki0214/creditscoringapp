@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step5_contractreview.dart';
+import '../utils/app_localization.dart';
 
 class Step4OfferCalculatorPage extends StatefulWidget {
   const Step4OfferCalculatorPage({super.key});
@@ -95,8 +96,12 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     final offer = vm.currentOffer;
 
     if (offer == null) {
-      return const Scaffold(
-        body: Center(child: Text('No offer available. Please go back.')),
+      return Scaffold(
+        body: Center(
+          child: Text(
+            context.t('No offer available. Please go back.', 'Không có đề nghị khoản vay. Vui lòng quay lại.'),
+          ),
+        ),
       );
     }
 
@@ -130,9 +135,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Step 4: Loan Calculator',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Step 4: Loan Calculator', 'Bước 4: Tính khoản vay'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -149,9 +154,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Calculate Your Loan',
-                        style: TextStyle(
+                      Text(
+                        context.t('Calculate Your Loan', 'Tính khoản vay của bạn'),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1F3F),
@@ -159,7 +164,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Select your loan purpose and financing options.',
+                        context.t('Select your loan purpose and financing options.', 'Chọn mục đích vay và phương án tài chính.'),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,

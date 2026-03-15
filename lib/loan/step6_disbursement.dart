@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
+import '../utils/app_localization.dart';
 
 class Step6DisbursementPage extends StatefulWidget {
   const Step6DisbursementPage({super.key});
@@ -37,8 +38,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeToDisbursement) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the disbursement terms'),
+        SnackBar(
+          content: Text(context.t('Please agree to the disbursement terms', 'Vui lòng đồng ý điều khoản giải ngân')),
           backgroundColor: Colors.red,
         ),
       );
@@ -63,8 +64,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Disbursement details submitted successfully!'),
+          SnackBar(
+            content: Text(context.t('Disbursement details submitted successfully!', 'Thông tin giải ngân đã được gửi thành công!')),
             backgroundColor: Color(0xFF4CAF50),
             duration: Duration(seconds: 2),
           ),
@@ -75,7 +76,7 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${context.t('Error', 'Lỗi')}: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -102,9 +103,9 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Step 6: Disbursement',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          context.t('Step 6: Disbursement', 'Bước 6: Giải ngân'),
+          style: const TextStyle(color: Colors.black),
         ),
       ),
       body: SafeArea(
@@ -118,9 +119,9 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Loan Disbursement',
-                        style: TextStyle(
+                      Text(
+                        context.t('Loan Disbursement', 'Giải ngân khoản vay'),
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1F3F),
@@ -128,7 +129,7 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Enter your bank details to receive the loan amount',
+                        context.t('Enter your bank details to receive the loan amount', 'Nhập thông tin ngân hàng để nhận tiền vay'),
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey.shade600,

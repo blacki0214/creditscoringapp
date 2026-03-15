@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
+import '../utils/app_localization.dart';
 import 'step1_selfie.dart';
 
 class Step1IDCapturePage extends StatefulWidget {
@@ -37,8 +38,13 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
     if (_autoFlowRunning || !mounted) return;
     if (!_isMobile) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Auto-scan is only available on Android/iOS devices.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Auto-scan is only available on Android/iOS devices.',
+              'Quét tự động chỉ khả dụng trên Android/iOS.',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -141,18 +147,22 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Authentication failed'),
+        title: Text(context.t('Authentication failed', 'Xác thực thất bại')),
         content: Text(
           loanViewModel.vnptErrorMessage ??
-              'Cannot recognize the ID card. Please rescan clearly.',
+              context.t(
+                'Cannot recognize the ID card. Please rescan clearly.',
+                'Không thể nhận diện CCCD. Vui lòng quét lại rõ hơn.',
+              ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.t('Cancel', 'Hủy')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Rescan'),
+            child: Text(context.t('Rescan', 'Quét lại')),
           ),
         ],
       ),
@@ -162,8 +172,13 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
     if (result != true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Scan cancelled. Tap Retry Auto-Scan to try again.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Scan cancelled. Tap Retry Auto-Scan to try again.',
+              'Đã hủy quét. Nhấn thử quét lại tự động để tiếp tục.',
+            ),
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -224,9 +239,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
-              'Scoring - Step 1 EKYC',
-              style: TextStyle(color: Colors.black, fontSize: 16),
+            title: Text(
+              context.t('Scoring - Step 1 EKYC', 'Chấm điểm - Bước 1 EKYC'),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           body: SafeArea(
@@ -238,9 +253,12 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        const Text(
-                          'Step 1: Verify your identity',
-                          style: TextStyle(
+                        Text(
+                          context.t(
+                            'Step 1: Verify your identity',
+                            'Bước 1: Xác minh danh tính',
+                          ),
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1A1F3F),
@@ -248,7 +266,10 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Auto-scanning front then back ID card',
+                          context.t(
+                            'Auto-scanning front then back ID card',
+                            'Tự động quét mặt trước và mặt sau CCCD',
+                          ),
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey.shade600,
@@ -269,7 +290,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
                         // Front ID Section
                         _buildIDSection(
-                          title: 'Front of ID Card',
+                          title: context.t('Front of ID Card', 'Mặt trước CCCD'),
                           imageData: frontImageData,
                           isLoading: isFrontLoading,
                           isVerifying: isFrontVerifying,
@@ -280,7 +301,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
                         // Back ID Section
                         _buildIDSection(
-                          title: 'Back of ID Card',
+                          title: context.t('Back of ID Card', 'Mặt sau CCCD'),
                           imageData: backImageData,
                           isLoading: isBackLoading,
                           isVerifying: isBackVerifying,
@@ -295,7 +316,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                             child: ElevatedButton.icon(
                               onPressed: _startAutoScanFlow,
                               icon: const Icon(Icons.autorenew),
-                              label: const Text('Retry Auto-Scan'),
+                              label: Text(
+                                context.t('Retry Auto-Scan', 'Thử quét lại tự động'),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4C40F7),
                                 foregroundColor: Colors.white,
@@ -329,7 +352,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         ),
                       ),
                       child: Text(
-                        canContinue ? 'Continue to Selfie' : 'Auto-scanning...',
+                        canContinue
+                          ? context.t('Continue to Selfie', 'Tiếp tục chụp khuôn mặt')
+                          : context.t('Auto-scanning...', 'Đang quét tự động...'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -392,7 +417,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Waiting for auto-scan',
+                    context.t('Waiting for auto-scan', 'Đang chờ quét tự động'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -436,9 +461,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   ),
                 )
               else if (!isProcessed)
-                const Text(
-                  'Verifying...',
-                  style: TextStyle(
+                Text(
+                  context.t('Verifying...', 'Đang xác thực...'),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF4C40F7),
@@ -454,9 +479,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                       size: 24,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Verified',
-                      style: TextStyle(
+                    Text(
+                      context.t('Verified', 'Đã xác thực'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF4CAF50),

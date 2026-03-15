@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step2_personal_info.dart';
+import '../utils/app_localization.dart';
 
 class Step1SelfiePage extends StatefulWidget {
   const Step1SelfiePage({super.key});
@@ -39,7 +40,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${context.t('Error', 'Lỗi')}: $e')),
         );
       }
     } finally {
@@ -76,7 +77,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
       await selectImage();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera error: $e')),
+          SnackBar(content: Text('${context.t('Camera error', 'Lỗi camera')}: $e')),
         );
       }
     } finally {
@@ -99,10 +100,13 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Verification failed'),
+          title: Text(context.t('Verification failed', 'Xác thực thất bại')),
           content: Text(
             loanViewModel.vnptErrorMessage ?? 
-            'Cannot verify your selfie. Please ensure good lighting and try again.',
+            context.t(
+              'Cannot verify your selfie. Please ensure good lighting and try again.',
+              'Không thể xác minh ảnh khuôn mặt. Vui lòng đảm bảo đủ ánh sáng và thử lại.',
+            ),
           ),
           actions: [
             TextButton(
@@ -110,7 +114,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                 Navigator.pop(context);
                 loanViewModel.clearVnptError();
               },
-              child: const Text('Close'),
+              child: Text(context.t('Close', 'Đóng')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -118,7 +122,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                 loanViewModel.clearVnptError();
                 clearImage();
               },
-              child: const Text('Take again'),
+              child: Text(context.t('Take again', 'Chụp lại')),
             ),
           ],
         ),
@@ -157,9 +161,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
-              'Scoring - Step 1 EKYC',
-              style: TextStyle(color: Colors.black, fontSize: 16),
+            title: Text(
+              context.t('Scoring - Step 1 EKYC', 'Chấm điểm - Bước 1 EKYC'),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           body: SafeArea(
@@ -168,9 +172,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  const Text(
-                    'Step 1: Verify your identity',
-                    style: TextStyle(
+                  Text(
+                    context.t('Step 1: Verify your identity', 'Bước 1: Xác minh danh tính'),
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
@@ -178,7 +182,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Take your selfie for verification',
+                    context.t('Take your selfie for verification', 'Chụp ảnh khuôn mặt để xác thực'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -214,7 +218,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Click to capture a selfie image',
+                                context.t('Click to capture a selfie image', 'Nhấn để chụp ảnh khuôn mặt'),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,

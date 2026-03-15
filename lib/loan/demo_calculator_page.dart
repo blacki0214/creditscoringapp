@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
+import '../utils/app_localization.dart';
 
 class DemoCalculatorPage extends StatefulWidget {
   const DemoCalculatorPage({super.key});
@@ -113,9 +114,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             automaticallyImplyLeading: false,
-            title: const Text(
-              'Demo: Financial Calculator',
-              style: TextStyle(color: Colors.black, fontSize: 16),
+            title: Text(
+              context.t('Demo: Financial Calculator', 'Demo: Máy tính tài chính'),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           body: SafeArea(
@@ -133,9 +134,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Calculate Your Financial Profile',
-                            style: TextStyle(
+                          Text(
+                            context.t('Calculate Your Financial Profile', 'Tính hồ sơ tài chính của bạn'),
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1A1F3F),
@@ -143,7 +144,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Enter your information to see your credit score and loan eligibility (no ID verification required).',
+                            context.t('Enter your information to see your credit score and loan eligibility (no ID verification required).', 'Nhập thông tin để xem điểm tín dụng và khả năng vay (không cần xác thực CCCD).'),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,

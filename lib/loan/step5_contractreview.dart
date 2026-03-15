@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step6_disbursement.dart';
+import '../utils/app_localization.dart';
 
 class Step5ContractReviewPage extends StatefulWidget {
   final double loanAmount;
@@ -66,7 +67,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
     final offer = vm.currentOffer;
 
     if (offer == null) {
-      return const Scaffold(body: Center(child: Text('No offer available.')));
+      return Scaffold(
+        body: Center(child: Text(context.t('No offer available.', 'Không có đề nghị khoản vay.'))),
+      );
     }
 
     return Scaffold(
@@ -78,9 +81,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Step 5: Review & Sign Contract',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Step 5: Review & Sign Contract', 'Bước 5: Xem và ký hợp đồng'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -95,9 +98,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Loan Contract Agreement',
-                      style: TextStyle(
+                    Text(
+                      context.t('Loan Contract Agreement', 'Hợp đồng khoản vay'),
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1F3F),
@@ -105,7 +108,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Please review the contract terms and sign to proceed.',
+                      context.t('Please review the contract terms and sign to proceed.', 'Vui lòng xem điều khoản hợp đồng và ký để tiếp tục.'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,

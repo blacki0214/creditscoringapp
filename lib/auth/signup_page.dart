@@ -5,6 +5,7 @@ import '../viewmodels/auth_viewmodel.dart';
 import 'otp_page.dart';
 import 'login_page.dart';
 import 'email_verification_page.dart';
+import '../utils/app_localization.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -56,16 +57,16 @@ class _SignupPageState extends State<SignupPage> {
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return context.t('Please enter your password', 'Vui lòng nhập mật khẩu');
     }
     if (value.length < 8) {
-      return 'Password must be at least 8 characters';
+      return context.t('Password must be at least 8 characters', 'Mật khẩu phải có ít nhất 8 ký tự');
     }
     if (!value.contains(RegExp(r'[A-Z]'))) {
-      return 'Password must contain at least 1 uppercase letter';
+      return context.t('Password must contain at least 1 uppercase letter', 'Mật khẩu phải có ít nhất 1 chữ in hoa');
     }
     if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Password must contain at least 1 number';
+      return context.t('Password must contain at least 1 number', 'Mật khẩu phải có ít nhất 1 chữ số');
     }
     return null;
   }
@@ -73,12 +74,12 @@ class _SignupPageState extends State<SignupPage> {
   /// Validate email format: must be a Gmail address (required)
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return context.t('Please enter your email', 'Vui lòng nhập email');
     }
     // Enforce Gmail format
     final emailRegex = RegExp(r'^[A-Z0-9._%+-]+@gmail\.com$', caseSensitive: false);
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid Gmail address';
+      return context.t('Please enter a valid Gmail address', 'Vui lòng nhập địa chỉ Gmail hợp lệ');
     }
     return null;
   }
@@ -92,10 +93,10 @@ class _SignupPageState extends State<SignupPage> {
     final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
     
     if (cleaned.length != 10) {
-      return 'Phone number must be 10 digits';
+      return context.t('Phone number must be 10 digits', 'Số điện thoại phải có 10 chữ số');
     }
     if (!cleaned.startsWith('0')) {
-      return 'Phone number must start with 0';
+      return context.t('Phone number must start with 0', 'Số điện thoại phải bắt đầu bằng 0');
     }
     return null;
   }
@@ -210,10 +211,10 @@ class _SignupPageState extends State<SignupPage> {
                   // Title
                   Text(
                     viewModel.signupStep == 0
-                        ? 'Create Account'
+                      ? context.t('Create Account', 'Tạo tài khoản')
                         : viewModel.signupStep == 1
-                            ? 'Phone Number (Optional)'
-                            : 'Profile Picture',
+                        ? context.t('Phone Number (Optional)', 'Số điện thoại (không bắt buộc)')
+                        : context.t('Profile Picture', 'Ảnh hồ sơ'),
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -223,10 +224,10 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 8),
                   Text(
                     viewModel.signupStep == 0
-                        ? 'Enter your details to get started'
+                      ? context.t('Enter your details to get started', 'Nhập thông tin để bắt đầu')
                         : viewModel.signupStep == 1
-                            ? 'Add phone for verification (optional)'
-                            : 'Add profile picture (optional)',
+                        ? context.t('Add phone for verification (optional)', 'Thêm số điện thoại để xác thực (không bắt buộc)')
+                        : context.t('Add profile picture (optional)', 'Thêm ảnh hồ sơ (không bắt buộc)'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -248,8 +249,8 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                       ],
                       decoration: InputDecoration(
-                        labelText: 'Full Name',
-                        hintText: 'Enter your full name',
+                        labelText: context.t('Full Name', 'Họ và tên'),
+                        hintText: context.t('Enter your full name', 'Nhập họ và tên'),
                         prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -269,14 +270,14 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
+                          return context.t('Please enter your name', 'Vui lòng nhập họ tên');
                         }
                         if (value.trim().length < 2) {
-                          return 'Name must be at least 2 characters';
+                          return context.t('Name must be at least 2 characters', 'Tên phải có ít nhất 2 ký tự');
                         }
                         if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true)
                             .hasMatch(value)) {
-                          return 'Name can only contain letters and spaces';
+                          return context.t('Name can only contain letters and spaces', 'Tên chỉ được chứa chữ cái và khoảng trắng');
                         }
                         return null;
                       },
@@ -293,8 +294,8 @@ class _SignupPageState extends State<SignupPage> {
                         FilteringTextInputFormatter.deny(RegExp(r'\s')),
                       ],
                       decoration: InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'Enter your email',
+                        labelText: context.t('Email', 'Email'),
+                        hintText: context.t('Enter your email', 'Nhập email của bạn'),
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -326,8 +327,8 @@ class _SignupPageState extends State<SignupPage> {
                       ],
                       obscureText: viewModel.obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter password',
+                        labelText: context.t('Password', 'Mật khẩu'),
+                        hintText: context.t('Enter password', 'Nhập mật khẩu'),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -369,8 +370,8 @@ class _SignupPageState extends State<SignupPage> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Continue',
+                        child: Text(
+                          context.t('Continue', 'Tiếp tục'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -394,8 +395,8 @@ class _SignupPageState extends State<SignupPage> {
                         FilteringTextInputFormatter.digitsOnly,
                       ],
                       decoration: InputDecoration(
-                        labelText: 'Phone Number (Optional)',
-                        hintText: 'Enter your phone number',
+                        labelText: context.t('Phone Number (Optional)', 'Số điện thoại (không bắt buộc)'),
+                        hintText: context.t('Enter your phone number', 'Nhập số điện thoại của bạn'),
                         prefixIcon: const Icon(Icons.phone_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -429,8 +430,8 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         child: viewModel.isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                'Continue',
+                            : Text(
+                              context.t('Continue', 'Tiếp tục'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -445,8 +446,8 @@ class _SignupPageState extends State<SignupPage> {
                         // Skip phone, go to avatar
                         context.read<AuthViewModel>().setSignupStep(2);
                       },
-                      child: const Text(
-                        'Skip',
+                      child: Text(
+                        context.t('Skip', 'Bỏ qua'),
                         style: TextStyle(
                           color: Color(0xFF4C40F7),
                           fontWeight: FontWeight.w600,
@@ -481,8 +482,8 @@ class _SignupPageState extends State<SignupPage> {
                     Center(
                       child: TextButton(
                         onPressed: () => context.read<AuthViewModel>().pickAvatar(),
-                        child: const Text(
-                          'Choose from gallery',
+                        child: Text(
+                          context.t('Choose from gallery', 'Chọn từ thư viện'),
                           style: TextStyle(
                             color: Color(0xFF4C40F7),
                             fontWeight: FontWeight.w600,
@@ -495,7 +496,7 @@ class _SignupPageState extends State<SignupPage> {
                         child: TextButton(
                           onPressed: () => context.read<AuthViewModel>().clearAvatar(),
                           child: Text(
-                            'Remove photo',
+                            context.t('Remove photo', 'Xóa ảnh'),
                             style: TextStyle(
                               color: Colors.grey.shade600,
                             ),
@@ -516,8 +517,8 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         child: viewModel.isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                'Complete',
+                            : Text(
+                              context.t('Complete', 'Hoàn tất'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -530,8 +531,8 @@ class _SignupPageState extends State<SignupPage> {
                     Center(
                       child: TextButton(
                         onPressed: _completeSignup,
-                        child: const Text(
-                          'Skip',
+                        child: Text(
+                          context.t('Skip', 'Bỏ qua'),
                           style: TextStyle(
                             color: Color(0xFF4C40F7),
                             fontWeight: FontWeight.w600,
@@ -548,7 +549,7 @@ class _SignupPageState extends State<SignupPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Already have an account? ',
+                          context.t('Already have an account? ', 'Đã có tài khoản? '),
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         TextButton(
@@ -561,8 +562,8 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                             );
                           },
-                          child: const Text(
-                            'Sign in',
+                          child: Text(
+                            context.t('Sign in', 'Đăng nhập'),
                             style: TextStyle(
                               color: Color(0xFF4C40F7),
                               fontWeight: FontWeight.w600,

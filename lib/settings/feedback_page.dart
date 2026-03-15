@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/settings_viewmodel.dart';
 import '../viewmodels/feedback_viewmodel.dart';
+import '../utils/app_localization.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -52,17 +53,17 @@ class _FeedbackPageState extends State<FeedbackPage> {
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            'Feedback',
-            style: TextStyle(color: Colors.black),
+          title: Text(
+            context.t('Feedback', 'Phản hồi'),
+            style: const TextStyle(color: Colors.black),
           ),
           bottom: TabBar(
             labelColor: const Color(0xFF4C40F7),
             unselectedLabelColor: Colors.grey,
             indicatorColor: const Color(0xFF4C40F7),
-            tabs: const [
-              Tab(text: 'Submit Feedback'),
-              Tab(text: 'My Feedback'),
+            tabs: [
+              Tab(text: context.t('Submit Feedback', 'Gửi phản hồi')),
+              Tab(text: context.t('My Feedback', 'Phản hồi của tôi')),
             ],
           ),
         ),
@@ -85,9 +86,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'We value your feedback',
-                style: TextStyle(
+              Text(
+                context.t('We value your feedback', 'Chúng tôi trân trọng phản hồi của bạn'),
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -95,7 +96,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Help us improve by sharing your thoughts',
+                context.t('Help us improve by sharing your thoughts', 'Hãy chia sẻ ý kiến để giúp chúng tôi cải thiện'),
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -107,7 +108,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: context.t('Name', 'Họ tên'),
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -126,7 +127,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
+                    return context.t('Please enter your name', 'Vui lòng nhập họ tên');
                   }
                   return null;
                 },
@@ -137,7 +138,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: context.t('Email', 'Email'),
                   prefixIcon: const Icon(Icons.email_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -156,7 +157,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
+                    return context.t('Please enter your email', 'Vui lòng nhập email');
                   }
                   return null;
                 },
@@ -167,7 +168,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
                 decoration: InputDecoration(
-                  labelText: 'Category',
+                  labelText: context.t('Category', 'Danh mục'),
                   prefixIcon: const Icon(Icons.category_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -202,7 +203,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               TextFormField(
                 controller: _subjectController,
                 decoration: InputDecoration(
-                  labelText: 'Subject',
+                  labelText: context.t('Subject', 'Chủ đề'),
                   prefixIcon: const Icon(Icons.subject_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -221,7 +222,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a subject';
+                    return context.t('Please enter a subject', 'Vui lòng nhập chủ đề');
                   }
                   return null;
                 },
@@ -233,7 +234,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 controller: _messageController,
                 maxLines: 6,
                 decoration: InputDecoration(
-                  labelText: 'Your Feedback',
+                  labelText: context.t('Your Feedback', 'Nội dung phản hồi'),
                   alignLabelWithHint: true,
                   prefixIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 100),
@@ -256,7 +257,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your feedback';
+                    return context.t('Please enter your feedback', 'Vui lòng nhập phản hồi của bạn');
                   }
                   return null;
                 },
@@ -275,9 +276,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Submit Feedback',
-                    style: TextStyle(
+                  child: Text(
+                    context.t('Submit Feedback', 'Gửi phản hồi'),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
