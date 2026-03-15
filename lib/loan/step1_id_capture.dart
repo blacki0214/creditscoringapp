@@ -146,7 +146,6 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Authentication failed'),
         title: Text(context.t('Authentication failed', 'Xác thực thất bại')),
         content: Text(
           loanViewModel.vnptErrorMessage ??
