@@ -146,8 +146,11 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                         ),
                         child: Column(
                           children: [
-                            const Text(
-                              'Loan Amount to be Disbursed',
+                            Text(
+                              context.t(
+                                'Loan Amount to be Disbursed',
+                                'Số tiền vay sẽ được giải ngân',
+                              ),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -168,8 +171,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                       ),
                       const SizedBox(height: 32),
 
-                      const Text(
-                        'Bank Account Details',
+                      Text(
+                        context.t('Bank Account Details', 'Thông tin tài khoản ngân hàng'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -181,8 +184,11 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                       TextFormField(
                         controller: _accountHolderController,
                         decoration: InputDecoration(
-                          labelText: 'Account Holder Name',
-                          hintText: 'Enter full name as per bank account',
+                          labelText: context.t('Account Holder Name', 'Tên chủ tài khoản'),
+                          hintText: context.t(
+                            'Enter full name as per bank account',
+                            'Nhập họ tên đầy đủ theo tài khoản ngân hàng',
+                          ),
                           prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -190,7 +196,10 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter account holder name';
+                            return context.t(
+                              'Please enter account holder name',
+                              'Vui lòng nhập tên chủ tài khoản',
+                            );
                           }
                           return null;
                         },
@@ -200,8 +209,11 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                       TextFormField(
                         controller: _bankNameController,
                         decoration: InputDecoration(
-                          labelText: 'Bank Name',
-                          hintText: 'e.g., Vietcombank, BIDV, Techcombank',
+                          labelText: context.t('Bank Name', 'Tên ngân hàng'),
+                          hintText: context.t(
+                            'e.g., Vietcombank, BIDV, Techcombank',
+                            'ví dụ: Vietcombank, BIDV, Techcombank',
+                          ),
                           prefixIcon: const Icon(Icons.account_balance),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -209,7 +221,7 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter bank name';
+                            return context.t('Please enter bank name', 'Vui lòng nhập tên ngân hàng');
                           }
                           return null;
                         },
@@ -219,8 +231,11 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                       TextFormField(
                         controller: _bankAccountController,
                         decoration: InputDecoration(
-                          labelText: 'Account Number',
-                          hintText: 'Enter your bank account number',
+                          labelText: context.t('Account Number', 'Số tài khoản'),
+                          hintText: context.t(
+                            'Enter your bank account number',
+                            'Nhập số tài khoản ngân hàng của bạn',
+                          ),
                           prefixIcon: const Icon(Icons.credit_card),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -229,10 +244,13 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                         keyboardType: TextInputType.number,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter account number';
+                            return context.t('Please enter account number', 'Vui lòng nhập số tài khoản');
                           }
                           if (value.length < 8) {
-                            return 'Account number must be at least 8 digits';
+                            return context.t(
+                              'Account number must be at least 8 digits',
+                              'Số tài khoản phải có ít nhất 8 chữ số',
+                            );
                           }
                           return null;
                         },
@@ -257,14 +275,20 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                               },
                               contentPadding: EdgeInsets.zero,
                               controlAffinity: ListTileControlAffinity.leading,
-                              title: const Text(
-                                'I agree to receive the loan amount in the bank account provided above',
+                              title: Text(
+                                context.t(
+                                  'I agree to receive the loan amount in the bank account provided above',
+                                  'Tôi đồng ý nhận khoản vay vào tài khoản ngân hàng đã cung cấp ở trên',
+                                ),
                                 style: TextStyle(fontSize: 14),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Note: Disbursement typically takes 1-3 business days. Ensure your account details are correct.',
+                              context.t(
+                                'Note: Disbursement typically takes 1-3 business days. Ensure your account details are correct.',
+                                'Lưu ý: Giải ngân thường mất 1-3 ngày làm việc. Vui lòng đảm bảo thông tin tài khoản chính xác.',
+                              ),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -313,8 +337,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'Complete Application',
+                        : Text(
+                          context.t('Complete Application', 'Hoàn tất hồ sơ'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

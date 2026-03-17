@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -97,9 +96,13 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
         context,
         MaterialPageRoute(
           builder: (_) => _LiveAutoCapturePage(
-            title: isFront ? 'Scan Front of ID Card' : 'Scan Back of ID Card',
-            subtitle:
-                'Center the card inside the frame and keep your hand steady.',
+            title: isFront
+                ? context.t('Scan Front of ID Card', 'Quét mặt trước CCCD')
+                : context.t('Scan Back of ID Card', 'Quét mặt sau CCCD'),
+            subtitle: context.t(
+              'Center the card inside the frame and keep your hand steady.',
+              'Đặt thẻ vào giữa khung và giữ tay ổn định.',
+            ),
           ),
         ),
       );
@@ -277,8 +280,14 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         const SizedBox(height: 8),
                         Text(
                           _autoFlowRunning
-                              ? 'Keep your card stable. Capture and verification run automatically.'
-                              : 'Auto flow paused. Tap retry to continue.',
+                              ? context.t(
+                                  'Keep your card stable. Capture and verification run automatically.',
+                                  'Giữ thẻ ổn định. Ảnh sẽ được chụp và xác thực tự động.',
+                                )
+                              : context.t(
+                                  'Auto flow paused. Tap retry to continue.',
+                                  'Luồng tự động đã tạm dừng. Nhấn thử lại để tiếp tục.',
+                                ),
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey.shade500,
@@ -566,7 +575,12 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Unable to start live camera: $e'),
+          content: Text(
+            context.t(
+              'Unable to start live camera: $e',
+              'Không thể khởi động camera trực tiếp: $e',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -719,8 +733,11 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
         SnackBar(
           content: Text(
             autoTriggered
-                ? 'Auto-capture failed. Keep ID inside the frame and retry.'
-                : 'Capture failed: $e',
+                ? context.t(
+                    'Auto-capture failed. Keep ID inside the frame and retry.',
+                    'Chụp tự động thất bại. Giữ CCCD trong khung và thử lại.',
+                  )
+                : context.t('Capture failed: $e', 'Chụp ảnh thất bại: $e'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -810,10 +827,16 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
                   const SizedBox(height: 8),
                   Text(
                     _isCapturing
-                        ? 'Capturing...'
+                        ? context.t('Capturing...', 'Đang chụp...')
                         : _idInterfaceDetected
-                        ? 'ID interface detected. Auto-capture in ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)}s'
-                        : 'Detecting ID interface...',
+                        ? context.t(
+                            'ID interface detected. Auto-capture in ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)}s',
+                            'Đã phát hiện thẻ CCCD. Tự động chụp sau ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)} giây',
+                          )
+                        : context.t(
+                            'Detecting ID interface...',
+                            'Đang nhận diện thẻ CCCD...',
+                          ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,

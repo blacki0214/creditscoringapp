@@ -299,8 +299,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                             Expanded(
                                               child: Text(
                                                 passedValidation 
-                                                    ? 'Face verification successful'
-                                                    : 'Face verification failed',
+                                                    ? context.t('Face verification successful', 'Xác thực khuôn mặt thành công')
+                                                    : context.t('Face verification failed', 'Xác thực khuôn mặt thất bại'),
                                                 style: TextStyle(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w700,
@@ -314,8 +314,10 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                         ),
                                         const SizedBox(height: 12),
                                         _buildInfoRow(
-                                          'Status',
-                                          faceMatchData.isMatch ? '✓ Match' : '✗ Not Match',
+                                          context.t('Status', 'Trạng thái'),
+                                          faceMatchData.isMatch
+                                              ? context.t('✓ Match', '✓ Khớp')
+                                              : context.t('✗ Not Match', '✗ Không khớp'),
                                         ),
                                         if (!passedValidation) ...[
                                           const SizedBox(height: 12),
@@ -332,8 +334,14 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                                                 Expanded(
                                                   child: Text(
                                                     faceMatchData.similarity != null && faceMatchData.similarity! < 0.70
-                                                        ? 'Similarity is too low (need ≥70%). Please retake with a clear face.'
-                                                        : 'Face does not match. Please try again.',
+                                                        ? context.t(
+                                                            'Similarity is too low (need ≥70%). Please retake with a clear face.',
+                                                            'Độ tương đồng quá thấp (cần ≥70%). Vui lòng chụp lại rõ khuôn mặt.',
+                                                          )
+                                                        : context.t(
+                                                            'Face does not match. Please try again.',
+                                                            'Khuôn mặt không khớp. Vui lòng thử lại.',
+                                                          ),
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color: Colors.red.shade700,
@@ -369,8 +377,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Comparing faces...',
+                        Text(
+                          context.t('Comparing faces...', 'Đang so khớp khuôn mặt...'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -404,7 +412,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'Process',
+                          context.t('Process', 'Xử lý'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -436,8 +444,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Continue',
+                        Text(
+                          context.t('Continue', 'Tiếp tục'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -467,8 +475,8 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Retake Photo',
+                        Text(
+                          context.t('Retake Photo', 'Chụp lại ảnh'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

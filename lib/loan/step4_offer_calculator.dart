@@ -173,9 +173,14 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                       const SizedBox(height: 24),
 
                       // Loan Purpose
-                      _buildSectionHeader('Loan Purpose'),
+                      _buildSectionHeader(
+                        context.t('Loan Purpose', 'Mục đích vay'),
+                      ),
                       _buildDropdown(
-                        label: 'What are you financing?',
+                        label: context.t(
+                          'What are you financing?',
+                          'Bạn cần tài trợ cho mục đích gì?',
+                        ),
                         value: _selectedPurpose,
                         items: loanPurposeOptions,
                         onChanged: (val) =>
@@ -184,12 +189,14 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
                       const SizedBox(height: 24),
                       // Total Price
-                      _buildSectionHeader('Financing Details'),
+                      _buildSectionHeader(
+                        context.t('Financing Details', 'Chi tiết tài chính'),
+                      ),
                       _buildTextField(
                         fieldKey: _totalPriceFieldKey,
                         controller: _totalPriceController,
                         focusNode: _totalPriceFocusNode,
-                        label: 'Total Price (VND)',
+                        label: context.t('Total Price (VND)', 'Tổng giá trị (VND)'),
                         hint: '100,000,000',
                         keyboardType: TextInputType.number,
                         maxLength: 15,
@@ -208,7 +215,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                         fieldKey: _downPaymentFieldKey,
                         controller: _downPaymentController,
                         focusNode: _downPaymentFocusNode,
-                        label: 'Down Payment (VND)',
+                        label: context.t('Down Payment (VND)', 'Trả trước (VND)'),
                         hint: '20,000,000',
                         keyboardType: TextInputType.number,
                         maxLength: 15,
@@ -231,7 +238,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'Down Payment: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% of total price',
+                            context.t(
+                              'Down Payment: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% of total price',
+                              'Trả trước: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% tổng giá trị',
+                            ),
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey.shade700,
@@ -241,7 +251,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
                       const SizedBox(height: 24),
                       // Tenor Slider
-                      _buildSectionHeader('Loan Term (Tenor)'),
+                      _buildSectionHeader(
+                        context.t('Loan Term (Tenor)', 'Kỳ hạn vay'),
+                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Column(
@@ -251,7 +263,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Tenor: ${_tenor.toInt()} months',
+                                  context.t(
+                                    'Tenor: ${_tenor.toInt()} months',
+                                    'Kỳ hạn: ${_tenor.toInt()} tháng',
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -309,7 +324,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
                       const SizedBox(height: 24),
                       // Offer Summary
-                      _buildSectionHeader('Offer Summary'),
+                      _buildSectionHeader(
+                        context.t('Offer Summary', 'Tóm tắt đề nghị'),
+                      ),
                       _buildOfferCard(
                         offer: offer,
                         calculatedLoanAmount: calculatedLoanAmount,
@@ -351,8 +368,14 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                   Expanded(
                                     child: Text(
                                       isWithinLimit
-                                          ? 'Within Your Loan Limit ✓'
-                                          : 'Exceeds Your Loan Limit',
+                                          ? context.t(
+                                              'Within Your Loan Limit ✓',
+                                              'Trong hạn mức vay của bạn ✓',
+                                            )
+                                          : context.t(
+                                              'Exceeds Your Loan Limit',
+                                              'Vượt hạn mức vay của bạn',
+                                            ),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -378,7 +401,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'Your Loan Limit:',
+                                          context.t(
+                                            'Your Loan Limit:',
+                                            'Hạn mức vay của bạn:',
+                                          ),
                                           style: TextStyle(
                                             fontSize: 13,
                                             color: Colors.grey.shade700,
@@ -400,7 +426,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'Requested Amount:',
+                                          context.t(
+                                            'Requested Amount:',
+                                            'Số tiền yêu cầu:',
+                                          ),
                                           style: TextStyle(
                                             fontSize: 13,
                                             color: Colors.grey.shade700,
@@ -436,7 +465,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Please reduce your loan amount or increase your down payment to proceed.',
+                                        context.t(
+                                          'Please reduce your loan amount or increase your down payment to proceed.',
+                                          'Vui lòng giảm số tiền vay hoặc tăng khoản trả trước để tiếp tục.',
+                                        ),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade700,
@@ -522,8 +554,11 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                   ),
                   child: Text(
                     isWithinLimit
-                        ? 'Accept Offer & Continue'
-                        : 'Reduce Loan Amount',
+                        ? context.t(
+                            'Accept Offer & Continue',
+                            'Chấp nhận đề nghị và tiếp tục',
+                          )
+                        : context.t('Reduce Loan Amount', 'Giảm số tiền vay'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -542,7 +577,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
       if (_isProceeding)
         Container(
           color: Colors.black54,
-          child: const Center(
+          child: Center(
             child: Card(
               elevation: 8,
               shape: RoundedRectangleBorder(
@@ -559,7 +594,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      'Processing your offer…',
+                      context.t('Processing your offer…', 'Đang xử lý đề nghị của bạn…'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -568,7 +603,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Please wait a moment.',
+                      context.t('Please wait a moment.', 'Vui lòng chờ trong giây lát.'),
                       style: TextStyle(fontSize: 13, color: Colors.grey),
                     ),
                   ],
@@ -618,7 +653,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
       validator:
           validator ??
           (value) {
-            if (value == null || value.isEmpty) return 'Please enter $label';
+            if (value == null || value.isEmpty) {
+              return context.t('Please enter $label', 'Vui lòng nhập $label');
+            }
             return null;
           },
       decoration: InputDecoration(
@@ -639,16 +676,27 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   }
 
   String? _validateAmount(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Total Price';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Total Price', 'Vui lòng nhập tổng giá trị');
+    }
     final amount = _parseAmount(value);
-    if (amount <= 0) return 'Total Price must be greater than 0';
+    if (amount <= 0) {
+      return context.t(
+        'Total Price must be greater than 0',
+        'Tổng giá trị phải lớn hơn 0',
+      );
+    }
     return null;
   }
 
   String? _validateDownPayment(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Down Payment';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Down Payment', 'Vui lòng nhập khoản trả trước');
+    }
     final amount = _parseAmount(value);
-    if (amount < 0) return 'Down Payment cannot be negative';
+    if (amount < 0) {
+      return context.t('Down Payment cannot be negative', 'Khoản trả trước không được âm');
+    }
     return null;
   }
 
@@ -673,10 +721,44 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
         ),
       ),
       items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .map(
+            (item) => DropdownMenuItem(
+              value: item,
+              child: Text(_displayLoanPurpose(item)),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
     );
+  }
+
+  String _displayLoanPurpose(String item) {
+    switch (item) {
+      case 'ELECTRONICS':
+        return context.t('Electronics', 'Thiết bị điện tử');
+      case 'VEHICLE':
+        return context.t('Vehicle', 'Phương tiện');
+      case 'HOME':
+        return context.t('Home', 'Nhà ở');
+      case 'PERSONAL':
+        return context.t('Personal', 'Tiêu dùng cá nhân');
+      case 'EDUCATION':
+        return context.t('Education', 'Giáo dục');
+      case 'MEDICAL':
+        return context.t('Medical', 'Y tế');
+      case 'BUSINESS':
+        return context.t('Business', 'Kinh doanh');
+      case 'HOME_IMPROVEMENT':
+        return context.t('Home improvement', 'Sửa chữa nhà');
+      case 'DEBT_CONSOLIDATION':
+        return context.t('Debt consolidation', 'Hợp nhất nợ');
+      case 'VENTURE':
+        return context.t('Venture', 'Khởi nghiệp');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return item;
+    }
   }
 
   Widget _buildOfferCard({
@@ -699,7 +781,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'Monthly Payment',
+                context.t('Monthly Payment', 'Thanh toán hàng tháng'),
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -725,10 +807,13 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDetailChip(
-                'Loan Amount',
+                context.t('Loan Amount', 'Số tiền vay'),
                 _currencyFormat.format(calculatedLoanAmount),
               ),
-              _buildDetailChip('Term', '$tenor months'),
+              _buildDetailChip(
+                context.t('Term', 'Kỳ hạn'),
+                context.t('$tenor months', '$tenor tháng'),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -736,10 +821,13 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDetailChip(
-                'Interest Rate',
+                context.t('Interest Rate', 'Lãi suất'),
                 '${(offer['interestRate'] as num).toStringAsFixed(2)}%',
               ),
-              _buildDetailChip('Credit Score', '${offer['creditScore']}'),
+              _buildDetailChip(
+                context.t('Credit Score', 'Điểm tín dụng'),
+                '${offer['creditScore']}',
+              ),
             ],
           ),
         ],

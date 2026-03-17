@@ -238,7 +238,10 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _yearsAtEmployerFieldKey,
                         controller: _yearsAtEmployerController,
                         focusNode: _yearsAtEmployerFocusNode,
-                        label: 'Years at Current Employer',
+                        label: context.t(
+                          'Years at Current Employer',
+                          'Số năm làm tại công ty hiện tại',
+                        ),
                         icon: Icons.calendar_today,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
@@ -252,12 +255,17 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
 
                       const SizedBox(height: 24),
-                      _buildSectionHeader('Emergency Contact'),
+                      _buildSectionHeader(
+                        context.t('Emergency Contact', 'Liên hệ khẩn cấp'),
+                      ),
                       _buildTextField(
                         fieldKey: _emergencyContactNameFieldKey,
                         controller: _emergencyContactNameController,
                         focusNode: _emergencyContactNameFocusNode,
-                        label: 'Emergency Contact 1 Name',
+                        label: context.t(
+                          'Emergency Contact 1 Name',
+                          'Tên liên hệ khẩn cấp 1',
+                        ),
                         icon: Icons.person,
                         maxLength: 30,
                         inputFormatters: [
@@ -273,7 +281,10 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _emergencyContactPhoneFieldKey,
                         controller: _emergencyContactPhoneController,
                         focusNode: _emergencyContactPhoneFocusNode,
-                        label: 'Emergency Contact 1 Phone',
+                        label: context.t(
+                          'Emergency Contact 1 Phone',
+                          'Số điện thoại liên hệ khẩn cấp 1',
+                        ),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 10,
@@ -285,7 +296,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildRelationshipDropdown(
-                        label: 'Relationship 1',
+                        label: context.t('Relationship 1', 'Mối quan hệ 1'),
                         value: _selectedRelationship1,
                         onChanged: (value) {
                           setState(() {
@@ -302,7 +313,10 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _emergencyContact2NameFieldKey,
                         controller: _emergencyContact2NameController,
                         focusNode: _emergencyContact2NameFocusNode,
-                        label: 'Emergency Contact 2 Name',
+                        label: context.t(
+                          'Emergency Contact 2 Name',
+                          'Tên liên hệ khẩn cấp 2',
+                        ),
                         icon: Icons.person,
                         maxLength: 30,
                         inputFormatters: [
@@ -318,7 +332,10 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         fieldKey: _emergencyContact2PhoneFieldKey,
                         controller: _emergencyContact2PhoneController,
                         focusNode: _emergencyContact2PhoneFocusNode,
-                        label: 'Emergency Contact 2 Phone',
+                        label: context.t(
+                          'Emergency Contact 2 Phone',
+                          'Số điện thoại liên hệ khẩn cấp 2',
+                        ),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 10,
@@ -330,7 +347,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildRelationshipDropdown(
-                        label: 'Relationship 2',
+                        label: context.t('Relationship 2', 'Mối quan hệ 2'),
                         value: _selectedRelationship2,
                         onChanged: (value) {
                           setState(() {
@@ -344,12 +361,14 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
 
                       const SizedBox(height: 24),
-                      _buildSectionHeader('References (Optional)'),
+                      _buildSectionHeader(
+                        context.t('References (Optional)', 'Người tham chiếu (Tùy chọn)'),
+                      ),
                       _buildTextField(
                         fieldKey: _referencesFieldKey,
                         controller: _referencesController,
                         focusNode: _referencesFocusNode,
-                        label: 'References',
+                        label: context.t('References', 'Người tham chiếu'),
                         icon: Icons.people,
                         maxLines: 3,
                         maxLength: 200,
@@ -382,8 +401,8 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Continue',
+                  child: Text(
+                    context.t('Continue', 'Tiếp tục'),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -438,7 +457,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
           validator ??
           (value) {
             if (isRequired && (value == null || value.isEmpty)) {
-              return 'Please enter $label';
+              return context.t('Please enter $label', 'Vui lòng nhập $label');
             }
             return null;
           },
@@ -487,7 +506,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
           value: option,
           enabled: !isDisabled,
           child: Text(
-            option,
+            _displayRelationship(option),
             style: TextStyle(
               color: isDisabled ? Colors.grey.shade400 : Colors.black,
             ),
@@ -497,83 +516,139 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       onChanged: onChanged,
       validator: (selected) {
         if (selected == null || selected.isEmpty) {
-          return 'Please select $label';
+          return context.t('Please select $label', 'Vui lòng chọn $label');
         }
         if (disabledValues.contains(selected)) {
-          return '$label cannot duplicate another selected relationship';
+          return context.t(
+            '$label cannot duplicate another selected relationship',
+            '$label không được trùng với mối quan hệ đã chọn khác',
+          );
         }
         return null;
       },
     );
   }
 
+  String _displayRelationship(String option) {
+    switch (option) {
+      case 'Mother':
+        return context.t('Mother', 'Mẹ');
+      case 'Father':
+        return context.t('Father', 'Bố');
+      case 'Brother':
+        return context.t('Brother', 'Anh/Em trai');
+      case 'Sister':
+        return context.t('Sister', 'Chị/Em gái');
+      case 'Spouse':
+        return context.t('Spouse', 'Vợ/Chồng');
+      case 'Child':
+        return context.t('Child', 'Con');
+      case 'Guardian':
+        return context.t('Guardian', 'Người giám hộ');
+      case 'Other':
+        return context.t('Other', 'Khác');
+      default:
+        return option;
+    }
+  }
+
   // ==================== VALIDATION FUNCTIONS ====================
 
   String? _validateEmployerName(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter employer name';
+      return context.t('Please enter employer name', 'Vui lòng nhập tên công ty');
     }
     if (value.length < 2) {
-      return 'Employer name must be at least 2 characters';
+      return context.t(
+        'Employer name must be at least 2 characters',
+        'Tên công ty phải có ít nhất 2 ký tự',
+      );
     }
     if (!RegExp(r'^[a-zA-Z\s\-\.&]+$').hasMatch(value)) {
-      return 'Employer name can only contain letters, spaces, hyphens, dots, and &';
+      return context.t(
+        'Employer name can only contain letters, spaces, hyphens, dots, and &',
+        'Tên công ty chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang, dấu chấm và &',
+      );
     }
     return null;
   }
 
   String? _validateJobTitle(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter job title';
+      return context.t('Please enter job title', 'Vui lòng nhập chức danh công việc');
     }
     if (value.length < 2) {
-      return 'Job title must be at least 2 characters';
+      return context.t(
+        'Job title must be at least 2 characters',
+        'Chức danh công việc phải có ít nhất 2 ký tự',
+      );
     }
     if (!RegExp(r'^[a-zA-Z\s\-\/]+$').hasMatch(value)) {
-      return 'Job title can only contain letters, spaces, hyphens, and slashes';
+      return context.t(
+        'Job title can only contain letters, spaces, hyphens, and slashes',
+        'Chức danh chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang và dấu gạch chéo',
+      );
     }
     return null;
   }
 
   String? _validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter phone number';
+      return context.t('Please enter phone number', 'Vui lòng nhập số điện thoại');
     }
     if (value.length != 10) {
-      return 'Phone number must be exactly 10 digits';
+      return context.t(
+        'Phone number must be exactly 10 digits',
+        'Số điện thoại phải gồm đúng 10 chữ số',
+      );
     }
     if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-      return 'Phone number can only contain digits';
+      return context.t(
+        'Phone number can only contain digits',
+        'Số điện thoại chỉ được chứa chữ số',
+      );
     }
     return null;
   }
 
   String? _validateYearsAtEmployer(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter years at employer';
+      return context.t(
+        'Please enter years at employer',
+        'Vui lòng nhập số năm làm việc tại công ty',
+      );
     }
     final years = double.tryParse(value);
     if (years == null) {
-      return 'Please enter a valid number';
+      return context.t('Please enter a valid number', 'Vui lòng nhập số hợp lệ');
     }
     if (years < 0) {
-      return 'Years cannot be negative';
+      return context.t('Years cannot be negative', 'Số năm không được âm');
     }
     if (years > 50) {
-      return 'Please enter a realistic number of years';
+      return context.t(
+        'Please enter a realistic number of years',
+        'Vui lòng nhập số năm hợp lý',
+      );
     }
     return null;
   }
 
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter contact name';
+      return context.t('Please enter contact name', 'Vui lòng nhập tên liên hệ');
     }
     if (value.length < 2) {
-      return 'Name must be at least 2 characters';
+      return context.t(
+        'Name must be at least 2 characters',
+        'Tên phải có ít nhất 2 ký tự',
+      );
     }
     if (!RegExp(r'^[a-zA-Z\s\-\.]+$').hasMatch(value)) {
-      return 'Name can only contain letters, spaces, hyphens, and dots';
+      return context.t(
+        'Name can only contain letters, spaces, hyphens, and dots',
+        'Tên chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang và dấu chấm',
+      );
     }
     return null;
   }
@@ -582,8 +657,13 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedRelationship1 == _selectedRelationship2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Emergency contacts must have different relationships'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Emergency contacts must have different relationships',
+              'Hai liên hệ khẩn cấp phải có mối quan hệ khác nhau',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -600,9 +680,12 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       await loanViewModel.resetLoanApplicationState();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Your previous application was rejected. Data has been cleared. Please submit a new application.',
+            context.t(
+              'Your previous application was rejected. Data has been cleared. Please submit a new application.',
+              'Hồ sơ trước của bạn đã bị từ chối. Dữ liệu đã được xóa. Vui lòng nộp hồ sơ mới.',
+            ),
           ),
           backgroundColor: Colors.orange,
         ),

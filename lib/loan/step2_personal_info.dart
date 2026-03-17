@@ -235,12 +235,14 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       if (_hasCreditHistory != null) ...[
                         const SizedBox(height: 24),
 
-                        _buildSectionHeader('Personal Details'),
+                        _buildSectionHeader(
+                          context.t('Personal Details', 'Thông tin cá nhân'),
+                        ),
                         _buildTextField(
                           fieldKey: _fullNameFieldKey,
                           controller: _fullNameController,
                           focusNode: _fullNameFocusNode,
-                          label: 'Full Name',
+                          label: context.t('Full Name', 'Họ và tên'),
                           maxLength: 30,
                           inputFormatters: [
                             LengthLimitingTextInputFormatter(30),
@@ -258,7 +260,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           fieldKey: _idFieldKey,
                           controller: _idController,
                           focusNode: _idFocusNode,
-                          label: 'ID Number (CCCD)',
+                          label: context.t(
+                            'ID Number (CCCD)',
+                            'Số CCCD',
+                          ),
                           keyboardType: TextInputType.number,
                           maxLength: 12,
                           inputFormatters: [
@@ -270,9 +275,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         ),
 
                         const SizedBox(height: 16),
-                        _buildSectionHeader('Employment & Income'),
+                        _buildSectionHeader(
+                          context.t('Employment & Income', 'Nghề nghiệp & Thu nhập'),
+                        ),
                         _buildDropdown(
-                          label: 'Employment Status',
+                          label: context.t('Employment Status', 'Tình trạng việc làm'),
                           value: vm.employmentStatus,
                           items: employmentOptions,
                           onChanged: (val) =>
@@ -283,7 +290,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           fieldKey: _yearsEmployedFieldKey,
                           controller: _yearsEmployedController,
                           focusNode: _yearsEmployedFocusNode,
-                          label: 'Years Employed',
+                          label: context.t('Years Employed', 'Số năm làm việc'),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
@@ -304,7 +311,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           fieldKey: _monthlyIncomeFieldKey,
                           controller: _monthlyIncomeController,
                           focusNode: _monthlyIncomeFocusNode,
-                          label: 'Monthly Income (VND)',
+                          label: context.t('Monthly Income (VND)', 'Thu nhập hàng tháng (VND)'),
                           keyboardType: TextInputType.number,
                           maxLength: 15,
                           inputFormatters: [
@@ -326,9 +333,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         ),
 
                         const SizedBox(height: 16),
-                        _buildSectionHeader('Residence & Assets'),
+                        _buildSectionHeader(
+                          context.t('Residence & Assets', 'Nơi ở & Tài sản'),
+                        ),
                         _buildDropdown(
-                          label: 'Home Ownership',
+                          label: context.t('Home Ownership', 'Tình trạng nhà ở'),
                           value: vm.homeOwnership,
                           items: homeOwnershipOptions,
                           onChanged: (val) => vm.updatePersonalInfo(home: val!),
@@ -338,7 +347,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           fieldKey: _addressFieldKey,
                           controller: _addressController,
                           focusNode: _addressFocusNode,
-                          label: 'Current Address',
+                          label: context.t('Current Address', 'Địa chỉ hiện tại'),
                           maxLines: 2,
                           maxLength: 100,
                           inputFormatters: [
@@ -355,7 +364,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                         ),
 
                         const SizedBox(height: 16),
-                        _buildSectionHeader('Credit History'),
+                        _buildSectionHeader(
+                          context.t('Credit History', 'Lịch sử tín dụng'),
+                        ),
 
                         // Show credit history fields only if user has credit history
                         if (_hasCreditHistory == true) ...[
@@ -363,7 +374,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                             fieldKey: _yearsCreditHistoryFieldKey,
                             controller: _yearsCreditHistoryController,
                             focusNode: _yearsCreditHistoryFocusNode,
-                            label: 'Years Credit History',
+                            label: context.t(
+                              'Years Credit History',
+                              'Số năm lịch sử tín dụng',
+                            ),
                             keyboardType: TextInputType.number,
                             maxLength: 2,
                             inputFormatters: [
@@ -377,14 +391,24 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           ),
                           const SizedBox(height: 16),
                           SwitchListTile(
-                            title: const Text('Have you ever defaulted?'),
+                            title: Text(
+                              context.t(
+                                'Have you ever defaulted?',
+                                'Bạn đã từng trễ hạn/thất hẹn trả nợ chưa?',
+                              ),
+                            ),
                             value: vm.hasPreviousDefaults,
                             onChanged: (val) =>
                                 vm.updatePersonalInfo(defaults: val),
                             activeThumbColor: const Color(0xFF4C40F7),
                           ),
                           SwitchListTile(
-                            title: const Text('Currently defaulting?'),
+                            title: Text(
+                              context.t(
+                                'Currently defaulting?',
+                                'Hiện tại bạn có đang chậm trả nợ không?',
+                              ),
+                            ),
                             value: vm.currentlyDefaulting,
                             onChanged: (val) =>
                                 vm.updatePersonalInfo(currentDefault: val),
@@ -410,7 +434,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'No problem! We\'ll evaluate your application based on your income and employment.',
+                                    context.t(
+                                      'No problem! We\'ll evaluate your application based on your income and employment.',
+                                      'Không sao! Chúng tôi sẽ đánh giá hồ sơ dựa trên thu nhập và công việc của bạn.',
+                                    ),
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey.shade700,
@@ -451,8 +478,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           color: Colors.white,
                           strokeWidth: 2,
                         )
-                      : const Text(
-                          'Submit Application',
+                        : Text(
+                          context.t('Submit Application', 'Nộp hồ sơ'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -516,11 +543,16 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         }
       },
       validator: (value) {
-        if (_selectedDOB == null) return 'Please select your date of birth';
+        if (_selectedDOB == null) {
+          return context.t(
+            'Please select your date of birth',
+            'Vui lòng chọn ngày sinh',
+          );
+        }
         return null;
       },
       decoration: InputDecoration(
-        labelText: 'Date of Birth',
+        labelText: context.t('Date of Birth', 'Ngày sinh'),
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
@@ -559,7 +591,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       validator:
           validator ??
           (value) {
-            if (value == null || value.isEmpty) return 'Please enter $label';
+            if (value == null || value.isEmpty) {
+              return context.t('Please enter $label', 'Vui lòng nhập $label');
+            }
             return null;
           },
       decoration: InputDecoration(
@@ -579,63 +613,108 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   }
 
   String? _validateFullName(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Full Name';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Full Name', 'Vui lòng nhập họ và tên');
+    }
     if (value.trim().length < 2)
-      return 'Full Name must be at least 2 characters';
+      return context.t(
+        'Full Name must be at least 2 characters',
+        'Họ và tên phải có ít nhất 2 ký tự',
+      );
     if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
-      return 'Full Name can only contain letters and spaces';
+      return context.t(
+        'Full Name can only contain letters and spaces',
+        'Họ và tên chỉ được chứa chữ cái và khoảng trắng',
+      );
     }
     return null;
   }
 
   String? _validateIdNumber(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter ID Number';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter ID Number', 'Vui lòng nhập số CCCD');
+    }
     if (!RegExp(r'^\d{12}$').hasMatch(value)) {
-      return 'ID Number must be exactly 12 digits';
+      return context.t(
+        'ID Number must be exactly 12 digits',
+        'Số CCCD phải gồm đúng 12 chữ số',
+      );
     }
     return null;
   }
 
   String? _validateYearsEmployed(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Years Employed';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Years Employed', 'Vui lòng nhập số năm làm việc');
+    }
     if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
-      return 'Enter a valid number (up to 2 decimals)';
+      return context.t(
+        'Enter a valid number (up to 2 decimals)',
+        'Nhập số hợp lệ (tối đa 2 chữ số thập phân)',
+      );
     }
     final years = double.tryParse(value);
     if (years == null || years < 0 || years > 60) {
-      return 'Years Employed must be between 0 and 60';
+      return context.t(
+        'Years Employed must be between 0 and 60',
+        'Số năm làm việc phải nằm trong khoảng 0 đến 60',
+      );
     }
     return null;
   }
 
   String? _validateMonthlyIncome(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Monthly Income';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Monthly Income', 'Vui lòng nhập thu nhập hàng tháng');
+    }
     final cleaned = value.replaceAll('.', '');
     final income = double.tryParse(cleaned);
     if (income == null || income <= 0) {
-      return 'Monthly Income must be greater than 0';
+      return context.t(
+        'Monthly Income must be greater than 0',
+        'Thu nhập hàng tháng phải lớn hơn 0',
+      );
     }
     return null;
   }
 
   String? _validateAddress(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Current Address';
-    if (value.trim().length < 5) return 'Address must be at least 5 characters';
+    if (value == null || value.isEmpty) {
+      return context.t(
+        'Please enter Current Address',
+        'Vui lòng nhập địa chỉ hiện tại',
+      );
+    }
+    if (value.trim().length < 5) {
+      return context.t(
+        'Address must be at least 5 characters',
+        'Địa chỉ phải có ít nhất 5 ký tự',
+      );
+    }
     if (!RegExp(
       r"^[\p{L}\p{M}0-9\s,\.\-/#]+$",
       unicode: true,
     ).hasMatch(value)) {
-      return 'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #';
+      return context.t(
+        'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #',
+        'Địa chỉ chỉ được chứa chữ cái, số, khoảng trắng, dấu phẩy, dấu chấm, dấu gạch ngang, dấu gạch chéo và #',
+      );
     }
     return null;
   }
 
   String? _validateYearsCreditHistory(String? value) {
     if (value == null || value.isEmpty)
-      return 'Please enter Years Credit History';
+      return context.t(
+        'Please enter Years Credit History',
+        'Vui lòng nhập số năm lịch sử tín dụng',
+      );
     final years = int.tryParse(value);
     if (years == null || years < 0 || years > 50) {
-      return 'Years Credit History must be between 0 and 50';
+      return context.t(
+        'Years Credit History must be between 0 and 50',
+        'Số năm lịch sử tín dụng phải nằm trong khoảng 0 đến 50',
+      );
     }
     return null;
   }
@@ -665,7 +744,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           .map(
             (item) => DropdownMenuItem(
               value: item,
-              child: Text(item, overflow: TextOverflow.ellipsis),
+              child: Text(
+                _displayOption(item),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           )
           .toList(),
@@ -673,13 +755,45 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     );
   }
 
+  String _displayOption(String item) {
+    switch (item) {
+      case 'EMPLOYED':
+        return context.t('Employed', 'Nhân viên');
+      case 'SELF_EMPLOYED':
+        return context.t('Self-employed', 'Tự kinh doanh');
+      case 'UNEMPLOYED':
+        return context.t('Unemployed', 'Thất nghiệp');
+      case 'STUDENT':
+        return context.t('Student', 'Sinh viên');
+      case 'RETIRED':
+        return context.t('Retired', 'Nghỉ hưu');
+      case 'RENT':
+        return context.t('Rent', 'Thuê nhà');
+      case 'OWN':
+        return context.t('Own', 'Sở hữu');
+      case 'MORTGAGE':
+        return context.t('Mortgage', 'Thế chấp');
+      case 'LIVING_WITH_PARENTS':
+        return context.t('Living with parents', 'Ở cùng bố mẹ');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return item;
+    }
+  }
+
   // ==================== SUBMIT HANDLER ====================
 
   Future<void> _submitApplication() async {
     if (!_isCreditHistoryChosen) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please choose your credit history before submitting.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Please choose your credit history before submitting.',
+              'Vui lòng chọn lịch sử tín dụng trước khi nộp hồ sơ.',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -704,9 +818,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
 
       // Show snackbar to inform user
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Your application is being processed. Check the Loans tab for status.',
+            context.t(
+              'Your application is being processed. Check the Loans tab for status.',
+              'Hồ sơ của bạn đang được xử lý. Vào tab Khoản vay để theo dõi trạng thái.',
+            ),
           ),
           backgroundColor: Color(0xFF4C40F7),
           duration: Duration(seconds: 3),
@@ -717,12 +834,18 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: Text(vm.errorMessage ?? 'Failed to submit application'),
+          title: Text(context.t('Error', 'Lỗi')),
+          content: Text(
+            vm.errorMessage ??
+                context.t(
+                  'Failed to submit application',
+                  'Nộp hồ sơ thất bại',
+                ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(context.t('OK', 'Đồng ý')),
             ),
           ],
         ),

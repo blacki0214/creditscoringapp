@@ -734,22 +734,25 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 24),
                         // Period selector
-                        Row(
-                          children: [
-                            _buildPeriodChip(context, viewModel, 'Overall'),
-                            const SizedBox(width: 8),
-                            _buildPeriodChip(
-                              context,
-                              viewModel,
-                              'Scoring Status',
-                            ),
-                            const SizedBox(width: 8),
-                            _buildPeriodChip(
-                              context,
-                              viewModel,
-                              'Loan History',
-                            ),
-                          ],
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildPeriodChip(context, viewModel, 'Overall'),
+                              const SizedBox(width: 8),
+                              _buildPeriodChip(
+                                context,
+                                viewModel,
+                                'Scoring Status',
+                              ),
+                              const SizedBox(width: 8),
+                              _buildPeriodChip(
+                                context,
+                                viewModel,
+                                'Loan History',
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 32),
                         // Content based on selected period
@@ -779,8 +782,11 @@ class _HomePageState extends State<HomePage> {
                                               color: Color(0xFF1A1F3F),
                                             ),
                                           ),
-                                          const Text(
-                                            'Your credit score',
+                                          Text(
+                                            context.t(
+                                              'Your credit score',
+                                              'Điểm tín dụng của bạn',
+                                            ),
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Colors.black87,
@@ -817,7 +823,10 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            'No data yet',
+                                            context.t(
+                                              'No data yet',
+                                              'Chưa có dữ liệu',
+                                            ),
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
@@ -826,7 +835,10 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            'credit score',
+                                            context.t(
+                                              'credit score',
+                                              'điểm tín dụng',
+                                            ),
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Colors.grey.shade500,
@@ -849,7 +861,7 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Text(
-                                      'starting score',
+                                      context.t('starting score', 'điểm ban đầu'),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -869,7 +881,10 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Text(
-                                      'change to date',
+                                      context.t(
+                                        'change to date',
+                                        'thay đổi đến hiện tại',
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -906,9 +921,12 @@ class _HomePageState extends State<HomePage> {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Credit score updated!',
+                                            context.t(
+                                              'Credit score updated!',
+                                              'Đã cập nhật điểm tín dụng!',
+                                            ),
                                           ),
                                           backgroundColor: Color(0xFF4CAF50),
                                           duration: Duration(seconds: 2),
@@ -945,8 +963,14 @@ class _HomePageState extends State<HomePage> {
                               ),
                               child: Text(
                                 viewModel.creditScore != null
-                                    ? 'Update your credit score'
-                                    : 'Apply for loan now',
+                                    ? context.t(
+                                        'Update your credit score',
+                                        'Cập nhật điểm tín dụng',
+                                      )
+                                    : context.t(
+                                        'Apply for loan now',
+                                        'Đăng ký vay ngay',
+                                      ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1568,7 +1592,7 @@ class _HomePageState extends State<HomePage> {
               : null,
         ),
         child: Text(
-          label,
+          context.t(label, _periodLabelVi(label)),
           style: TextStyle(
             color: isSelected ? Colors.white : const Color(0xFF2B335A),
             fontSize: 13,
@@ -1577,6 +1601,19 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  String _periodLabelVi(String label) {
+    switch (label) {
+      case 'Overall':
+        return 'Tổng quan';
+      case 'Scoring Status':
+        return 'Trạng thái chấm điểm';
+      case 'Loan History':
+        return 'Lịch sử khoản vay';
+      default:
+        return label;
+    }
   }
 
   Widget _buildMetricCard(
@@ -1834,18 +1871,33 @@ Widget _buildCreditScoreTips(
       : Icons.lightbulb_outline;
 
   final String headerTitle = !hasScore
-      ? 'Credit Score Tips'
+      ? context.t('Credit Score Tips', 'Mẹo cải thiện điểm tín dụng')
       : isGood
-      ? 'Congratulations'
-      : 'How to Improve Your Credit Score';
+      ? context.t('Congratulations', 'Chúc mừng')
+      : context.t(
+          'How to Improve Your Credit Score',
+          'Cách cải thiện điểm tín dụng',
+        );
 
   final String subtitleText = !hasScore
-      ? 'We need more information to generate personalized tips.'
+      ? context.t(
+          'We need more information to generate personalized tips.',
+          'Chúng tôi cần thêm thông tin để tạo gợi ý phù hợp cho bạn.',
+        )
       : isGood
-      ? 'Your credit score is perfect. Keep up the great habits!'
+      ? context.t(
+          'Your credit score is perfect. Keep up the great habits!',
+          'Điểm tín dụng của bạn rất tốt. Hãy tiếp tục duy trì thói quen này!',
+        )
       : isLow
-      ? 'Your score is low. Try these steps to improve it.'
-      : 'Your score is fair. These tips can help you move higher.';
+      ? context.t(
+          'Your score is low. Try these steps to improve it.',
+          'Điểm của bạn còn thấp. Hãy thử các bước sau để cải thiện.',
+        )
+      : context.t(
+          'Your score is fair. These tips can help you move higher.',
+          'Điểm của bạn ở mức trung bình. Các mẹo sau sẽ giúp bạn cải thiện.',
+        );
 
   // This returns a Column widget which stacks widgets vertically
   return Column(
@@ -1902,7 +1954,10 @@ Widget _buildCreditScoreTips(
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Complete your profile and submit an application to see tailored credit score tips.',
+                  context.t(
+                    'Complete your profile and submit an application to see tailored credit score tips.',
+                    'Hãy hoàn thiện hồ sơ và gửi đơn vay để xem các mẹo điểm tín dụng phù hợp.',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
               ),
@@ -1928,7 +1983,10 @@ Widget _buildCreditScoreTips(
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Your credit score is perfect. Keep paying on time and maintaining low balances to stay in the top tier.',
+                  context.t(
+                    'Your credit score is perfect. Keep paying on time and maintaining low balances to stay in the top tier.',
+                    'Điểm tín dụng của bạn rất tốt. Hãy tiếp tục thanh toán đúng hạn và giữ dư nợ thấp để duy trì mức cao nhất.',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
                 ),
               ),
@@ -1941,14 +1999,28 @@ Widget _buildCreditScoreTips(
           icon: Icons.schedule,
           iconColor: const Color(0xFF4CAF50),
           iconBgColor: const Color(0xFFE8F5E9),
-          title: '1. Pay Bills on Time',
-          description:
-              'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
+          title: context.t('1. Pay Bills on Time', '1. Thanh toán đúng hạn'),
+          description: context.t(
+            'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
+            'Lịch sử thanh toán là yếu tố quan trọng nhất (35% điểm số). Hãy bật tự động thanh toán hoặc nhắc nhở để không trễ hạn.',
+          ),
           tips: [
-            'Set up autopay for recurring bills',
-            'Use calendar reminders 3 days before due dates',
-            'Pay at least the minimum amount required',
-            'Consider bi-weekly payments to stay ahead',
+            context.t(
+              'Set up autopay for recurring bills',
+              'Bật tự động thanh toán cho hóa đơn định kỳ',
+            ),
+            context.t(
+              'Use calendar reminders 3 days before due dates',
+              'Đặt nhắc lịch trước hạn thanh toán 3 ngày',
+            ),
+            context.t(
+              'Pay at least the minimum amount required',
+              'Thanh toán ít nhất số tiền tối thiểu',
+            ),
+            context.t(
+              'Consider bi-weekly payments to stay ahead',
+              'Cân nhắc trả 2 tuần/lần để chủ động hơn',
+            ),
           ],
         ),
 
@@ -1959,14 +2031,31 @@ Widget _buildCreditScoreTips(
           icon: Icons.credit_card,
           iconColor: const Color(0xFF2196F3),
           iconBgColor: const Color(0xFFE3F2FD),
-          title: '2. Keep Credit Utilization Below 30%',
-          description:
-              'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
+          title: context.t(
+            '2. Keep Credit Utilization Below 30%',
+            '2. Giữ tỷ lệ sử dụng tín dụng dưới 30%',
+          ),
+          description: context.t(
+            'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
+            'Tỷ lệ sử dụng tín dụng (30% điểm số) là tỷ lệ dư nợ thẻ trên hạn mức. Tỷ lệ càng thấp càng tốt.',
+          ),
           tips: [
-            'Try to use less than 30% of your available credit',
-            'Pay down balances before statement closing dates',
-            'Request credit limit increases (but don\'t spend more)',
-            'Spread charges across multiple cards if needed',
+            context.t(
+              'Try to use less than 30% of your available credit',
+              'Cố gắng sử dụng dưới 30% hạn mức tín dụng',
+            ),
+            context.t(
+              'Pay down balances before statement closing dates',
+              'Giảm dư nợ trước ngày chốt sao kê',
+            ),
+            context.t(
+              'Request credit limit increases (but don\'t spend more)',
+              'Xin tăng hạn mức tín dụng (nhưng không chi tiêu nhiều hơn)',
+            ),
+            context.t(
+              'Spread charges across multiple cards if needed',
+              'Phân bổ chi tiêu trên nhiều thẻ khi cần',
+            ),
           ],
         ),
 
@@ -1978,14 +2067,31 @@ Widget _buildCreditScoreTips(
             icon: Icons.playlist_add_check,
             iconColor: const Color(0xFF9C27B0),
             iconBgColor: const Color(0xFFF3E5F5),
-            title: '3. Limit New Credit Applications',
-            description:
-                'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
+            title: context.t(
+              '3. Limit New Credit Applications',
+              '3. Hạn chế mở tín dụng mới',
+            ),
+            description: context.t(
+              'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
+              'Mỗi lần tra cứu tín dụng cứng có thể làm giảm 5-10 điểm. Yếu tố tín dụng mới chiếm 10% điểm số.',
+            ),
             tips: [
-              'Only apply for credit when you really need it',
-              'Multiple inquiries within 14-45 days count as one',
-              'Avoid opening multiple accounts in a short time',
-              'Check your own credit (soft inquiry) regularly',
+              context.t(
+                'Only apply for credit when you really need it',
+                'Chỉ đăng ký tín dụng khi thực sự cần',
+              ),
+              context.t(
+                'Multiple inquiries within 14-45 days count as one',
+                'Nhiều lần tra cứu trong 14-45 ngày có thể được tính là một',
+              ),
+              context.t(
+                'Avoid opening multiple accounts in a short time',
+                'Tránh mở nhiều tài khoản trong thời gian ngắn',
+              ),
+              context.t(
+                'Check your own credit (soft inquiry) regularly',
+                'Thường xuyên tự kiểm tra tín dụng (tra cứu mềm)',
+              ),
             ],
           ),
         ],
