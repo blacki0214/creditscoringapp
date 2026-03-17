@@ -1023,8 +1023,8 @@ class _HomePageState extends State<HomePage> {
       children: [
         // Loan Status Box
         if (showScoreStatus) ...[
-          const Text(
-            'Score Status',
+          Text(
+            context.t('Score Status', 'Trạng thái chấm điểm'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1071,10 +1071,13 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Text(
                         activeStatus == ApplicationStatus.processing
-                            ? 'Scoring (In Progress)'
+                            ? context.t(
+                                'Scoring (In Progress)',
+                                'Đang chấm điểm',
+                              )
                             : activeStatus == ApplicationStatus.scored
-                            ? 'Scored'
-                            : 'Rejected',
+                            ? context.t('Scored', 'Đã chấm điểm')
+                            : context.t('Rejected', 'Không được chấp thuận'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -1088,10 +1091,19 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 4),
                       Text(
                         activeStatus == ApplicationStatus.processing
-                            ? 'We are calculating your credit score...'
+                            ? context.t(
+                                'We are calculating your credit score...',
+                                'Chúng tôi đang tính toán điểm tín dụng của bạn...',
+                              )
                             : activeStatus == ApplicationStatus.scored
-                            ? 'Your score has been calculated successfully'
-                            : 'Your application was not approved',
+                            ? context.t(
+                                'Your score has been calculated successfully',
+                                'Điểm tín dụng của bạn đã được tính toán thành công',
+                              )
+                            : context.t(
+                                'Your application was not approved',
+                                'Đơn của bạn không được chấp thuận',
+                              ),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -1114,8 +1126,8 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Limit Amount',
+                              Text(
+                                context.t('Limit Amount', 'Hạn mức'),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Color(0xFF1A1F3F),
@@ -1163,8 +1175,8 @@ class _HomePageState extends State<HomePage> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: const Text(
-                                'Continue',
+                              child: Text(
+                                context.t('Continue', 'Tiếp tục'),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1188,8 +1200,8 @@ class _HomePageState extends State<HomePage> {
             (isActiveFromHistory ||
                 (loanViewModel.step3Completed &&
                     loanViewModel.step4Completed))) ...[
-          const Text(
-            'Current Loan Offer',
+          Text(
+            context.t('Current Loan Offer', 'Đề nghị khoản vay hiện tại'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1218,8 +1230,8 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       (activeOffer['approved'] as bool? ?? true)
-                          ? 'APPROVED'
-                          : 'REJECTED',
+                          ? context.t('APPROVED', 'ĐÃ DUYỆT')
+                          : context.t('REJECTED', 'TỪ CHỐI'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -1246,7 +1258,7 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Loan Amount',
+                          context.t('Loan Amount', 'Số tiền vay'),
                           currencyFormat.format(
                             activeOffer['loanAmountVnd'] as num,
                           ),
@@ -1258,8 +1270,11 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Interest Rate',
-                          '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / year',
+                          context.t('Interest Rate', 'Lãi suất'),
+                          context.t(
+                            '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / year',
+                            '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / năm',
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -1268,7 +1283,7 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Monthly Payment',
+                          context.t('Monthly Payment', 'Thanh toán hàng tháng'),
                           currencyFormat.format(
                             activeOffer['monthlyPaymentVnd'] as num,
                           ),
@@ -1280,14 +1295,17 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Loan Term',
-                          '${activeOffer['loanTermMonths']} months',
+                          context.t('Loan Term', 'Kỳ hạn vay'),
+                          context.t(
+                            '${activeOffer['loanTermMonths']} months',
+                            '${activeOffer['loanTermMonths']} tháng',
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
                   _buildLoanDetailRow(
-                    'Credit Score',
+                    context.t('Credit Score', 'Điểm tín dụng'),
                     '${activeOffer['creditScore']}',
                   ),
                 ] else ...[
@@ -1305,7 +1323,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 12),
                         _buildLoanDetailRow(
-                          'Credit Score',
+                          context.t('Credit Score', 'Điểm tín dụng'),
                           '${activeOffer['creditScore']}',
                         ),
                       ],
@@ -1324,7 +1342,7 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.money_off, size: 64, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'No Active Loan',
+                  context.t('No Active Loan', 'Không có khoản vay đang hoạt động'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1333,7 +1351,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Start a new loan application',
+                  context.t('Start a new loan application', 'Bắt đầu hồ sơ vay mới'),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
@@ -1357,7 +1375,7 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('Apply Now'),
+                  child: Text(context.t('Apply Now', 'Đăng ký ngay')),
                 ),
               ],
             ),
@@ -1379,7 +1397,7 @@ class _HomePageState extends State<HomePage> {
             Icon(Icons.history, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'No Applications Yet',
+              context.t('No Applications Yet', 'Chưa có hồ sơ nào'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1388,7 +1406,10 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your loan applications will appear here',
+              context.t(
+                'Your loan applications will appear here',
+                'Các hồ sơ vay của bạn sẽ hiển thị tại đây',
+              ),
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
@@ -1399,8 +1420,8 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Application History',
+        Text(
+          context.t('Application History', 'Lịch sử hồ sơ'),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -1463,7 +1484,9 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isApproved ? 'Approved' : 'Rejected',
+                            isApproved
+                                ? context.t('Approved', 'Đã duyệt')
+                                : context.t('Rejected', 'Từ chối'),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -1483,7 +1506,10 @@ class _HomePageState extends State<HomePage> {
                           if (isApproved) ...[
                             const SizedBox(height: 2),
                             Text(
-                              'Tap to view contract status',
+                              context.t(
+                                'Tap to view contract status',
+                                'Nhấn để xem trạng thái hợp đồng',
+                              ),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade500,
@@ -1509,7 +1535,7 @@ class _HomePageState extends State<HomePage> {
                           )
                         else if (!isApproved)
                           Text(
-                            'Not approved',
+                            context.t('Not approved', 'Không được duyệt'),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
