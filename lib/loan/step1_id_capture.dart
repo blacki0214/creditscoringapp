@@ -1,10 +1,11 @@
 import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import '../config/app_environment.dart';
 import '../viewmodels/loan_viewmodel.dart';
+import '../utils/app_localization.dart';
 import 'step1_selfie.dart';
 
 class Step1IDCapturePage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
   bool isFrontLoading = false;
   bool isBackLoading = false;
   bool _autoFlowRunning = false;
+  bool get _autoCaptureDisabled => AppEnvironment.shouldDisableAutoCaptureIdCard;
   bool get _isMobile =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
@@ -29,7 +31,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startAutoScanFlow();
+      if (!_autoCaptureDisabled) {
+        _startAutoScanFlow();
+      }
     });
   }
 
@@ -37,8 +41,13 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
     if (_autoFlowRunning || !mounted) return;
     if (!_isMobile) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Auto-scan is only available on Android/iOS devices.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Auto-scan is only available on Android/iOS devices.',
+              'Quét tự động chỉ khả dụng trên Android/iOS.',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -47,7 +56,6 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
     final vm = context.read<LoanViewModel>();
     final frontDone = vm.frontIdData?.success ?? false;
-    final backDone = vm.backIdData?.success ?? false;
 
     setState(() {
       _autoFlowRunning = true;
@@ -91,9 +99,14 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
         context,
         MaterialPageRoute(
           builder: (_) => _LiveAutoCapturePage(
-            title: isFront ? 'Scan Front of ID Card' : 'Scan Back of ID Card',
-            subtitle:
-                'Center the card inside the frame and keep your hand steady.',
+            title: isFront
+                ? context.t('Scan Front of ID Card', 'Quét mặt trước CCCD')
+                : context.t('Scan Back of ID Card', 'Quét mặt sau CCCD'),
+            subtitle: context.t(
+              'Center the card inside the frame and keep your hand steady.',
+              'Đặt thẻ vào giữa khung và giữ tay ổn định.',
+            ),
+            manualCaptureEnabled: _autoCaptureDisabled,
           ),
         ),
       );
@@ -140,19 +153,22 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Authentication failed'),
+        title: Text(context.t('Authentication failed', 'Xác thực thất bại')),
         content: Text(
           loanViewModel.vnptErrorMessage ??
-              'Cannot recognize the ID card. Please rescan clearly.',
+              context.t(
+                'Cannot recognize the ID card. Please rescan clearly.',
+                'Không thể nhận diện CCCD. Vui lòng quét lại rõ hơn.',
+              ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.t('Cancel', 'Hủy')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Rescan'),
+            child: Text(context.t('Rescan', 'Quét lại')),
           ),
         ],
       ),
@@ -162,8 +178,13 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
     if (result != true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Scan cancelled. Tap Retry Auto-Scan to try again.'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Scan cancelled. Tap Retry Auto-Scan to try again.',
+              'Đã hủy quét. Nhấn thử quét lại tự động để tiếp tục.',
+            ),
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -224,9 +245,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
-              'Scoring - Step 1 EKYC',
-              style: TextStyle(color: Colors.black, fontSize: 16),
+            title: Text(
+              context.t('Scoring - Step 1 EKYC', 'Chấm điểm - Bước 1 EKYC'),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           body: SafeArea(
@@ -238,9 +259,12 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        const Text(
-                          'Step 1: Verify your identity',
-                          style: TextStyle(
+                        Text(
+                          context.t(
+                            'Step 1: Verify your identity',
+                            'Bước 1: Xác minh danh tính',
+                          ),
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1A1F3F),
@@ -248,7 +272,14 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Auto-scanning front then back ID card',
+                          context.t(
+                            _autoCaptureDisabled
+                                ? 'Scan front then back ID card'
+                                : 'Auto-scanning front then back ID card',
+                            _autoCaptureDisabled
+                                ? 'Quét mặt trước rồi mặt sau CCCD'
+                                : 'Tự động quét mặt trước và mặt sau CCCD',
+                          ),
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey.shade600,
@@ -257,8 +288,19 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         const SizedBox(height: 8),
                         Text(
                           _autoFlowRunning
-                              ? 'Keep your card stable. Capture and verification run automatically.'
-                              : 'Auto flow paused. Tap retry to continue.',
+                              ? context.t(
+                                  'Keep your card stable. Capture and verification run automatically.',
+                                  'Giữ thẻ ổn định. Ảnh sẽ được chụp và xác thực tự động.',
+                                )
+                              : _autoCaptureDisabled
+                              ? context.t(
+                                  'Auto-capture is disabled in test mode. Tap Start Scan to continue.',
+                                  'Đã tắt chụp tự động trong chế độ test. Nhấn Bắt đầu quét để tiếp tục.',
+                                )
+                              : context.t(
+                                  'Auto flow paused. Tap retry to continue.',
+                                  'Luồng tự động đã tạm dừng. Nhấn thử lại để tiếp tục.',
+                                ),
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey.shade500,
@@ -269,7 +311,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
                         // Front ID Section
                         _buildIDSection(
-                          title: 'Front of ID Card',
+                          title: context.t('Front of ID Card', 'Mặt trước CCCD'),
                           imageData: frontImageData,
                           isLoading: isFrontLoading,
                           isVerifying: isFrontVerifying,
@@ -280,7 +322,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
                         // Back ID Section
                         _buildIDSection(
-                          title: 'Back of ID Card',
+                          title: context.t('Back of ID Card', 'Mặt sau CCCD'),
                           imageData: backImageData,
                           isLoading: isBackLoading,
                           isVerifying: isBackVerifying,
@@ -295,7 +337,11 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                             child: ElevatedButton.icon(
                               onPressed: _startAutoScanFlow,
                               icon: const Icon(Icons.autorenew),
-                              label: const Text('Retry Auto-Scan'),
+                              label: Text(
+                                _autoCaptureDisabled
+                                    ? context.t('Start Scan', 'Bắt đầu quét')
+                                    : context.t('Retry Auto-Scan', 'Thử quét lại tự động'),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4C40F7),
                                 foregroundColor: Colors.white,
@@ -329,7 +375,11 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         ),
                       ),
                       child: Text(
-                        canContinue ? 'Continue to Selfie' : 'Auto-scanning...',
+                        canContinue
+                          ? context.t('Continue to Selfie', 'Tiếp tục chụp khuôn mặt')
+                          : _autoFlowRunning
+                          ? context.t('Auto-scanning...', 'Đang quét tự động...')
+                          : context.t('Waiting to scan...', 'Đang chờ quét...'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -392,7 +442,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Waiting for auto-scan',
+                    context.t('Waiting for auto-scan', 'Đang chờ quét tự động'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -436,9 +486,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   ),
                 )
               else if (!isProcessed)
-                const Text(
-                  'Verifying...',
-                  style: TextStyle(
+                Text(
+                  context.t('Verifying...', 'Đang xác thực...'),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF4C40F7),
@@ -454,9 +504,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                       size: 24,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Verified',
-                      style: TextStyle(
+                    Text(
+                      context.t('Verified', 'Đã xác thực'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF4CAF50),
@@ -472,10 +522,15 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 }
 
 class _LiveAutoCapturePage extends StatefulWidget {
-  const _LiveAutoCapturePage({required this.title, required this.subtitle});
+  const _LiveAutoCapturePage({
+    required this.title,
+    required this.subtitle,
+    this.manualCaptureEnabled = false,
+  });
 
   final String title;
   final String subtitle;
+  final bool manualCaptureEnabled;
 
   @override
   State<_LiveAutoCapturePage> createState() => _LiveAutoCapturePageState();
@@ -536,13 +591,20 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
       });
 
       _startDetectionStream();
-      _startAutoCaptureCountdown();
+      if (!widget.manualCaptureEnabled) {
+        _startAutoCaptureCountdown();
+      }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Unable to start live camera: $e'),
+          content: Text(
+            context.t(
+              'Unable to start live camera: $e',
+              'Không thể khởi động camera trực tiếp: $e',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -690,13 +752,18 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
         _stableTicks = 0;
       });
       _startDetectionStream();
-      _startAutoCaptureCountdown();
+      if (!widget.manualCaptureEnabled) {
+        _startAutoCaptureCountdown();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             autoTriggered
-                ? 'Auto-capture failed. Keep ID inside the frame and retry.'
-                : 'Capture failed: $e',
+                ? context.t(
+                    'Auto-capture failed. Keep ID inside the frame and retry.',
+                    'Chụp tự động thất bại. Giữ CCCD trong khung và thử lại.',
+                  )
+                : context.t('Capture failed: $e', 'Chụp ảnh thất bại: $e'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -772,24 +839,50 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      minHeight: 8,
-                      value: progress,
-                      backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF4CAF50),
+                  if (!widget.manualCaptureEnabled)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        minHeight: 8,
+                        value: progress,
+                        backgroundColor: Colors.white24,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF4CAF50),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                  if (!widget.manualCaptureEnabled) const SizedBox(height: 8),
+                  if (widget.manualCaptureEnabled)
+                    SizedBox(
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _isCapturing ? null : () => _capture(),
+                        icon: const Icon(Icons.camera_alt),
+                        label: Text(context.t('Capture ID', 'Chụp CCCD')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C40F7),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  if (widget.manualCaptureEnabled) const SizedBox(height: 8),
                   Text(
                     _isCapturing
-                        ? 'Capturing...'
+                        ? context.t('Capturing...', 'Đang chụp...')
+                        : widget.manualCaptureEnabled
+                        ? context.t(
+                            'Manual mode: align the ID in frame, then tap Capture ID.',
+                            'Chế độ thủ công: đặt CCCD trong khung rồi nhấn Chụp CCCD.',
+                          )
                         : _idInterfaceDetected
-                        ? 'ID interface detected. Auto-capture in ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)}s'
-                        : 'Detecting ID interface...',
+                        ? context.t(
+                            'ID interface detected. Auto-capture in ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)}s',
+                            'Đã phát hiện thẻ CCCD. Tự động chụp sau ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)} giây',
+                          )
+                        : context.t(
+                            'Detecting ID interface...',
+                            'Đang nhận diện thẻ CCCD...',
+                          ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,

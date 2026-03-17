@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
+import '../utils/app_localization.dart';
 
 class DemoCalculatorPage extends StatefulWidget {
   const DemoCalculatorPage({super.key});
@@ -113,9 +114,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             automaticallyImplyLeading: false,
-            title: const Text(
-              'Demo: Financial Calculator',
-              style: TextStyle(color: Colors.black, fontSize: 16),
+            title: Text(
+              context.t('Demo: Financial Calculator', 'Demo: Máy tính tài chính'),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
             ),
           ),
           body: SafeArea(
@@ -133,9 +134,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Calculate Your Financial Profile',
-                            style: TextStyle(
+                          Text(
+                            context.t('Calculate Your Financial Profile', 'Tính hồ sơ tài chính của bạn'),
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1A1F3F),
@@ -143,7 +144,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Enter your information to see your credit score and loan eligibility (no ID verification required).',
+                            context.t('Enter your information to see your credit score and loan eligibility (no ID verification required).', 'Nhập thông tin để xem điểm tín dụng và khả năng vay (không cần xác thực CCCD).'),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
@@ -165,8 +166,11 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Do you have credit history?',
+                                Text(
+                                  context.t(
+                                    'Do you have credit history?',
+                                    'Bạn có lịch sử tín dụng không?',
+                                  ),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -178,8 +182,12 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                   children: [
                                     Expanded(
                                       child: RadioListTile<bool>(
-                                        title: const Text(
-                                            'Yes, I have credit history'),
+                                        title: Text(
+                                          context.t(
+                                            'Yes, I have credit history',
+                                            'Có, tôi có lịch sử tín dụng',
+                                          ),
+                                        ),
                                         value: true,
                                         groupValue: _hasCreditHistory,
                                         onChanged: (val) => setState(
@@ -194,8 +202,12 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                   children: [
                                     Expanded(
                                       child: RadioListTile<bool>(
-                                        title:
-                                            const Text('No, I\'m new to credit'),
+                                        title: Text(
+                                          context.t(
+                                            'No, I\'m new to credit',
+                                            'Không, tôi chưa có lịch sử tín dụng',
+                                          ),
+                                        ),
                                         value: false,
                                         groupValue: _hasCreditHistory,
                                         onChanged: (val) => setState(
@@ -214,15 +226,19 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             const SizedBox(height: 24),
 
                             // Personal Details
-                            _buildSectionHeader('Personal Details'),
+                            _buildSectionHeader(
+                              context.t('Personal Details', 'Thông tin cá nhân'),
+                            ),
                             _buildDateField(),
 
                             const SizedBox(height: 16),
 
                             // Employment & Income
-                            _buildSectionHeader('Employment & Income'),
+                            _buildSectionHeader(
+                              context.t('Employment & Income', 'Nghề nghiệp & Thu nhập'),
+                            ),
                             _buildDropdown(
-                              label: 'Employment Status',
+                              label: context.t('Employment Status', 'Tình trạng việc làm'),
                               value: _employmentStatus,
                               items: employmentOptions,
                               onChanged: (val) =>
@@ -233,7 +249,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               fieldKey: _yearsEmployedFieldKey,
                               controller: _yearsEmployedController,
                               focusNode: _yearsEmployedFocusNode,
-                              label: 'Years Employed',
+                              label: context.t('Years Employed', 'Số năm làm việc'),
                               keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
@@ -250,7 +266,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               fieldKey: _monthlyIncomeFieldKey,
                               controller: _monthlyIncomeController,
                               focusNode: _monthlyIncomeFocusNode,
-                              label: 'Monthly Income (VND)',
+                              label: context.t('Monthly Income (VND)', 'Thu nhập hàng tháng (VND)'),
                               keyboardType: TextInputType.number,
                               maxLength: 15,
                               inputFormatters: [
@@ -264,9 +280,11 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             const SizedBox(height: 16),
 
                             // Residence & Assets
-                            _buildSectionHeader('Residence & Assets'),
+                            _buildSectionHeader(
+                              context.t('Residence & Assets', 'Nơi ở & Tài sản'),
+                            ),
                             _buildDropdown(
-                              label: 'Home Ownership',
+                              label: context.t('Home Ownership', 'Tình trạng nhà ở'),
                               value: _homeOwnership,
                               items: homeOwnershipOptions,
                               onChanged: (val) =>
@@ -277,7 +295,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               fieldKey: _addressFieldKey,
                               controller: _addressController,
                               focusNode: _addressFocusNode,
-                              label: 'Current Address',
+                              label: context.t('Current Address', 'Địa chỉ hiện tại'),
                               maxLines: 2,
                               maxLength: 100,
                               inputFormatters: [
@@ -293,13 +311,15 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             const SizedBox(height: 16),
 
                             // Credit History
-                            _buildSectionHeader('Credit History'),
+                            _buildSectionHeader(
+                              context.t('Credit History', 'Lịch sử tín dụng'),
+                            ),
                             if (_hasCreditHistory == true) ...[
                               _buildTextField(
                                 fieldKey: _yearsCreditHistoryFieldKey,
                                 controller: _yearsCreditHistoryController,
                                 focusNode: _yearsCreditHistoryFocusNode,
-                                label: 'Years Credit History',
+                                label: context.t('Years Credit History', 'Số năm lịch sử tín dụng'),
                                 keyboardType: TextInputType.number,
                                 maxLength: 2,
                                 inputFormatters: [
@@ -310,14 +330,24 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               ),
                               const SizedBox(height: 16),
                               SwitchListTile(
-                                title: const Text('Have you ever defaulted?'),
+                                title: Text(
+                                  context.t(
+                                    'Have you ever defaulted?',
+                                    'Bạn đã từng nợ xấu chưa?',
+                                  ),
+                                ),
                                 value: _hasPreviousDefaults,
                                 onChanged: (val) =>
                                     setState(() => _hasPreviousDefaults = val),
                                 activeThumbColor: const Color(0xFF4C40F7),
                               ),
                               SwitchListTile(
-                                title: const Text('Currently defaulting?'),
+                                title: Text(
+                                  context.t(
+                                    'Currently defaulting?',
+                                    'Hiện tại đang có nợ xấu?',
+                                  ),
+                                ),
                                 value: _currentlyDefaulting,
                                 onChanged: (val) =>
                                     setState(() => _currentlyDefaulting = val),
@@ -339,7 +369,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'No problem! We\'ll calculate your profile based on income and employment only.',
+                                        context.t(
+                                          'No problem! We\'ll calculate your profile based on income and employment only.',
+                                          'Không sao! Chúng tôi sẽ tính hồ sơ của bạn dựa trên thu nhập và việc làm.',
+                                        ),
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.grey.shade700,
@@ -384,7 +417,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             // Results card
                             if (_limitResult != null) ...[
                               const SizedBox(height: 20),
-                              _buildSectionHeader('Your Financial Profile'),
+                              _buildSectionHeader(
+                                context.t('Your Financial Profile', 'Hồ sơ tài chính của bạn'),
+                              ),
                               _buildResultCard(),
                             ],
                           ],
@@ -418,8 +453,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'Calculate Profile',
+                      child: Text(
+                        context.t('Calculate Profile', 'Tính hồ sơ'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -438,7 +473,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         if (_isCalculating)
           Container(
             color: Colors.black54,
-            child: const Center(
+            child: Center(
               child: Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(
@@ -449,22 +484,22 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(
+                      const CircularProgressIndicator(
                         color: Color(0xFF4C40F7),
                         strokeWidth: 3,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text(
-                        'Analyzing your profile…',
+                        context.t('Analyzing your profile…', 'Đang phân tích hồ sơ của bạn…'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF1A1F3F),
                         ),
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        'This may take up to 30 seconds.',
+                        context.t('This may take up to 30 seconds.', 'Quá trình này có thể mất đến 30 giây.'),
                         style: TextStyle(fontSize: 13, color: Colors.grey),
                       ),
                     ],
@@ -495,8 +530,13 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   Future<void> _calculateProfile() async {
     if (_hasCreditHistory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select whether you have credit history'),
+        SnackBar(
+          content: Text(
+            context.t(
+              'Please select whether you have credit history',
+              'Vui lòng chọn bạn có lịch sử tín dụng hay không',
+            ),
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -561,7 +601,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       if (!mounted) return;
       setState(() {
         _isCalculating = false;
-        _errorMessage = 'Could not calculate profile. Please try again.\n$e';
+        _errorMessage = context.t(
+          'Could not calculate profile. Please try again.\n$e',
+          'Không thể tính hồ sơ. Vui lòng thử lại.\n$e',
+        );
       });
     }
   }
@@ -611,11 +654,16 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         if (picked != null) setState(() => _selectedDOB = picked);
       },
       validator: (value) {
-        if (_selectedDOB == null) return 'Please select your date of birth';
+        if (_selectedDOB == null) {
+          return context.t(
+            'Please select your date of birth',
+            'Vui lòng chọn ngày sinh',
+          );
+        }
         return null;
       },
       decoration: InputDecoration(
-        labelText: 'Date of Birth',
+        labelText: context.t('Date of Birth', 'Ngày sinh'),
         suffixIcon:
             const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -652,7 +700,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       maxLength: maxLength,
       validator: validator ??
           (value) {
-            if (value == null || value.isEmpty) return 'Please enter $label';
+            if (value == null || value.isEmpty) {
+              return context.t('Please enter $label', 'Vui lòng nhập $label');
+            }
             return null;
           },
       decoration: InputDecoration(
@@ -695,7 +745,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       items: items
           .map((item) => DropdownMenuItem(
                 value: item,
-                child: Text(item, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  _getDropdownDisplayText(item),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ))
           .toList(),
       onChanged: onChanged,
@@ -750,7 +803,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      approved ? 'Approved' : 'Not Approved',
+                      approved
+                          ? context.t('Approved', 'Được duyệt')
+                          : context.t('Not Approved', 'Không được duyệt'),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -771,8 +826,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text(
-                      'Credit Score',
+                    Text(
+                      context.t('Credit Score', 'Điểm tín dụng'),
                       style: TextStyle(color: Colors.white70, fontSize: 11),
                     ),
                     Text(
@@ -802,7 +857,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                         size: 18, color: riskColor),
                     const SizedBox(width: 8),
                     Text(
-                      'Max Loan Limit',
+                      context.t('Max Loan Limit', 'Hạn mức vay tối đa'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -812,7 +867,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                   ],
                 ),
                 Text(
-                  NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                  NumberFormat.currency(
+                    locale: context.isVietnamese ? 'vi_VN' : 'en_US',
+                    symbol: '₫',
+                  )
                       .format(limit.loanLimitVnd),
                   style: const TextStyle(
                     fontSize: 14,
@@ -862,47 +920,103 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   // ==================== VALIDATORS ====================
 
   String? _validateYearsEmployed(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Years Employed';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Years Employed', 'Vui lòng nhập số năm làm việc');
+    }
     if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
-      return 'Enter a valid number (up to 2 decimals)';
+      return context.t(
+        'Enter a valid number (up to 2 decimals)',
+        'Nhập số hợp lệ (tối đa 2 chữ số thập phân)',
+      );
     }
     final years = double.tryParse(value);
     if (years == null || years < 0 || years > 60) {
-      return 'Years Employed must be between 0 and 60';
+      return context.t(
+        'Years Employed must be between 0 and 60',
+        'Số năm làm việc phải trong khoảng 0 đến 60',
+      );
     }
     return null;
   }
 
   String? _validateMonthlyIncome(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Monthly Income';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Monthly Income', 'Vui lòng nhập thu nhập hàng tháng');
+    }
     final cleaned = value.replaceAll('.', '').replaceAll(',', '');
     final income = double.tryParse(cleaned);
     if (income == null || income <= 0) {
-      return 'Monthly Income must be greater than 0';
+      return context.t(
+        'Monthly Income must be greater than 0',
+        'Thu nhập hàng tháng phải lớn hơn 0',
+      );
     }
     return null;
   }
 
 
   String? _validateAddress(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter Current Address';
-    if (value.trim().length < 5) return 'Address must be at least 5 characters';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter Current Address', 'Vui lòng nhập địa chỉ hiện tại');
+    }
+    if (value.trim().length < 5) {
+      return context.t(
+        'Address must be at least 5 characters',
+        'Địa chỉ phải có ít nhất 5 ký tự',
+      );
+    }
     if (!RegExp(r'^[\p{L}\p{M}0-9\s,\.\-/#]+$', unicode: true)
         .hasMatch(value)) {
-      return 'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #';
+      return context.t(
+        'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #',
+        'Địa chỉ chỉ được chứa chữ, số, khoảng trắng, dấu phẩy, dấu chấm, dấu gạch nối, dấu gạch chéo và #',
+      );
     }
     return null;
   }
 
   String? _validateYearsCreditHistory(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter Years Credit History';
+      return context.t(
+        'Please enter Years Credit History',
+        'Vui lòng nhập số năm lịch sử tín dụng',
+      );
     }
     final years = int.tryParse(value);
     if (years == null || years < 0 || years > 50) {
-      return 'Years Credit History must be between 0 and 50';
+      return context.t(
+        'Years Credit History must be between 0 and 50',
+        'Số năm lịch sử tín dụng phải trong khoảng 0 đến 50',
+      );
     }
     return null;
+  }
+
+  String _getDropdownDisplayText(String value) {
+    switch (value) {
+      case 'EMPLOYED':
+        return context.t('Employed', 'Đang làm việc');
+      case 'SELF_EMPLOYED':
+        return context.t('Self-employed', 'Tự kinh doanh');
+      case 'UNEMPLOYED':
+        return context.t('Unemployed', 'Thất nghiệp');
+      case 'STUDENT':
+        return context.t('Student', 'Sinh viên');
+      case 'RETIRED':
+        return context.t('Retired', 'Đã nghỉ hưu');
+      case 'RENT':
+        return context.t('Rent', 'Thuê');
+      case 'OWN':
+        return context.t('Own', 'Sở hữu');
+      case 'MORTGAGE':
+        return context.t('Mortgage', 'Thế chấp');
+      case 'LIVING_WITH_PARENTS':
+        return context.t('Living with parents', 'Sống cùng bố mẹ');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
   }
 }
 

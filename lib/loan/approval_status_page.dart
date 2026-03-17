@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../home/main_shell.dart';
+import '../utils/app_localization.dart';
 
 class ApprovalStatusPage extends StatefulWidget {
   final double loanAmount;
@@ -32,7 +33,11 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
     final offer = vm.currentOffer;
 
     if (offer == null) {
-      return const Scaffold(body: Center(child: Text('Error: No offer data.')));
+      return Scaffold(
+        body: Center(
+          child: Text(context.t('Error: No offer data.', 'Lỗi: Không có dữ liệu đề nghị.')),
+        ),
+      );
     }
 
     // Determine approval status based on offer
@@ -40,11 +45,11 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
     final statusIcon = isApproved ? Icons.check_circle : Icons.cancel;
     final statusColor = isApproved ? const Color(0xFF4CAF50) : Colors.red;
     final statusTitle = isApproved
-        ? 'Application Approved'
-        : 'Application Rejected';
+      ? context.t('Application Approved', 'Hồ sơ được duyệt')
+      : context.t('Application Rejected', 'Hồ sơ bị từ chối');
     final statusMessage = isApproved
-        ? 'Your loan has been approved and is ready for disbursement.'
-        : 'Unfortunately, your application could not be approved at this time.';
+      ? context.t('Your loan has been approved and is ready for disbursement.', 'Khoản vay của bạn đã được phê duyệt và sẵn sàng giải ngân.')
+      : context.t('Unfortunately, your application could not be approved at this time.', 'Rất tiếc, hồ sơ của bạn chưa thể được phê duyệt ở thời điểm này.');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -52,9 +57,9 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
-          'Application Status',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Application Status', 'Trạng thái hồ sơ'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -145,9 +150,9 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Complete Application',
-                          style: TextStyle(
+                        child: Text(
+                          context.t('Complete Application', 'Hoàn tất hồ sơ'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -178,9 +183,9 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Return Home',
-                          style: TextStyle(
+                        child: Text(
+                          context.t('Return Home', 'Quay về trang chủ'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -197,9 +202,9 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       onPressed: () {
                         // Contact support
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(
-                              'Support team will contact you soon.',
+                              context.t('Support team will contact you soon.', 'Bộ phận hỗ trợ sẽ liên hệ với bạn sớm.'),
                             ),
                             backgroundColor: Colors.blue,
                           ),
@@ -214,9 +219,9 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'Contact Support',
-                        style: TextStyle(
+                      child: Text(
+                        context.t('Contact Support', 'Liên hệ hỗ trợ'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF4C40F7),
@@ -247,9 +252,9 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Loan Details',
-            style: TextStyle(
+          Text(
+            context.t('Loan Details', 'Chi tiết khoản vay'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1A1F3F),

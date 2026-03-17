@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step6_disbursement.dart';
+import '../utils/app_localization.dart';
 
 class Step5ContractReviewPage extends StatefulWidget {
   final double loanAmount;
@@ -66,7 +67,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
     final offer = vm.currentOffer;
 
     if (offer == null) {
-      return const Scaffold(body: Center(child: Text('No offer available.')));
+      return Scaffold(
+        body: Center(child: Text(context.t('No offer available.', 'Không có đề nghị khoản vay.'))),
+      );
     }
 
     return Scaffold(
@@ -78,9 +81,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Step 5: Review & Sign Contract',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Step 5: Review & Sign Contract', 'Bước 5: Xem và ký hợp đồng'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -95,9 +98,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Loan Contract Agreement',
-                      style: TextStyle(
+                    Text(
+                      context.t('Loan Contract Agreement', 'Hợp đồng khoản vay'),
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1F3F),
@@ -105,7 +108,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Please review the contract terms and sign to proceed.',
+                      context.t('Please review the contract terms and sign to proceed.', 'Vui lòng xem điều khoản hợp đồng và ký để tiếp tục.'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -116,68 +119,89 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     _buildContractSummaryCard(offer),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader('Loan Terms'),
+                    _buildSectionHeader(context.t('Loan Terms', 'Điều khoản khoản vay')),
                     _buildTermRow(
-                      'Loan Amount',
+                      context.t('Loan Amount', 'Số tiền vay'),
                       _currencyFormat.format(widget.loanAmount),
                     ),
                     const SizedBox(height: 12),
                     _buildTermRow(
-                      'Interest Rate',
-                      '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}% per annum',
+                      context.t('Interest Rate', 'Lãi suất'),
+                      context.t(
+                        '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}% per annum',
+                        '${(offer['interestRate'] as num?)?.toStringAsFixed(2) ?? "15.00"}% mỗi năm',
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _buildTermRow('Loan Term', '${widget.tenor} months'),
+                    _buildTermRow(
+                      context.t('Loan Term', 'Kỳ hạn vay'),
+                      context.t('${widget.tenor} months', '${widget.tenor} tháng'),
+                    ),
                     const SizedBox(height: 12),
                     _buildTermRow(
-                      'Monthly Payment',
+                      context.t('Monthly Payment', 'Thanh toán hàng tháng'),
                       _currencyFormat.format(_calculateMonthlyPayment(offer)),
                     ),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader('Additional Charges'),
-                    _buildTermRow('Origination Fee', 'Included in rate'),
-                    const SizedBox(height: 12),
+                    _buildSectionHeader(context.t('Additional Charges', 'Phí bổ sung')),
                     _buildTermRow(
-                      'Insurance',
-                      'Optional - will be presented post-approval',
+                      context.t('Origination Fee', 'Phí khởi tạo'),
+                      context.t('Included in rate', 'Đã bao gồm trong lãi suất'),
                     ),
                     const SizedBox(height: 12),
                     _buildTermRow(
-                      'Late Payment Fee',
-                      '2% per month after due date',
+                      context.t('Insurance', 'Bảo hiểm'),
+                      context.t(
+                        'Optional - will be presented post-approval',
+                        'Tùy chọn - sẽ được cung cấp sau khi phê duyệt',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTermRow(
+                      context.t('Late Payment Fee', 'Phí trả chậm'),
+                      context.t('2% per month after due date', '2% mỗi tháng sau ngày đến hạn'),
                     ),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader('Legal Agreements'),
+                    _buildSectionHeader(context.t('Legal Agreements', 'Cam kết pháp lý')),
                     _buildAgreementCheckbox(
-                      label:
-                          'I agree to the Terms and Conditions of this Loan Agreement',
+                      label: context.t(
+                        'I agree to the Terms and Conditions of this Loan Agreement',
+                        'Tôi đồng ý với các điều khoản và điều kiện của hợp đồng vay này',
+                      ),
                       value: _agreedToTerms,
                       onChanged: (val) =>
                           setState(() => _agreedToTerms = val ?? false),
                     ),
                     const SizedBox(height: 12),
                     _buildAgreementCheckbox(
-                      label:
-                          'I authorize the lender to deduct monthly payments from my registered bank account',
+                      label: context.t(
+                        'I authorize the lender to deduct monthly payments from my registered bank account',
+                        'Tôi ủy quyền cho bên cho vay trích khoản thanh toán hàng tháng từ tài khoản ngân hàng đã đăng ký của tôi',
+                      ),
                       value: _agreedToDeduction,
                       onChanged: (val) =>
                           setState(() => _agreedToDeduction = val ?? false),
                     ),
                     const SizedBox(height: 12),
                     _buildAgreementCheckbox(
-                      label:
-                          'I consent to sharing my credit information with credit bureaus',
+                      label: context.t(
+                        'I consent to sharing my credit information with credit bureaus',
+                        'Tôi đồng ý chia sẻ thông tin tín dụng của mình với các tổ chức tín dụng',
+                      ),
                       value: _agreedToConsent,
                       onChanged: (val) =>
                           setState(() => _agreedToConsent = val ?? false),
                     ),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader('Digital Signature'),
-                    const Text(
-                      'Type your full name as signature:',
+                    _buildSectionHeader(context.t('Digital Signature', 'Chữ ký điện tử')),
+                    Text(
+                      context.t(
+                        'Type your full name as signature:',
+                        'Nhập họ và tên đầy đủ để ký:',
+                      ),
                       style: TextStyle(
                         fontSize: 13,
                         color: Color(0xFF1A1F3F),
@@ -198,7 +222,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                       ],
                       validator: _validateSignature,
                       decoration: InputDecoration(
-                        hintText: 'Enter your full name',
+                        hintText: context.t('Enter your full name', 'Nhập họ và tên đầy đủ'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -236,7 +260,10 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'By signing this contract, you acknowledge that you have read and agreed to all terms. This is a legally binding document.',
+                              context.t(
+                                'By signing this contract, you acknowledge that you have read and agreed to all terms. This is a legally binding document.',
+                                'Bằng việc ký hợp đồng này, bạn xác nhận đã đọc và đồng ý với toàn bộ điều khoản. Đây là tài liệu có giá trị pháp lý ràng buộc.',
+                              ),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade700,
@@ -275,8 +302,8 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                           color: Colors.white,
                           strokeWidth: 2,
                         )
-                      : const Text(
-                          'Sign & Continue',
+                        : Text(
+                          context.t('Sign & Continue', 'Ký và tiếp tục'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -329,7 +356,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Loan Status',
+                context.t('Loan Status', 'Trạng thái khoản vay'),
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
@@ -342,8 +369,8 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                   color: const Color(0xFF4CAF50).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Approved',
+                child: Text(
+                  context.t('Approved', 'Đã duyệt'),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -357,7 +384,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Credit Score',
+                context.t('Credit Score', 'Điểm tín dụng'),
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
@@ -466,12 +493,20 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
   }
 
   String? _validateSignature(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter your signature';
+    if (value == null || value.isEmpty) {
+      return context.t('Please enter your signature', 'Vui lòng nhập chữ ký của bạn');
+    }
     if (value.trim().length < 2) {
-      return 'Signature must be at least 2 characters';
+      return context.t(
+        'Signature must be at least 2 characters',
+        'Chữ ký phải có ít nhất 2 ký tự',
+      );
     }
     if (!RegExp(r"^[A-Za-z\s\-']+$").hasMatch(value)) {
-      return 'Signature can only contain letters, spaces, hyphens, and apostrophes';
+      return context.t(
+        'Signature can only contain letters, spaces, hyphens, and apostrophes',
+        'Chữ ký chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang và dấu nháy đơn',
+      );
     }
     return null;
   }

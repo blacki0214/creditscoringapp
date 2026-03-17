@@ -11,6 +11,7 @@ import 'forgot_password.dart';
 import 'phone_login_page.dart';
 import 'termOfService.dart';
 import '../home/main_shell.dart';
+import '../utils/app_localization.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,11 +43,14 @@ class _LoginPageState extends State<LoginPage> {
   /// Validate email format
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return context.t('Please enter your email', 'Vui lòng nhập email');
     }
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
+      return context.t(
+        'Please enter a valid email address',
+        'Vui lòng nhập địa chỉ email hợp lệ',
+      );
     }
     return null;
   }
@@ -54,12 +58,12 @@ class _LoginPageState extends State<LoginPage> {
   /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return context.t('Please enter your password', 'Vui lòng nhập mật khẩu');
     }
     if (value.length < 8 ||
         !value.contains(RegExp(r'[A-Z]')) ||
         !value.contains(RegExp(r'[0-9]'))) {
-      return 'Invalid password';
+      return context.t('Invalid password', 'Mật khẩu không hợp lệ');
     }
     return null;
   }
@@ -80,9 +84,9 @@ class _LoginPageState extends State<LoginPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text(
-              'Terms of Service',
-              style: TextStyle(
+            title: Text(
+              context.t('Terms of Service', 'Điều khoản dịch vụ'),
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF1A1F3F),
               ),
@@ -99,9 +103,9 @@ class _LoginPageState extends State<LoginPage> {
                       color: Color(0xFF3E4566),
                     ),
                     children: [
-                      const TextSpan(text: 'I agree to '),
+                      TextSpan(text: context.t('I agree to ', 'Tôi đồng ý với ')),
                       TextSpan(
-                        text: 'Terms of Service',
+                        text: context.t('Terms of Service', 'Điều khoản dịch vụ'),
                         style: const TextStyle(
                           decoration: TextDecoration.underline,
                           fontWeight: FontWeight.w600,
@@ -130,9 +134,9 @@ class _LoginPageState extends State<LoginPage> {
                     minimumSize: const Size(double.infinity, 48),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  child: const Text(
-                    'Decline',
-                    style: TextStyle(
+                  child: Text(
+                    context.t('Decline', 'Từ chối'),
+                    style: const TextStyle(
                       color: Colors.redAccent,
                       fontWeight: FontWeight.w600,
                     ),
@@ -149,9 +153,9 @@ class _LoginPageState extends State<LoginPage> {
                     minimumSize: const Size(double.infinity, 48),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  child: const Text(
-                    'Agree to all',
-                    style: TextStyle(
+                  child: Text(
+                    context.t('Agree to all', 'Đồng ý tất cả'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -190,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
           ],
           decoration: InputDecoration(
             labelText: 'Email',
-            hintText: 'Enter your email',
+            hintText: context.t('Enter your email', 'Nhập email của bạn'),
             prefixIcon: const Icon(Icons.email_outlined),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             enabledBorder: OutlineInputBorder(
@@ -216,8 +220,8 @@ class _LoginPageState extends State<LoginPage> {
           ],
           obscureText: viewModel.obscurePassword,
           decoration: InputDecoration(
-            labelText: 'Password',
-            hintText: 'Enter your password',
+            labelText: context.t('Password', 'Mật khẩu'),
+            hintText: context.t('Enter your password', 'Nhập mật khẩu của bạn'),
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               icon: Icon(
@@ -253,9 +257,9 @@ class _LoginPageState extends State<LoginPage> {
                 MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
               );
             },
-            child: const Text(
-              'Forgot password?',
-              style: TextStyle(
+            child: Text(
+              context.t('Forgot password?', 'Quên mật khẩu?'),
+              style: const TextStyle(
                 color: Color(0xFF4C40F7),
                 fontWeight: FontWeight.w600,
               ),
@@ -294,9 +298,9 @@ class _LoginPageState extends State<LoginPage> {
             ),
             child: viewModel.isLoading
                 ? const CircularProgressIndicator(color: Colors.white)
-                : const Text(
-                    'Sign in',
-                    style: TextStyle(
+                : Text(
+                  context.t('Sign in', 'Đăng nhập'),
+                  style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -319,9 +323,9 @@ class _LoginPageState extends State<LoginPage> {
                     );
                   },
             icon: const Icon(Icons.phone_outlined, color: Color(0xFF4C40F7)),
-            label: const Text(
-              'Sign in with Phone',
-              style: TextStyle(
+            label: Text(
+              context.t('Sign in with Phone', 'Đăng nhập bằng số điện thoại'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF4C40F7),
@@ -359,9 +363,9 @@ class _LoginPageState extends State<LoginPage> {
               height: 24,
               width: 24,
             ),
-            label: const Text(
-              'Continue with Google',
-              style: TextStyle(
+            label: Text(
+              context.t('Continue with Google', 'Tiếp tục với Google'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1A1F3F),
@@ -424,9 +428,9 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       const SizedBox(height: 40),
                       // Title
-                      const Text(
-                        'Sign in',
-                        style: TextStyle(
+                      Text(
+                        context.t('Sign in', 'Đăng nhập'),
+                        style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1F3F),
@@ -434,7 +438,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Welcome back',
+                        context.t('Welcome back', 'Chào mừng bạn quay lại'),
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey.shade600,
@@ -448,7 +452,10 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Don't have an account? ",
+                            context.t(
+                              "Don't have an account? ",
+                              'Bạn chưa có tài khoản? ',
+                            ),
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                           TextButton(
@@ -462,9 +469,9 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               );
                             },
-                            child: const Text(
-                              'Sign up',
-                              style: TextStyle(
+                            child: Text(
+                              context.t('Sign up', 'Đăng ký'),
+                              style: const TextStyle(
                                 color: Color(0xFF4C40F7),
                                 fontWeight: FontWeight.w600,
                               ),

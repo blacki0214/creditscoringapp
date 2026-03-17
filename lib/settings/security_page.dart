@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../utils/app_localization.dart';
 
 class SecurityPage extends StatefulWidget {
   const SecurityPage({super.key});
@@ -25,9 +26,9 @@ class _SecurityPageState extends State<SecurityPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Security',
-          style: TextStyle(
+        title: Text(
+          context.t('Security', 'Bảo mật'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -38,12 +39,12 @@ class _SecurityPageState extends State<SecurityPage> {
         padding: const EdgeInsets.all(20),
         children: [
           // Password Section
-          _buildSectionTitle('Password & Authentication'),
+          _buildSectionTitle(context.t('Password & Authentication', 'Mật khẩu & Xác thực')),
           const SizedBox(height: 12),
           _buildActionCard(
             icon: Icons.lock_outline,
-            title: 'Change Password',
-            subtitle: 'Update your account password',
+            title: context.t('Change Password', 'Đổi mật khẩu'),
+            subtitle: context.t('Update your account password', 'Cập nhật mật khẩu tài khoản'),
             onTap: () {
               _showChangePasswordDialog();
             },
@@ -51,8 +52,8 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(height: 12),
           _buildSwitchCard(
             icon: Icons.fingerprint,
-            title: 'Biometric Login',
-            subtitle: 'Use fingerprint or face recognition',
+            title: context.t('Biometric Login', 'Đăng nhập sinh trắc học'),
+            subtitle: context.t('Use fingerprint or face recognition', 'Dùng vân tay hoặc nhận diện khuôn mặt'),
             value: _biometricEnabled,
             onChanged: (value) {
               setState(() {
@@ -63,8 +64,8 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(height: 12),
           _buildSwitchCard(
             icon: Icons.security,
-            title: 'Two-Factor Authentication',
-            subtitle: 'Add an extra layer of security',
+            title: context.t('Two-Factor Authentication', 'Xác thực hai lớp'),
+            subtitle: context.t('Add an extra layer of security', 'Thêm một lớp bảo mật bổ sung'),
             value: _twoFactorEnabled,
             onChanged: (value) {
               setState(() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/settings_viewmodel.dart';
+import '../utils/app_localization.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -52,9 +53,9 @@ class _ProfilePageState extends State<ProfilePage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Profile',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          context.t('Profile', 'Hồ sơ'),
+          style: const TextStyle(color: Colors.black),
         ),
         actions: [
           TextButton(
@@ -73,8 +74,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     );
 
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Profile updated successfully'),
+                      SnackBar(
+                        content: Text(
+                          context.t('Profile updated successfully', 'Cập nhật hồ sơ thành công'),
+                        ),
                         backgroundColor: Color(0xFF4CAF50),
                       ),
                     );
@@ -86,7 +89,7 @@ class _ProfilePageState extends State<ProfilePage> {
               });
             },
             child: Text(
-              _isEditing ? 'Save' : 'Edit',
+              _isEditing ? context.t('Save', 'Lưu') : context.t('Edit', 'Sửa'),
               style: const TextStyle(
                 color: Color(0xFF4C40F7),
                 fontWeight: FontWeight.w600,
@@ -144,11 +147,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 32),
                 
                 // Personal Information Section
-                _buildSectionTitle('Personal Information'),
+                _buildSectionTitle(context.t('Personal Information', 'Thông tin cá nhân')),
                 const SizedBox(height: 16),
                 
                 _buildInfoField(
-                  label: 'Full Name',
+                  label: context.t('Full Name', 'Họ và tên'),
                   controller: _nameController,
                   icon: Icons.person_outline,
                   enabled: _isEditing,
@@ -156,7 +159,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 
                 _buildInfoField(
-                  label: 'Email',
+                  label: context.t('Email', 'Email'),
                   controller: _emailController,
                   icon: Icons.email_outlined,
                   enabled: _isEditing,
@@ -165,7 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 
                 _buildInfoField(
-                  label: 'Phone Number',
+                  label: context.t('Phone Number', 'Số điện thoại'),
                   controller: _phoneController,
                   icon: Icons.phone_outlined,
                   enabled: _isEditing,
@@ -174,7 +177,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 
                 _buildInfoField(
-                  label: 'Date of Birth',
+                  label: context.t('Date of Birth', 'Ngày sinh'),
                   controller: _dobController,
                   icon: Icons.cake_outlined,
                   enabled: _isEditing,
@@ -182,11 +185,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 32),
                 
                 // Address Section
-                _buildSectionTitle('Address'),
+                _buildSectionTitle(context.t('Address', 'Địa chỉ')),
                 const SizedBox(height: 16),
                 
                 _buildInfoField(
-                  label: 'Address',
+                  label: context.t('Address', 'Địa chỉ'),
                   controller: _addressController,
                   icon: Icons.location_on_outlined,
                   enabled: _isEditing,
@@ -195,11 +198,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 32),
                 
                 // Document Section
-                _buildSectionTitle('Documents'),
+                _buildSectionTitle(context.t('Documents', 'Giấy tờ')),
                 const SizedBox(height: 16),
                 
                 _buildInfoField(
-                  label: 'ID Number (CCCD)',
+                  label: context.t('ID Number (CCCD)', 'Số CCCD'),
                   controller: _idController,
                   icon: Icons.badge_outlined,
                   enabled: _isEditing,

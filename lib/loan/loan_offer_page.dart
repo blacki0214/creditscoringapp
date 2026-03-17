@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step4_offer_calculator.dart';
+import '../utils/app_localization.dart';
 
 class LoanOfferPage extends StatelessWidget {
   const LoanOfferPage({super.key});
@@ -13,7 +14,13 @@ class LoanOfferPage extends StatelessWidget {
     final offer = viewModel.currentOffer;
 
     if (offer == null) {
-        return const Scaffold(body: Center(child: Text('No offer details available.')));
+        return Scaffold(
+          body: Center(
+            child: Text(
+              context.t('No offer details available.', 'Không có chi tiết đề nghị.'),
+            ),
+          ),
+        );
     }
 
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
@@ -27,9 +34,9 @@ class LoanOfferPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Scoring - Offer',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        title: Text(
+          context.t('Scoring - Offer', 'Chấm điểm - Đề nghị'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -39,7 +46,9 @@ class LoanOfferPage extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               Text(
-                offer['approved'] as bool ? 'Congratulations!' : 'Application Rejected',
+                offer['approved'] as bool
+                  ? context.t('Congratulations!', 'Chúc mừng!')
+                  : context.t('Application Rejected', 'Hồ sơ bị từ chối'),
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -85,10 +94,10 @@ class LoanOfferPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Center(
+                          Center(
                             child: Text(
-                              'Loan Details',
-                              style: TextStyle(
+                              context.t('Loan Details', 'Chi tiết khoản vay'),
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF1A1F3F),
@@ -96,18 +105,18 @@ class LoanOfferPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          _buildDetailRow('Approved Amount', currencyFormat.format(offer['loanAmountVnd'] as num)),
+                          _buildDetailRow(context.t('Approved Amount', 'Số tiền được duyệt'), currencyFormat.format(offer['loanAmountVnd'] as num)),
                           const SizedBox(height: 16),
                           // Max eligible is redundant if same as approved, but good to show
-                          _buildDetailRow('Max Eligible', currencyFormat.format(offer['maxAmountVnd'] as num)),
+                          _buildDetailRow(context.t('Max Eligible', 'Hạn mức tối đa'), currencyFormat.format(offer['maxAmountVnd'] as num)),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Credit Score', offer['creditScore'].toString()),
+                          _buildDetailRow(context.t('Credit Score', 'Điểm tín dụng'), offer['creditScore'].toString()),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Interest Rate', '${offer['interestRate']}%'),
+                          _buildDetailRow(context.t('Interest Rate', 'Lãi suất'), '${offer['interestRate']}%'),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Monthly Payment', offer['monthlyPaymentVnd'] != null ? currencyFormat.format(offer['monthlyPaymentVnd'] as num) : 'N/A'),
+                          _buildDetailRow(context.t('Monthly Payment', 'Thanh toán hàng tháng'), offer['monthlyPaymentVnd'] != null ? currencyFormat.format(offer['monthlyPaymentVnd'] as num) : context.t('N/A', 'Không có')),
                           const SizedBox(height: 16),
-                          _buildDetailRow('Term', '${offer['loanTermMonths'] ?? 0} months'),
+                          _buildDetailRow(context.t('Term', 'Kỳ hạn'), '${offer['loanTermMonths'] ?? 0} ${context.t('months', 'tháng')}'),
                         ],
                       ),
                     ),
@@ -134,9 +143,9 @@ class LoanOfferPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Accept Offer',
-                      style: TextStyle(
+                    child: Text(
+                      context.t('Accept Offer', 'Chấp nhận đề nghị'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -161,9 +170,9 @@ class LoanOfferPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Try Again',
-                      style: TextStyle(
+                    child: Text(
+                      context.t('Try Again', 'Thử lại'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../auth/login_page.dart';
 import '../viewmodels/settings_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/language_viewmodel.dart';
 import 'profile_page.dart';
 import 'support_page.dart';
 import 'feedback_page.dart';
@@ -32,6 +33,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final settingsViewModel = context.watch<SettingsViewModel>();
+    final languageViewModel = context.watch<LanguageViewModel>();
+    final isVietnamese = languageViewModel.isVietnamese;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -39,7 +42,10 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text('Settings', style: TextStyle(color: Colors.black)),
+        title: Text(
+          isVietnamese ? 'Cài đặt' : 'Settings',
+          style: const TextStyle(color: Colors.black),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -113,9 +119,22 @@ class _SettingsPageState extends State<SettingsPage> {
                     // Settings options
                     _buildSettingItem(
                       context,
+                      icon: Icons.language,
+                      title: isVietnamese ? 'Ngôn ngữ' : 'Language',
+                      subtitle: isVietnamese
+                          ? 'Chuyển đổi tiếng Việt/English'
+                          : 'Switch between Vietnamese/English',
+                      trailing: _buildLanguageToggle(languageViewModel),
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSettingItem(
+                      context,
                       icon: Icons.person_outline,
-                      title: 'Profile',
-                      subtitle: 'Manage your personal information',
+                      title: isVietnamese ? 'Hồ sơ' : 'Profile',
+                      subtitle: isVietnamese
+                          ? 'Quản lý thông tin cá nhân'
+                          : 'Manage your personal information',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -129,8 +148,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.support_agent_outlined,
-                      title: 'Support',
-                      subtitle: 'Get help and contact us',
+                      title: isVietnamese ? 'Hỗ trợ' : 'Support',
+                      subtitle: isVietnamese
+                          ? 'Nhận trợ giúp và liên hệ'
+                          : 'Get help and contact us',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -144,8 +165,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.feedback_outlined,
-                      title: 'Feedback',
-                      subtitle: 'Share your thoughts with us',
+                      title: isVietnamese ? 'Phản hồi' : 'Feedback',
+                      subtitle: isVietnamese
+                          ? 'Chia sẻ ý kiến của bạn'
+                          : 'Share your thoughts with us',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -159,8 +182,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.notifications_outlined,
-                      title: 'Notifications',
-                      subtitle: 'Manage notification preferences',
+                      title: isVietnamese ? 'Thông báo' : 'Notifications',
+                      subtitle: isVietnamese
+                          ? 'Quản lý tùy chọn thông báo'
+                          : 'Manage notification preferences',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -174,8 +199,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.security,
-                      title: 'Security',
-                      subtitle: 'Password, biometric, 2FA',
+                      title: isVietnamese ? 'Bảo mật' : 'Security',
+                      subtitle: isVietnamese
+                          ? 'Mật khẩu, sinh trắc học, 2FA'
+                          : 'Password, biometric, 2FA',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -189,8 +216,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy Policy',
-                      subtitle: 'How we handle your data',
+                      title: isVietnamese
+                        ? 'Chính sách bảo mật'
+                        : 'Privacy Policy',
+                      subtitle: isVietnamese
+                        ? 'Cách chúng tôi xử lý dữ liệu'
+                        : 'How we handle your data',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -204,8 +235,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSettingItem(
                       context,
                       icon: Icons.description_outlined,
-                      title: 'Terms & Conditions',
-                      subtitle: 'Read our terms and conditions',
+                      title: isVietnamese
+                        ? 'Điều khoản & Điều kiện'
+                        : 'Terms & Conditions',
+                      subtitle: isVietnamese
+                        ? 'Đọc điều khoản và điều kiện'
+                        : 'Read our terms and conditions',
                       onTap: () {
                         // Navigate to terms
                       },
@@ -228,14 +263,14 @@ class _SettingsPageState extends State<SettingsPage> {
                             side: BorderSide(color: Colors.red.shade200),
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.logout, size: 20),
-                            SizedBox(width: 8),
+                            const Icon(Icons.logout, size: 20),
+                            const SizedBox(width: 8),
                             Text(
-                              'Logout',
-                              style: TextStyle(
+                              isVietnamese ? 'Đăng xuất' : 'Logout',
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -300,6 +335,7 @@ class _SettingsPageState extends State<SettingsPage> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Widget? trailing,
   }) {
     return InkWell(
       onTap: onTap,
@@ -342,18 +378,49 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.grey.shade400,
-            ),
+            trailing ??
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey.shade400,
+                ),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildLanguageToggle(LanguageViewModel languageViewModel) {
+    return ToggleButtons(
+      borderRadius: BorderRadius.circular(10),
+      constraints: const BoxConstraints(minHeight: 32, minWidth: 50),
+      isSelected: [
+        !languageViewModel.isVietnamese,
+        languageViewModel.isVietnamese,
+      ],
+      onPressed: (index) {
+        if (index == 0) {
+          languageViewModel.setLanguage('en');
+          return;
+        }
+        languageViewModel.setLanguage('vi');
+      },
+      children: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Text('ENG'),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Text('VN'),
+        ),
+      ],
+    );
+  }
+
   void _showLogoutDialog(BuildContext context) {
+    final isVietnamese = context.read<LanguageViewModel>().isVietnamese;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -361,16 +428,18 @@ class _SettingsPageState extends State<SettingsPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
-            'Logout',
-            style: TextStyle(
+          title: Text(
+            isVietnamese ? 'Đăng xuất' : 'Logout',
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Color(0xFF1A1F3F),
             ),
           ),
-          content: const Text(
-            'Are you sure you want to logout?',
-            style: TextStyle(fontSize: 15),
+          content: Text(
+            isVietnamese
+                ? 'Bạn có chắc chắn muốn đăng xuất?'
+                : 'Are you sure you want to logout?',
+            style: const TextStyle(fontSize: 15),
           ),
           actions: [
             TextButton(
@@ -378,7 +447,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                isVietnamese ? 'Hủy' : 'Cancel',
                 style: TextStyle(
                   color: Colors.grey.shade600,
                   fontWeight: FontWeight.w600,
@@ -403,9 +472,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(
+              child: Text(
+                isVietnamese ? 'Đăng xuất' : 'Logout',
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),

@@ -16,6 +16,7 @@ import '../loan/step3_additional_info.dart';
 import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'application_contract_status_page.dart';
+import '../utils/app_localization.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -399,9 +400,12 @@ class _HomePageState extends State<HomePage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
-                                          'Notifications',
-                                          style: TextStyle(
+                                        Text(
+                                          context.t(
+                                            'Notifications',
+                                            'Thông báo',
+                                          ),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                             color: Color(0xFF1A1F3F),
@@ -421,9 +425,12 @@ class _HomePageState extends State<HomePage> {
                                                   MaterialTapTargetSize
                                                       .shrinkWrap,
                                             ),
-                                            child: const Text(
-                                              'Mark all read',
-                                              style: TextStyle(
+                                            child: Text(
+                                              context.t(
+                                                'Mark all read',
+                                                'Đánh dấu đã đọc',
+                                              ),
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF4C40F7),
                                               ),
@@ -456,7 +463,10 @@ class _HomePageState extends State<HomePage> {
                                           if (snapshot.hasError) {
                                             return Center(
                                               child: Text(
-                                                'Error loading notifications',
+                                                context.t(
+                                                  'Error loading notifications',
+                                                  'Lỗi khi tải thông báo',
+                                                ),
                                                 style: TextStyle(
                                                   color: Colors.grey.shade600,
                                                   fontSize: 14,
@@ -481,7 +491,10 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   const SizedBox(height: 8),
                                                   Text(
-                                                    'No notifications yet',
+                                                    context.t(
+                                                      'No notifications yet',
+                                                      'Chưa có thông báo',
+                                                    ),
                                                     style: TextStyle(
                                                       color:
                                                           Colors.grey.shade600,
@@ -502,6 +515,21 @@ class _HomePageState extends State<HomePage> {
                                             itemBuilder: (context, index) {
                                               final notification =
                                                   notifications[index];
+                                              final localizedTitle =
+                                                  _getLocalizedNotificationTitle(
+                                                    context,
+                                                    notification,
+                                                  );
+                                              final localizedBody =
+                                                  _getLocalizedNotificationBody(
+                                                    context,
+                                                    notification,
+                                                  );
+                                              final localizedTimeAgo =
+                                                  _formatNotificationTimeAgo(
+                                                    context,
+                                                    notification.createdAt,
+                                                  );
                                               return InkWell(
                                                 onTap: () async {
                                                   if (!notification.isRead) {
@@ -540,6 +568,18 @@ class _HomePageState extends State<HomePage> {
                                                               BorderRadius.circular(
                                                                 8,
                                                               ),
+                                                          border: notification
+                                                                  .isRead
+                                                              ? null
+                                                              : Border.all(
+                                                                  color: Color(
+                                                                    notification
+                                                                        .colorValue,
+                                                                  ).withOpacity(
+                                                                    0.35,
+                                                                  ),
+                                                                  width: 1.2,
+                                                                ),
                                                         ),
                                                         child: Icon(
                                                           _getNotificationIcon(
@@ -549,7 +589,10 @@ class _HomePageState extends State<HomePage> {
                                                             notification
                                                                 .colorValue,
                                                           ),
-                                                          size: 20,
+                                                          size: notification
+                                                                  .isRead
+                                                              ? 20
+                                                              : 22,
                                                         ),
                                                       ),
                                                       const SizedBox(width: 12),
@@ -581,14 +624,13 @@ class _HomePageState extends State<HomePage> {
                                                                   ),
                                                                 Expanded(
                                                                   child: Text(
-                                                                    notification
-                                                                        .title,
+                                                                    localizedTitle,
                                                                     style: TextStyle(
                                                                       fontWeight:
                                                                           notification
                                                                               .isRead
                                                                           ? FontWeight.w500
-                                                                          : FontWeight.w600,
+                                                                        : FontWeight.w700,
                                                                       fontSize:
                                                                           14,
                                                                       color: notification
@@ -607,9 +649,13 @@ class _HomePageState extends State<HomePage> {
                                                               height: 2,
                                                             ),
                                                             Text(
-                                                              notification.body,
+                                                              localizedBody,
                                                               style: TextStyle(
                                                               fontSize: 12,
+                                                              fontWeight: notification
+                                                                  .isRead
+                                                                ? FontWeight.w400
+                                                                : FontWeight.w600,
                                                               color: notification
                                                                   .isRead
                                                                 ? Colors
@@ -628,8 +674,7 @@ class _HomePageState extends State<HomePage> {
                                                               height: 4,
                                                             ),
                                                             Text(
-                                                              notification
-                                                                  .timeAgo,
+                                                              localizedTimeAgo,
                                                               style: TextStyle(
                                                                 fontSize: 11,
                                                                 color: Colors
@@ -679,7 +724,10 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         // Greeting
                         Text(
-                          'Hello, ${viewModel.userName ?? "User"}',
+                          context.t(
+                            'Hello, ${viewModel.userName ?? "User"}',
+                            'Xin chào, ${viewModel.userName ?? "Bạn"}',
+                          ),
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -688,7 +736,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Here is your credit rate',
+                          context.t(
+                            'Here is your credit rate',
+                            'Đây là mức tín dụng của bạn',
+                          ),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -696,22 +747,25 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 24),
                         // Period selector
-                        Row(
-                          children: [
-                            _buildPeriodChip(context, viewModel, 'Overall'),
-                            const SizedBox(width: 8),
-                            _buildPeriodChip(
-                              context,
-                              viewModel,
-                              'Scoring Status',
-                            ),
-                            const SizedBox(width: 8),
-                            _buildPeriodChip(
-                              context,
-                              viewModel,
-                              'Loan History',
-                            ),
-                          ],
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildPeriodChip(context, viewModel, 'Overall'),
+                              const SizedBox(width: 8),
+                              _buildPeriodChip(
+                                context,
+                                viewModel,
+                                'Scoring Status',
+                              ),
+                              const SizedBox(width: 8),
+                              _buildPeriodChip(
+                                context,
+                                viewModel,
+                                'Loan History',
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 32),
                         // Content based on selected period
@@ -741,8 +795,11 @@ class _HomePageState extends State<HomePage> {
                                               color: Color(0xFF1A1F3F),
                                             ),
                                           ),
-                                          const Text(
-                                            'Your credit score',
+                                          Text(
+                                            context.t(
+                                              'Your credit score',
+                                              'Điểm tín dụng của bạn',
+                                            ),
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Colors.black87,
@@ -779,7 +836,10 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            'No data yet',
+                                            context.t(
+                                              'No data yet',
+                                              'Chưa có dữ liệu',
+                                            ),
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
@@ -788,7 +848,10 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            'credit score',
+                                            context.t(
+                                              'credit score',
+                                              'điểm tín dụng',
+                                            ),
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Colors.grey.shade500,
@@ -811,7 +874,7 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Text(
-                                      'starting score',
+                                      context.t('starting score', 'điểm ban đầu'),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -831,7 +894,10 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Text(
-                                      'change to date',
+                                      context.t(
+                                        'change to date',
+                                        'thay đổi đến hiện tại',
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -868,9 +934,12 @@ class _HomePageState extends State<HomePage> {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Credit score updated!',
+                                            context.t(
+                                              'Credit score updated!',
+                                              'Đã cập nhật điểm tín dụng!',
+                                            ),
                                           ),
                                           backgroundColor: Color(0xFF4CAF50),
                                           duration: Duration(seconds: 2),
@@ -907,8 +976,14 @@ class _HomePageState extends State<HomePage> {
                               ),
                               child: Text(
                                 viewModel.creditScore != null
-                                    ? 'Update your credit score'
-                                    : 'Apply for loan now',
+                                    ? context.t(
+                                        'Update your credit score',
+                                        'Cập nhật điểm tín dụng',
+                                      )
+                                    : context.t(
+                                        'Apply for loan now',
+                                        'Đăng ký vay ngay',
+                                      ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -961,8 +1036,8 @@ class _HomePageState extends State<HomePage> {
       children: [
         // Loan Status Box
         if (showScoreStatus) ...[
-          const Text(
-            'Score Status',
+          Text(
+            context.t('Score Status', 'Trạng thái chấm điểm'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1009,10 +1084,13 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Text(
                         activeStatus == ApplicationStatus.processing
-                            ? 'Scoring (In Progress)'
+                            ? context.t(
+                                'Scoring (In Progress)',
+                                'Đang chấm điểm',
+                              )
                             : activeStatus == ApplicationStatus.scored
-                            ? 'Scored'
-                            : 'Rejected',
+                            ? context.t('Scored', 'Đã chấm điểm')
+                            : context.t('Rejected', 'Không được chấp thuận'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -1026,10 +1104,19 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 4),
                       Text(
                         activeStatus == ApplicationStatus.processing
-                            ? 'We are calculating your credit score...'
+                            ? context.t(
+                                'We are calculating your credit score...',
+                                'Chúng tôi đang tính toán điểm tín dụng của bạn...',
+                              )
                             : activeStatus == ApplicationStatus.scored
-                            ? 'Your score has been calculated successfully'
-                            : 'Your application was not approved',
+                            ? context.t(
+                                'Your score has been calculated successfully',
+                                'Điểm tín dụng của bạn đã được tính toán thành công',
+                              )
+                            : context.t(
+                                'Your application was not approved',
+                                'Đơn của bạn không được chấp thuận',
+                              ),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -1052,8 +1139,8 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Limit Amount',
+                              Text(
+                                context.t('Limit Amount', 'Hạn mức'),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Color(0xFF1A1F3F),
@@ -1101,8 +1188,8 @@ class _HomePageState extends State<HomePage> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: const Text(
-                                'Continue',
+                              child: Text(
+                                context.t('Continue', 'Tiếp tục'),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1126,8 +1213,8 @@ class _HomePageState extends State<HomePage> {
             (isActiveFromHistory ||
                 (loanViewModel.step3Completed &&
                     loanViewModel.step4Completed))) ...[
-          const Text(
-            'Current Loan Offer',
+          Text(
+            context.t('Current Loan Offer', 'Đề nghị khoản vay hiện tại'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1156,8 +1243,8 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       (activeOffer['approved'] as bool? ?? true)
-                          ? 'APPROVED'
-                          : 'REJECTED',
+                          ? context.t('APPROVED', 'ĐÃ DUYỆT')
+                          : context.t('REJECTED', 'TỪ CHỐI'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -1184,7 +1271,7 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Loan Amount',
+                          context.t('Loan Amount', 'Số tiền vay'),
                           currencyFormat.format(
                             activeOffer['loanAmountVnd'] as num,
                           ),
@@ -1196,8 +1283,11 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Interest Rate',
-                          '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / year',
+                          context.t('Interest Rate', 'Lãi suất'),
+                          context.t(
+                            '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / year',
+                            '${(activeOffer['interestRate'] as num).toStringAsFixed(2)}% / năm',
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -1206,7 +1296,7 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Monthly Payment',
+                          context.t('Monthly Payment', 'Thanh toán hàng tháng'),
                           currencyFormat.format(
                             activeOffer['monthlyPaymentVnd'] as num,
                           ),
@@ -1218,14 +1308,17 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       children: [
                         _buildLoanDetailRow(
-                          'Loan Term',
-                          '${activeOffer['loanTermMonths']} months',
+                          context.t('Loan Term', 'Kỳ hạn vay'),
+                          context.t(
+                            '${activeOffer['loanTermMonths']} months',
+                            '${activeOffer['loanTermMonths']} tháng',
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],
                     ),
                   _buildLoanDetailRow(
-                    'Credit Score',
+                    context.t('Credit Score', 'Điểm tín dụng'),
                     '${activeOffer['creditScore']}',
                   ),
                 ] else ...[
@@ -1243,7 +1336,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 12),
                         _buildLoanDetailRow(
-                          'Credit Score',
+                          context.t('Credit Score', 'Điểm tín dụng'),
                           '${activeOffer['creditScore']}',
                         ),
                       ],
@@ -1262,7 +1355,7 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.money_off, size: 64, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'No Active Loan',
+                  context.t('No Active Loan', 'Không có khoản vay đang hoạt động'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1271,7 +1364,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Start a new loan application',
+                  context.t('Start a new loan application', 'Bắt đầu hồ sơ vay mới'),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
@@ -1295,7 +1388,7 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('Apply Now'),
+                  child: Text(context.t('Apply Now', 'Đăng ký ngay')),
                 ),
               ],
             ),
@@ -1317,7 +1410,7 @@ class _HomePageState extends State<HomePage> {
             Icon(Icons.history, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'No Applications Yet',
+              context.t('No Applications Yet', 'Chưa có hồ sơ nào'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1326,7 +1419,10 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your loan applications will appear here',
+              context.t(
+                'Your loan applications will appear here',
+                'Các hồ sơ vay của bạn sẽ hiển thị tại đây',
+              ),
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
@@ -1337,8 +1433,8 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Application History',
+        Text(
+          context.t('Application History', 'Lịch sử hồ sơ'),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -1401,7 +1497,9 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isApproved ? 'Approved' : 'Rejected',
+                            isApproved
+                                ? context.t('Approved', 'Đã duyệt')
+                                : context.t('Rejected', 'Từ chối'),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -1421,7 +1519,10 @@ class _HomePageState extends State<HomePage> {
                           if (isApproved) ...[
                             const SizedBox(height: 2),
                             Text(
-                              'Tap to view contract status',
+                              context.t(
+                                'Tap to view contract status',
+                                'Nhấn để xem trạng thái hợp đồng',
+                              ),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade500,
@@ -1447,7 +1548,7 @@ class _HomePageState extends State<HomePage> {
                           )
                         else if (!isApproved)
                           Text(
-                            'Not approved',
+                            context.t('Not approved', 'Không được duyệt'),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -1530,7 +1631,7 @@ class _HomePageState extends State<HomePage> {
               : null,
         ),
         child: Text(
-          label,
+          context.t(label, _periodLabelVi(label)),
           style: TextStyle(
             color: isSelected ? Colors.white : const Color(0xFF2B335A),
             fontSize: 13,
@@ -1539,6 +1640,19 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  String _periodLabelVi(String label) {
+    switch (label) {
+      case 'Overall':
+        return 'Tổng quan';
+      case 'Scoring Status':
+        return 'Trạng thái chấm điểm';
+      case 'Loan History':
+        return 'Lịch sử khoản vay';
+      default:
+        return label;
+    }
   }
 
   Widget _buildMetricCard(
@@ -1796,18 +1910,33 @@ Widget _buildCreditScoreTips(
       : Icons.lightbulb_outline;
 
   final String headerTitle = !hasScore
-      ? 'Credit Score Tips'
+      ? context.t('Credit Score Tips', 'Mẹo cải thiện điểm tín dụng')
       : isGood
-      ? 'Congratulations'
-      : 'How to Improve Your Credit Score';
+      ? context.t('Congratulations', 'Chúc mừng')
+      : context.t(
+          'How to Improve Your Credit Score',
+          'Cách cải thiện điểm tín dụng',
+        );
 
   final String subtitleText = !hasScore
-      ? 'We need more information to generate personalized tips.'
+      ? context.t(
+          'We need more information to generate personalized tips.',
+          'Chúng tôi cần thêm thông tin để tạo gợi ý phù hợp cho bạn.',
+        )
       : isGood
-      ? 'Your credit score is perfect. Keep up the great habits!'
+      ? context.t(
+          'Your credit score is perfect. Keep up the great habits!',
+          'Điểm tín dụng của bạn rất tốt. Hãy tiếp tục duy trì thói quen này!',
+        )
       : isLow
-      ? 'Your score is low. Try these steps to improve it.'
-      : 'Your score is fair. These tips can help you move higher.';
+      ? context.t(
+          'Your score is low. Try these steps to improve it.',
+          'Điểm của bạn còn thấp. Hãy thử các bước sau để cải thiện.',
+        )
+      : context.t(
+          'Your score is fair. These tips can help you move higher.',
+          'Điểm của bạn ở mức trung bình. Các mẹo sau sẽ giúp bạn cải thiện.',
+        );
 
   // This returns a Column widget which stacks widgets vertically
   return Column(
@@ -1864,7 +1993,10 @@ Widget _buildCreditScoreTips(
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Complete your profile and submit an application to see tailored credit score tips.',
+                  context.t(
+                    'Complete your profile and submit an application to see tailored credit score tips.',
+                    'Hãy hoàn thiện hồ sơ và gửi đơn vay để xem các mẹo điểm tín dụng phù hợp.',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
               ),
@@ -1890,7 +2022,10 @@ Widget _buildCreditScoreTips(
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Your credit score is perfect. Keep paying on time and maintaining low balances to stay in the top tier.',
+                  context.t(
+                    'Your credit score is perfect. Keep paying on time and maintaining low balances to stay in the top tier.',
+                    'Điểm tín dụng của bạn rất tốt. Hãy tiếp tục thanh toán đúng hạn và giữ dư nợ thấp để duy trì mức cao nhất.',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
                 ),
               ),
@@ -1903,14 +2038,28 @@ Widget _buildCreditScoreTips(
           icon: Icons.schedule,
           iconColor: const Color(0xFF4CAF50),
           iconBgColor: const Color(0xFFE8F5E9),
-          title: '1. Pay Bills on Time',
-          description:
-              'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
+          title: context.t('1. Pay Bills on Time', '1. Thanh toán đúng hạn'),
+          description: context.t(
+            'Payment history is the most important factor (35% of your score). Set up automatic payments or reminders to never miss a due date.',
+            'Lịch sử thanh toán là yếu tố quan trọng nhất (35% điểm số). Hãy bật tự động thanh toán hoặc nhắc nhở để không trễ hạn.',
+          ),
           tips: [
-            'Set up autopay for recurring bills',
-            'Use calendar reminders 3 days before due dates',
-            'Pay at least the minimum amount required',
-            'Consider bi-weekly payments to stay ahead',
+            context.t(
+              'Set up autopay for recurring bills',
+              'Bật tự động thanh toán cho hóa đơn định kỳ',
+            ),
+            context.t(
+              'Use calendar reminders 3 days before due dates',
+              'Đặt nhắc lịch trước hạn thanh toán 3 ngày',
+            ),
+            context.t(
+              'Pay at least the minimum amount required',
+              'Thanh toán ít nhất số tiền tối thiểu',
+            ),
+            context.t(
+              'Consider bi-weekly payments to stay ahead',
+              'Cân nhắc trả 2 tuần/lần để chủ động hơn',
+            ),
           ],
         ),
 
@@ -1921,14 +2070,31 @@ Widget _buildCreditScoreTips(
           icon: Icons.credit_card,
           iconColor: const Color(0xFF2196F3),
           iconBgColor: const Color(0xFFE3F2FD),
-          title: '2. Keep Credit Utilization Below 30%',
-          description:
-              'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
+          title: context.t(
+            '2. Keep Credit Utilization Below 30%',
+            '2. Giữ tỷ lệ sử dụng tín dụng dưới 30%',
+          ),
+          description: context.t(
+            'Credit utilization (30% of your score) is the ratio of your credit card balances to credit limits. Lower is better.',
+            'Tỷ lệ sử dụng tín dụng (30% điểm số) là tỷ lệ dư nợ thẻ trên hạn mức. Tỷ lệ càng thấp càng tốt.',
+          ),
           tips: [
-            'Try to use less than 30% of your available credit',
-            'Pay down balances before statement closing dates',
-            'Request credit limit increases (but don\'t spend more)',
-            'Spread charges across multiple cards if needed',
+            context.t(
+              'Try to use less than 30% of your available credit',
+              'Cố gắng sử dụng dưới 30% hạn mức tín dụng',
+            ),
+            context.t(
+              'Pay down balances before statement closing dates',
+              'Giảm dư nợ trước ngày chốt sao kê',
+            ),
+            context.t(
+              'Request credit limit increases (but don\'t spend more)',
+              'Xin tăng hạn mức tín dụng (nhưng không chi tiêu nhiều hơn)',
+            ),
+            context.t(
+              'Spread charges across multiple cards if needed',
+              'Phân bổ chi tiêu trên nhiều thẻ khi cần',
+            ),
           ],
         ),
 
@@ -1940,14 +2106,31 @@ Widget _buildCreditScoreTips(
             icon: Icons.playlist_add_check,
             iconColor: const Color(0xFF9C27B0),
             iconBgColor: const Color(0xFFF3E5F5),
-            title: '3. Limit New Credit Applications',
-            description:
-                'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
+            title: context.t(
+              '3. Limit New Credit Applications',
+              '3. Hạn chế mở tín dụng mới',
+            ),
+            description: context.t(
+              'Each hard inquiry can lower your score by 5-10 points. New credit accounts for 10% of your score.',
+              'Mỗi lần tra cứu tín dụng cứng có thể làm giảm 5-10 điểm. Yếu tố tín dụng mới chiếm 10% điểm số.',
+            ),
             tips: [
-              'Only apply for credit when you really need it',
-              'Multiple inquiries within 14-45 days count as one',
-              'Avoid opening multiple accounts in a short time',
-              'Check your own credit (soft inquiry) regularly',
+              context.t(
+                'Only apply for credit when you really need it',
+                'Chỉ đăng ký tín dụng khi thực sự cần',
+              ),
+              context.t(
+                'Multiple inquiries within 14-45 days count as one',
+                'Nhiều lần tra cứu trong 14-45 ngày có thể được tính là một',
+              ),
+              context.t(
+                'Avoid opening multiple accounts in a short time',
+                'Tránh mở nhiều tài khoản trong thời gian ngắn',
+              ),
+              context.t(
+                'Check your own credit (soft inquiry) regularly',
+                'Thường xuyên tự kiểm tra tín dụng (tra cứu mềm)',
+              ),
             ],
           ),
         ],
@@ -2126,6 +2309,143 @@ class _TipCardState extends State<TipCard> {
       ),
     );
   }
+}
+
+String _getLocalizedNotificationTitle(
+  BuildContext context,
+  NotificationModel notification,
+) {
+  switch (notification.type) {
+    case 'loan_approved':
+      return context.t('Loan Approved', 'Khoản vay đã được duyệt');
+    case 'loan_rejected':
+      return context.t('Loan Application Update', 'Cập nhật hồ sơ vay');
+    case 'credit_score_updated':
+      return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
+    case 'payment_reminder':
+      return context.t('Payment Reminder', 'Nhắc nhở thanh toán');
+    default:
+      if (notification.title == 'Loan Approved') {
+        return context.t('Loan Approved', 'Khoản vay đã được duyệt');
+      }
+      if (notification.title == 'Loan Application Update') {
+        return context.t('Loan Application Update', 'Cập nhật hồ sơ vay');
+      }
+      if (notification.title == 'Credit Score Updated') {
+        return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
+      }
+      return notification.title;
+  }
+}
+
+String _getLocalizedNotificationBody(
+  BuildContext context,
+  NotificationModel notification,
+) {
+  final isVietnamese = context.isVietnamese;
+
+  if (notification.type == 'loan_approved') {
+    final rawAmount = notification.data?['loanAmount'];
+    final amount = rawAmount is num ? rawAmount.toDouble() : null;
+    final format = NumberFormat.currency(
+      locale: isVietnamese ? 'vi_VN' : 'en_US',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    if (amount != null) {
+      return context.t(
+        'Your loan of ${format.format(amount)} has been approved',
+        'Khoản vay ${format.format(amount)} của bạn đã được duyệt',
+      );
+    }
+    return context.t(
+      'Your loan has been approved',
+      'Khoản vay của bạn đã được duyệt',
+    );
+  }
+
+  if (notification.type == 'loan_rejected') {
+    return context.t(
+      'Your loan application needs review',
+      'Hồ sơ vay của bạn cần được xem xét thêm',
+    );
+  }
+
+  if (notification.type == 'credit_score_updated') {
+    final rawDifference = notification.data?['difference'];
+    final difference = rawDifference is num ? rawDifference.toInt() : null;
+    if (difference != null) {
+      if (difference > 0) {
+        return context.t(
+          'Your score increased by $difference points',
+          'Điểm tín dụng của bạn đã tăng $difference điểm',
+        );
+      }
+      if (difference < 0) {
+        return context.t(
+          'Your score decreased by ${difference.abs()} points',
+          'Điểm tín dụng của bạn đã giảm ${difference.abs()} điểm',
+        );
+      }
+    }
+    return context.t(
+      'Your credit score was updated',
+      'Điểm tín dụng của bạn đã được cập nhật',
+    );
+  }
+
+  if (notification.body ==
+      'Your loan application needs review') {
+    return context.t(
+      'Your loan application needs review',
+      'Hồ sơ vay của bạn cần được xem xét thêm',
+    );
+  }
+
+  if (notification.body == 'Just now') {
+    return context.t('Just now', 'Vừa xong');
+  }
+
+  return notification.body;
+}
+
+String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
+  final now = DateTime.now();
+  final difference = now.difference(createdAt);
+
+  if (difference.inDays > 7) {
+    final weeks = difference.inDays ~/ 7;
+    return context.t(
+      '$weeks week${weeks > 1 ? 's' : ''} ago',
+      '$weeks tuần trước',
+    );
+  }
+
+  if (difference.inDays > 0) {
+    final days = difference.inDays;
+    return context.t(
+      '$days day${days > 1 ? 's' : ''} ago',
+      '$days ngày trước',
+    );
+  }
+
+  if (difference.inHours > 0) {
+    final hours = difference.inHours;
+    return context.t(
+      '$hours hour${hours > 1 ? 's' : ''} ago',
+      '$hours giờ trước',
+    );
+  }
+
+  if (difference.inMinutes > 0) {
+    final minutes = difference.inMinutes;
+    return context.t(
+      '$minutes minute${minutes > 1 ? 's' : ''} ago',
+      '$minutes phút trước',
+    );
+  }
+
+  return context.t('Just now', 'Vừa xong');
 }
 
 /// Helper function to get icon for notification type

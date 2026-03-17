@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
 import '../services/local_storage_service.dart';
+import '../utils/app_localization.dart';
 import 'onboarding_page.dart';
 import '../auth/login_page.dart';
 
@@ -57,13 +58,13 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/logo.png',
+              'assets/images/SwinCredit_logo2.png',
               width: 350,
               height: 350,
             ),
             const SizedBox(height: 24),
             const Text(
-              'VietCredit',
+              'SwinCredit',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -72,9 +73,9 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'SCORE',
-              style: TextStyle(
+            Text(
+              context.t('SCORE', 'ĐIỂM TÍN DỤNG'),
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 18,
                 fontWeight: FontWeight.w300,

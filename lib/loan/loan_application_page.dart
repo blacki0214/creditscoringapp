@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import '../config/app_environment.dart';
 import '../services/local_storage_service.dart';
+import '../utils/app_localization.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step1_id_capture.dart';
 import 'step2_personal_info.dart';
@@ -56,8 +58,8 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
         scrolledUnderElevation: 0,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
-          'Start Your Loan Application',
+        title: Text(
+          context.t('Start Your Loan Application', 'Bắt đầu hồ sơ vay của bạn'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -74,7 +76,10 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Complete the following steps to apply for your loan',
+                    context.t(
+                      'Complete the following steps to apply for your loan',
+                      'Hoàn tất các bước sau để nộp đơn vay',
+                    ),
                     style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 20),
@@ -84,9 +89,14 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                         _buildStepCard(
                           context,
                           icon: Icons.verified_user_outlined,
-                          title: 'Step 1: Verify Identity',
-                          description:
-                              'Confirm your identity with ID and selfie',
+                          title: context.t(
+                            'Step 1: Verify Identity',
+                            'Bước 1: Xác minh danh tính',
+                          ),
+                          description: context.t(
+                            'Confirm your identity with ID and selfie',
+                            'Xác minh danh tính bằng CCCD và ảnh khuôn mặt',
+                          ),
                           isCompleted: viewModel.step1Completed,
                           onIconTap: _handleStep1IconTapForDemo,
                         ),
@@ -94,16 +104,28 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                         _buildStepCard(
                           context,
                           icon: Icons.person_outline,
-                          title: 'Step 2: Personal Information',
-                          description: 'Provide your personal details',
+                          title: context.t(
+                            'Step 2: Personal Information',
+                            'Bước 2: Thông tin cá nhân',
+                          ),
+                          description: context.t(
+                            'Provide your personal details',
+                            'Cung cấp thông tin cá nhân',
+                          ),
                           isCompleted: viewModel.step2Completed,
                         ),
                         const SizedBox(height: 16),
                         _buildStepCard(
                           context,
                           icon: Icons.analytics_outlined,
-                          title: 'Step 3: Processing',
-                          description: 'We\'ll process your application',
+                          title: context.t(
+                            'Step 3: Processing',
+                            'Bước 3: Xử lý hồ sơ',
+                          ),
+                          description: context.t(
+                            'We\'ll process your application',
+                            'Chúng tôi sẽ xử lý hồ sơ của bạn',
+                          ),
                           isCompleted:
                               viewModel.step2Completed &&
                               viewModel.step3Completed,
@@ -112,24 +134,42 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                         _buildStepCard(
                           context,
                           icon: Icons.check_circle_outline,
-                          title: 'Step 4: Loan Offer',
-                          description: 'Review your loan offer',
+                          title: context.t(
+                            'Step 4: Loan Offer',
+                            'Bước 4: Đề nghị khoản vay',
+                          ),
+                          description: context.t(
+                            'Review your loan offer',
+                            'Xem lại đề nghị vay',
+                          ),
                           isCompleted: viewModel.step4Completed,
                         ),
                         const SizedBox(height: 16),
                         _buildStepCard(
                           context,
                           icon: Icons.description_outlined,
-                          title: 'Step 5: Contract Review',
-                          description: 'Read and sign your loan contract',
+                          title: context.t(
+                            'Step 5: Contract Review',
+                            'Bước 5: Xem hợp đồng',
+                          ),
+                          description: context.t(
+                            'Read and sign your loan contract',
+                            'Đọc và ký hợp đồng vay',
+                          ),
                           isCompleted: viewModel.step6Completed,
                         ),
                         const SizedBox(height: 16),
                         _buildStepCard(
                           context,
                           icon: Icons.account_balance_wallet_outlined,
-                          title: 'Step 6: Disbursement',
-                          description: 'Provide bank details to receive funds',
+                          title: context.t(
+                            'Step 6: Disbursement',
+                            'Bước 6: Giải ngân',
+                          ),
+                          description: context.t(
+                            'Provide bank details to receive funds',
+                            'Cung cấp thông tin ngân hàng để nhận tiền',
+                          ),
                           isCompleted: viewModel.step6Completed,
                         ),
                         const SizedBox(height: 24),
@@ -138,8 +178,12 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (LocalStorageService.hasCompletedEkyc() ||
-                                  LocalStorageService.isTestAccountMode()) {
+                              if (AppEnvironment.shouldSkipEkyc(
+                                hasCompletedEkyc:
+                                    LocalStorageService.hasCompletedEkyc(),
+                                isTestAccountMode:
+                                    LocalStorageService.isTestAccountMode(),
+                              )) {
                                 viewModel.applySavedEkycPrefill();
                                 if (!viewModel.step1Completed) {
                                   viewModel.completeStep1();
@@ -201,8 +245,14 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                             ),
                             child: Text(
                               viewModel.step1Completed
-                                  ? 'Continue Application'
-                                  : 'Start Application',
+                                  ? context.t(
+                                      'Continue Application',
+                                      'Tiếp tục hồ sơ',
+                                    )
+                                  : context.t(
+                                      'Start Application',
+                                      'Bắt đầu hồ sơ',
+                                    ),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
+import '../utils/app_localization.dart';
 
 class SuccessPage extends StatelessWidget {
   const SuccessPage({super.key});
@@ -30,9 +31,9 @@ class SuccessPage extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               // Title
-              const Text(
-                'Success!',
-                style: TextStyle(
+              Text(
+                context.t('Success!', 'Thành công!'),
+                style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F3F),
@@ -41,7 +42,10 @@ class SuccessPage extends StatelessWidget {
               const SizedBox(height: 16),
               // Message
               Text(
-                'Your password has been reset successfully.\nYou can now sign in with your new password.',
+                context.t(
+                  'Your password has been reset successfully.\nYou can now sign in with your new password.',
+                  'Mật khẩu của bạn đã được đặt lại thành công.\nBây giờ bạn có thể đăng nhập bằng mật khẩu mới.',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -68,9 +72,9 @@ class SuccessPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Back to Sign In',
-                    style: TextStyle(
+                  child: Text(
+                    context.t('Back to Sign In', 'Quay lại đăng nhập'),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,

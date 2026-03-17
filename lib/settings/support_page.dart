@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/support_viewmodel.dart';
+import '../utils/app_localization.dart';
 
 class SupportPage extends StatefulWidget {
   const SupportPage({super.key});
@@ -79,9 +80,9 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Support',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          context.t('Support', 'Hỗ trợ'),
+          style: const TextStyle(color: Colors.black),
         ),
       ),
       body: Stack(
@@ -94,9 +95,9 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  const Text(
-                    'How can we help you?',
-                    style: TextStyle(
+                  Text(
+                    context.t('How can we help you?', 'Chúng tôi có thể hỗ trợ gì cho bạn?'),
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
@@ -104,7 +105,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Find answers to frequently asked questions',
+                    context.t('Find answers to frequently asked questions', 'Tìm câu trả lời cho các câu hỏi thường gặp'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -118,7 +119,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                       Expanded(
                         child: _buildContactCard(
                           icon: Icons.email_outlined,
-                          title: 'Email',
+                          title: context.t('Email', 'Email'),
                           subtitle: 'support@vietcredit.com',
                           color: const Color(0xFF4C40F7),
                         ),
@@ -127,7 +128,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                       Expanded(
                         child: _buildContactCard(
                           icon: Icons.phone_outlined,
-                          title: 'Phone',
+                          title: context.t('Phone', 'Điện thoại'),
                           subtitle: '+84 123 456 789',
                           color: const Color(0xFF4CAF50),
                         ),
@@ -137,9 +138,9 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                   const SizedBox(height: 32),
                   
                   // FAQ Section
-                  const Text(
-                    'Frequently Asked Questions',
-                    style: TextStyle(
+                  Text(
+                    context.t('Frequently Asked Questions', 'Câu hỏi thường gặp'),
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F3F),
