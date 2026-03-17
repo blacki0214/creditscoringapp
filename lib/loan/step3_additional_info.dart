@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
+import '../utils/app_localization.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step4_offer_calculator.dart';
-import '../utils/app_localization.dart';
 
 class Step3AdditionalInfoPage extends StatefulWidget {
   const Step3AdditionalInfoPage({super.key});
@@ -16,125 +17,272 @@ class Step3AdditionalInfoPage extends StatefulWidget {
 class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
-  final TextEditingController _employerNameController = TextEditingController();
-  final TextEditingController _jobTitleController = TextEditingController();
-  final TextEditingController _workPhoneController = TextEditingController();
-  final TextEditingController _yearsAtEmployerController =
-      TextEditingController();
-  final TextEditingController _emergencyContactNameController =
-      TextEditingController();
-  final TextEditingController _emergencyContactPhoneController =
-      TextEditingController();
-  final TextEditingController _emergencyContact2NameController =
-      TextEditingController();
-  final TextEditingController _emergencyContact2PhoneController =
-      TextEditingController();
-  final TextEditingController _referencesController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _nationalityController = TextEditingController(text: 'Việt Nam');
+  final _cccdController = TextEditingController();
+  final _oldIdController = TextEditingController();
+  final _issuePlaceController = TextEditingController();
+  final _taxCodeController = TextEditingController();
+  final _permanentAddressController = TextEditingController();
+  final _currentAddressController = TextEditingController();
+  final _mobilePhoneController = TextEditingController();
+  final _emailController = TextEditingController();
 
-  final _employerNameFieldKey = GlobalKey<FormFieldState<String>>();
-  final _jobTitleFieldKey = GlobalKey<FormFieldState<String>>();
-  final _workPhoneFieldKey = GlobalKey<FormFieldState<String>>();
-  final _yearsAtEmployerFieldKey = GlobalKey<FormFieldState<String>>();
-  final _emergencyContactNameFieldKey = GlobalKey<FormFieldState<String>>();
-  final _emergencyContactPhoneFieldKey = GlobalKey<FormFieldState<String>>();
-  final _emergencyContact2NameFieldKey = GlobalKey<FormFieldState<String>>();
-  final _emergencyContact2PhoneFieldKey = GlobalKey<FormFieldState<String>>();
-  final _referencesFieldKey = GlobalKey<FormFieldState<String>>();
+  final _monthlyIncomeController = TextEditingController();
+  final _companyNameController = TextEditingController();
+  final _companyPhoneController = TextEditingController();
+  final _companyAddressController = TextEditingController();
+  final _occupationTitleController = TextEditingController();
 
-  final _employerNameFocusNode = FocusNode();
-  final _jobTitleFocusNode = FocusNode();
-  final _workPhoneFocusNode = FocusNode();
-  final _yearsAtEmployerFocusNode = FocusNode();
-  final _emergencyContactNameFocusNode = FocusNode();
-  final _emergencyContactPhoneFocusNode = FocusNode();
-  final _emergencyContact2NameFocusNode = FocusNode();
-  final _emergencyContact2PhoneFocusNode = FocusNode();
-  final _referencesFocusNode = FocusNode();
+  final _reference1NameController = TextEditingController();
+  final _reference1PhoneController = TextEditingController();
+  final _reference2NameController = TextEditingController();
+  final _reference2PhoneController = TextEditingController();
+  List<PlatformFile> _additionalDocuments = [];
 
-  String? _selectedRelationship1;
-  String? _selectedRelationship2;
+  DateTime? _dob;
+  DateTime? _idIssueDate;
+  DateTime? _idExpiryDate;
+
+  String? _selectedGender;
+  String? _selectedEducationLevel;
+  String? _selectedMaritalStatus;
+  String? _selectedResidencyStatus;
+
+  String? _selectedJobType;
+  String? _selectedContractType;
+
+  String? _selectedReference1Relationship;
+  String? _selectedReference2Relationship;
+
+  bool _lockFullName = false;
+  bool _lockDob = false;
+  bool _lockCccd = false;
+  bool _lockMobilePhone = false;
+  bool _lockJobType = false;
+  bool _lockMonthlyIncome = false;
+
+  final List<String> _genderOptions = ['MALE', 'FEMALE', 'OTHER'];
+  final List<String> _maritalStatusOptions = [
+    'SINGLE',
+    'MARRIED',
+    'DIVORCED',
+    'WIDOWED',
+  ];
+  final List<String> _residencyStatusOptions = ['RESIDENT', 'NON_RESIDENT'];
+  final List<String> _educationLevelOptions = [
+    'THCS',
+    'THPT',
+    'INTERMEDIATE',
+    'COLLEGE',
+    'UNIVERSITY',
+    'MASTER',
+    'DOCTORATE',
+    'OTHER',
+  ];
+
+  final List<String> _jobTypeOptions = [
+    'EMPLOYED',
+    'SELF_EMPLOYED',
+    'UNEMPLOYED',
+    'STUDENT',
+    'RETIRED',
+    'OTHER',
+  ];
+  final List<String> _contractTypeOptions = [
+    'INDEFINITE',
+    'FIXED_TERM',
+    'SEASONAL',
+    'PROBATION',
+    'OTHER',
+  ];
   final List<String> _relationshipOptions = [
-    'Mother',
-    'Father',
-    'Brother',
-    'Sister',
-    'Spouse',
-    'Child',
-    'Guardian',
-    'Other',
+    'PARENT',
+    'SPOUSE',
+    'SIBLING',
+    'CHILD',
+    'FRIEND',
+    'OTHER',
   ];
 
   @override
   void initState() {
     super.initState();
-    _employerNameFocusNode.addListener(() {
-      if (!_employerNameFocusNode.hasFocus) {
-        _employerNameFieldKey.currentState?.validate();
+    _prefillFromStep2();
+  }
+
+  void _prefillFromStep2() {
+    final vm = context.read<LoanViewModel>();
+    final ekycFront = vm.frontIdData;
+    final ekycBack = vm.backIdData;
+
+    final idResidenceAddress =
+        (ekycFront?.placeOfResidence ?? ekycBack?.placeOfResidence ?? '')
+            .trim();
+    if (idResidenceAddress.isNotEmpty) {
+      _permanentAddressController.text = idResidenceAddress;
+    }
+
+    final issuePlace = (ekycBack?.issuePlace ?? ekycFront?.issuePlace ?? '')
+        .trim();
+    if (issuePlace.isNotEmpty) {
+      _issuePlaceController.text = issuePlace;
+    }
+
+    final issueDateRaw =
+        (ekycBack?.issueDate ?? ekycFront?.issueDate ?? '').trim();
+    if (issueDateRaw.isNotEmpty) {
+      _idIssueDate = _parseDateLoose(issueDateRaw);
+    }
+
+    final expiryDateRaw =
+        (ekycBack?.expiryDate ?? ekycFront?.expiryDate ?? '').trim();
+    if (expiryDateRaw.isNotEmpty) {
+      _idExpiryDate = _parseDateLoose(expiryDateRaw);
+    }
+
+    final nationality =
+        (ekycFront?.nationality ?? ekycBack?.nationality ?? '').trim();
+    if (nationality.isNotEmpty) {
+      _nationalityController.text = nationality;
+    }
+
+    final normalizedGender = _normalizeGender(
+      (ekycFront?.gender ?? ekycBack?.gender ?? '').trim(),
+    );
+    if (normalizedGender != null) {
+      _selectedGender = normalizedGender;
+    }
+
+    if (vm.step2Completed) {
+      final fullName = vm.fullName.trim();
+      if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
+        _fullNameController.text = fullName;
+        _lockFullName = true;
       }
-    });
-    _jobTitleFocusNode.addListener(() {
-      if (!_jobTitleFocusNode.hasFocus) {
-        _jobTitleFieldKey.currentState?.validate();
+
+      if (vm.dob != null) {
+        _dob = vm.dob;
+        _lockDob = true;
       }
-    });
-    _workPhoneFocusNode.addListener(() {
-      if (!_workPhoneFocusNode.hasFocus) {
-        _workPhoneFieldKey.currentState?.validate();
+
+      final cccd = vm.idNumber.trim();
+      if (RegExp(r'^\d{12}$').hasMatch(cccd)) {
+        _cccdController.text = cccd;
+        _lockCccd = true;
       }
-    });
-    _yearsAtEmployerFocusNode.addListener(() {
-      if (!_yearsAtEmployerFocusNode.hasFocus) {
-        _yearsAtEmployerFieldKey.currentState?.validate();
+
+      final address = vm.address.trim();
+      if (address.isNotEmpty && address != '123 Street...') {
+        _currentAddressController.text = address;
+      } else if (idResidenceAddress.isNotEmpty) {
+        _currentAddressController.text = idResidenceAddress;
       }
-    });
-    _emergencyContactNameFocusNode.addListener(() {
-      if (!_emergencyContactNameFocusNode.hasFocus) {
-        _emergencyContactNameFieldKey.currentState?.validate();
+
+      final phone = vm.phoneNumber.trim();
+      if (phone.isNotEmpty && phone != '(+84) 901234567') {
+        _mobilePhoneController.text = phone;
+        _lockMobilePhone = true;
       }
-    });
-    _emergencyContactPhoneFocusNode.addListener(() {
-      if (!_emergencyContactPhoneFocusNode.hasFocus) {
-        _emergencyContactPhoneFieldKey.currentState?.validate();
+
+      if (vm.employmentStatus.trim().isNotEmpty) {
+        _selectedJobType = vm.employmentStatus;
+        _lockJobType = true;
       }
-    });
-    _emergencyContact2NameFocusNode.addListener(() {
-      if (!_emergencyContact2NameFocusNode.hasFocus) {
-        _emergencyContact2NameFieldKey.currentState?.validate();
+
+      final monthlyIncome = vm.monthlyIncome;
+      if (monthlyIncome > 0) {
+        _monthlyIncomeController.text = monthlyIncome.toStringAsFixed(0);
+        _lockMonthlyIncome = true;
       }
-    });
-    _emergencyContact2PhoneFocusNode.addListener(() {
-      if (!_emergencyContact2PhoneFocusNode.hasFocus) {
-        _emergencyContact2PhoneFieldKey.currentState?.validate();
+    } else {
+      final fullName = (ekycFront?.fullName ?? '').trim();
+      if (fullName.isNotEmpty) {
+        _fullNameController.text = fullName;
       }
-    });
-    _referencesFocusNode.addListener(() {
-      if (!_referencesFocusNode.hasFocus) {
-        _referencesFieldKey.currentState?.validate();
+
+      final idNumber = (ekycFront?.idNumber ?? '').trim();
+      if (RegExp(r'^\d{12}$').hasMatch(idNumber)) {
+        _cccdController.text = idNumber;
       }
-    });
+
+      if (ekycFront?.dateOfBirth != null) {
+        _dob = ekycFront!.dateOfBirth;
+      }
+
+      if (_currentAddressController.text.trim().isEmpty &&
+          idResidenceAddress.isNotEmpty) {
+        _currentAddressController.text = idResidenceAddress;
+      }
+    }
+  }
+
+  DateTime? _parseDateLoose(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return null;
+
+    final slash = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})$').firstMatch(value);
+    if (slash != null) {
+      final day = int.tryParse(slash.group(1)!);
+      final month = int.tryParse(slash.group(2)!);
+      final year = int.tryParse(slash.group(3)!);
+      if (day != null && month != null && year != null) {
+        return DateTime(year, month, day);
+      }
+    }
+
+    final dash = RegExp(r'^(\d{4})-(\d{1,2})-(\d{1,2})$').firstMatch(value);
+    if (dash != null) {
+      final year = int.tryParse(dash.group(1)!);
+      final month = int.tryParse(dash.group(2)!);
+      final day = int.tryParse(dash.group(3)!);
+      if (day != null && month != null && year != null) {
+        return DateTime(year, month, day);
+      }
+    }
+
+    return DateTime.tryParse(value);
+  }
+
+  String? _normalizeGender(String raw) {
+    if (raw.isEmpty) return null;
+    final value = raw.toLowerCase();
+
+    if (value.contains('male') || value.contains('nam')) return 'MALE';
+    if (value.contains('female') || value.contains('nữ') || value.contains('nu')) {
+      return 'FEMALE';
+    }
+
+    if (value.contains('other') || value.contains('khác') || value.contains('khac')) {
+      return 'OTHER';
+    }
+
+    return null;
   }
 
   @override
   void dispose() {
-    _employerNameController.dispose();
-    _jobTitleController.dispose();
-    _workPhoneController.dispose();
-    _yearsAtEmployerController.dispose();
-    _emergencyContactNameController.dispose();
-    _emergencyContactPhoneController.dispose();
-    _emergencyContact2NameController.dispose();
-    _emergencyContact2PhoneController.dispose();
-    _referencesController.dispose();
-    _employerNameFocusNode.dispose();
-    _jobTitleFocusNode.dispose();
-    _workPhoneFocusNode.dispose();
-    _yearsAtEmployerFocusNode.dispose();
-    _emergencyContactNameFocusNode.dispose();
-    _emergencyContactPhoneFocusNode.dispose();
-    _emergencyContact2NameFocusNode.dispose();
-    _emergencyContact2PhoneFocusNode.dispose();
-    _referencesFocusNode.dispose();
+    _fullNameController.dispose();
+    _nationalityController.dispose();
+    _cccdController.dispose();
+    _oldIdController.dispose();
+    _issuePlaceController.dispose();
+    _taxCodeController.dispose();
+    _permanentAddressController.dispose();
+    _currentAddressController.dispose();
+    _mobilePhoneController.dispose();
+    _emailController.dispose();
+
+    _monthlyIncomeController.dispose();
+    _companyNameController.dispose();
+    _companyPhoneController.dispose();
+    _companyAddressController.dispose();
+    _occupationTitleController.dispose();
+
+    _reference1NameController.dispose();
+    _reference1PhoneController.dispose();
+    _reference2NameController.dispose();
+    _reference2PhoneController.dispose();
     super.dispose();
   }
 
@@ -150,7 +298,10 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          context.t('Step 3: Additional Information', 'Bước 3: Thông tin bổ sung'),
+          context.t(
+            'Step 3: Additional Information',
+            'Bước 3: Thông tin bổ sung',
+          ),
           style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
@@ -168,218 +319,458 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        context.t('Additional Details', 'Chi tiết bổ sung'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t('Please provide additional information to complete your loan application.', 'Vui lòng cung cấp thêm thông tin để hoàn tất hồ sơ vay.'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                      _buildMainHeader(
+                        context.t(
+                          'Additional details for disbursement',
+                          'Bổ sung thông tin để giải ngân',
                         ),
                       ),
                       const SizedBox(height: 24),
 
-                      _buildSectionHeader(context.t('Employment Information', 'Thông tin công việc')),
+                      _buildSectionHeader(
+                        context.t(
+                          'PERSONAL INFORMATION',
+                          'THÔNG TIN CÁ NHÂN',
+                        ),
+                      ),
                       _buildTextField(
-                        fieldKey: _employerNameFieldKey,
-                        controller: _employerNameController,
-                        focusNode: _employerNameFocusNode,
-                        label: context.t('Employer Name', 'Tên công ty'),
-                        icon: Icons.business,
-                        maxLength: 50,
+                        controller: _fullNameController,
+                        label: context.t('Full Name*', 'Họ và tên*'),
+                        icon: Icons.person,
+                        readOnly: _lockFullName,
+                        maxLength: 60,
                         inputFormatters: [
-                          LengthLimitingTextInputFormatter(50),
+                          LengthLimitingTextInputFormatter(60),
                           FilteringTextInputFormatter.allow(
-                            RegExp(r'[a-zA-Z\s\-\.&]'),
+                            RegExp(r"[\p{L}\p{M}\s]", unicode: true),
                           ),
                         ],
-                        validator: _validateEmployerName,
+                        validator: _validateRequiredName,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       _buildTextField(
-                        fieldKey: _jobTitleFieldKey,
-                        controller: _jobTitleController,
-                        focusNode: _jobTitleFocusNode,
-                        label: context.t('Job Title', 'Chức danh công việc'),
-                        icon: Icons.work,
-                        maxLength: 50,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(50),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[a-zA-Z\s\-/]'),
-                          ),
-                        ],
-                        validator: _validateJobTitle,
+                        controller: _nationalityController,
+                        label: context.t('Nationality*', 'Quốc tịch*'),
+                        icon: Icons.flag_outlined,
+                        maxLength: 40,
+                        inputFormatters: [LengthLimitingTextInputFormatter(40)],
+                        validator: _requiredValidator(
+                          context.t('Please enter nationality', 'Vui lòng nhập quốc tịch'),
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
+                      _buildDateField(
+                        label: context.t(
+                          'Date of Birth*',
+                          'Ngày, tháng, năm sinh*',
+                        ),
+                        icon: Icons.cake_outlined,
+                        value: _dob,
+                        onChanged: (value) => setState(() => _dob = value),
+                        locked: _lockDob,
+                        firstDate: DateTime(1950),
+                        lastDate: DateTime.now(),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t('Gender*', 'Giới tính*'),
+                        icon: Icons.wc,
+                        value: _selectedGender,
+                        items: _genderOptions,
+                        display: _displayGender,
+                        onChanged: (value) =>
+                            setState(() => _selectedGender = value),
+                        validatorMessage: context.t(
+                          'Please select gender',
+                          'Vui lòng chọn giới tính',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       _buildTextField(
-                        fieldKey: _workPhoneFieldKey,
-                        controller: _workPhoneController,
-                        focusNode: _workPhoneFocusNode,
-                        label: context.t('Work Phone Number', 'Số điện thoại công việc'),
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        maxLength: 10,
+                        controller: _cccdController,
+                        label: context.t('Citizen ID (CCCD)*', 'Thẻ CC/CCCD*'),
+                        icon: Icons.badge_outlined,
+                        keyboardType: TextInputType.number,
+                        readOnly: _lockCccd,
+                        maxLength: 12,
                         inputFormatters: [
-                          LengthLimitingTextInputFormatter(10),
+                          LengthLimitingTextInputFormatter(12),
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: _validatePhoneNumber,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return context.t(
+                              'Please enter citizen ID',
+                              'Vui lòng nhập số CC/CCCD',
+                            );
+                          }
+                          if (!RegExp(r'^\d{12}$').hasMatch(value)) {
+                            return context.t(
+                              'Citizen ID must be exactly 12 digits',
+                              'Số CC/CCCD phải gồm đúng 12 chữ số',
+                            );
+                          }
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       _buildTextField(
-                        fieldKey: _yearsAtEmployerFieldKey,
-                        controller: _yearsAtEmployerController,
-                        focusNode: _yearsAtEmployerFocusNode,
+                        controller: _oldIdController,
                         label: context.t(
-                          'Years at Current Employer',
-                          'Số năm làm tại công ty hiện tại',
+                          'Old ID Number (if any)',
+                          'Số CMND cũ (nếu có)',
                         ),
-                        icon: Icons.calendar_today,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        maxLength: 5,
+                        icon: Icons.credit_card,
+                        keyboardType: TextInputType.number,
+                        maxLength: 12,
                         inputFormatters: [
-                          LengthLimitingTextInputFormatter(5),
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
+                          LengthLimitingTextInputFormatter(12),
+                          FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: _validateYearsAtEmployer,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDateField(
+                        label: context.t('Issue Date*', 'Ngày cấp*'),
+                        icon: Icons.event,
+                        value: _idIssueDate,
+                        onChanged: (value) => setState(() => _idIssueDate = value),
+                        firstDate: DateTime(1950),
+                        lastDate: DateTime.now(),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _issuePlaceController,
+                        label: context.t('Issue Place*', 'Nơi cấp*'),
+                        icon: Icons.location_city,
+                        maxLength: 100,
+                        inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                        validator: _requiredValidator(
+                          context.t('Please enter issue place', 'Vui lòng nhập nơi cấp'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDateField(
+                        label: context.t(
+                          'CCCD Expiry Date*',
+                          'Ngày thẻ CC/CCCD hết hạn*',
+                        ),
+                        icon: Icons.event_available,
+                        value: _idExpiryDate,
+                        onChanged: (value) =>
+                            setState(() => _idExpiryDate = value),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t('Education Level', 'Trình độ học vấn'),
+                        icon: Icons.school_outlined,
+                        value: _selectedEducationLevel,
+                        items: _educationLevelOptions,
+                        display: _displayEducationLevel,
+                        onChanged: (value) =>
+                            setState(() => _selectedEducationLevel = value),
+                        required: false,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _taxCodeController,
+                        label: context.t('Tax Code (if any)', 'Mã số thuế (nếu có)'),
+                        icon: Icons.numbers,
+                        maxLength: 20,
+                        inputFormatters: [LengthLimitingTextInputFormatter(20)],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t('Marital Status', 'Tình trạng hôn nhân'),
+                        icon: Icons.favorite_border,
+                        value: _selectedMaritalStatus,
+                        items: _maritalStatusOptions,
+                        display: _displayMaritalStatus,
+                        onChanged: (value) =>
+                            setState(() => _selectedMaritalStatus = value),
+                        required: false,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _permanentAddressController,
+                        label: context.t('Permanent Address', 'Địa chỉ thường trú'),
+                        icon: Icons.home_outlined,
+                        readOnly: true,
+                        maxLines: 2,
+                        maxLength: 160,
+                        inputFormatters: [LengthLimitingTextInputFormatter(160)],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _currentAddressController,
+                        label: context.t(
+                          'Current Residential Address*',
+                          'Địa chỉ nơi ở hiện tại*',
+                        ),
+                        icon: Icons.location_on_outlined,
+                        readOnly: false,
+                        maxLines: 2,
+                        maxLength: 160,
+                        inputFormatters: [LengthLimitingTextInputFormatter(160)],
+                        validator: _requiredValidator(
+                          context.t(
+                            'Please enter current residential address',
+                            'Vui lòng nhập địa chỉ nơi ở hiện tại',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _mobilePhoneController,
+                        label: context.t(
+                          'Mobile Phone Number',
+                          'Số điện thoại di động',
+                        ),
+                        icon: Icons.phone_android,
+                        keyboardType: TextInputType.phone,
+                        readOnly: _lockMobilePhone,
+                        maxLength: 15,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(15),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9+\-\s()]'),
+                          ),
+                        ],
+                        validator: _validateOptionalPhone,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _emailController,
+                        label: context.t('Email', 'Email'),
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        maxLength: 100,
+                        inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                        validator: _validateOptionalGmail,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t(
+                          'Residency Status*',
+                          'Tình trạng cư trú*',
+                        ),
+                        icon: Icons.badge,
+                        value: _selectedResidencyStatus,
+                        items: _residencyStatusOptions,
+                        display: _displayResidencyStatus,
+                        onChanged: (value) =>
+                            setState(() => _selectedResidencyStatus = value),
+                        validatorMessage: context.t(
+                          'Please select residency status',
+                          'Vui lòng chọn tình trạng cư trú',
+                        ),
                       ),
 
                       const SizedBox(height: 24),
                       _buildSectionHeader(
-                        context.t('Emergency Contact', 'Liên hệ khẩn cấp'),
-                      ),
-                      _buildTextField(
-                        fieldKey: _emergencyContactNameFieldKey,
-                        controller: _emergencyContactNameController,
-                        focusNode: _emergencyContactNameFocusNode,
-                        label: context.t(
-                          'Emergency Contact 1 Name',
-                          'Tên liên hệ khẩn cấp 1',
+                        context.t(
+                          'EMPLOYMENT AND INCOME INFORMATION',
+                          'THÔNG TIN NGHỀ NGHIỆP VÀ THU NHẬP',
                         ),
-                        icon: Icons.person,
-                        maxLength: 30,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(30),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[a-zA-Z\s\-\.]'),
-                          ),
-                        ],
-                        validator: _validateName,
                       ),
-                      const SizedBox(height: 16),
+                      _buildDropdownField(
+                        label: context.t('Job Type', 'Loại hình công việc'),
+                        icon: Icons.work_outline,
+                        value: _selectedJobType,
+                        items: _jobTypeOptions,
+                        display: _displayJobType,
+                        onChanged: _lockJobType
+                            ? null
+                            : (value) => setState(() => _selectedJobType = value),
+                      ),
+                      const SizedBox(height: 12),
                       _buildTextField(
-                        fieldKey: _emergencyContactPhoneFieldKey,
-                        controller: _emergencyContactPhoneController,
-                        focusNode: _emergencyContactPhoneFocusNode,
-                        label: context.t(
-                          'Emergency Contact 1 Phone',
-                          'Số điện thoại liên hệ khẩn cấp 1',
-                        ),
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        maxLength: 10,
+                        controller: _monthlyIncomeController,
+                        label: context.t('Monthly Income*', 'Thu nhập hàng tháng*'),
+                        icon: Icons.payments_outlined,
+                        keyboardType: TextInputType.number,
+                        readOnly: _lockMonthlyIncome,
+                        maxLength: 15,
                         inputFormatters: [
-                          LengthLimitingTextInputFormatter(10),
+                          LengthLimitingTextInputFormatter(15),
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: _validatePhoneNumber,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return context.t(
+                              'Please enter monthly income',
+                              'Vui lòng nhập thu nhập hàng tháng',
+                            );
+                          }
+                          final income = double.tryParse(value);
+                          if (income == null || income <= 0) {
+                            return context.t(
+                              'Monthly income must be greater than 0',
+                              'Thu nhập hàng tháng phải lớn hơn 0',
+                            );
+                          }
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 16),
-                      _buildRelationshipDropdown(
-                        label: context.t('Relationship 1', 'Mối quan hệ 1'),
-                        value: _selectedRelationship1,
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _companyNameController,
+                        label: context.t('Company Name', 'Đơn vị công tác'),
+                        icon: Icons.business,
+                        maxLength: 100,
+                        inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _companyPhoneController,
+                        label: context.t('Office Phone', 'Điện thoại cơ quan'),
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 15,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(15),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9+\-\s()]'),
+                          ),
+                        ],
+                        validator: _validateOptionalPhone,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _companyAddressController,
+                        label: context.t('Office Address', 'Địa chỉ cơ quan'),
+                        icon: Icons.location_city,
+                        maxLines: 2,
+                        maxLength: 160,
+                        inputFormatters: [LengthLimitingTextInputFormatter(160)],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t(
+                          'Labor Contract Type',
+                          'Loại hợp đồng lao động',
+                        ),
+                        icon: Icons.description_outlined,
+                        value: _selectedContractType,
+                        items: _contractTypeOptions,
+                        display: _displayContractType,
+                        onChanged: (value) =>
+                            setState(() => _selectedContractType = value),
+                        required: false,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _occupationTitleController,
+                        label: context.t(
+                          'Occupation / Position*',
+                          'Nghề nghiệp, Chức vụ*',
+                        ),
+                        icon: Icons.badge,
+                        maxLength: 60,
+                        inputFormatters: [LengthLimitingTextInputFormatter(60)],
+                        validator: _requiredMin2Validator(
+                          context.t(
+                            'Please enter occupation/position',
+                            'Vui lòng nhập nghề nghiệp/chức vụ',
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                      _buildSectionHeader(
+                        context.t(
+                          'REFERENCE INFORMATION',
+                          'THÔNG TIN NGƯỜI THAM CHIẾU',
+                        ),
+                      ),
+                      _buildTextField(
+                        controller: _reference1NameController,
+                        label: context.t(
+                          'Reference Person 1 Name',
+                          'Họ và tên người tham chiếu 1',
+                        ),
+                        icon: Icons.person_outline,
+                        maxLength: 60,
+                        inputFormatters: [LengthLimitingTextInputFormatter(60)],
+                        validator: _validateOptionalName,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t('Relationship', 'Quan hệ'),
+                        icon: Icons.family_restroom,
+                        value: _selectedReference1Relationship,
+                        items: _relationshipOptions,
+                        display: _displayRelationship,
                         onChanged: (value) {
                           setState(() {
-                            _selectedRelationship1 = value;
-                            if (_selectedRelationship2 == value) {
-                              _selectedRelationship2 = null;
+                            _selectedReference1Relationship = value;
+                            if (_selectedReference2Relationship == value) {
+                              _selectedReference2Relationship = null;
                             }
                           });
                         },
+                        required: false,
                       ),
-
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
                       _buildTextField(
-                        fieldKey: _emergencyContact2NameFieldKey,
-                        controller: _emergencyContact2NameController,
-                        focusNode: _emergencyContact2NameFocusNode,
-                        label: context.t(
-                          'Emergency Contact 2 Name',
-                          'Tên liên hệ khẩn cấp 2',
-                        ),
-                        icon: Icons.person,
-                        maxLength: 30,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(30),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[a-zA-Z\s\-\.]'),
-                          ),
-                        ],
-                        validator: _validateName,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        fieldKey: _emergencyContact2PhoneFieldKey,
-                        controller: _emergencyContact2PhoneController,
-                        focusNode: _emergencyContact2PhoneFocusNode,
-                        label: context.t(
-                          'Emergency Contact 2 Phone',
-                          'Số điện thoại liên hệ khẩn cấp 2',
-                        ),
+                        controller: _reference1PhoneController,
+                        label: context.t('Phone', 'Điện thoại'),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
-                        maxLength: 10,
+                        maxLength: 15,
                         inputFormatters: [
-                          LengthLimitingTextInputFormatter(10),
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: _validatePhoneNumber,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRelationshipDropdown(
-                        label: context.t('Relationship 2', 'Mối quan hệ 2'),
-                        value: _selectedRelationship2,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedRelationship2 = value;
-                          });
-                        },
-                        disabledValues: {
-                          if (_selectedRelationship1 != null)
-                            _selectedRelationship1!,
-                        },
-                      ),
-
-                      const SizedBox(height: 24),
-                      _buildSectionHeader(
-                        context.t('References (Optional)', 'Người tham chiếu (Tùy chọn)'),
-                      ),
-                      _buildTextField(
-                        fieldKey: _referencesFieldKey,
-                        controller: _referencesController,
-                        focusNode: _referencesFocusNode,
-                        label: context.t('References', 'Người tham chiếu'),
-                        icon: Icons.people,
-                        maxLines: 3,
-                        maxLength: 200,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(200),
+                          LengthLimitingTextInputFormatter(15),
                           FilteringTextInputFormatter.allow(
-                            RegExp(r"[A-Za-z0-9\s,\.\-/#&()']"),
+                            RegExp(r'[0-9+\-\s()]'),
                           ),
                         ],
-                        isRequired: false,
+                        validator: _validateOptionalPhone,
                       ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _reference2NameController,
+                        label: context.t(
+                          'Reference Person 2 Name',
+                          'Họ và tên người tham chiếu 2',
+                        ),
+                        icon: Icons.person_outline,
+                        maxLength: 60,
+                        inputFormatters: [LengthLimitingTextInputFormatter(60)],
+                        validator: _validateOptionalName,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDropdownField(
+                        label: context.t('Relationship', 'Quan hệ'),
+                        icon: Icons.family_restroom,
+                        value: _selectedReference2Relationship,
+                        items: _relationshipOptions,
+                        display: _displayRelationship,
+                        onChanged: (value) =>
+                            setState(() => _selectedReference2Relationship = value),
+                        required: false,
+                        disabledValues: {
+                          if (_selectedReference1Relationship != null)
+                            _selectedReference1Relationship!,
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _reference2PhoneController,
+                        label: context.t('Phone', 'Điện thoại'),
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 15,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(15),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9+\-\s()]'),
+                          ),
+                        ],
+                        validator: _validateOptionalPhone,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDocumentUploadField(),
                     ],
                   ),
                 ),
@@ -403,7 +794,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                   ),
                   child: Text(
                     context.t('Continue', 'Tiếp tục'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -418,22 +809,119 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     );
   }
 
+  Widget _buildMainHeader(String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.t('Additional Information', 'Thông tin bổ sung'),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1A1F3F),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
           color: Color(0xFF4C40F7),
         ),
       ),
     );
   }
 
+  Widget _buildDocumentUploadField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.t('Additional Documents', 'Tài liệu bổ sung'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1F3F),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _pickAdditionalDocuments,
+                  icon: const Icon(Icons.upload_file),
+                  label: Text(
+                    context.t('Upload Documents', 'Tải tài liệu lên'),
+                  ),
+                ),
+              ),
+              if (_additionalDocuments.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ..._additionalDocuments.map(
+                  (doc) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.insert_drive_file_outlined,
+                          size: 16,
+                          color: Color(0xFF4C40F7),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            doc.name,
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickAdditionalDocuments() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      withData: false,
+    );
+    if (result == null) return;
+
+    setState(() {
+      _additionalDocuments = result.files;
+    });
+  }
+
   Widget _buildTextField({
-    GlobalKey<FormFieldState<String>>? fieldKey,
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -441,29 +929,23 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
     int? maxLength,
-    bool isRequired = true,
-    FocusNode? focusNode,
+    bool readOnly = false,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
-      key: fieldKey,
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       maxLines: maxLines,
       maxLength: maxLength,
-      focusNode: focusNode,
-      validator:
-          validator ??
-          (value) {
-            if (isRequired && (value == null || value.isEmpty)) {
-              return context.t('Please enter $label', 'Vui lòng nhập $label');
-            }
-            return null;
-          },
+      readOnly: readOnly,
+      validator: validator,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+        suffixIcon: readOnly
+            ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
+            : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -478,18 +960,60 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     );
   }
 
-  Widget _buildRelationshipDropdown({
+  Widget _buildDateField({
     required String label,
-    required String? value,
-    required ValueChanged<String?> onChanged,
-    Set<String> disabledValues = const <String>{},
+    required IconData icon,
+    required DateTime? value,
+    required ValueChanged<DateTime?> onChanged,
+    required DateTime firstDate,
+    required DateTime lastDate,
+    bool locked = false,
   }) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
+    final text = value == null
+        ? ''
+        : '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+
+    return TextFormField(
+      readOnly: true,
+      controller: TextEditingController(text: text),
+      onTap: locked
+          ? null
+          : () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: value ?? DateTime.now(),
+                firstDate: firstDate,
+                lastDate: lastDate,
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.light(
+                        primary: Color(0xFF4C40F7),
+                        onPrimary: Colors.white,
+                        surface: Colors.white,
+                        onSurface: Colors.black,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (picked != null) {
+                onChanged(picked);
+              }
+            },
+      validator: (_) {
+        if (value == null) {
+          return context.t('Please select $label', 'Vui lòng chọn $label');
+        }
+        return null;
+      },
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: const Icon(Icons.family_restroom, color: Color(0xFF4C40F7)),
+        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+        suffixIcon: locked
+            ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
+            : const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -500,25 +1024,56 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
           borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
         ),
       ),
-      items: _relationshipOptions.map((option) {
-        final isDisabled = disabledValues.contains(option);
-        return DropdownMenuItem(
-          value: option,
-          enabled: !isDisabled,
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required String Function(String) display,
+    required ValueChanged<String?>? onChanged,
+    String? validatorMessage,
+    bool required = true,
+    Set<String> disabledValues = const <String>{},
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+        ),
+      ),
+      items: items.map((item) {
+        final disabled = disabledValues.contains(item);
+        return DropdownMenuItem<String>(
+          value: item,
+          enabled: !disabled,
           child: Text(
-            _displayRelationship(option),
+            display(item),
             style: TextStyle(
-              color: isDisabled ? Colors.grey.shade400 : Colors.black,
+              color: disabled ? Colors.grey.shade400 : Colors.black,
             ),
           ),
         );
       }).toList(),
       onChanged: onChanged,
       validator: (selected) {
-        if (selected == null || selected.isEmpty) {
-          return context.t('Please select $label', 'Vui lòng chọn $label');
+        if (required && (selected == null || selected.isEmpty)) {
+          return validatorMessage ??
+              context.t('Please select $label', 'Vui lòng chọn $label');
         }
-        if (disabledValues.contains(selected)) {
+        if (selected != null && disabledValues.contains(selected)) {
           return context.t(
             '$label cannot duplicate another selected relationship',
             '$label không được trùng với mối quan hệ đã chọn khác',
@@ -529,139 +1084,227 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     );
   }
 
-  String _displayRelationship(String option) {
-    switch (option) {
-      case 'Mother':
-        return context.t('Mother', 'Mẹ');
-      case 'Father':
-        return context.t('Father', 'Bố');
-      case 'Brother':
-        return context.t('Brother', 'Anh/Em trai');
-      case 'Sister':
-        return context.t('Sister', 'Chị/Em gái');
-      case 'Spouse':
-        return context.t('Spouse', 'Vợ/Chồng');
-      case 'Child':
-        return context.t('Child', 'Con');
-      case 'Guardian':
-        return context.t('Guardian', 'Người giám hộ');
-      case 'Other':
-        return context.t('Other', 'Khác');
-      default:
-        return option;
-    }
+  String? Function(String?) _requiredValidator(String message) {
+    return (value) {
+      if (value == null || value.trim().isEmpty) {
+        return message;
+      }
+      return null;
+    };
   }
 
-  // ==================== VALIDATION FUNCTIONS ====================
-
-  String? _validateEmployerName(String? value) {
-    if (value == null || value.isEmpty) {
-      return context.t('Please enter employer name', 'Vui lòng nhập tên công ty');
-    }
-    if (value.length < 2) {
-      return context.t(
-        'Employer name must be at least 2 characters',
-        'Tên công ty phải có ít nhất 2 ký tự',
-      );
-    }
-    if (!RegExp(r'^[a-zA-Z\s\-\.&]+$').hasMatch(value)) {
-      return context.t(
-        'Employer name can only contain letters, spaces, hyphens, dots, and &',
-        'Tên công ty chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang, dấu chấm và &',
-      );
-    }
-    return null;
+  String? Function(String?) _requiredMin2Validator(String message) {
+    return (value) {
+      if (value == null || value.trim().isEmpty) {
+        return message;
+      }
+      if (value.trim().length < 2) {
+        return context.t(
+          'Must be at least 2 characters',
+          'Phải có ít nhất 2 ký tự',
+        );
+      }
+      return null;
+    };
   }
 
-  String? _validateJobTitle(String? value) {
-    if (value == null || value.isEmpty) {
-      return context.t('Please enter job title', 'Vui lòng nhập chức danh công việc');
+  String? _validateRequiredName(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) {
+      return context.t('Please enter full name', 'Vui lòng nhập họ và tên');
     }
-    if (value.length < 2) {
-      return context.t(
-        'Job title must be at least 2 characters',
-        'Chức danh công việc phải có ít nhất 2 ký tự',
-      );
-    }
-    if (!RegExp(r'^[a-zA-Z\s\-\/]+$').hasMatch(value)) {
-      return context.t(
-        'Job title can only contain letters, spaces, hyphens, and slashes',
-        'Chức danh chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang và dấu gạch chéo',
-      );
-    }
-    return null;
-  }
-
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return context.t('Please enter phone number', 'Vui lòng nhập số điện thoại');
-    }
-    if (value.length != 10) {
-      return context.t(
-        'Phone number must be exactly 10 digits',
-        'Số điện thoại phải gồm đúng 10 chữ số',
-      );
-    }
-    if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-      return context.t(
-        'Phone number can only contain digits',
-        'Số điện thoại chỉ được chứa chữ số',
-      );
-    }
-    return null;
-  }
-
-  String? _validateYearsAtEmployer(String? value) {
-    if (value == null || value.isEmpty) {
-      return context.t(
-        'Please enter years at employer',
-        'Vui lòng nhập số năm làm việc tại công ty',
-      );
-    }
-    final years = double.tryParse(value);
-    if (years == null) {
-      return context.t('Please enter a valid number', 'Vui lòng nhập số hợp lệ');
-    }
-    if (years < 0) {
-      return context.t('Years cannot be negative', 'Số năm không được âm');
-    }
-    if (years > 50) {
-      return context.t(
-        'Please enter a realistic number of years',
-        'Vui lòng nhập số năm hợp lý',
-      );
-    }
-    return null;
-  }
-
-  String? _validateName(String? value) {
-    if (value == null || value.isEmpty) {
-      return context.t('Please enter contact name', 'Vui lòng nhập tên liên hệ');
-    }
-    if (value.length < 2) {
+    if (raw.length < 2) {
       return context.t(
         'Name must be at least 2 characters',
         'Tên phải có ít nhất 2 ký tự',
       );
     }
-    if (!RegExp(r'^[a-zA-Z\s\-\.]+$').hasMatch(value)) {
+    if (!RegExp(r"^[\p{L}\p{M}\s\-.']+$", unicode: true).hasMatch(raw)) {
       return context.t(
-        'Name can only contain letters, spaces, hyphens, and dots',
-        'Tên chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang và dấu chấm',
+        'Name can only contain letters, spaces, dots, apostrophes, and hyphens',
+        'Tên chỉ được chứa chữ cái, khoảng trắng, dấu chấm, dấu nháy và gạch nối',
       );
     }
     return null;
   }
 
+  String? _validateOptionalName(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+    if (raw.length < 2) {
+      return context.t(
+        'Name must be at least 2 characters',
+        'Tên phải có ít nhất 2 ký tự',
+      );
+    }
+    if (!RegExp(r"^[\p{L}\p{M}\s\-.']+$", unicode: true).hasMatch(raw)) {
+      return context.t(
+        'Invalid name format',
+        'Định dạng tên không hợp lệ',
+      );
+    }
+    return null;
+  }
+
+  String? _validateOptionalPhone(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+
+    final normalized = raw.replaceAll(RegExp(r'[^0-9+]'), '');
+    final isVietnamLocal = RegExp(r'^0\d{9}$').hasMatch(normalized);
+    final isVietnamIntl = RegExp(r'^\+84\d{9}$').hasMatch(normalized);
+
+    if (!isVietnamLocal && !isVietnamIntl) {
+      return context.t(
+        'Phone must be 10 digits (0xxxxxxxxx) or +84xxxxxxxxx',
+        'Số điện thoại phải có dạng 0xxxxxxxxx hoặc +84xxxxxxxxx',
+      );
+    }
+    return null;
+  }
+
+  String? _validateOptionalGmail(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+
+    final gmailRegex = RegExp(r'^[A-Z0-9._%+-]+@gmail\.com$', caseSensitive: false);
+    if (!gmailRegex.hasMatch(raw)) {
+      return context.t(
+        'Please enter a valid Gmail address',
+        'Vui lòng nhập địa chỉ Gmail hợp lệ',
+      );
+    }
+    return null;
+  }
+
+  String _displayGender(String value) {
+    switch (value) {
+      case 'MALE':
+        return context.t('Male', 'Nam');
+      case 'FEMALE':
+        return context.t('Female', 'Nữ');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
+  String _displayMaritalStatus(String value) {
+    switch (value) {
+      case 'SINGLE':
+        return context.t('Single', 'Độc thân');
+      case 'MARRIED':
+        return context.t('Married', 'Đã kết hôn');
+      case 'DIVORCED':
+        return context.t('Divorced', 'Ly hôn');
+      case 'WIDOWED':
+        return context.t('Widowed', 'Góa');
+      default:
+        return value;
+    }
+  }
+
+  String _displayEducationLevel(String value) {
+    switch (value) {
+      case 'THCS':
+        return context.t('Lower secondary school (THCS)', 'Trung học cơ sở (THCS)');
+      case 'THPT':
+        return context.t('Upper secondary school (THPT)', 'Trung học phổ thông (THPT)');
+      case 'INTERMEDIATE':
+        return context.t('Intermediate', 'Trung cấp');
+      case 'COLLEGE':
+        return context.t('College', 'Cao đẳng');
+      case 'UNIVERSITY':
+        return context.t('University (Bachelor / Engineer)', 'Đại học (Cử nhân / Kỹ sư)');
+      case 'MASTER':
+        return context.t('Master', 'Thạc sĩ');
+      case 'DOCTORATE':
+        return context.t('Doctorate', 'Tiến sĩ');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
+  String _displayResidencyStatus(String value) {
+    switch (value) {
+      case 'RESIDENT':
+        return context.t('Resident', 'Người cư trú');
+      case 'NON_RESIDENT':
+        return context.t('Non-resident', 'Người không cư trú');
+      default:
+        return value;
+    }
+  }
+
+  String _displayJobType(String value) {
+    switch (value) {
+      case 'EMPLOYED':
+        return context.t('Employed', 'Nhân viên');
+      case 'SELF_EMPLOYED':
+        return context.t('Self-employed', 'Tự kinh doanh');
+      case 'UNEMPLOYED':
+        return context.t('Unemployed', 'Thất nghiệp');
+      case 'STUDENT':
+        return context.t('Student', 'Sinh viên');
+      case 'RETIRED':
+        return context.t('Retired', 'Nghỉ hưu');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
+  String _displayContractType(String value) {
+    switch (value) {
+      case 'INDEFINITE':
+        return context.t('Indefinite-term', 'Không xác định thời hạn');
+      case 'FIXED_TERM':
+        return context.t('Fixed-term', 'Xác định thời hạn');
+      case 'SEASONAL':
+        return context.t('Seasonal', 'Thời vụ');
+      case 'PROBATION':
+        return context.t('Probation', 'Thử việc');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
+  String _displayRelationship(String value) {
+    switch (value) {
+      case 'PARENT':
+        return context.t('Parent', 'Cha/Mẹ');
+      case 'SPOUSE':
+        return context.t('Spouse', 'Vợ/Chồng');
+      case 'SIBLING':
+        return context.t('Sibling', 'Anh/Chị/Em');
+      case 'CHILD':
+        return context.t('Child', 'Con');
+      case 'FRIEND':
+        return context.t('Friend', 'Bạn bè');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
   Future<void> _continueToOfferCalculator() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedRelationship1 == _selectedRelationship2) {
+
+    if (_selectedReference1Relationship != null &&
+        _selectedReference1Relationship == _selectedReference2Relationship) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.t(
-              'Emergency contacts must have different relationships',
-              'Hai liên hệ khẩn cấp phải có mối quan hệ khác nhau',
+              'Reference relationships must be different',
+              'Hai người tham chiếu phải có quan hệ khác nhau',
             ),
           ),
           backgroundColor: Colors.red,
@@ -670,12 +1313,11 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       return;
     }
 
-    // Mark Step 3 as completed
     final loanViewModel = context.read<LoanViewModel>();
-
     final isRejected =
         loanViewModel.isApplicationRejected ||
         (loanViewModel.currentOffer?['approved'] == false);
+
     if (isRejected) {
       await loanViewModel.resetLoanApplicationState();
       if (!mounted) return;
@@ -696,12 +1338,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
 
     loanViewModel.completeStep3();
 
-    // TODO: Save additional info to ViewModel/Firebase
-
-    // Navigate to Step 4 - Offer Calculator
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const Step4OfferCalculatorPage()),
+      MaterialPageRoute(builder: (_) => const Step4OfferCalculatorPage()),
     );
   }
 }

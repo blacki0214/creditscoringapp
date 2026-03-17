@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import '../config/app_environment.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../utils/app_localization.dart';
 import 'step1_selfie.dart';
@@ -20,6 +21,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
   bool isFrontLoading = false;
   bool isBackLoading = false;
   bool _autoFlowRunning = false;
+  bool get _autoCaptureDisabled => AppEnvironment.shouldDisableAutoCaptureIdCard;
   bool get _isMobile =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
@@ -29,7 +31,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startAutoScanFlow();
+      if (!_autoCaptureDisabled) {
+        _startAutoScanFlow();
+      }
     });
   }
 
@@ -52,7 +56,6 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 
     final vm = context.read<LoanViewModel>();
     final frontDone = vm.frontIdData?.success ?? false;
-    final backDone = vm.backIdData?.success ?? false;
 
     setState(() {
       _autoFlowRunning = true;
@@ -103,6 +106,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
               'Center the card inside the frame and keep your hand steady.',
               'Đặt thẻ vào giữa khung và giữ tay ổn định.',
             ),
+            manualCaptureEnabled: _autoCaptureDisabled,
           ),
         ),
       );
@@ -269,8 +273,12 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                         const SizedBox(height: 12),
                         Text(
                           context.t(
-                            'Auto-scanning front then back ID card',
-                            'Tự động quét mặt trước và mặt sau CCCD',
+                            _autoCaptureDisabled
+                                ? 'Scan front then back ID card'
+                                : 'Auto-scanning front then back ID card',
+                            _autoCaptureDisabled
+                                ? 'Quét mặt trước rồi mặt sau CCCD'
+                                : 'Tự động quét mặt trước và mặt sau CCCD',
                           ),
                           style: TextStyle(
                             fontSize: 16,
@@ -283,6 +291,11 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                               ? context.t(
                                   'Keep your card stable. Capture and verification run automatically.',
                                   'Giữ thẻ ổn định. Ảnh sẽ được chụp và xác thực tự động.',
+                                )
+                              : _autoCaptureDisabled
+                              ? context.t(
+                                  'Auto-capture is disabled in test mode. Tap Start Scan to continue.',
+                                  'Đã tắt chụp tự động trong chế độ test. Nhấn Bắt đầu quét để tiếp tục.',
                                 )
                               : context.t(
                                   'Auto flow paused. Tap retry to continue.',
@@ -325,7 +338,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                               onPressed: _startAutoScanFlow,
                               icon: const Icon(Icons.autorenew),
                               label: Text(
-                                context.t('Retry Auto-Scan', 'Thử quét lại tự động'),
+                                _autoCaptureDisabled
+                                    ? context.t('Start Scan', 'Bắt đầu quét')
+                                    : context.t('Retry Auto-Scan', 'Thử quét lại tự động'),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4C40F7),
@@ -362,7 +377,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                       child: Text(
                         canContinue
                           ? context.t('Continue to Selfie', 'Tiếp tục chụp khuôn mặt')
-                          : context.t('Auto-scanning...', 'Đang quét tự động...'),
+                          : _autoFlowRunning
+                          ? context.t('Auto-scanning...', 'Đang quét tự động...')
+                          : context.t('Waiting to scan...', 'Đang chờ quét...'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -505,10 +522,15 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
 }
 
 class _LiveAutoCapturePage extends StatefulWidget {
-  const _LiveAutoCapturePage({required this.title, required this.subtitle});
+  const _LiveAutoCapturePage({
+    required this.title,
+    required this.subtitle,
+    this.manualCaptureEnabled = false,
+  });
 
   final String title;
   final String subtitle;
+  final bool manualCaptureEnabled;
 
   @override
   State<_LiveAutoCapturePage> createState() => _LiveAutoCapturePageState();
@@ -569,7 +591,9 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
       });
 
       _startDetectionStream();
-      _startAutoCaptureCountdown();
+      if (!widget.manualCaptureEnabled) {
+        _startAutoCaptureCountdown();
+      }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
@@ -728,7 +752,9 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
         _stableTicks = 0;
       });
       _startDetectionStream();
-      _startAutoCaptureCountdown();
+      if (!widget.manualCaptureEnabled) {
+        _startAutoCaptureCountdown();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -813,21 +839,41 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      minHeight: 8,
-                      value: progress,
-                      backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF4CAF50),
+                  if (!widget.manualCaptureEnabled)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        minHeight: 8,
+                        value: progress,
+                        backgroundColor: Colors.white24,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF4CAF50),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                  if (!widget.manualCaptureEnabled) const SizedBox(height: 8),
+                  if (widget.manualCaptureEnabled)
+                    SizedBox(
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _isCapturing ? null : () => _capture(),
+                        icon: const Icon(Icons.camera_alt),
+                        label: Text(context.t('Capture ID', 'Chụp CCCD')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C40F7),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  if (widget.manualCaptureEnabled) const SizedBox(height: 8),
                   Text(
                     _isCapturing
                         ? context.t('Capturing...', 'Đang chụp...')
+                        : widget.manualCaptureEnabled
+                        ? context.t(
+                            'Manual mode: align the ID in frame, then tap Capture ID.',
+                            'Chế độ thủ công: đặt CCCD trong khung rồi nhấn Chụp CCCD.',
+                          )
                         : _idInterfaceDetected
                         ? context.t(
                             'ID interface detected. Auto-capture in ${((_requiredStableTicks - _stableTicks) * 0.25).clamp(0, 99).toStringAsFixed(2)}s',
