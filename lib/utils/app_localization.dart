@@ -5,13 +5,17 @@ import '../viewmodels/language_viewmodel.dart';
 extension AppLocalizationExtension on BuildContext {
   bool get isVietnamese {
     try {
+      return Localizations.localeOf(this).languageCode == 'vi';
+    } catch (_) {}
+
+    try {
       final vm = Provider.of<LanguageViewModel?>(this, listen: false);
       if (vm != null) {
         return vm.isVietnamese;
       }
     } catch (_) {}
 
-    return Localizations.localeOf(this).languageCode == 'vi';
+    return false;
   }
 
   String t(String english, String vietnamese) {

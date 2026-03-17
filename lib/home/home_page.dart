@@ -515,6 +515,21 @@ class _HomePageState extends State<HomePage> {
                                             itemBuilder: (context, index) {
                                               final notification =
                                                   notifications[index];
+                                              final localizedTitle =
+                                                  _getLocalizedNotificationTitle(
+                                                    context,
+                                                    notification,
+                                                  );
+                                              final localizedBody =
+                                                  _getLocalizedNotificationBody(
+                                                    context,
+                                                    notification,
+                                                  );
+                                              final localizedTimeAgo =
+                                                  _formatNotificationTimeAgo(
+                                                    context,
+                                                    notification.createdAt,
+                                                  );
                                               return InkWell(
                                                 onTap: () async {
                                                   if (!notification.isRead) {
@@ -609,8 +624,7 @@ class _HomePageState extends State<HomePage> {
                                                                   ),
                                                                 Expanded(
                                                                   child: Text(
-                                                                    notification
-                                                                        .title,
+                                                                    localizedTitle,
                                                                     style: TextStyle(
                                                                       fontWeight:
                                                                           notification
@@ -635,7 +649,7 @@ class _HomePageState extends State<HomePage> {
                                                               height: 2,
                                                             ),
                                                             Text(
-                                                              notification.body,
+                                                              localizedBody,
                                                               style: TextStyle(
                                                               fontSize: 12,
                                                               fontWeight: notification
@@ -660,8 +674,7 @@ class _HomePageState extends State<HomePage> {
                                                               height: 4,
                                                             ),
                                                             Text(
-                                                              notification
-                                                                  .timeAgo,
+                                                              localizedTimeAgo,
                                                               style: TextStyle(
                                                                 fontSize: 11,
                                                                 color: Colors
@@ -2296,6 +2309,143 @@ class _TipCardState extends State<TipCard> {
       ),
     );
   }
+}
+
+String _getLocalizedNotificationTitle(
+  BuildContext context,
+  NotificationModel notification,
+) {
+  switch (notification.type) {
+    case 'loan_approved':
+      return context.t('Loan Approved', 'Khoản vay đã được duyệt');
+    case 'loan_rejected':
+      return context.t('Loan Application Update', 'Cập nhật hồ sơ vay');
+    case 'credit_score_updated':
+      return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
+    case 'payment_reminder':
+      return context.t('Payment Reminder', 'Nhắc nhở thanh toán');
+    default:
+      if (notification.title == 'Loan Approved') {
+        return context.t('Loan Approved', 'Khoản vay đã được duyệt');
+      }
+      if (notification.title == 'Loan Application Update') {
+        return context.t('Loan Application Update', 'Cập nhật hồ sơ vay');
+      }
+      if (notification.title == 'Credit Score Updated') {
+        return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
+      }
+      return notification.title;
+  }
+}
+
+String _getLocalizedNotificationBody(
+  BuildContext context,
+  NotificationModel notification,
+) {
+  final isVietnamese = context.isVietnamese;
+
+  if (notification.type == 'loan_approved') {
+    final rawAmount = notification.data?['loanAmount'];
+    final amount = rawAmount is num ? rawAmount.toDouble() : null;
+    final format = NumberFormat.currency(
+      locale: isVietnamese ? 'vi_VN' : 'en_US',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    if (amount != null) {
+      return context.t(
+        'Your loan of ${format.format(amount)} has been approved',
+        'Khoản vay ${format.format(amount)} của bạn đã được duyệt',
+      );
+    }
+    return context.t(
+      'Your loan has been approved',
+      'Khoản vay của bạn đã được duyệt',
+    );
+  }
+
+  if (notification.type == 'loan_rejected') {
+    return context.t(
+      'Your loan application needs review',
+      'Hồ sơ vay của bạn cần được xem xét thêm',
+    );
+  }
+
+  if (notification.type == 'credit_score_updated') {
+    final rawDifference = notification.data?['difference'];
+    final difference = rawDifference is num ? rawDifference.toInt() : null;
+    if (difference != null) {
+      if (difference > 0) {
+        return context.t(
+          'Your score increased by $difference points',
+          'Điểm tín dụng của bạn đã tăng $difference điểm',
+        );
+      }
+      if (difference < 0) {
+        return context.t(
+          'Your score decreased by ${difference.abs()} points',
+          'Điểm tín dụng của bạn đã giảm ${difference.abs()} điểm',
+        );
+      }
+    }
+    return context.t(
+      'Your credit score was updated',
+      'Điểm tín dụng của bạn đã được cập nhật',
+    );
+  }
+
+  if (notification.body ==
+      'Your loan application needs review') {
+    return context.t(
+      'Your loan application needs review',
+      'Hồ sơ vay của bạn cần được xem xét thêm',
+    );
+  }
+
+  if (notification.body == 'Just now') {
+    return context.t('Just now', 'Vừa xong');
+  }
+
+  return notification.body;
+}
+
+String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
+  final now = DateTime.now();
+  final difference = now.difference(createdAt);
+
+  if (difference.inDays > 7) {
+    final weeks = difference.inDays ~/ 7;
+    return context.t(
+      '$weeks week${weeks > 1 ? 's' : ''} ago',
+      '$weeks tuần trước',
+    );
+  }
+
+  if (difference.inDays > 0) {
+    final days = difference.inDays;
+    return context.t(
+      '$days day${days > 1 ? 's' : ''} ago',
+      '$days ngày trước',
+    );
+  }
+
+  if (difference.inHours > 0) {
+    final hours = difference.inHours;
+    return context.t(
+      '$hours hour${hours > 1 ? 's' : ''} ago',
+      '$hours giờ trước',
+    );
+  }
+
+  if (difference.inMinutes > 0) {
+    final minutes = difference.inMinutes;
+    return context.t(
+      '$minutes minute${minutes > 1 ? 's' : ''} ago',
+      '$minutes phút trước',
+    );
+  }
+
+  return context.t('Just now', 'Vừa xong');
 }
 
 /// Helper function to get icon for notification type
