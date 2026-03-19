@@ -616,11 +616,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     if (value == null || value.isEmpty) {
       return context.t('Please enter Full Name', 'Vui lòng nhập họ và tên');
     }
-    if (value.trim().length < 2)
+    if (value.trim().length < 2) {
       return context.t(
         'Full Name must be at least 2 characters',
         'Họ và tên phải có ít nhất 2 ký tự',
       );
+    }
     if (!RegExp(r"^[\p{L}\p{M}\s]+$", unicode: true).hasMatch(value)) {
       return context.t(
         'Full Name can only contain letters and spaces',
@@ -704,11 +705,12 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
   }
 
   String? _validateYearsCreditHistory(String? value) {
-    if (value == null || value.isEmpty)
+    if (value == null || value.isEmpty) {
       return context.t(
         'Please enter Years Credit History',
         'Vui lòng nhập số năm lịch sử tín dụng',
       );
+    }
     final years = int.tryParse(value);
     if (years == null || years < 0 || years > 50) {
       return context.t(

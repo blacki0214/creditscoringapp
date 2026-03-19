@@ -5,6 +5,11 @@ import '../services/firebase_service.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
+import '../services/bank_service.dart';
+import '../services/installment_service.dart';
+import '../services/push_notification_service.dart';
+import '../models/bank_model.dart';
+import '../models/bank_account_validation_model.dart';
 
 // Application status enum
 enum ApplicationStatus {
@@ -19,6 +24,9 @@ class LoanViewModel extends ChangeNotifier {
   final VnptEkycService _vnptService = VnptEkycService();
   final FirebaseLoanService _loanService = FirebaseLoanService();
   final FirebaseService _firebase = FirebaseService();
+  final InstallmentService _installmentService = InstallmentService();
+  final PushNotificationService _pushNotificationService =
+      PushNotificationService();
 
   // Step progress
   bool _step1Completed = false;
@@ -72,6 +80,19 @@ class LoanViewModel extends ChangeNotifier {
   String? _errorMessage;
   List<Map<String, dynamic>> _applications = [];
 
+  // Bank Account & Disbursement (Step 6)
+  final BankService _bankService = BankService();
+  final ApiService _apiService = ApiService();
+  
+  List<Bank> _banks = [];
+  String? _selectedBankCode;
+  String? _selectedBranchCode;
+  
+  bool _isLoadingBanks = false;
+  bool _isValidatingAccount = false;
+  String? _bankAccountValidationError;
+  BankAccountValidationResponse? _bankValidationResult;
+
   // Getters
   bool get step1Completed => _step1Completed;
   bool get step2Completed => _step2Completed;
@@ -112,6 +133,26 @@ class LoanViewModel extends ChangeNotifier {
   bool get isVerifyingBackId => _isVerifyingBackId;
   bool get isVerifyingSelfie => _isVerifyingSelfie;
   String? get vnptErrorMessage => _vnptErrorMessage;
+
+  // Bank Account & Disbursement getters (Step 6)
+  List<Bank> get banks => _banks;
+  String? get selectedBankCode => _selectedBankCode;
+  String? get selectedBranchCode => _selectedBranchCode;
+  bool get isLoadingBanks => _isLoadingBanks;
+  bool get isValidatingAccount => _isValidatingAccount;
+  String? get bankAccountValidationError => _bankAccountValidationError;
+  BankAccountValidationResponse? get bankValidationResult => _bankValidationResult;
+  
+  // Get selected bank details
+  Bank? get selectedBank => _selectedBankCode != null 
+      ? _bankService.getBankByCode(_selectedBankCode!) 
+      : null;
+  
+  // Get selected branch details
+  BankBranch? get selectedBranch {
+    if (_selectedBankCode == null || _selectedBranchCode == null) return null;
+    return _bankService.getBranchDetails(_selectedBankCode!, _selectedBranchCode!);
+  }
 
   // Load saved draft on init
   LoanViewModel() {
@@ -328,6 +369,45 @@ class LoanViewModel extends ChangeNotifier {
   Future<void> completeStep6() async {
     _step6Completed = true;
     notifyListeners();
+    
+    // Generate installments if loan was accepted
+    if (_currentOffer != null && _currentOffer!['accepted'] == true) {
+      try {
+        final userId = _firebase.currentUserId;
+        if (userId != null) {
+          // Get the offer ID from lastCompletedOffer or construct from available data
+          final loanAmountVnd = _currentOffer!['loanAmountVnd'] as double? ?? 0.0;
+          final interestRate = _currentOffer!['interestRate'] as double? ?? 0.0;
+          final loanTermMonths = _currentOffer!['loanTermMonths'] as int? ?? 12;
+          final monthlyPaymentVnd = _currentOffer!['monthlyPaymentVnd'] as double? ?? 0.0;
+          final totalInterestVnd = _currentOffer!['totalInterestVnd'] as double? ?? 0.0;
+          
+          // Calculate first due date (30 days from today)
+          final firstDueDate = DateTime.now().add(const Duration(days: 30));
+          
+          // Note: offerId would normally come from Firestore when offer is created
+          // For now, we'll use a timestamp-based ID as fallback
+          final offerId = _currentOffer!['id'] as String? ?? 'offer_${DateTime.now().millisecondsSinceEpoch}';
+          
+          await _installmentService.generateInstallmentsForLoan(
+            userId: userId,
+            loanOfferId: offerId,
+            loanAmountVnd: loanAmountVnd,
+            interestRate: interestRate,
+            loanTermMonths: loanTermMonths,
+            monthlyPaymentVnd: monthlyPaymentVnd,
+            totalInterestVnd: totalInterestVnd,
+            firstDueDate: firstDueDate,
+          );
+          
+          print('[LoanViewModel] Installments generated for loan $offerId');
+        }
+      } catch (e) {
+        print('[LoanViewModel] Error generating installments: $e');
+        // Don't throw - installment generation failure shouldn't block the flow
+      }
+    }
+    
     await finalizeAndResetForNewApplication();
   }
 
@@ -519,6 +599,13 @@ class LoanViewModel extends ChangeNotifier {
       print('[LoanViewModel] Clearing draft...');
       await LocalStorageService.clearDraft();
 
+      // Show local push when scoring completes and result returns.
+      await _pushNotificationService.showScoringResultNotification(
+        approved: limitResponse.approved,
+        creditScore: limitResponse.creditScore,
+        loanAmount: limitResponse.loanLimitVnd,
+      );
+
       _step2Completed = true;
       _step3Completed = true; // Processing done
       notifyListeners();
@@ -611,6 +698,9 @@ class LoanViewModel extends ChangeNotifier {
     _isVerifyingFrontId = false;
     _isVerifyingBackId = false;
     _isVerifyingSelfie = false;
+
+    // Reset bank state
+    _resetBankState();
 
     notifyListeners();
   }
@@ -706,8 +796,9 @@ class LoanViewModel extends ChangeNotifier {
         if (response.fullName != null) fullName = response.fullName!;
         if (response.idNumber != null) idNumber = response.idNumber!;
         if (response.dateOfBirth != null) dob = response.dateOfBirth;
-        if (response.placeOfResidence != null)
+        if (response.placeOfResidence != null) {
           address = response.placeOfResidence!;
+        }
 
         _saveDraft();
         print('[ViewModel] OCR successful, data auto-filled');
@@ -853,6 +944,150 @@ class LoanViewModel extends ChangeNotifier {
     _faceMatchData = null;
     _vnptErrorMessage = null;
     notifyListeners();
+  }
+
+  // ===== Bank Account & Disbursement Methods (Step 6) =====
+
+  /// Load available banks from service
+  Future<void> loadBanks() async {
+    try {
+      _isLoadingBanks = true;
+      notifyListeners();
+
+      _banks = _bankService.getAllBanks();
+      print('[LoanViewModel] Loaded ${_banks.length} banks');
+
+      _isLoadingBanks = false;
+      notifyListeners();
+    } catch (e) {
+      print('[LoanViewModel] Error loading banks: $e');
+      _isLoadingBanks = false;
+      notifyListeners();
+      throw Exception('Failed to load banks: $e');
+    }
+  }
+
+  /// Update selected bank
+  void updateSelectedBank(String bankCode) {
+    _selectedBankCode = bankCode;
+    _selectedBranchCode = null; // Reset branch selection
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+    print('[LoanViewModel] Selected bank: $bankCode');
+    notifyListeners();
+  }
+
+  /// Update selected branch
+  void updateSelectedBranch(String branchCode) {
+    _selectedBranchCode = branchCode;
+    print('[LoanViewModel] Selected branch: $branchCode');
+    notifyListeners();
+  }
+
+  /// Validate bank account with external service
+  Future<bool> validateBankAccount({
+    required String bankCode,
+    required String accountNumber,
+    required String accountHolder,
+    String? branchCode,
+  }) async {
+    _isValidatingAccount = true;
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+    notifyListeners();
+
+    try {
+      print('[LoanViewModel] Validating bank account...');
+      print('[LoanViewModel] Bank: $bankCode, Account: $accountNumber');
+
+      // Check test accounts first (TEST MODE)
+      final bankService = BankService();
+      if (BankService.TEST_MODE) {
+        final isTestAccount = bankService.validateTestAccount(
+          bankCode: bankCode,
+          accountNumber: accountNumber,
+          accountHolderName: accountHolder,
+        );
+
+        if (isTestAccount) {
+          print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
+          print('[LoanViewModel] Account holder: $accountHolder');
+          
+          // Create a mock success response for test account
+          _bankValidationResult = BankAccountValidationResponse(
+            valid: true,
+            accountHolderName: accountHolder,
+            bankName: bankService.getBankByCode(bankCode)?.bankName ?? bankCode,
+            bankCode: bankCode,
+            status: 'active',
+            message: 'Account verified successfully (TEST MODE)',
+            accountType: 'savings',
+            validatedAt: DateTime.now(),
+          );
+          
+          _isValidatingAccount = false;
+          notifyListeners();
+          return true;
+        }
+        print('[LoanViewModel] Test mode enabled but account not in test list, calling API...');
+      }
+
+      // If not a test account or test mode disabled, call the real API
+      final request = BankAccountValidationRequest(
+        bankCode: bankCode,
+        accountNumber: accountNumber,
+        accountHolder: accountHolder,
+        branchCode: branchCode,
+      );
+
+      _bankValidationResult = await _apiService.validateBankAccount(request);
+
+      if (!_bankValidationResult!.valid) {
+        _bankAccountValidationError = _bankValidationResult!.message;
+        print('[LoanViewModel] Validation failed: $_bankAccountValidationError');
+        _isValidatingAccount = false;
+        notifyListeners();
+        return false;
+      }
+
+      print('[LoanViewModel] Bank account validated successfully');
+      print('[LoanViewModel] Account holder: ${_bankValidationResult!.accountHolderName}');
+      _isValidatingAccount = false;
+      notifyListeners();
+      return true;
+    } on BankAccountValidationException catch (e) {
+      _bankAccountValidationError = e.message;
+      print('[LoanViewModel] Validation exception: $e');
+      _isValidatingAccount = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _bankAccountValidationError = e.toString();
+      print('[LoanViewModel] Error validating bank account: $e');
+      _isValidatingAccount = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Clear bank validation state
+  void clearBankValidation() {
+    _selectedBankCode = null;
+    _selectedBranchCode = null;
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+    notifyListeners();
+  }
+
+  /// Reset bank state for new application
+  void _resetBankState() {
+    _banks = [];
+    _selectedBankCode = null;
+    _selectedBranchCode = null;
+    _isLoadingBanks = false;
+    _isValidatingAccount = false;
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
   }
 
   @override

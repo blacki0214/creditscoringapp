@@ -15,6 +15,7 @@ import 'viewmodels/feedback_viewmodel.dart';
 import 'viewmodels/support_viewmodel.dart';
 import 'viewmodels/language_viewmodel.dart';
 import 'services/local_storage_service.dart';
+import 'services/push_notification_service.dart';
 import 'services/vnpt_ekyc_service.dart';
 import 'services/vnpt_credentials_manager.dart';
 import 'onboarding/splash_screen.dart';
@@ -74,6 +75,9 @@ void main() async {
   
   // Initialize local storage (called again after Firebase in case of dependency)
   await LocalStorageService.init();
+
+  // Initialize FCM and local notification handling
+  await PushNotificationService().initialize();
   
   runApp(const VietCreditApp());
 }

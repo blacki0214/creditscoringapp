@@ -39,12 +39,19 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
           isVietnamese ? 'Cài đặt' : 'Settings',
-          style: const TextStyle(color: Colors.black),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1A1F3F),
+          ),
         ),
       ),
       body: SafeArea(
@@ -280,19 +287,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        border: Border(
-                          top: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
                         children: [
                           Text(
-                            'VietCredit Score',
+                            'SwinCredit',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -309,7 +309,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '© 2025 VietCredit. All rights reserved.',
+                            '© 2025 SwinCredit. All rights reserved.',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade400,

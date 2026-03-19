@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import '../models/bank_account_validation_model.dart';
 
 // ===== Two-Step API Flow Models (API v2.0) =====
 
@@ -425,5 +426,104 @@ class ApiService {
     }
     
     throw Exception('Failed to apply for loan after $maxRetries attempts');
+  }
+
+  // ===== Bank Account Validation (Step 6) =====
+
+  /// Validate bank account through external service
+  /// 
+  /// This endpoint verifies that the provided bank account details are valid
+  /// and that the account holder name matches.
+  Future<BankAccountValidationResponse> validateBankAccount(
+    BankAccountValidationRequest request,
+  ) async {
+    const endpoint = '/validate-bank-account';
+    final url = Uri.parse('$baseUrl$endpoint');
+    print('[ApiService] POST $url');
+    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          print('[ApiService] Retry attempt $attempt/$maxRetries');
+        }
+
+        final authToken = await _getAuthToken();
+        final startTime = DateTime.now();
+
+        final response = await _activeClient
+            .post(
+              url,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authToken,
+              },
+              body: jsonEncode(request.toJson()),
+            )
+            .timeout(requestTimeout);
+
+        final duration = DateTime.now().difference(startTime);
+        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          print('[ApiService] Success: ${jsonEncode(data)}');
+          return BankAccountValidationResponse.fromJson(data);
+        } else if (response.statusCode == 400) {
+          // Bad request - don't retry
+          final data = jsonDecode(response.body);
+          final message = data['message'] ?? 'Invalid bank account information';
+          print('[ApiService] Validation failed: $message');
+          throw BankAccountValidationException(
+            message,
+            code: 'INVALID_ACCOUNT',
+            originalError: response.body,
+          );
+        } else if (response.statusCode == 404) {
+          // Account not found - don't retry
+          final data = jsonDecode(response.body);
+          final message = data['message'] ?? 'Bank account not found';
+          print('[ApiService] Account not found: $message');
+          throw BankAccountValidationException(
+            message,
+            code: 'ACCOUNT_NOT_FOUND',
+            originalError: response.body,
+          );
+        } else {
+          print('[ApiService] Error response: ${response.body}');
+          // Server error - retry
+          if (attempt < maxRetries - 1) {
+            await Future.delayed(retryDelay);
+            continue;
+          }
+          throw Exception('Failed to validate bank account: ${response.body}');
+        }
+      } on http.ClientException catch (e) {
+        print('[ApiService] Network error: $e');
+        // Network error - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Network error after $maxRetries attempts: $e');
+      } on TimeoutException catch (e) {
+        print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
+        // Timeout - retry
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          continue;
+        }
+        throw Exception('Request timeout after $maxRetries attempts: $e');
+      } on BankAccountValidationException {
+        // Don't retry validation exceptions
+        rethrow;
+      } catch (e) {
+        print('[ApiService] Unexpected error: $e');
+        // Other errors - don't retry
+        throw Exception('Error validating bank account: $e');
+      }
+    }
+
+    throw Exception('Failed to validate bank account after $maxRetries attempts');
   }
 }

@@ -419,22 +419,32 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
 
   Widget _buildTermRow(String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey.shade700,
-            fontWeight: FontWeight.w500,
+        Expanded(
+          flex: 4,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+            softWrap: true,
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1F3F),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 6,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1F3F),
+            ),
+            softWrap: true,
           ),
         ),
       ],

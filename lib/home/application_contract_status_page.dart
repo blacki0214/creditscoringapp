@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../utils/app_localization.dart';
 
 class ApplicationContractStatusPage extends StatelessWidget {
   final Map<String, dynamic> application;
@@ -11,6 +12,7 @@ class ApplicationContractStatusPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isVietnamese = context.isVietnamese;
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     final isApproved = application['approved'] == true;
     final submittedAtRaw = application['timestamp'] ?? application['submitted_at'];
@@ -31,17 +33,26 @@ class ApplicationContractStatusPage extends StatelessWidget {
         : null;
 
     final statusText = isApproved
-        ? (application['contractStatus']?.toString() ?? 'Active')
-        : 'Rejected';
+      ? context.t('Active', 'Đang hiệu lực')
+      : context.t('Rejected', 'Từ chối');
+
+    final dateTimePattern = isVietnamese ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy HH:mm';
+    final datePattern = isVietnamese ? 'dd/MM/yyyy' : 'dd/MM/yyyy';
+    final monthYearPattern = isVietnamese ? 'MM/yyyy' : 'MMM yyyy';
+    final naText = context.t('N/A', 'Không có');
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Contract Status',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          context.t('Contract Status', 'Trạng thái hợp đồng'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -91,51 +102,110 @@ class ApplicationContractStatusPage extends StatelessWidget {
               _buildCard(
                 children: [
                   _buildRow(
-                    'Submitted At',
+                    context.t('Submitted At', 'Ngày nộp'),
                     submittedAt != null
-                        ? DateFormat('dd/MM/yyyy HH:mm').format(submittedAt)
-                        : 'N/A',
+                        ? DateFormat(dateTimePattern).format(submittedAt)
+                        : naText,
                   ),
                   _buildRow(
-                    'Loan Amount',
-                    loanAmount != null ? currencyFormat.format(loanAmount) : 'N/A',
+                    context.t('Loan Amount', 'Số tiền vay'),
+                    loanAmount != null ? currencyFormat.format(loanAmount) : naText,
                   ),
                   _buildRow(
-                    'Tenor',
-                    tenorMonths != null ? '$tenorMonths months' : 'N/A',
+                    context.t('Tenor', 'Kỳ hạn'),
+                    tenorMonths != null
+                        ? context.t('$tenorMonths months', '$tenorMonths tháng')
+                        : naText,
                   ),
                   _buildRow(
-                    'Monthly Payment',
+                    context.t('Monthly Payment', 'Thanh toán hàng tháng'),
                     monthlyPayment != null
                         ? currencyFormat.format(monthlyPayment)
-                        : 'N/A',
+                        : naText,
                   ),
                   _buildRow(
-                    'Interest Rate',
+                    context.t('Interest Rate', 'Lãi suất'),
                     interestRate != null
-                        ? '${interestRate.toStringAsFixed(2)}% / year'
-                        : 'N/A',
+                        ? context.t(
+                            '${interestRate.toStringAsFixed(2)}% / year',
+                            '${interestRate.toStringAsFixed(2)}% / năm',
+                          )
+                        : naText,
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               _buildCard(
-                title: 'Repayment Timeline',
+                title: context.t('Repayment Timeline', 'Lịch trả nợ'),
                 children: [
                   _buildRow(
-                    'First Due Date',
+                    context.t('First Due Date', 'Kỳ trả đầu tiên'),
                     firstDueDate != null
-                        ? DateFormat('dd/MM/yyyy').format(firstDueDate)
-                        : 'N/A',
+                        ? DateFormat(datePattern).format(firstDueDate)
+                        : naText,
                   ),
                   _buildRow(
-                    'Final Due Date',
+                    context.t('Final Due Date', 'Kỳ trả cuối cùng'),
                     finalDueDate != null
-                        ? DateFormat('dd/MM/yyyy').format(finalDueDate)
-                        : 'N/A',
+                        ? DateFormat(datePattern).format(finalDueDate)
+                        : naText,
                   ),
                 ],
               ),
+              if (isApproved && tenorMonths != null && monthlyPayment != null) ...[
+                const SizedBox(height: 12),
+                _buildCard(
+                  title: context.t('Installment Schedule', 'Lịch trả góp'),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F7FA),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.t(
+                                  'Total Installments: $tenorMonths',
+                                  'Tổng số kỳ: $tenorMonths',
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1F3F),
+                                ),
+                              ),
+                              Text(
+                                currencyFormat.format(monthlyPayment),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF4CAF50),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.t(
+                              'Monthly payment of ${currencyFormat.format(monthlyPayment)} starts from ${firstDueDate != null ? DateFormat('MMM yyyy').format(firstDueDate) : ""}',
+                              'Khoản trả hàng tháng ${currencyFormat.format(monthlyPayment)} bắt đầu từ ${firstDueDate != null ? DateFormat(monthYearPattern).format(firstDueDate) : ""}',
+                            ),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF667085),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

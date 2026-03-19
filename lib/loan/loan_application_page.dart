@@ -75,14 +75,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.t(
-                      'Complete the following steps to apply for your loan',
-                      'Hoàn tất các bước sau để nộp đơn vay',
-                    ),
-                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: ListView(
                       children: [

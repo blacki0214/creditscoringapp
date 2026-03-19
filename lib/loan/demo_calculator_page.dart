@@ -111,12 +111,19 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            scrolledUnderElevation: 0,
             elevation: 0,
             automaticallyImplyLeading: false,
             title: Text(
               context.t('Demo: Financial Calculator', 'Demo: Máy tính tài chính'),
-              style: const TextStyle(color: Colors.black, fontSize: 16),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1F3F),
+              ),
             ),
           ),
           body: SafeArea(
@@ -134,23 +141,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            context.t('Calculate Your Financial Profile', 'Tính hồ sơ tài chính của bạn'),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1F3F),
-                            ),
-                          ),
                           const SizedBox(height: 8),
-                          Text(
-                            context.t('Enter your information to see your credit score and loan eligibility (no ID verification required).', 'Nhập thông tin để xem điểm tín dụng và khả năng vay (không cần xác thực CCCD).'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
 
                           // Credit History Selection
                           Container(

@@ -106,7 +106,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               // Vibration toggle
               _buildSwitchCard(
                 icon: Icons.vibration,
-                title: context.t('Vibration', 'Rung'),
+                title: context.t('Vibration', 'Chế độ rung'),
                 subtitle: settingsVM.vibrationEnabled 
                   ? context.t('Vibration is on', 'Rung đang bật')
                   : context.t('Vibration is off', 'Rung đang tắt'),
@@ -436,31 +436,39 @@ class _NotificationsPageState extends State<NotificationsPage> {
         
         // Calculate snooze time
         DateTime? snoozeUntil;
-        if (value != 'None') {
+        if (value != 'None' && value != 'Không') {
           final now = DateTime.now();
           switch (value) {
             case '1 Hour':
+            case '1 giờ':
               snoozeUntil = now.add(const Duration(hours: 1));
               break;
             case '2 Hours':
+            case '2 giờ':
               snoozeUntil = now.add(const Duration(hours: 2));
               break;
             case '4 Hours':
+            case '4 giờ':
               snoozeUntil = now.add(const Duration(hours: 4));
               break;
             case '8 Hours':
+            case '8 giờ':
               snoozeUntil = now.add(const Duration(hours: 8));
               break;
             case '1 Day':
+            case '1 ngày':
               snoozeUntil = now.add(const Duration(days: 1));
               break;
             case '2 Days':
+            case '2 ngày':
               snoozeUntil = now.add(const Duration(days: 2));
               break;
             case '1 Week':
+            case '1 tuần':
               snoozeUntil = now.add(const Duration(days: 7));
               break;
             case 'Forever':
+            case 'Mãi mãi':
               snoozeUntil = DateTime(2099, 12, 31);
               break;
           }
@@ -473,9 +481,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              value == 'None' 
-                  ? 'Notifications are active' 
-                  : 'Notifications snoozed for $value',
+              (value == 'None' || value == 'Không')
+                  ? context.t('Notifications are active', 'Thông báo đang hoạt động')
+                  : context.t('Notifications snoozed for $value', 'Đã tạm dừng thông báo trong $value'),
             ),
             backgroundColor: const Color(0xFF4C40F7),
             duration: const Duration(seconds: 2),

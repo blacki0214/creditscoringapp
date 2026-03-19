@@ -225,20 +225,20 @@ class _ProfilePageState extends State<ProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Account Status',
-                                style: TextStyle(
+                                context.t('Account Status', 'Trạng thái tài khoản'),
+                                style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                'Verified',
-                                style: TextStyle(
+                                context.t('Verified', 'Đã xác thực'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -267,15 +267,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildAccountStat(
-                            'Member Since',
+                            context.t('Member Since', 'Thành viên từ'),
                             settingsViewModel.memberSince?.year.toString() ?? 'N/A',
                           ),
                           _buildAccountStat(
-                            'Credit Score',
+                            context.t('Credit Score', 'Điểm tín dụng'),
                             settingsViewModel.latestCreditScore?.toString() ?? 'N/A',
                           ),
                           _buildAccountStat(
-                            'Applications',
+                            context.t('Applications', 'Hồ sơ vay'),
                             settingsViewModel.totalApplications.toString(),
                           ),
                         ],
@@ -286,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 32),
                 
                 // Credit Score Section
-                _buildSectionTitle('Credit Status'),
+                _buildSectionTitle(context.t('Credit Status', 'Tình trạng tín dụng')),
                 const SizedBox(height: 16),
                 _buildCreditScoreCard(settingsViewModel),
               ],
@@ -334,7 +334,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       decoration: InputDecoration(
         labelText: label,
-        hintText: !enabled && isEmpty ? 'Not available' : null,
+        hintText: !enabled && isEmpty ? context.t('Not available', 'Không có') : null,
         hintStyle: TextStyle(
           color: Colors.grey.shade400,
           fontStyle: FontStyle.italic,
@@ -367,7 +367,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       validator: enabled ? (value) {
         if (value == null || value.isEmpty) {
-          return 'This field is required';
+          return context.t('This field is required', 'Trường này là bắt buộc');
         }
         return null;
       } : null,
@@ -411,7 +411,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Icon(Icons.info_outline, size: 48, color: Colors.grey.shade400),
             const SizedBox(height: 12),
             Text(
-              'No Credit Score Yet',
+              context.t('No Credit Score Yet', 'Chưa có điểm tín dụng'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -420,7 +420,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Complete a loan application to get your credit score',
+              context.t(
+                'Complete a loan application to get your credit score',
+                'Hoàn tất hồ sơ vay để nhận điểm tín dụng của bạn',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -437,13 +440,13 @@ class _ProfilePageState extends State<ProfilePage> {
     String scoreLabel;
     if (vm.latestCreditScore! >= 700) {
       scoreColor = const Color(0xFF4CAF50); // Green
-      scoreLabel = 'Excellent';
+      scoreLabel = context.t('Excellent', 'Xuất sắc');
     } else if (vm.latestCreditScore! >= 600) {
       scoreColor = const Color(0xFFFFA726); // Orange
-      scoreLabel = 'Good';
+      scoreLabel = context.t('Good', 'Tốt');
     } else {
       scoreColor = const Color(0xFFEF5350); // Red
-      scoreLabel = 'Fair';
+      scoreLabel = context.t('Fair', 'Trung bình');
     }
 
     return Container(
@@ -462,9 +465,9 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Credit Score',
-                  style: TextStyle(
+                Text(
+                  context.t('Credit Score', 'Điểm tín dụng'),
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                   ),
@@ -490,7 +493,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (vm.riskLevel != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Risk Level: ${vm.riskLevel}',
+                    context.t('Risk Level: ${vm.riskLevel}', 'Mức rủi ro: ${vm.riskLevel}'),
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,

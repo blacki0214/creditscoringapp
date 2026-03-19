@@ -77,12 +77,12 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(height: 24),
 
           // Account Security
-          _buildSectionTitle('Account Security'),
+          _buildSectionTitle(context.t('Account Security', 'Bảo mật tài khoản')),
           const SizedBox(height: 12),
           _buildSwitchCard(
             icon: Icons.notifications_active_outlined,
-            title: 'Login Notifications',
-            subtitle: 'Get notified of new login activity',
+            title: context.t('Login Notifications', 'Thông báo đăng nhập'),
+            subtitle: context.t('Get notified of new login activity', 'Nhận thông báo khi có đăng nhập mới'),
             value: _loginNotifications,
             onChanged: (value) {
               setState(() {
@@ -93,8 +93,8 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(height: 12),
           _buildActionCard(
             icon: Icons.devices,
-            title: 'Active Sessions',
-            subtitle: 'Manage your logged-in devices',
+            title: context.t('Active Sessions', 'Phiên đăng nhập hoạt động'),
+            subtitle: context.t('Manage your logged-in devices', 'Quản lý thiết bị đang đăng nhập'),
             onTap: () {
               _showActiveSessionsDialog();
             },
@@ -103,12 +103,12 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(height: 24),
 
           // Data & Privacy
-          _buildSectionTitle('Data & Privacy'),
+          _buildSectionTitle(context.t('Data & Privacy', 'Dữ liệu & Quyền riêng tư')),
           const SizedBox(height: 12),
           _buildActionCard(
             icon: Icons.download_outlined,
-            title: 'Download My Data',
-            subtitle: 'Request a copy of your data',
+            title: context.t('Download My Data', 'Tải dữ liệu của tôi'),
+            subtitle: context.t('Request a copy of your data', 'Yêu cầu bản sao dữ liệu của bạn'),
             onTap: () {
               _showDownloadDataDialog();
             },
@@ -116,8 +116,8 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(height: 12),
           _buildActionCard(
             icon: Icons.delete_outline,
-            title: 'Delete Account',
-            subtitle: 'Permanently delete your account',
+            title: context.t('Delete Account', 'Xóa tài khoản'),
+            subtitle: context.t('Permanently delete your account', 'Xóa vĩnh viễn tài khoản của bạn'),
             onTap: () {
               _showDeleteAccountDialog();
             },
@@ -267,7 +267,10 @@ class _SecurityPageState extends State<SecurityPage> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'We recommend enabling two-factor authentication and biometric login for maximum security.',
+              context.t(
+                'We recommend enabling two-factor authentication and biometric login for maximum security.',
+                'Chúng tôi khuyến nghị bật xác thực hai lớp và đăng nhập sinh trắc học để bảo mật tối đa.',
+              ),
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
                 fontSize: 13,
@@ -294,9 +297,9 @@ class _SecurityPageState extends State<SecurityPage> {
           return AlertDialog(
             backgroundColor: const Color(0xFF252B4C),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text(
-              'Change Password',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            title: Text(
+              context.t('Change Password', 'Đổi mật khẩu'),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -307,7 +310,7 @@ class _SecurityPageState extends State<SecurityPage> {
                   enabled: !isLoading,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Current Password',
+                    labelText: context.t('Current Password', 'Mật khẩu hiện tại'),
                     labelStyle: const TextStyle(color: Colors.white60),
                     enabledBorder: OutlineInputBorder(
                       borderSide: const BorderSide(color: Colors.white30),
@@ -330,9 +333,12 @@ class _SecurityPageState extends State<SecurityPage> {
                   enabled: !isLoading,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'New Password',
+                    labelText: context.t('New Password', 'Mật khẩu mới'),
                     labelStyle: const TextStyle(color: Colors.white60),
-                    helperText: 'Min 8 chars, uppercase, lowercase, number, special char',
+                    helperText: context.t(
+                      'Min 8 chars, uppercase, lowercase, number, special char',
+                      'Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt',
+                    ),
                     helperStyle: const TextStyle(color: Colors.white38, fontSize: 11),
                     helperMaxLines: 2,
                     enabledBorder: OutlineInputBorder(
@@ -356,7 +362,7 @@ class _SecurityPageState extends State<SecurityPage> {
                   enabled: !isLoading,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Confirm Password',
+                    labelText: context.t('Confirm Password', 'Xác nhận mật khẩu'),
                     labelStyle: const TextStyle(color: Colors.white60),
                     enabledBorder: OutlineInputBorder(
                       borderSide: const BorderSide(color: Colors.white30),
@@ -384,7 +390,7 @@ class _SecurityPageState extends State<SecurityPage> {
               TextButton(
                 onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
                 child: Text(
-                  'Cancel',
+                  context.t('Cancel', 'Hủy'),
                   style: TextStyle(
                     color: isLoading ? Colors.white30 : Colors.white60,
                   ),
@@ -395,8 +401,8 @@ class _SecurityPageState extends State<SecurityPage> {
                   // Validate inputs
                   if (currentPasswordController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please enter your current password'),
+                      SnackBar(
+                        content: Text(context.t('Please enter your current password', 'Vui lòng nhập mật khẩu hiện tại')),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -405,8 +411,8 @@ class _SecurityPageState extends State<SecurityPage> {
 
                   if (newPasswordController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please enter a new password'),
+                      SnackBar(
+                        content: Text(context.t('Please enter a new password', 'Vui lòng nhập mật khẩu mới')),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -415,8 +421,8 @@ class _SecurityPageState extends State<SecurityPage> {
 
                   if (newPasswordController.text != confirmPasswordController.text) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Passwords do not match'),
+                      SnackBar(
+                        content: Text(context.t('Passwords do not match', 'Mật khẩu xác nhận không khớp')),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -462,7 +468,7 @@ class _SecurityPageState extends State<SecurityPage> {
                       ? const Color(0xFF4C40F7).withOpacity(0.5)
                       : const Color(0xFF4C40F7),
                 ),
-                child: const Text('Update'),
+                child: Text(context.t('Update', 'Cập nhật')),
               ),
             ],
           );
@@ -477,22 +483,33 @@ class _SecurityPageState extends State<SecurityPage> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF252B4C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Active Sessions',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          context.t('Active Sessions', 'Phiên đăng nhập hoạt động'),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildSessionItem('Current Device', 'Windows - Chrome', true),
+            _buildSessionItem(
+              context.t('Current Device', 'Thiết bị hiện tại'),
+              context.t('Windows - Chrome', 'Windows - Chrome'),
+              true,
+            ),
             const SizedBox(height: 8),
-            _buildSessionItem('Mobile Device', 'Android - App', false),
+            _buildSessionItem(
+              context.t('Mobile Device', 'Thiết bị di động'),
+              context.t('Android - App', 'Android - Ứng dụng'),
+              false,
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close', style: TextStyle(color: Colors.white60)),
+            child: Text(
+              context.t('Close', 'Đóng'),
+              style: const TextStyle(color: Colors.white60),
+            ),
           ),
         ],
       ),
@@ -529,10 +546,10 @@ class _SecurityPageState extends State<SecurityPage> {
             ),
           ),
           if (isCurrent)
-            const Chip(
-              label: Text('Current', style: TextStyle(fontSize: 10)),
+            Chip(
+              label: Text(context.t('Current', 'Hiện tại'), style: const TextStyle(fontSize: 10)),
               backgroundColor: Color(0xFF4CAF50),
-              labelPadding: EdgeInsets.symmetric(horizontal: 8),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
             ),
         ],
       ),
@@ -545,25 +562,31 @@ class _SecurityPageState extends State<SecurityPage> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF252B4C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Download My Data',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          context.t('Download My Data', 'Tải dữ liệu của tôi'),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'We will send a copy of your data to your registered email address within 24 hours.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          context.t(
+            'We will send a copy of your data to your registered email address within 24 hours.',
+            'Chúng tôi sẽ gửi bản sao dữ liệu tới email đã đăng ký của bạn trong vòng 24 giờ.',
+          ),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+            child: Text(
+              context.t('Cancel', 'Hủy'),
+              style: const TextStyle(color: Colors.white60),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Data download request submitted'),
+                SnackBar(
+                  content: Text(context.t('Data download request submitted', 'Đã gửi yêu cầu tải dữ liệu')),
                   backgroundColor: Color(0xFF4CAF50),
                 ),
               );
@@ -571,7 +594,7 @@ class _SecurityPageState extends State<SecurityPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4C40F7),
             ),
-            child: const Text('Request'),
+            child: Text(context.t('Request', 'Yêu cầu')),
           ),
         ],
       ),
@@ -584,25 +607,31 @@ class _SecurityPageState extends State<SecurityPage> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF252B4C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Delete Account',
-          style: TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.bold),
+        title: Text(
+          context.t('Delete Account', 'Xóa tài khoản'),
+          style: const TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'This action cannot be undone. All your data will be permanently deleted.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          context.t(
+            'This action cannot be undone. All your data will be permanently deleted.',
+            'Hành động này không thể hoàn tác. Toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn.',
+          ),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+            child: Text(
+              context.t('Cancel', 'Hủy'),
+              style: const TextStyle(color: Colors.white60),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Account deletion requires email verification'),
+                SnackBar(
+                  content: Text(context.t('Account deletion requires email verification', 'Xóa tài khoản yêu cầu xác minh email')),
                   backgroundColor: Color(0xFFFF5252),
                 ),
               );
@@ -610,7 +639,7 @@ class _SecurityPageState extends State<SecurityPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF5252),
             ),
-            child: const Text('Delete'),
+            child: Text(context.t('Delete', 'Xóa')),
           ),
         ],
       ),
