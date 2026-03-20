@@ -976,6 +976,7 @@ class LoanViewModel extends ChangeNotifier {
       _lastCompletedStatus = _applicationStatus;
 
       await LocalStorageService.saveApplicationHistory({
+        'offerId': _currentOfferId ?? _currentOffer!['offerId'] ?? _currentOffer!['id'],
         'approved': _currentOffer!['approved'],
         'creditScore': _currentOffer!['creditScore'],
         'loanAmount': _currentOffer!['loanAmountVnd'],

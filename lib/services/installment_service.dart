@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math' as math;
 import '../models/installment_model.dart';
 import 'firebase_service.dart';
 
@@ -28,7 +29,7 @@ class InstallmentService {
 
       // Generate each installment
       for (int i = 1; i <= loanTermMonths; i++) {
-        final dueDate = firstDueDate.add(Duration(days: (i - 1) * 30));
+        final dueDate = _addMonthsSafe(firstDueDate, i - 1);
 
         final installment = Installment(
           id: '', // Will be set by Firestore
@@ -239,5 +240,27 @@ class InstallmentService {
     } else {
       return 'incoming';
     }
+  }
+
+  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
+    final totalMonths = (date.month - 1) + monthsToAdd;
+    final year = date.year + (totalMonths ~/ 12);
+    final month = (totalMonths % 12) + 1;
+    final day = math.min(date.day, _daysInMonth(year, month));
+
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
+  }
+
+  int _daysInMonth(int year, int month) {
+    return DateTime(year, month + 1, 0).day;
   }
 }
