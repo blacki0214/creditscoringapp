@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/app_localization.dart';
+import 'payment_page.dart';
 
 class ApplicationContractStatusPage extends StatelessWidget {
   final Map<String, dynamic> application;
@@ -201,6 +202,49 @@ class ApplicationContractStatusPage extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildCard(
+                  title: context.t('Payment Method', 'Phương thức thanh toán'),
+                  children: [
+                    Text(
+                      context.t(
+                        'Choose a payment method to pay your monthly installment.',
+                        'Chọn phương thức thanh toán để trả góp hàng tháng.',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF667085),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4C40F7),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PaymentPage(
+                                application: application,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          context.t('Pay now', 'Thanh toán ngay'),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ],

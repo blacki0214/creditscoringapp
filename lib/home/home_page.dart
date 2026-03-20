@@ -1678,12 +1678,9 @@ class _HomePageState extends State<HomePage> {
             itemCount: paginatedInstallments.length,
             itemBuilder: (context, index) {
               final app = paginatedInstallments[index];
-              final tenorMonths =
-                  app['tensorMonths'] ?? app['loanTermMonths'] ?? 12;
-              final loanAmount = app['loanAmount'] ?? app['loanAmountVnd'] ?? 0;
               final monthlyPayment =
                   app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
-              final firstDueDate = app['firstDueDate'];
+              final nextDueDate = _getNextDueDateFromSubmission(app);
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1703,27 +1700,7 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              context.t('Loan Amount', 'Số tiền vay'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              currencyFormat.format(loanAmount),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1A1F3F),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              context.t('Monthly Payment', 'Thanh toán hàng tháng'),
+                              context.t('Monthly Repayment', 'Khoản trả hàng tháng'),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -1731,36 +1708,10 @@ class _HomePageState extends State<HomePage> {
                             ),
                             Text(
                               currencyFormat.format(monthlyPayment),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF4CAF50),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.t('Term', 'Thời hạn'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              '$tenorMonths ${context.t('months', 'tháng')}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1F3F),
+                                color: const Color(0xFF4CAF50),
                               ),
                             ),
                           ],
@@ -1776,9 +1727,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             Text(
-                              firstDueDate != null
-                                  ? DateFormat('dd/MM/yyyy').format(
-                                      DateTime.parse(firstDueDate.toString()))
+                              nextDueDate != null
+                                  ? DateFormat('dd/MM/yyyy').format(nextDueDate)
                                   : '-',
                               style: const TextStyle(
                                 fontSize: 14,
@@ -2115,6 +2065,63 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  DateTime? _getNextDueDateFromSubmission(Map<String, dynamic> application) {
+    final submittedAt = _getSubmissionDate(application);
+    if (submittedAt == null) return null;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    var nextDueDate = _addMonthsSafe(
+      DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+      1,
+    );
+
+    while (nextDueDate.isBefore(today)) {
+      nextDueDate = _addMonthsSafe(nextDueDate, 1);
+    }
+
+    return nextDueDate;
+  }
+
+  DateTime? _getSubmissionDate(Map<String, dynamic> application) {
+    final candidates = [
+      application['submitted_at'],
+      application['submittedAt'],
+      application['timestamp'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate == null) continue;
+      final parsed = DateTime.tryParse(candidate.toString());
+      if (parsed != null) return parsed;
+    }
+
+    return null;
+  }
+
+  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
+    final totalMonths = (date.month - 1) + monthsToAdd;
+    final year = date.year + (totalMonths ~/ 12);
+    final month = (totalMonths % 12) + 1;
+    final day = math.min(date.day, _daysInMonth(year, month));
+
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
+  }
+
+  int _daysInMonth(int year, int month) {
+    return DateTime(year, month + 1, 0).day;
   }
 }
 
