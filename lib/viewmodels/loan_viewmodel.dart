@@ -808,6 +808,44 @@ class LoanViewModel extends ChangeNotifier {
     }
   }
 
+  // Recalculate terms (interest rate, payments) when Step 4 parameters change.
+  Future<bool> refreshOfferTerms({
+    required double loanAmount,
+    required String loanPurpose,
+  }) async {
+    if (_currentOffer == null) return false;
+
+    final creditScore = _asInt(_currentOffer!['creditScore'], -1);
+    if (creditScore < 0) return false;
+
+    try {
+      final termsResponse = await _apiService.calculateTerms(
+        CalculateTermsRequest(
+          loanAmount: loanAmount,
+          loanPurpose: loanPurpose,
+          creditScore: creditScore,
+        ),
+      );
+
+      _currentOffer!['loanAmountVnd'] = termsResponse.loanAmountVnd;
+      _currentOffer!['loanPurpose'] = termsResponse.loanPurpose;
+      _currentOffer!['interestRate'] = termsResponse.interestRate;
+      _currentOffer!['monthlyPaymentVnd'] = termsResponse.monthlyPaymentVnd;
+      _currentOffer!['loanTermMonths'] = termsResponse.loanTermMonths;
+      _currentOffer!['totalPaymentVnd'] = termsResponse.totalPaymentVnd;
+      _currentOffer!['totalInterestVnd'] = termsResponse.totalInterestVnd;
+      _currentOffer!['rateExplanation'] = termsResponse.rateExplanation;
+      _currentOffer!['termExplanation'] = termsResponse.termExplanation;
+      this.loanPurpose = loanPurpose;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   void updatePersonalInfo({
     String? name,
     DateTime? dob,

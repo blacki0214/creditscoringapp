@@ -33,6 +33,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   final double _calculatedLoanAmount = 0;
   final double _downPayment = 0;
   bool _isProceeding = false;
+  bool _isRecalculatingTerms = false;
 
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
   final NumberFormat _currencyFormat = NumberFormat.currency(
@@ -183,9 +184,72 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                         ),
                         value: _selectedPurpose,
                         items: loanPurposeOptions,
-                        onChanged: (val) =>
-                            setState(() => _selectedPurpose = val!),
+                        onChanged: _isRecalculatingTerms
+                            ? null
+                            : (val) async {
+                                if (val == null || val == _selectedPurpose) {
+                                  return;
+                                }
+
+                                final nextPurpose = val;
+                                setState(() {
+                                  _selectedPurpose = nextPurpose;
+                                  _isRecalculatingTerms = true;
+                                });
+
+                                final requestedAmount = calculatedLoanAmount > 0
+                                    ? calculatedLoanAmount
+                                    : ((offer['loanAmountVnd'] as num?)?.toDouble() ?? 0.0);
+
+                                final success = requestedAmount > 0
+                                    ? await context.read<LoanViewModel>().refreshOfferTerms(
+                                        loanAmount: requestedAmount,
+                                        loanPurpose: nextPurpose,
+                                      )
+                                    : false;
+
+                                if (!mounted) return;
+
+                                setState(() => _isRecalculatingTerms = false);
+
+                                if (!success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        context.t(
+                                          'Could not refresh loan terms. Please try again.',
+                                          'Không thể cập nhật điều khoản vay. Vui lòng thử lại.',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
                       ),
+
+                      if (_isRecalculatingTerms) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.t(
+                                'Updating interest rate...',
+                                'Đang cập nhật lãi suất...',
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
 
                       const SizedBox(height: 24),
                       // Total Price
@@ -704,7 +768,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     required String label,
     required String value,
     required List<String> items,
-    required Function(String?) onChanged,
+    required void Function(String?)? onChanged,
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
