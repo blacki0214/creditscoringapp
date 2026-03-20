@@ -28,6 +28,11 @@ class _PaymentPageState extends State<PaymentPage> {
   String _selectedMethod = _paymentMethodKeys.first;
   final InstallmentService _installmentService = InstallmentService();
   late final Future<_PaymentSummary> _paymentSummaryFuture;
+  bool _showBankTransferQr = false;
+  bool _isConfirmingPayment = false;
+
+  static const String _hardcodedQrUrl =
+      'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=CREDITSCORINGAPP_LOAN_PAYMENT_VN_123456789';
 
   @override
   void initState() {
@@ -57,147 +62,288 @@ class _PaymentPageState extends State<PaymentPage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FutureBuilder<_PaymentSummary>(
-                future: _paymentSummaryFuture,
-                builder: (context, snapshot) {
-                  final summary = snapshot.data;
+          child: _showBankTransferQr
+              ? _buildBankTransferQrStep(context)
+              : _buildMethodSelectionStep(context, currencyFormat),
+        ),
+      ),
+    );
+  }
 
-                  if (snapshot.connectionState == ConnectionState.waiting && summary == null) {
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F7FA),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFE3E8F4)),
-                      ),
-                      child: const Center(
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    );
-                  }
+  Widget _buildMethodSelectionStep(
+    BuildContext context,
+    NumberFormat currencyFormat,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FutureBuilder<_PaymentSummary>(
+          future: _paymentSummaryFuture,
+          builder: (context, snapshot) {
+            final summary = snapshot.data;
 
-                  final amountDue = summary?.amountDue;
-                  final dueDate = summary?.dueDate;
-                  final remainingAfterPayment = summary?.remainingAfterPayment;
-
-                  return Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7FA),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE3E8F4)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSummaryRow(
-                          context.t('Amount Due', 'Số tiền đến hạn'),
-                          amountDue != null ? currencyFormat.format(amountDue) : '-',
-                        ),
-                        const SizedBox(height: 8),
-                        _buildSummaryRow(
-                          context.t('Due Date', 'Ngày đến hạn'),
-                          dueDate != null ? DateFormat('dd/MM/yyyy').format(dueDate) : '-',
-                        ),
-                        const SizedBox(height: 8),
-                        _buildSummaryRow(
-                          context.t(
-                            'Remaining After This Payment',
-                            'Số tiền còn lại sau lần thanh toán này',
-                          ),
-                          remainingAfterPayment != null
-                              ? currencyFormat.format(remainingAfterPayment)
-                              : '-',
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.t(
-                  'Select a payment method',
-                  'Chọn phương thức thanh toán',
+            if (snapshot.connectionState == ConnectionState.waiting && summary == null) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F7FA),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE3E8F4)),
                 ),
+                child: const Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+
+            final amountDue = summary?.amountDue;
+            final dueDate = summary?.dueDate;
+            final remainingAfterPayment = summary?.remainingAfterPayment;
+
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F7FA),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE3E8F4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSummaryRow(
+                    context.t('Amount Due', 'Số tiền đến hạn'),
+                    amountDue != null ? currencyFormat.format(amountDue) : '-',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSummaryRow(
+                    context.t('Due Date', 'Ngày đến hạn'),
+                    dueDate != null ? DateFormat('dd/MM/yyyy').format(dueDate) : '-',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSummaryRow(
+                    context.t(
+                      'Remaining After This Payment',
+                      'Số tiền còn lại sau lần thanh toán này',
+                    ),
+                    remainingAfterPayment != null
+                        ? currencyFormat.format(remainingAfterPayment)
+                        : '-',
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        Text(
+          context.t(
+            'Select a payment method',
+            'Chọn phương thức thanh toán',
+          ),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1F3F),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ..._paymentMethodKeys.map((method) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFFE3E8F4)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: RadioListTile<String>(
+              value: method,
+              groupValue: _selectedMethod,
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  _selectedMethod = value;
+                });
+              },
+              activeColor: const Color(0xFF4C40F7),
+              title: Text(
+                _localizedMethod(method, context),
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: Color(0xFF1A1F3F),
                 ),
               ),
-              const SizedBox(height: 12),
-              ..._paymentMethodKeys.map((method) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE3E8F4)),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: RadioListTile<String>(
-                    value: method,
-                    groupValue: _selectedMethod,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() {
-                        _selectedMethod = value;
-                      });
-                    },
-                    activeColor: const Color(0xFF4C40F7),
-                    title: Text(
-                      _localizedMethod(method, context),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1F3F),
-                      ),
+            ),
+          );
+        }),
+        const Spacer(),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4C40F7),
+            ),
+            onPressed: () {
+              if (_selectedMethod == 'bank_transfer') {
+                setState(() {
+                  _showBankTransferQr = true;
+                });
+                return;
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    context.t(
+                      'This payment method is not enabled yet. Please choose Bank Transfer.',
+                      'Phương thức này chưa được bật. Vui lòng chọn Chuyển khoản ngân hàng.',
                     ),
                   ),
-                );
-              }),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
-                  ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          context.t(
-                            'Payment method selected: ${_localizedMethod(_selectedMethod, context)}',
-                            'Đã chọn phương thức thanh toán: ${_localizedMethod(_selectedMethod, context)}',
-                          ),
+                ),
+              );
+            },
+            child: Text(
+              context.t('Continue', 'Tiếp tục'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBankTransferQrStep(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.t('Bank Transfer QR', 'Mã QR chuyển khoản'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1F3F),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          context.t(
+            'Scan this QR code to complete payment.',
+            'Quét mã QR này để hoàn tất thanh toán.',
+          ),
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF667085),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: Container(
+            width: 260,
+            height: 260,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE3E8F4)),
+            ),
+            padding: const EdgeInsets.all(10),
+            child: Image.network(
+              _hardcodedQrUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Center(
+                child: Icon(Icons.qr_code_2, size: 120, color: Color(0xFF4C40F7)),
+              ),
+            ),
+          ),
+        ),
+        const Spacer(),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4C40F7),
+            ),
+            onPressed: _isConfirmingPayment ? null : _confirmBankTransferPayment,
+            child: _isConfirmingPayment
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
                         ),
                       ),
-                    );
-                  },
-                  child: Text(
-                    context.t('Continue', 'Tiếp tục'),
+                      const SizedBox(width: 10),
+                      Text(context.t('Confirming...', 'Đang xác nhận...')),
+                    ],
+                  )
+                : Text(
+                    context.t('Confirm Payment', 'Xác nhận thanh toán'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ),
-            ],
           ),
         ),
-      ),
+      ],
     );
+  }
+
+  Future<void> _confirmBankTransferPayment() async {
+    setState(() {
+      _isConfirmingPayment = true;
+    });
+
+    try {
+      final summary = await _buildPaymentSummary();
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (summary.offerId != null &&
+          summary.installmentId != null &&
+          userId != null &&
+          userId.isNotEmpty) {
+        await _installmentService.markInstallmentAsPaid(
+          userId: userId,
+          loanOfferId: summary.offerId!,
+          installmentId: summary.installmentId!,
+        );
+      }
+
+      await Future.delayed(const Duration(seconds: 7));
+
+      if (!mounted) return;
+      Navigator.pop(context, {
+        'paymentSuccess': true,
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.t(
+              'Payment confirmation failed. Please try again.',
+              'Xác nhận thanh toán thất bại. Vui lòng thử lại.',
+            ),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isConfirmingPayment = false;
+      });
+    }
   }
 
   Widget _buildSummaryRow(String label, String value) {
@@ -325,11 +471,14 @@ class _PaymentPageState extends State<PaymentPage> {
         return _PaymentSummary(
           amountDue: 0,
           dueDate: null,
-          remainingAfterPayment: 0,
+            remainingAfterPayment: 0,
+            offerId: offerId,
+            installmentId: null,
         );
       }
 
       final amountDue = unpaid.first.amountVnd;
+        final installmentId = unpaid.first.id;
       final paidInstallmentsCount = installments.where((item) => item.isPaid).length;
       final paidAmountAfterCurrent = (paidInstallmentsCount + 1) * amountDue;
       final remainingAfterPayment = loanAmount != null
@@ -347,6 +496,8 @@ class _PaymentPageState extends State<PaymentPage> {
         amountDue: amountDue,
         dueDate: dueDate,
         remainingAfterPayment: remainingAfterPayment,
+        offerId: offerId,
+        installmentId: installmentId,
       );
     } catch (_) {
       return fallback;
@@ -432,6 +583,8 @@ class _PaymentPageState extends State<PaymentPage> {
       amountDue: amountDue,
       dueDate: dueDate,
       remainingAfterPayment: remainingAfterPayment,
+      offerId: null,
+      installmentId: null,
     );
   }
 
@@ -472,10 +625,14 @@ class _PaymentSummary {
   final double? amountDue;
   final DateTime? dueDate;
   final double? remainingAfterPayment;
+  final String? offerId;
+  final String? installmentId;
 
   const _PaymentSummary({
     required this.amountDue,
     required this.dueDate,
     required this.remainingAfterPayment,
+    required this.offerId,
+    required this.installmentId,
   });
 }

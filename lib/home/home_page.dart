@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
+import '../services/installment_service.dart';
 import '../services/notification_service.dart';
 import '../models/notification_model.dart';
 import '../loan/loan_application_page.dart';
@@ -27,6 +29,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ApplicationStatus? _lastKnownStatus;
+  final InstallmentService _installmentService = InstallmentService();
 
   @override
   void initState() {
@@ -1680,7 +1683,6 @@ class _HomePageState extends State<HomePage> {
               final app = paginatedInstallments[index];
               final monthlyPayment =
                   app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
-              final nextDueDate = _getNextDueDateFromSubmission(app);
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1726,15 +1728,21 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.grey.shade600,
                               ),
                             ),
-                            Text(
-                              nextDueDate != null
-                                  ? DateFormat('dd/MM/yyyy').format(nextDueDate)
-                                  : '-',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1F3F),
-                              ),
+                            FutureBuilder<DateTime?>(
+                              future: _getSyncedNextDueDateForApplication(app),
+                              builder: (context, snapshot) {
+                                final nextDueDate = snapshot.data;
+                                return Text(
+                                  nextDueDate != null
+                                      ? DateFormat('dd/MM/yyyy').format(nextDueDate)
+                                      : '-',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1A1F3F),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -2122,6 +2130,116 @@ class _HomePageState extends State<HomePage> {
 
   int _daysInMonth(int year, int month) {
     return DateTime(year, month + 1, 0).day;
+  }
+
+  int? _asNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
+  }
+
+  double? _asNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  Future<DateTime?> _getSyncedNextDueDateForApplication(
+    Map<String, dynamic> application,
+  ) async {
+    final submittedAt = _getSubmissionDate(application);
+    if (submittedAt == null) return null;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final offerId = await _resolveOfferIdForApplication(application, userId);
+
+    if (offerId == null || offerId.isEmpty || userId == null || userId.isEmpty) {
+      return _getNextDueDateFromSubmission(application);
+    }
+
+    try {
+      final installments = await _installmentService.getInstallmentsForLoan(
+        userId: userId,
+        loanOfferId: offerId,
+      );
+      final unpaid = installments.where((item) => !item.isPaid).toList();
+      if (unpaid.isEmpty) return null;
+
+      final paidCount = installments.where((item) => item.isPaid).length;
+      return _addMonthsSafe(
+        DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+        paidCount + 1,
+      );
+    } catch (_) {
+      return _getNextDueDateFromSubmission(application);
+    }
+  }
+
+  Future<String?> _resolveOfferIdForApplication(
+    Map<String, dynamic> application,
+    String? userId,
+  ) async {
+    final offerIdRaw = application['offerId'] ?? application['loanOfferId'];
+    final directOfferId = offerIdRaw?.toString();
+    if (directOfferId != null && directOfferId.isNotEmpty) {
+      return directOfferId;
+    }
+
+    if (userId == null || userId.isEmpty) return null;
+
+    try {
+      final query = await FirebaseFirestore.instance
+          .collection('loan_offers')
+          .where('userId', isEqualTo: userId)
+          .where('accepted', isEqualTo: true)
+          .get();
+
+      if (query.docs.isEmpty) return null;
+
+      final appLoanAmount = _asNullableDouble(
+        application['loanAmount'] ?? application['loanAmountVnd'],
+      );
+      final appTenorMonths = _asNullableInt(application['loanTermMonths']);
+      final appMonthlyPayment = _asNullableDouble(
+        application['monthlyPayment'] ?? application['monthlyPaymentVnd'],
+      );
+
+      QueryDocumentSnapshot<Map<String, dynamic>>? bestDoc;
+      int bestScore = -1;
+
+      for (final doc in query.docs) {
+        final data = doc.data();
+        int score = 0;
+
+        final offerLoanAmount = _asNullableDouble(data['loanAmountVnd']);
+        final offerTenorMonths = _asNullableInt(data['loanTermMonths']);
+        final offerMonthlyPayment = _asNullableDouble(data['monthlyPaymentVnd']);
+
+        if (appLoanAmount != null && offerLoanAmount != null) {
+          if ((appLoanAmount - offerLoanAmount).abs() < 1) score += 2;
+        }
+        if (appTenorMonths != null && offerTenorMonths != null && appTenorMonths == offerTenorMonths) {
+          score += 2;
+        }
+        if (appMonthlyPayment != null && offerMonthlyPayment != null) {
+          if ((appMonthlyPayment - offerMonthlyPayment).abs() < 1) score += 2;
+        }
+
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        if (createdAt != null) score += 1;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestDoc = doc;
+        }
+      }
+
+      return bestDoc?.id;
+    } catch (_) {
+      return null;
+    }
   }
 }
 
