@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../utils/app_localization.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step4_offer_calculator.dart';
@@ -61,6 +62,8 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
   bool _lockMobilePhone = false;
   bool _lockJobType = false;
   bool _lockMonthlyIncome = false;
+
+  final NumberFormat _vndFormatter = NumberFormat('#,###', 'vi_VN');
 
   final List<String> _genderOptions = ['MALE', 'FEMALE', 'OTHER'];
   final List<String> _maritalStatusOptions = [
@@ -175,6 +178,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       final address = vm.address.trim();
       if (address.isNotEmpty && address != '123 Street...') {
         _currentAddressController.text = address;
+        if (_permanentAddressController.text.trim().isEmpty) {
+          _permanentAddressController.text = address;
+        }
       } else if (idResidenceAddress.isNotEmpty) {
         _currentAddressController.text = idResidenceAddress;
       }
@@ -192,7 +198,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
 
       final monthlyIncome = vm.monthlyIncome;
       if (monthlyIncome > 0) {
-        _monthlyIncomeController.text = monthlyIncome.toStringAsFixed(0);
+        _monthlyIncomeController.text = _formatCurrencyNumber(monthlyIncome);
         _lockMonthlyIncome = true;
       }
     } else {
@@ -215,6 +221,15 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
         _currentAddressController.text = idResidenceAddress;
       }
     }
+  }
+
+  String _formatCurrencyNumber(num value) {
+    return _vndFormatter.format(value.round());
+  }
+
+  double? _parseCurrencyNumber(String raw) {
+    final cleaned = raw.replaceAll('.', '').replaceAll(',', '').trim();
+    return double.tryParse(cleaned);
   }
 
   DateTime? _parseDateLoose(String raw) {
@@ -388,7 +403,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _cccdController,
-                        label: context.t('Citizen ID (CCCD)*', 'Thẻ CC/CCCD*'),
+                        label: context.t('Citizen ID (CCCD)*', 'Căn cước công dân*'),
                         icon: Icons.badge_outlined,
                         keyboardType: TextInputType.number,
                         readOnly: _lockCccd,
@@ -463,14 +478,17 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Education Level', 'Trình độ học vấn'),
+                        label: context.t('Education Level*', 'Trình độ học vấn*'),
                         icon: Icons.school_outlined,
                         value: _selectedEducationLevel,
                         items: _educationLevelOptions,
                         display: _displayEducationLevel,
                         onChanged: (value) =>
                             setState(() => _selectedEducationLevel = value),
-                        required: false,
+                        validatorMessage: context.t(
+                          'Please select education level',
+                          'Vui lòng chọn trình độ học vấn',
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
@@ -482,24 +500,30 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Marital Status', 'Tình trạng hôn nhân'),
+                        label: context.t('Marital Status*', 'Tình trạng hôn nhân*'),
                         icon: Icons.favorite_border,
                         value: _selectedMaritalStatus,
                         items: _maritalStatusOptions,
                         display: _displayMaritalStatus,
                         onChanged: (value) =>
                             setState(() => _selectedMaritalStatus = value),
-                        required: false,
+                        validatorMessage: context.t(
+                          'Please select marital status',
+                          'Vui lòng chọn tình trạng hôn nhân',
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _permanentAddressController,
-                        label: context.t('Permanent Address', 'Địa chỉ thường trú'),
+                        label: context.t('Permanent Address*', 'Địa chỉ thường trú*'),
                         icon: Icons.home_outlined,
                         readOnly: true,
                         maxLines: 2,
                         maxLength: 160,
                         inputFormatters: [LengthLimitingTextInputFormatter(160)],
+                        validator: _requiredValidator(
+                          context.t('Please enter permanent address', 'Vui lòng nhập địa chỉ thường trú'),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
@@ -524,8 +548,8 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       _buildTextField(
                         controller: _mobilePhoneController,
                         label: context.t(
-                          'Mobile Phone Number',
-                          'Số điện thoại di động',
+                          'Mobile Phone Number*',
+                          'Số điện thoại di động*',
                         ),
                         icon: Icons.phone_android,
                         keyboardType: TextInputType.phone,
@@ -537,17 +561,17 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                             RegExp(r'[0-9+\-\s()]'),
                           ),
                         ],
-                        validator: _validateOptionalPhone,
+                        validator: _validateRequiredPhone,
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _emailController,
-                        label: context.t('Email', 'Email'),
+                        label: context.t('Email*', 'Email*'),
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         maxLength: 100,
                         inputFormatters: [LengthLimitingTextInputFormatter(100)],
-                        validator: _validateOptionalGmail,
+                        validator: _validateRequiredGmail,
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
@@ -595,7 +619,9 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(15),
                           FilteringTextInputFormatter.digitsOnly,
+                          _CurrencyInputFormatter(_vndFormatter),
                         ],
+                        suffixText: 'đ',
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return context.t(
@@ -603,7 +629,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                               'Vui lòng nhập thu nhập hàng tháng',
                             );
                           }
-                          final income = double.tryParse(value);
+                          final income = _parseCurrencyNumber(value);
                           if (income == null || income <= 0) {
                             return context.t(
                               'Monthly income must be greater than 0',
@@ -616,15 +642,18 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _companyNameController,
-                        label: context.t('Company Name', 'Đơn vị công tác'),
+                        label: context.t('Company Name*', 'Đơn vị công tác*'),
                         icon: Icons.business,
                         maxLength: 100,
                         inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                        validator: _requiredMin2Validator(
+                          context.t('Please enter company name', 'Vui lòng nhập đơn vị công tác'),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _companyPhoneController,
-                        label: context.t('Office Phone', 'Điện thoại cơ quan'),
+                        label: context.t('Office Phone*', 'Điện thoại cơ quan*'),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 15,
@@ -634,22 +663,25 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                             RegExp(r'[0-9+\-\s()]'),
                           ),
                         ],
-                        validator: _validateOptionalPhone,
+                        validator: _validateRequiredPhone,
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _companyAddressController,
-                        label: context.t('Office Address', 'Địa chỉ cơ quan'),
+                        label: context.t('Office Address*', 'Địa chỉ cơ quan*'),
                         icon: Icons.location_city,
                         maxLines: 2,
                         maxLength: 160,
                         inputFormatters: [LengthLimitingTextInputFormatter(160)],
+                        validator: _requiredValidator(
+                          context.t('Please enter office address', 'Vui lòng nhập địa chỉ cơ quan'),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
                         label: context.t(
-                          'Labor Contract Type',
-                          'Loại hợp đồng lao động',
+                          'Labor Contract Type*',
+                          'Loại hợp đồng lao động*',
                         ),
                         icon: Icons.description_outlined,
                         value: _selectedContractType,
@@ -657,7 +689,10 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                         display: _displayContractType,
                         onChanged: (value) =>
                             setState(() => _selectedContractType = value),
-                        required: false,
+                        validatorMessage: context.t(
+                          'Please select labor contract type',
+                          'Vui lòng chọn loại hợp đồng lao động',
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
@@ -680,24 +715,24 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       const SizedBox(height: 24),
                       _buildSectionHeader(
                         context.t(
-                          'REFERENCE INFORMATION',
-                          'THÔNG TIN NGƯỜI THAM CHIẾU',
+                          'REFERENCE INFORMATION (*)',
+                          'THÔNG TIN NGƯỜI THAM CHIẾU (*)',
                         ),
                       ),
                       _buildTextField(
                         controller: _reference1NameController,
                         label: context.t(
-                          'Reference Person 1 Name',
-                          'Họ và tên người tham chiếu 1',
+                          'Reference Person 1 Name*',
+                          'Họ và tên người tham chiếu 1*',
                         ),
                         icon: Icons.person_outline,
                         maxLength: 60,
                         inputFormatters: [LengthLimitingTextInputFormatter(60)],
-                        validator: _validateOptionalName,
+                        validator: _validateRequiredName,
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Relationship', 'Quan hệ'),
+                        label: context.t('Relationship*', 'Quan hệ*'),
                         icon: Icons.family_restroom,
                         value: _selectedReference1Relationship,
                         items: _relationshipOptions,
@@ -710,12 +745,16 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                             }
                           });
                         },
-                        required: false,
+                        validatorMessage: context.t(
+                          'Please select relationship for reference 1',
+                          'Vui lòng chọn quan hệ người tham chiếu 1',
+                        ),
+                        required: true,
                       ),
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _reference1PhoneController,
-                        label: context.t('Phone', 'Điện thoại'),
+                        label: context.t('Phone*', 'Điện thoại*'),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 15,
@@ -725,30 +764,34 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                             RegExp(r'[0-9+\-\s()]'),
                           ),
                         ],
-                        validator: _validateOptionalPhone,
+                        validator: _validateRequiredPhone,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _reference2NameController,
                         label: context.t(
-                          'Reference Person 2 Name',
-                          'Họ và tên người tham chiếu 2',
+                          'Reference Person 2 Name*',
+                          'Họ và tên người tham chiếu 2*',
                         ),
                         icon: Icons.person_outline,
                         maxLength: 60,
                         inputFormatters: [LengthLimitingTextInputFormatter(60)],
-                        validator: _validateOptionalName,
+                        validator: _validateRequiredName,
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Relationship', 'Quan hệ'),
+                        label: context.t('Relationship*', 'Quan hệ*'),
                         icon: Icons.family_restroom,
                         value: _selectedReference2Relationship,
                         items: _relationshipOptions,
                         display: _displayRelationship,
                         onChanged: (value) =>
                             setState(() => _selectedReference2Relationship = value),
-                        required: false,
+                        validatorMessage: context.t(
+                          'Please select relationship for reference 2',
+                          'Vui lòng chọn quan hệ người tham chiếu 2',
+                        ),
+                        required: true,
                         disabledValues: {
                           if (_selectedReference1Relationship != null)
                             _selectedReference1Relationship!,
@@ -757,7 +800,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _reference2PhoneController,
-                        label: context.t('Phone', 'Điện thoại'),
+                        label: context.t('Phone*', 'Điện thoại*'),
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
                         maxLength: 15,
@@ -767,7 +810,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
                             RegExp(r'[0-9+\-\s()]'),
                           ),
                         ],
-                        validator: _validateOptionalPhone,
+                        validator: _validateRequiredPhone,
                       ),
                       const SizedBox(height: 16),
                       _buildDocumentUploadField(),
@@ -930,6 +973,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     int maxLines = 1,
     int? maxLength,
     bool readOnly = false,
+    String? suffixText,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -943,9 +987,12 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+        suffixText: suffixText,
         suffixIcon: readOnly
             ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
             : null,
+        filled: true,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -1163,6 +1210,17 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     return null;
   }
 
+  String? _validateRequiredPhone(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) {
+      return context.t(
+        'Please enter phone number',
+        'Vui lòng nhập số điện thoại',
+      );
+    }
+    return _validateOptionalPhone(raw);
+  }
+
   String? _validateOptionalGmail(String? value) {
     final raw = value?.trim() ?? '';
     if (raw.isEmpty) return null;
@@ -1175,6 +1233,17 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       );
     }
     return null;
+  }
+
+  String? _validateRequiredGmail(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) {
+      return context.t(
+        'Please enter email',
+        'Vui lòng nhập email',
+      );
+    }
+    return _validateOptionalGmail(raw);
   }
 
   String _displayGender(String value) {
@@ -1358,7 +1427,7 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       },
       'employment': {
         'jobType': _selectedJobType,
-        'monthlyIncome': double.tryParse(_monthlyIncomeController.text),
+        'monthlyIncome': _parseCurrencyNumber(_monthlyIncomeController.text),
         'companyName': _companyNameController.text.trim(),
         'companyPhone': _companyPhoneController.text.trim(),
         'companyAddress': _companyAddressController.text.trim(),
@@ -1386,6 +1455,26 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const Step4OfferCalculatorPage()),
+    );
+  }
+}
+
+class _CurrencyInputFormatter extends TextInputFormatter {
+  final NumberFormat formatter;
+  _CurrencyInputFormatter(this.formatter);
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+    final number = int.tryParse(newValue.text);
+    if (number == null) return oldValue;
+    final formatted = formatter.format(number);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

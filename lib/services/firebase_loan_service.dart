@@ -94,7 +94,7 @@ class FirebaseLoanService {
 
           // Flow state
           'step2Completed': true,
-          'step3Completed': true,
+          'step3Completed': false,
           'step4Completed': false,
           'step5Completed': false,
           'step6Completed': false,
@@ -183,7 +183,7 @@ class FirebaseLoanService {
 
         // Flow state
         'step2Completed': true,
-        'step3Completed': true,
+        'step3Completed': false,
         'step4Completed': false,
         'step5Completed': false,
         'step6Completed': false,

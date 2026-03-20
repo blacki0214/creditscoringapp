@@ -276,6 +276,28 @@ class NotificationService {
     }
   }
 
+  /// Delete all read notifications for a user
+  Future<void> deleteAllReadNotifications(String userId) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: userId)
+          .where('isRead', isEqualTo: true)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      print('[NotificationService] Deleted all read notifications');
+    } catch (e) {
+      print('[NotificationService] Error deleting all read notifications: $e');
+      rethrow;
+    }
+  }
+
   /// Get recent notifications (non-stream, for one-time fetch)
   Future<List<NotificationModel>> getRecentNotifications(
     String userId, {

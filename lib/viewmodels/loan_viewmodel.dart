@@ -161,6 +161,23 @@ class LoanViewModel extends ChangeNotifier {
     return _bankService.getBranchDetails(_selectedBankCode!, _selectedBranchCode!);
   }
 
+  /// Determines if there is an active application currently in progress
+  bool get hasActiveApplication {
+    return _applicationStatus != ApplicationStatus.none;
+  }
+
+  /// Returns the current/next step that needs to be completed
+  /// Returns 1-6 indicating which step the user should proceed to
+  /// Returns 7 if all steps are completed
+  int get getCurrentStep {
+    if (!_step1Completed) return 1;
+    if (!_step2Completed) return 2;
+    if (!_step3Completed) return 3;
+    if (!_step4Completed) return 4;
+    if (!_step6Completed) return 6; // Note: Step 5 is contract review, Step 6 is disbursement
+    return 7; // All steps completed
+  }
+
   // Load saved draft on init
   LoanViewModel() {
     _loadDraft();
@@ -246,37 +263,60 @@ class LoanViewModel extends ChangeNotifier {
       if (latestApplication == null) return;
 
       final applicationId = latestApplication['id'] as String?;
-      if (applicationId != null) {
-        _pendingApplicationId = applicationId;
-      }
-
-      _step2Completed = latestApplication['step2Completed'] as bool? ?? false;
-      _step3Completed = latestApplication['step3Completed'] as bool? ?? false;
-      _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
-      _step6Completed = latestApplication['step6Completed'] as bool? ?? false;
-
       final status = (latestApplication['status'] as String? ?? 'none').toLowerCase();
+
+      // Default to a fresh post-eKYC flow. We only hydrate steps 2-6
+      // for active/in-progress applications.
+      _pendingApplicationId = null;
+      _step2Completed = false;
+      _step3Completed = false;
+      _step4Completed = false;
+      _step6Completed = false;
+      _currentOffer = null;
+
       switch (status) {
         case 'processing':
           _applicationStatus = ApplicationStatus.processing;
           break;
         case 'approved':
-        case 'completed':
           _applicationStatus = ApplicationStatus.scored;
           break;
         case 'rejected':
           _applicationStatus = ApplicationStatus.rejected;
           break;
+        case 'completed':
+          // Completed applications belong to Installment/History, not active flow.
+          _applicationStatus = ApplicationStatus.none;
+          break;
         default:
           _applicationStatus = ApplicationStatus.none;
       }
 
+      final isActiveFlow = _applicationStatus != ApplicationStatus.none;
+      if (isActiveFlow) {
+        if (applicationId != null) {
+          _pendingApplicationId = applicationId;
+        }
+
+        _step2Completed = latestApplication['step2Completed'] as bool? ?? false;
+        final rawStep3Completed = latestApplication['step3Completed'] as bool? ?? false;
+        final step3Data = latestApplication['step3Data'];
+        final hasStep3Data =
+            step3Data is Map && (step3Data as Map).isNotEmpty;
+        // Backward-compat: old records may mark step3Completed=true right after scoring.
+        _step3Completed = rawStep3Completed && hasStep3Data;
+        _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
+        _step6Completed = latestApplication['step6Completed'] as bool? ?? false;
+      }
+
       Map<String, dynamic>? offer;
-      final offerId = latestApplication['offerId'] as String?;
-      if (offerId != null && offerId.isNotEmpty) {
-        offer = await _loanService.getLoanOfferById(offerId);
-      } else if (applicationId != null) {
-        offer = await _loanService.getLoanOfferByApplicationId(applicationId);
+      if (isActiveFlow) {
+        final offerId = latestApplication['offerId'] as String?;
+        if (offerId != null && offerId.isNotEmpty) {
+          offer = await _loanService.getLoanOfferById(offerId);
+        } else if (applicationId != null) {
+          offer = await _loanService.getLoanOfferByApplicationId(applicationId);
+        }
       }
 
       if (offer != null) {
@@ -1011,7 +1051,8 @@ class LoanViewModel extends ChangeNotifier {
       );
 
       _step2Completed = true;
-      _step3Completed = true; // Processing done
+      // Step 3 is completed only after Step3AdditionalInfoPage is submitted.
+      _step3Completed = false;
       _step4Completed = false;
       _step6Completed = false;
       notifyListeners();

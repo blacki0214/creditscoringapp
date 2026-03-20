@@ -604,6 +604,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.white,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -696,8 +698,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
                 'Feedback Details',
@@ -706,7 +711,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   color: Color(0xFF1A1F3F),
                 ),
               ),
-              _buildStatusBadge(status),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: _buildStatusBadge(status),
+              ),
             ],
           ),
           content: SingleChildScrollView(

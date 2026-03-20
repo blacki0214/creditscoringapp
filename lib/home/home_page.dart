@@ -21,7 +21,12 @@ import 'application_contract_status_page.dart';
 import '../utils/app_localization.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    super.key,
+    this.onOpenSettings,
+  });
+
+  final VoidCallback? onOpenSettings;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -30,6 +35,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   ApplicationStatus? _lastKnownStatus;
   final InstallmentService _installmentService = InstallmentService();
+
+  void _openSettingsFromMenu() {
+    if (widget.onOpenSettings != null) {
+      widget.onOpenSettings!();
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SettingsPage(),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -365,6 +384,26 @@ class _HomePageState extends State<HomePage> {
                                         ],
                                       ),
                                     ),
+                                    const SizedBox(width: 6),
+                                    SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        splashRadius: 16,
+                                        tooltip: context.t('Delete', 'Xóa'),
+                                        onPressed: () async {
+                                          await NotificationService()
+                                              .deleteNotification(notification.id);
+                                        },
+                                        icon: Icon(
+                                          Icons.close,
+                                          size: 16,
+                                          color: Colors.red.shade400,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -377,27 +416,56 @@ class _HomePageState extends State<HomePage> {
                   Divider(height: 1, color: Colors.grey.shade200),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4D4AF9),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4D4AF9),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                            ),
+                            child: Text(
+                              context.t('Back', 'Quay lại'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 11),
                         ),
-                        child: Text(
-                          context.t('Back', 'Quay lại'),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await NotificationService()
+                                  .deleteAllReadNotifications(userId);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE53935),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                            ),
+                            child: Text(
+                              context.t('Delete all read', 'Xóa thông báo đã đọc'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
@@ -512,12 +580,7 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SettingsPage(),
-                              ),
-                            );
+                            _openSettingsFromMenu();
                           },
                         ),
                         PopupMenuItem(
@@ -925,14 +988,29 @@ class _HomePageState extends State<HomePage> {
                                       );
                                     }
                                   } else {
-                                    // Navigate to loan application
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const LoanApplicationPage(),
-                                      ),
-                                    );
+                                    // Navigate to loan application (but prevent if already active)
+                                    final loanViewModel = context.read<LoanViewModel>();
+                                    if (loanViewModel.hasActiveApplication) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            context.t(
+                                              'You already have an active application. Please complete it first.',
+                                              'Bạn đã có một hồ sơ đang xử lý. Vui lòng hoàn thành nó trước.',
+                                            ),
+                                          ),
+                                          backgroundColor: Colors.orange,
+                                        ),
+                                      );
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const LoanApplicationPage(),
+                                        ),
+                                      );
+                                    }
                                   }
                                 }
                               },
@@ -960,7 +1038,7 @@ class _HomePageState extends State<HomePage> {
                                       )
                                     : context.t(
                                         'Apply for loan now',
-                                        'Đăng ký vay ngay',
+                                              'Chưa có dữ liệu',
                                       ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -1000,14 +1078,8 @@ class _HomePageState extends State<HomePage> {
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
-    final activeOffer =
-        loanViewModel.currentOffer ?? loanViewModel.lastCompletedOffer;
-    final activeStatus =
-        loanViewModel.applicationStatus != ApplicationStatus.none
-        ? loanViewModel.applicationStatus
-        : loanViewModel.lastCompletedStatus;
-    final isActiveFromHistory =
-        activeOffer != null && loanViewModel.currentOffer == null;
+    final activeOffer = loanViewModel.currentOffer;
+    final activeStatus = loanViewModel.applicationStatus;
     final showScoreStatus =
         loanViewModel.currentOffer != null ||
         activeStatus == ApplicationStatus.processing;
@@ -1123,22 +1195,36 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                context.t('Limit Amount', 'Hạn mức'),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF1A1F3F),
-                                  fontWeight: FontWeight.w500,
+                              Expanded(
+                                child: Text(
+                                  context.t('Limit Amount', 'Hạn mức'),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF1A1F3F),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
-                                currencyFormat.format(
-                                  activeOffer['maxAmountVnd'] as num,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF4CAF50),
-                                  fontWeight: FontWeight.w700,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      currencyFormat.format(
+                                        activeOffer['maxAmountVnd'] as num,
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF4CAF50),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -1146,9 +1232,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 12),
                         // Continue button to Step 3 (only show for active flow)
-                        if (!isActiveFromHistory &&
-                            (!loanViewModel.step3Completed ||
-                                !loanViewModel.step4Completed))
+                        if (!loanViewModel.step3Completed ||
+                          !loanViewModel.step4Completed)
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -1185,6 +1270,71 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                       ],
+
+                      // Show re-apply guidance for rejected applications
+                      if (activeStatus == ApplicationStatus.rejected) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.t(
+                                  'You can submit a new application after updating your profile details.',
+                                  'Bạn có thể nộp hồ sơ mới sau khi cập nhật thông tin hồ sơ.',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                  height: 1.35,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    await loanViewModel
+                                        .finalizeAndResetForNewApplication();
+                                    if (!context.mounted) return;
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const LoanApplicationPage(),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4C40F7),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 11,
+                                    ),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    context.t('Apply Again', 'Nộp hồ sơ mới'),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1197,9 +1347,8 @@ class _HomePageState extends State<HomePage> {
         // Current Loan Offer Section (only show full details after Step 3 & 4 completion)
         if (activeOffer != null &&
             activeStatus == ApplicationStatus.scored &&
-            (isActiveFromHistory ||
-                (loanViewModel.step3Completed &&
-                    loanViewModel.step4Completed))) ...[
+          (loanViewModel.step3Completed &&
+            loanViewModel.step4Completed)) ...[
           Text(
             context.t('Current Offer', 'Đề nghị hiện tại'),
             style: TextStyle(
@@ -1839,20 +1988,34 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey.shade700,
-            fontWeight: FontWeight.w500,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1F3F),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1F3F),
+                ),
+              ),
+            ),
           ),
         ),
       ],

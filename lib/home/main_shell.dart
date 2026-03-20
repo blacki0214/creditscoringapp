@@ -18,16 +18,17 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
   int _previousIndex = 0;
   late AnimationController _animationController;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    LoanApplicationPage(),
-    DemoCalculatorPage(),
-    SettingsPage(),
-  ];
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _pages = [
+      HomePage(onOpenSettings: () => _onNavItemTap(3)),
+      const LoanApplicationPage(),
+      const DemoCalculatorPage(),
+      const SettingsPage(),
+    ];
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -80,6 +81,15 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     );
   }
 
+  void _onNavItemTap(int index) {
+    if (!mounted) return;
+    setState(() {
+      _previousIndex = _selectedIndex;
+      _selectedIndex = index;
+    });
+    _animationController.forward(from: 0.0);
+  }
+
   Widget _buildNavItem(IconData icon, int index) {
     final isCurrentlySelected = _selectedIndex == index;
     final wasPreviouslySelected = _previousIndex == index;
@@ -89,11 +99,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        setState(() {
-          _previousIndex = _selectedIndex;
-          _selectedIndex = index;
-        });
-        _animationController.forward(from: 0.0);
+        _onNavItemTap(index);
       },
       child: SizedBox(
         width: 64,
