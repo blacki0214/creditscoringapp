@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math' as math;
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
@@ -623,9 +624,14 @@ class LoanViewModel extends ChangeNotifier {
           final loanTermMonths = _asInt(_currentOffer!['loanTermMonths'], 12);
           final monthlyPaymentVnd = _asDouble(_currentOffer!['monthlyPaymentVnd']);
           final totalInterestVnd = _asDouble(_currentOffer!['totalInterestVnd']);
-          
-          // Calculate first due date (30 days from today)
-          final firstDueDate = DateTime.now().add(const Duration(days: 30));
+
+          final anchorDate = _resolveRepaymentAnchorDate() ?? DateTime.now();
+          final normalizedAnchorDate = DateTime(
+            anchorDate.year,
+            anchorDate.month,
+            anchorDate.day,
+          );
+          final firstDueDate = _addMonthsSafe(normalizedAnchorDate, 1);
           
           await _installmentService.generateInstallmentsForLoan(
             userId: userId,
@@ -647,6 +653,51 @@ class LoanViewModel extends ChangeNotifier {
     }
     
     await finalizeAndResetForNewApplication();
+  }
+
+  DateTime? _resolveRepaymentAnchorDate() {
+    final candidates = [
+      _currentOffer?['acceptedAt'],
+      _currentOffer?['timestamp'],
+      _currentOffer?['submitted_at'],
+      _currentOffer?['submittedAt'],
+      _currentOffer?['createdAt'],
+      _currentOffer?['updatedAt'],
+    ];
+
+    for (final candidate in candidates) {
+      final parsed = _parseDate(candidate);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    return DateTime.tryParse(value.toString());
+  }
+
+  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
+    final totalMonths = (date.month - 1) + monthsToAdd;
+    final year = date.year + (totalMonths ~/ 12);
+    final month = (totalMonths % 12) + 1;
+    final day = math.min(date.day, DateTime(year, month + 1, 0).day);
+
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
   }
 
   // Backward compatibility for older call sites.

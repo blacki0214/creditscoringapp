@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/app_localization.dart';
 import 'payment_page.dart';
 import '../services/installment_service.dart';
+import '../services/local_storage_service.dart';
+import '../models/installment_model.dart';
 
 class ApplicationContractStatusPage extends StatefulWidget {
   final Map<String, dynamic> application;
@@ -23,11 +26,23 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
   bool _paymentSuccessThisMonth = false;
   DateTime? _nextDueDateSynced;
   final InstallmentService _installmentService = InstallmentService();
+  StreamSubscription<List<Installment>>? _installmentsSubscription;
+  late final bool _isTestAccountMode;
 
   @override
   void initState() {
     super.initState();
-    _syncNextDueDateWithPaymentPage();
+    _isTestAccountMode = LocalStorageService.isTestAccountMode();
+    if (!_isTestAccountMode) {
+      _syncNextDueDateWithPaymentPage();
+      _startRealtimeDueDateSync();
+    }
+  }
+
+  @override
+  void dispose() {
+    _installmentsSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -53,6 +68,7 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
     final finalDueDate = (submittedAt != null && tenorMonths != null)
         ? _addMonthsSafe(submittedAt, tenorMonths)
         : null;
+    final canPayNow = _isTestAccountMode ? true : _canPayOnDate(nextDueDate);
 
     final statusText = isApproved
       ? context.t('Active', 'Đang hiệu lực')
@@ -240,23 +256,27 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4C40F7),
                           ),
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PaymentPage(
-                                  application: widget.application,
-                                ),
-                              ),
-                            );
+                          onPressed: canPayNow
+                              ? () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PaymentPage(
+                                        application: widget.application,
+                                      ),
+                                    ),
+                                  );
 
-                            if (result is Map && result['paymentSuccess'] == true && mounted) {
-                              setState(() {
-                                _paymentSuccessThisMonth = true;
-                              });
-                              await _syncNextDueDateWithPaymentPage();
-                            }
-                          },
+                                  if (result is Map && result['paymentSuccess'] == true && mounted) {
+                                    setState(() {
+                                      _paymentSuccessThisMonth = true;
+                                    });
+                                    if (!_isTestAccountMode) {
+                                      await _syncNextDueDateWithPaymentPage();
+                                    }
+                                  }
+                                }
+                              : null,
                           child: Text(
                             context.t('Pay now', 'Thanh toán ngay'),
                             style: const TextStyle(
@@ -266,6 +286,23 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
                           ),
                         ),
                       ),
+                    if (!_isTestAccountMode && !canPayNow && nextDueDate != null) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          context.t(
+                            'Payment opens on ${DateFormat(datePattern).format(nextDueDate)}',
+                            'Thanh toán mở từ ${DateFormat(datePattern).format(nextDueDate)}',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE65100),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (_paymentSuccessThisMonth) ...[
                       const SizedBox(height: 8),
                       Align(
@@ -385,9 +422,82 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
   }
 
   DateTime? _getSubmissionDate(Map<String, dynamic> application) {
-    final submittedAtRaw = application['timestamp'] ?? application['submitted_at'];
-    if (submittedAtRaw == null) return null;
-    return DateTime.tryParse(submittedAtRaw.toString());
+    final candidates = [
+      application['acceptedAt'],
+      application['timestamp'],
+      application['submitted_at'],
+      application['submittedAt'],
+      application['createdAt'],
+    ];
+
+    for (final candidate in candidates) {
+      final parsed = _parseDate(candidate);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    return DateTime.tryParse(value.toString());
+  }
+
+  bool _canPayOnDate(DateTime? dueDate) {
+    if (dueDate == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    return !dueDateOnly.isAfter(today);
+  }
+
+  Future<void> _startRealtimeDueDateSync() async {
+    final submittedAt = _getSubmissionDate(widget.application);
+    if (submittedAt == null) return;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final offerId = await _resolveOfferId(userId);
+    if (offerId == null || offerId.isEmpty || userId == null || userId.isEmpty) {
+      return;
+    }
+
+    await _installmentsSubscription?.cancel();
+    _installmentsSubscription = _installmentService
+        .getInstallmentsStream(userId: userId, loanOfferId: offerId)
+        .listen((installments) {
+      _updateDueDateFromInstallments(installments, submittedAt);
+    });
+  }
+
+  void _updateDueDateFromInstallments(
+    List<Installment> installments,
+    DateTime submittedAt,
+  ) {
+    if (!mounted) return;
+
+    final unpaid = installments.where((item) => !item.isPaid).toList();
+    if (unpaid.isEmpty) {
+      setState(() {
+        _nextDueDateSynced = null;
+        _paymentSuccessThisMonth = true;
+      });
+      return;
+    }
+
+    final paidCount = installments.where((item) => item.isPaid).length;
+    final dueDate = _addMonthsSafe(
+      DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+      paidCount + 1,
+    );
+
+    setState(() {
+      _nextDueDateSynced = dueDate;
+      _paymentSuccessThisMonth = false;
+    });
   }
 
   int? _asNullableInt(dynamic value) {

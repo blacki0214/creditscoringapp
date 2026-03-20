@@ -2797,6 +2797,8 @@ String _getLocalizedNotificationTitle(
       return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
     case 'payment_reminder':
       return context.t('Payment Reminder', 'Nhắc nhở thanh toán');
+    case 'payment_success':
+      return context.t('Payment Successful', 'Thanh toán thành công');
     default:
       if (notification.title == 'Loan Approved') {
         return context.t('Loan Approved', 'Khoản vay đã được duyệt');
@@ -2895,6 +2897,26 @@ String _getLocalizedNotificationBody(
     );
   }
 
+  if (notification.type == 'payment_success') {
+    final rawAmount = notification.data?['amountVnd'];
+    final amount = rawAmount is num ? rawAmount.toDouble() : null;
+    final format = NumberFormat.currency(
+      locale: isVietnamese ? 'vi_VN' : 'en_US',
+      symbol: ' VND',
+      decimalDigits: 0,
+    );
+    if (amount != null) {
+      return context.t(
+        'We received your payment of ${format.format(amount)}.',
+        'Chúng tôi đã nhận khoản thanh toán ${format.format(amount)} của bạn.',
+      );
+    }
+    return context.t(
+      'Your payment was completed successfully.',
+      'Bạn đã thanh toán thành công.',
+    );
+  }
+
   if (notification.body == 'Your loan application needs review') {
     return context.t(
       'Your loan application needs review',
@@ -2973,6 +2995,8 @@ IconData _getNotificationIcon(String type) {
       return Icons.trending_up;
     case 'payment_reminder':
       return Icons.payment;
+    case 'payment_success':
+      return Icons.task_alt;
     default:
       return Icons.notifications;
   }

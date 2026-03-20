@@ -230,6 +230,46 @@ class PushNotificationService {
     }
   }
 
+  Future<void> showPaymentSuccessNotification({
+    required double amountVnd,
+    DateTime? dueDate,
+  }) async {
+    final amountText = _currencyFormat.format(amountVnd);
+    final dueText = dueDate != null
+        ? DateFormat('dd/MM/yyyy').format(dueDate)
+        : null;
+
+    final title = 'Payment Successful | Thanh toán thành công';
+    final body = dueText != null
+        ? 'Paid: $amountText | Due date: $dueText'
+        : 'Paid: $amountText';
+
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _defaultChannel.id,
+          _defaultChannel.name,
+          channelDescription: _defaultChannel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      payload: jsonEncode({
+        'type': 'payment_success',
+        'amountVnd': amountVnd,
+        'dueDate': dueDate?.toIso8601String(),
+      }),
+    );
+
+    if (kDebugMode) {
+      print('[Push] Payment success notification shown');
+    }
+  }
+
   Future<void> _syncFcmTokenToCurrentUser() async {
     final token = await _messaging.getToken();
     if (token == null) return;

@@ -20,15 +20,34 @@ class FirebaseService {
 
   // Collection references
   CollectionReference get usersCollection => _firestore.collection('users');
-  CollectionReference get ekycLogsCollection => _firestore.collection('ekyc_logs');
-  CollectionReference get ekycImagesCollection => _firestore.collection('ekyc_images');
-  CollectionReference get creditApplicationsCollection => _firestore.collection('credit_applications');
-  CollectionReference get loanOffersCollection => _firestore.collection('loan_offers');
-  CollectionReference get applicationHistoryCollection => _firestore.collection('application_history');
-  CollectionReference get feedbackCollection => _firestore.collection('feedback');
+  CollectionReference get ekycLogsCollection =>
+      _firestore.collection('ekyc_logs');
+  CollectionReference get ekycImagesCollection =>
+      _firestore.collection('ekyc_images');
+  CollectionReference get creditApplicationsCollection =>
+      _firestore.collection('credit_applications');
+  CollectionReference get loanOffersCollection =>
+      _firestore.collection('loan_offers');
+  CollectionReference get applicationHistoryCollection =>
+      _firestore.collection('application_history');
+  CollectionReference get feedbackCollection =>
+      _firestore.collection('feedback');
 
   // Current user
   User? get currentUser => _auth.currentUser;
   String? get currentUserId => _auth.currentUser?.uid;
   bool get isAuthenticated => _auth.currentUser != null;
+
+  Future<Map<String, dynamic>?> getCurrentUserProfile() async {
+    final userId = currentUserId;
+    if (userId == null) return null;
+
+    final doc = await usersCollection.doc(userId).get();
+    return doc.data() as Map<String, dynamic>?;
+  }
+
+  Future<bool> isCurrentUserSupportStaff() async {
+    final profile = await getCurrentUserProfile();
+    return profile?['role'] == 'support';
+  }
 }

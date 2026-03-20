@@ -1,9 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isSupportStaff() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'support';
+    }
+
     // Users collection
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
     }
     
     // Credit applications collection
@@ -16,17 +29,17 @@ service cloud.firestore {
     // Feedback collection 
     match /feedback/{feedbackId} {
       // Users can read their own feedback
-      allow read: if request.auth != null && 
-                     resource.data.userId == request.auth.uid;
+      allow read: if isSupportStaff() ||
+                     (isAuthenticated() && resource.data.userId == request.auth.uid);
       
       // Users can create feedback
-      allow create: if request.auth != null &&
-                       request.resource.data.userId == request.auth.uid &&
+      allow create: if isAuthenticated() &&
+               request.resource.data.userId == request.auth.uid &&
                        request.resource.data.keys().hasAll(['userId', 'userName', 'userEmail', 'category', 'subject', 'message', 'status', 'createdAt', 'updatedAt']);
       
       // Users can update their own feedback (for future edit feature)
-      allow update: if request.auth != null && 
-                       resource.data.userId == request.auth.uid;
+      allow update: if isSupportStaff() ||
+               (isAuthenticated() && resource.data.userId == request.auth.uid);
       
       // Users cannot delete feedback
       allow delete: if false;
@@ -85,26 +98,28 @@ service cloud.firestore {
     // Support chats
     match /support_chats/{chatId} {
       // Users can read their own chats
-      allow read: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+      allow read: if isSupportStaff() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
       
       // Users can create new chats
-      allow create: if request.auth != null &&
+      allow create: if isAuthenticated() &&
         request.resource.data.userId == request.auth.uid;
       
       // Users can update their own chats
-      allow update: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+      allow update: if isSupportStaff() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
       
       // Messages subcollection
       match /messages/{messageId} {
         // Users can read messages in their own chats
-        allow read: if request.auth != null && 
-          get(/databases/$(database)/documents/support_chats/$(chatId)).data.userId == request.auth.uid;
+        allow read: if isSupportStaff() ||
+          (isAuthenticated() &&
+            get(/databases/$(database)/documents/support_chats/$(chatId)).data.userId == request.auth.uid);
         
         // Users can create messages in their own chats
-        allow create: if request.auth != null &&
-          get(/databases/$(database)/documents/support_chats/$(chatId)).data.userId == request.auth.uid;
+        allow create: if isSupportStaff() ||
+          (isAuthenticated() &&
+            get(/databases/$(database)/documents/support_chats/$(chatId)).data.userId == request.auth.uid);
       }
     }
   }

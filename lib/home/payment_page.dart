@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/installment_service.dart';
+import '../services/local_storage_service.dart';
+import '../services/notification_service.dart';
+import '../services/push_notification_service.dart';
 import '../utils/app_localization.dart';
 
 class PaymentPage extends StatefulWidget {
@@ -27,9 +30,13 @@ class _PaymentPageState extends State<PaymentPage> {
 
   String _selectedMethod = _paymentMethodKeys.first;
   final InstallmentService _installmentService = InstallmentService();
+  final NotificationService _notificationService = NotificationService();
+  final PushNotificationService _pushNotificationService =
+      PushNotificationService();
   late final Future<_PaymentSummary> _paymentSummaryFuture;
   bool _showBankTransferQr = false;
   bool _isConfirmingPayment = false;
+  late final bool _isTestAccountMode;
 
   static const String _hardcodedQrUrl =
       'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=CREDITSCORINGAPP_LOAN_PAYMENT_VN_123456789';
@@ -37,6 +44,7 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   void initState() {
     super.initState();
+    _isTestAccountMode = LocalStorageService.isTestAccountMode();
     _paymentSummaryFuture = _buildPaymentSummary();
   }
 
@@ -104,6 +112,9 @@ class _PaymentPageState extends State<PaymentPage> {
             final amountDue = summary?.amountDue;
             final dueDate = summary?.dueDate;
             final remainingAfterPayment = summary?.remainingAfterPayment;
+            final canPayNow = _isTestAccountMode
+              ? true
+              : (summary?.canPayNow ?? false);
 
             return Container(
               width: double.infinity,
@@ -125,6 +136,20 @@ class _PaymentPageState extends State<PaymentPage> {
                     context.t('Due Date', 'Ngày đến hạn'),
                     dueDate != null ? DateFormat('dd/MM/yyyy').format(dueDate) : '-',
                   ),
+                  if (!_isTestAccountMode && !canPayNow && dueDate != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      context.t(
+                        'Payment will be available on ${DateFormat('dd/MM/yyyy').format(dueDate)}',
+                        'Bạn có thể thanh toán từ ngày ${DateFormat('dd/MM/yyyy').format(dueDate)}',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFE65100),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   _buildSummaryRow(
                     context.t(
@@ -185,36 +210,47 @@ class _PaymentPageState extends State<PaymentPage> {
         SizedBox(
           width: double.infinity,
           height: 48,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C40F7),
-            ),
-            onPressed: () {
-              if (_selectedMethod == 'bank_transfer') {
-                setState(() {
-                  _showBankTransferQr = true;
-                });
-                return;
-              }
+          child: FutureBuilder<_PaymentSummary>(
+            future: _paymentSummaryFuture,
+            builder: (context, snapshot) {
+                final canPayNow = _isTestAccountMode
+                  ? true
+                  : (snapshot.data?.canPayNow ?? false);
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.t(
-                      'This payment method is not enabled yet. Please choose Bank Transfer.',
-                      'Phương thức này chưa được bật. Vui lòng chọn Chuyển khoản ngân hàng.',
-                    ),
+              return ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4C40F7),
+                ),
+                onPressed: canPayNow
+                    ? () {
+                        if (_selectedMethod == 'bank_transfer') {
+                          setState(() {
+                            _showBankTransferQr = true;
+                          });
+                          return;
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              context.t(
+                                'This payment method is not enabled yet. Please choose Bank Transfer.',
+                                'Phương thức này chưa được bật. Vui lòng chọn Chuyển khoản ngân hàng.',
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    : null,
+                child: Text(
+                  context.t('Continue', 'Tiếp tục'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               );
             },
-            child: Text(
-              context.t('Continue', 'Tiếp tục'),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
         ),
       ],
@@ -310,14 +346,36 @@ class _PaymentPageState extends State<PaymentPage> {
       final summary = await _buildPaymentSummary();
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
+      if (!_isTestAccountMode && !summary.canPayNow) {
+        throw Exception('Payment is not due yet');
+      }
+
       if (summary.offerId != null &&
           summary.installmentId != null &&
           userId != null &&
           userId.isNotEmpty) {
+        final paidAmount = summary.amountDue ?? 0;
+
         await _installmentService.markInstallmentAsPaid(
           userId: userId,
           loanOfferId: summary.offerId!,
           installmentId: summary.installmentId!,
+          bypassDueDateCheck: _isTestAccountMode,
+        );
+
+        await _notificationService.createPaymentSuccessNotification(
+          userId: userId,
+          applicationId: widget.application['applicationId']?.toString(),
+          offerId: summary.offerId,
+          installmentId: summary.installmentId,
+          amountVnd: paidAmount,
+          dueDate: summary.dueDate,
+          paidAt: DateTime.now(),
+        );
+
+        await _pushNotificationService.showPaymentSuccessNotification(
+          amountVnd: paidAmount,
+          dueDate: summary.dueDate,
         );
       }
 
@@ -408,18 +466,27 @@ class _PaymentPageState extends State<PaymentPage> {
 
   DateTime? _getSubmissionDate(Map<String, dynamic> application) {
     final candidates = [
+      application['acceptedAt'],
       application['submitted_at'],
       application['submittedAt'],
       application['timestamp'],
+      application['createdAt'],
     ];
 
     for (final candidate in candidates) {
       if (candidate == null) continue;
-      final parsed = DateTime.tryParse(candidate.toString());
+      final parsed = _parseDate(candidate);
       if (parsed != null) return parsed;
     }
 
     return null;
+  }
+
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    return DateTime.tryParse(value.toString());
   }
 
   DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
@@ -474,6 +541,7 @@ class _PaymentPageState extends State<PaymentPage> {
             remainingAfterPayment: 0,
             offerId: offerId,
             installmentId: null,
+            canPayNow: false,
         );
       }
 
@@ -491,6 +559,10 @@ class _PaymentPageState extends State<PaymentPage> {
               paidInstallmentsCount + 1,
             )
           : unpaid.first.dueDate;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+      final canPayNow = !dueDateOnly.isAfter(today);
 
       return _PaymentSummary(
         amountDue: amountDue,
@@ -498,6 +570,7 @@ class _PaymentPageState extends State<PaymentPage> {
         remainingAfterPayment: remainingAfterPayment,
         offerId: offerId,
         installmentId: installmentId,
+        canPayNow: canPayNow,
       );
     } catch (_) {
       return fallback;
@@ -585,7 +658,16 @@ class _PaymentPageState extends State<PaymentPage> {
       remainingAfterPayment: remainingAfterPayment,
       offerId: null,
       installmentId: null,
+      canPayNow: _canPayNow(dueDate),
     );
+  }
+
+  bool _canPayNow(DateTime? dueDate) {
+    if (dueDate == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    return !dueDateOnly.isAfter(today);
   }
 
   Future<double?> _resolveLoanAmount(String offerId) async {
@@ -627,6 +709,7 @@ class _PaymentSummary {
   final double? remainingAfterPayment;
   final String? offerId;
   final String? installmentId;
+  final bool canPayNow;
 
   const _PaymentSummary({
     required this.amountDue,
@@ -634,5 +717,6 @@ class _PaymentSummary {
     required this.remainingAfterPayment,
     required this.offerId,
     required this.installmentId,
+    required this.canPayNow,
   });
 }

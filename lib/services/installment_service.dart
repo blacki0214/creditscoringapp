@@ -112,18 +112,47 @@ class InstallmentService {
     required String userId,
     required String loanOfferId,
     required String installmentId,
+    bool bypassDueDateCheck = false,
   }) async {
     try {
-      await _firebase.firestore
+      final installmentRef = _firebase.firestore
           .collection('loan_offers')
           .doc(loanOfferId)
           .collection('installments')
-          .doc(installmentId)
-          .update({
-            'status': 'paid',
-            'paidAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          .doc(installmentId);
+
+      await _firebase.firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(installmentRef);
+        if (!snapshot.exists || snapshot.data() == null) {
+          throw Exception('Installment not found');
+        }
+
+        final data = snapshot.data()!;
+        final status = (data['status'] as String? ?? '').toLowerCase();
+        if (status == 'paid') {
+          return;
+        }
+
+        final dueTimestamp = data['dueDate'] as Timestamp?;
+        if (dueTimestamp == null) {
+          throw Exception('Installment due date is missing');
+        }
+
+        final dueDate = dueTimestamp.toDate();
+        final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        if (!bypassDueDateCheck && dueDateOnly.isAfter(today)) {
+          throw Exception('Installment is not due yet');
+        }
+
+        transaction.update(installmentRef, {
+          'status': 'paid',
+          'paidAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      });
 
       print('[InstallmentService] Marked installment $installmentId as paid');
     } catch (e) {

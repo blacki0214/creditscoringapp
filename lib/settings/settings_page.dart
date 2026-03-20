@@ -10,6 +10,8 @@ import 'feedback_page.dart';
 import 'notifications_page.dart';
 import 'security_page.dart';
 import 'privacy_policy_page.dart';
+import 'support_staff_page.dart';
+import '../services/firebase_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -19,6 +21,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _isSupportStaff = false;
+
   @override
   void initState() {
     super.initState();
@@ -26,8 +30,24 @@ class _SettingsPageState extends State<SettingsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<SettingsViewModel>().loadUserProfile();
+        _loadSupportRole();
       }
     });
+  }
+
+  Future<void> _loadSupportRole() async {
+    try {
+      final isSupport = await FirebaseService().isCurrentUserSupportStaff();
+      if (!mounted) return;
+      setState(() {
+        _isSupportStaff = isSupport;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSupportStaff = false;
+      });
+    }
   }
 
   @override
@@ -185,6 +205,27 @@ class _SettingsPageState extends State<SettingsPage> {
                         );
                       },
                     ),
+                    if (_isSupportStaff) ...[
+                      const SizedBox(height: 12),
+                      _buildSettingItem(
+                        context,
+                        icon: Icons.headset_mic_outlined,
+                        title: isVietnamese
+                            ? 'Bảng điều khiển hỗ trợ'
+                            : 'Support Console',
+                        subtitle: isVietnamese
+                            ? 'Trả lời chat và xử lý phản hồi'
+                            : 'Reply to support chats and resolve feedback',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SupportStaffPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     _buildSettingItem(
                       context,
@@ -224,11 +265,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       context,
                       icon: Icons.privacy_tip_outlined,
                       title: isVietnamese
-                        ? 'Chính sách bảo mật'
-                        : 'Privacy Policy',
+                          ? 'Chính sách bảo mật'
+                          : 'Privacy Policy',
                       subtitle: isVietnamese
-                        ? 'Cách chúng tôi xử lý dữ liệu'
-                        : 'How we handle your data',
+                          ? 'Cách chúng tôi xử lý dữ liệu'
+                          : 'How we handle your data',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -243,11 +284,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       context,
                       icon: Icons.description_outlined,
                       title: isVietnamese
-                        ? 'Điều khoản & Điều kiện'
-                        : 'Terms & Conditions',
+                          ? 'Điều khoản & Điều kiện'
+                          : 'Terms & Conditions',
                       subtitle: isVietnamese
-                        ? 'Đọc điều khoản và điều kiện'
-                        : 'Read our terms and conditions',
+                          ? 'Đọc điều khoản và điều kiện'
+                          : 'Read our terms and conditions',
                       onTap: () {
                         // Navigate to terms
                       },
