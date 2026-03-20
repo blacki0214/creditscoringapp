@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../config/app_environment.dart';
 import '../services/local_storage_service.dart';
@@ -173,13 +174,15 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                             onPressed: () async {
                               if (AppEnvironment.shouldSkipEkyc(
                                 hasCompletedEkyc:
-                                    LocalStorageService.hasCompletedEkyc(),
+                                    LocalStorageService.hasCompletedEkyc(
+                                      userId: FirebaseAuth.instance.currentUser?.uid,
+                                    ),
                                 isTestAccountMode:
                                     LocalStorageService.isTestAccountMode(),
                               )) {
                                 viewModel.applySavedEkycPrefill();
                                 if (!viewModel.step1Completed) {
-                                  viewModel.completeStep1();
+                                  viewModel.markStep1CompletedLocalOnly();
                                 }
                                 Navigator.push(
                                   context,

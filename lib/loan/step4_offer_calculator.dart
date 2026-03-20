@@ -525,7 +525,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                           );
 
                           // Mark Step 4 as completed
-                          loanViewModel.completeStep4();
+                          await loanViewModel.completeStep4();
 
                           if (!mounted) return;
                           setState(() => _isProceeding = false);

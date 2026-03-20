@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firebase_user_service.dart';
@@ -138,11 +140,12 @@ class AuthViewModel extends ChangeNotifier {
   }) async {
     try {
       _setLoading(true);
-      await _authService.signInWithEmail(
+      final credential = await _authService.signInWithEmail(
         email: email,
         password: password,
       );
       await TestAccountService.applyLoginMode(email);
+      await _syncUserStateAfterLogin(credential.user);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -593,6 +596,7 @@ class AuthViewModel extends ChangeNotifier {
       final result = await _authService.signInWithGoogle();
       if (result != null) {
         await TestAccountService.applyLoginMode(result.user?.email);
+        await _syncUserStateAfterLogin(result.user);
       }
       
       _setLoading(false);
@@ -608,5 +612,63 @@ class AuthViewModel extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
+  }
+
+  Future<void> _syncUserStateAfterLogin(User? user) async {
+    if (user == null) return;
+
+    try {
+      final profile = await _userService.getUserProfile(user.uid);
+      if (profile == null) return;
+
+        final ekycCompleted = _isEkycCompletedInProfile(profile);
+
+      if (ekycCompleted) {
+        await LocalStorageService.markEkycCompleted(userId: user.uid);
+        } else {
+          await LocalStorageService.clearEkycCompletion(userId: user.uid);
+      }
+
+      final prefill = <String, dynamic>{};
+      final fullName = (profile['fullName'] as String?)?.trim();
+      final phone = (profile['phoneNumber'] as String?)?.trim();
+      final nationalId = (profile['nationalId'] as String?)?.trim();
+      final address = (profile['address'] as String?)?.trim();
+
+      if (fullName != null && fullName.isNotEmpty) prefill['fullName'] = fullName;
+      if (phone != null && phone.isNotEmpty) prefill['phoneNumber'] = phone;
+      if (nationalId != null && nationalId.isNotEmpty) prefill['idNumber'] = nationalId;
+      if (address != null && address.isNotEmpty) prefill['address'] = address;
+
+      final dobValue = profile['dateOfBirth'];
+      if (dobValue is Timestamp) {
+        prefill['dob'] = dobValue.toDate().toIso8601String();
+      } else if (dobValue is DateTime) {
+        prefill['dob'] = dobValue.toIso8601String();
+      } else if (dobValue is String && dobValue.isNotEmpty) {
+        prefill['dob'] = dobValue;
+      }
+
+      if (prefill.isNotEmpty) {
+        await LocalStorageService.saveEkycPrefill(prefill, userId: user.uid);
+      }
+    } catch (e) {
+      // Non-fatal: login should still complete even if local sync fails.
+      print('[AuthViewModel] Failed to sync user state after login: $e');
+    }
+  }
+
+  bool _isEkycCompletedInProfile(Map<String, dynamic> profile) {
+    if (profile['ekycCompleted'] == true) return true;
+
+    final ekycStatus = (profile['ekycStatus'] as String?)?.toLowerCase().trim();
+    if (ekycStatus == 'verified' ||
+        ekycStatus == 'completed' ||
+        ekycStatus == 'approved' ||
+        ekycStatus == 'success') {
+      return true;
+    }
+
+    return profile['ekycVerifiedAt'] != null;
   }
 }

@@ -331,6 +331,14 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
 
     await Future.delayed(const Duration(seconds: 1));
 
+    final vm = context.read<LoanViewModel>();
+    await vm.completeStep5(
+      signature: _signatureController.text,
+      agreedToTerms: _agreedToTerms,
+      agreedToDeduction: _agreedToDeduction,
+      agreedToConsent: _agreedToConsent,
+    );
+
     if (!mounted) return;
 
     setState(() => _isSigning = false);

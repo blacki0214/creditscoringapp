@@ -1384,7 +1384,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLoanHistoryDisplay(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
-    final applicationHistory = LocalStorageService.getApplicationHistory();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final applicationHistory = LocalStorageService.getApplicationHistory(
+      userId: userId,
+    );
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
 
     if (applicationHistory.isEmpty) {
@@ -1596,7 +1599,10 @@ class _HomePageState extends State<HomePage> {
     final viewModel = context.watch<HomeViewModel>();
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
 
-    final applicationHistory = LocalStorageService.getApplicationHistory();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final applicationHistory = LocalStorageService.getApplicationHistory(
+      userId: userId,
+    );
     final approvedApplications =
         applicationHistory.where((app) => app['approved'] == true).toList();
 
@@ -2650,6 +2656,14 @@ String _getLocalizedNotificationTitle(
   NotificationModel notification,
 ) {
   switch (notification.type) {
+    case 'ekyc_completed':
+      return context.t('eKYC Completed', 'eKYC đã hoàn tất');
+    case 'step3_completed':
+      return context.t('Step 3 Completed', 'Hoàn tất Bước 3');
+    case 'step4_completed':
+      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');
+    case 'step5_completed':
+      return context.t('Step 5 Completed', 'Hoàn tất Bước 5');
     case 'loan_approved':
       return context.t('Loan Approved', 'Khoản vay đã được duyệt');
     case 'loan_rejected':
@@ -2695,6 +2709,34 @@ String _getLocalizedNotificationBody(
     return context.t(
       'Your loan has been approved',
       'Khoản vay của bạn đã được duyệt',
+    );
+  }
+
+  if (notification.type == 'ekyc_completed') {
+    return context.t(
+      'Your identity verification is complete.',
+      'Xác minh danh tính của bạn đã hoàn tất.',
+    );
+  }
+
+  if (notification.type == 'step3_completed') {
+    return context.t(
+      'Additional information has been saved successfully.',
+      'Thông tin bổ sung đã được lưu thành công.',
+    );
+  }
+
+  if (notification.type == 'step4_completed') {
+    return context.t(
+      'Loan offer details are confirmed. Please review your contract.',
+      'Thông tin đề nghị vay đã được xác nhận. Vui lòng xem lại hợp đồng.',
+    );
+  }
+
+  if (notification.type == 'step5_completed') {
+    return context.t(
+      'Contract signed successfully. Continue to disbursement.',
+      'Ký hợp đồng thành công. Tiếp tục sang bước giải ngân.',
     );
   }
 
@@ -2790,6 +2832,14 @@ String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
 /// Helper function to get icon for notification type
 IconData _getNotificationIcon(String type) {
   switch (type) {
+    case 'ekyc_completed':
+      return Icons.verified_user;
+    case 'step3_completed':
+      return Icons.assignment_turned_in;
+    case 'step4_completed':
+      return Icons.calculate;
+    case 'step5_completed':
+      return Icons.description;
     case 'loan_approved':
       return Icons.check_circle;
     case 'loan_rejected':

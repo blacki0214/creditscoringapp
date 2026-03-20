@@ -82,6 +82,14 @@ class NotificationModel {
   /// Get icon based on notification type (for reference, not used in UI)
   String get iconType {
     switch (type) {
+      case 'ekyc_completed':
+        return 'verified_user';
+      case 'step3_completed':
+        return 'assignment_turned_in';
+      case 'step4_completed':
+        return 'calculate';
+      case 'step5_completed':
+        return 'description';
       case 'loan_approved':
         return 'check_circle';
       case 'loan_rejected':
@@ -98,6 +106,14 @@ class NotificationModel {
   /// Get color based on notification type
   int get colorValue {
     switch (type) {
+      case 'ekyc_completed':
+        return 0xFF26A69A; // Teal
+      case 'step3_completed':
+        return 0xFF42A5F5; // Blue
+      case 'step4_completed':
+        return 0xFF5C6BC0; // Indigo
+      case 'step5_completed':
+        return 0xFF8D6E63; // Brown
       case 'loan_approved':
         return 0xFF4CAF50; // Green
       case 'loan_rejected':

@@ -8,6 +8,39 @@ class NotificationService {
   final FirebaseService _firebase = FirebaseService();
   final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
+  /// Create a generic flow milestone notification (eKYC/step completion, etc.)
+  Future<void> createFlowMilestoneNotification({
+    required String userId,
+    String? applicationId,
+    required String type,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final notification = NotificationModel(
+        id: '',
+        userId: userId,
+        applicationId: applicationId,
+        type: type,
+        title: title,
+        body: body,
+        data: data,
+        isRead: false,
+        createdAt: DateTime.now(),
+      );
+
+      await FirebaseFirestore.instance
+          .collection('notifications')
+          .add(notification.toFirestore());
+
+      print('[NotificationService] Created milestone notification: $type');
+    } catch (e) {
+      print('[NotificationService] Error creating milestone notification: $e');
+      // Non-blocking by design: notification errors should not break flow.
+    }
+  }
+
   /// Create notification when loan application is processed
   Future<void> createLoanNotification({
     required String userId,

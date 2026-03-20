@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
@@ -154,14 +155,27 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     });
 
     try {
-      // Mark step 6 as completed
-      await viewModel.completeStep6();
+      // Mark step 6 as completed and persist disbursement details
+      await viewModel.completeStep6(
+        disbursementData: {
+          'bankCode': viewModel.selectedBankCode,
+          'bankName': viewModel.selectedBank?.bankName,
+          'branchCode': viewModel.selectedBranchCode,
+          'branchName': viewModel.selectedBranch?.branchName,
+          'accountNumber': _bankAccountController.text.trim(),
+          'accountHolder': _accountHolderController.text.trim(),
+          'validated': _bankAccountValidated,
+          'submittedAt': DateTime.now().toIso8601String(),
+        },
+      );
 
       // Persist ID-derived fields locally so Step 2 can be pre-filled on future skips
       await viewModel.persistEkycPrefill();
 
       // Mark eKYC as permanently completed
-      await LocalStorageService.markEkycCompleted();
+      await LocalStorageService.markEkycCompleted(
+        userId: FirebaseAuth.instance.currentUser?.uid,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

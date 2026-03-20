@@ -1336,7 +1336,52 @@ class _Step3AdditionalInfoPageState extends State<Step3AdditionalInfoPage> {
       return;
     }
 
-    loanViewModel.completeStep3();
+    final step3Payload = <String, dynamic>{
+      'personalInfo': {
+        'fullName': _fullNameController.text.trim(),
+        'nationality': _nationalityController.text.trim(),
+        'gender': _selectedGender,
+        'cccd': _cccdController.text.trim(),
+        'oldIdNumber': _oldIdController.text.trim(),
+        'issuePlace': _issuePlaceController.text.trim(),
+        'issueDate': _idIssueDate?.toIso8601String(),
+        'expiryDate': _idExpiryDate?.toIso8601String(),
+        'educationLevel': _selectedEducationLevel,
+        'taxCode': _taxCodeController.text.trim(),
+        'maritalStatus': _selectedMaritalStatus,
+        'permanentAddress': _permanentAddressController.text.trim(),
+        'currentAddress': _currentAddressController.text.trim(),
+        'mobilePhone': _mobilePhoneController.text.trim(),
+        'email': _emailController.text.trim(),
+        'residencyStatus': _selectedResidencyStatus,
+        'dob': _dob?.toIso8601String(),
+      },
+      'employment': {
+        'jobType': _selectedJobType,
+        'monthlyIncome': double.tryParse(_monthlyIncomeController.text),
+        'companyName': _companyNameController.text.trim(),
+        'companyPhone': _companyPhoneController.text.trim(),
+        'companyAddress': _companyAddressController.text.trim(),
+        'contractType': _selectedContractType,
+        'occupationTitle': _occupationTitleController.text.trim(),
+      },
+      'references': [
+        {
+          'name': _reference1NameController.text.trim(),
+          'relationship': _selectedReference1Relationship,
+          'phone': _reference1PhoneController.text.trim(),
+        },
+        {
+          'name': _reference2NameController.text.trim(),
+          'relationship': _selectedReference2Relationship,
+          'phone': _reference2PhoneController.text.trim(),
+        },
+      ],
+      'documents': _additionalDocuments.map((doc) => doc.name).toList(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+
+    await loanViewModel.completeStep3(step3Data: step3Payload);
 
     Navigator.push(
       context,

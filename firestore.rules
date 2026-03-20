@@ -45,6 +45,12 @@ service cloud.firestore {
     // Loan offers collection
     match /loan_offers/{offerId} {
       allow read, write: if request.auth != null;
+
+      // Loan-offer subcollections (e.g., installments)
+      match /{document=**} {
+        allow read, write: if request.auth != null &&
+          get(/databases/$(database)/documents/loan_offers/$(offerId)).data.userId == request.auth.uid;
+      }
     }
     
     // Application history collection

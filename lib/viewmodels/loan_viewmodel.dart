@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_loan_service.dart';
@@ -8,6 +9,8 @@ import '../services/vnpt_ekyc_service.dart';
 import '../services/bank_service.dart';
 import '../services/installment_service.dart';
 import '../services/push_notification_service.dart';
+import '../services/notification_service.dart';
+import '../services/firebase_user_service.dart';
 import '../models/bank_model.dart';
 import '../models/bank_account_validation_model.dart';
 
@@ -27,6 +30,9 @@ class LoanViewModel extends ChangeNotifier {
   final InstallmentService _installmentService = InstallmentService();
   final PushNotificationService _pushNotificationService =
       PushNotificationService();
+  final NotificationService _notificationService = NotificationService();
+  final FirebaseUserService _userService = FirebaseUserService();
+  StreamSubscription<dynamic>? _authStateSubscription;
 
   // Step progress
   bool _step1Completed = false;
@@ -157,10 +163,151 @@ class LoanViewModel extends ChangeNotifier {
   // Load saved draft on init
   LoanViewModel() {
     _loadDraft();
+    Future.microtask(_restoreFlowFromFirestore);
+    _authStateSubscription = _firebase.auth.authStateChanges().listen((user) {
+      if (user != null) {
+        _restoreFlowFromFirestore();
+      }
+    });
+  }
+
+  String? get _currentApplicationId {
+    return _currentOffer?['applicationId'] as String? ?? _pendingApplicationId;
+  }
+
+  String? get _currentOfferId {
+    return _currentOffer?['offerId'] as String? ?? _currentOffer?['id'] as String?;
+  }
+
+  double _asDouble(dynamic value, [double fallback = 0.0]) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  int _asInt(dynamic value, [int fallback = 0]) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  Future<void> _restoreFlowFromFirestore() async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) return;
+
+    try {
+      final profile = await _userService.getUserProfile(userId);
+      if (profile != null) {
+        final profileEkycDone = _isEkycCompletedInProfile(profile);
+        if (profileEkycDone) {
+          _step1Completed = true;
+          await LocalStorageService.markEkycCompleted(userId: userId);
+        } else {
+          await LocalStorageService.clearEkycCompletion(userId: userId);
+        }
+
+        final prefill = <String, dynamic>{};
+        final profileName = (profile['fullName'] as String?)?.trim();
+        final profilePhone = (profile['phoneNumber'] as String?)?.trim();
+        final profileNationalId = (profile['nationalId'] as String?)?.trim();
+        final profileAddress = (profile['address'] as String?)?.trim();
+
+        if (profileName != null && profileName.isNotEmpty) {
+          prefill['fullName'] = profileName;
+          fullName = profileName;
+        }
+        if (profilePhone != null && profilePhone.isNotEmpty) {
+          prefill['phoneNumber'] = profilePhone;
+          phoneNumber = profilePhone;
+        }
+        if (profileNationalId != null && profileNationalId.isNotEmpty) {
+          prefill['idNumber'] = profileNationalId;
+          idNumber = profileNationalId;
+        }
+        if (profileAddress != null && profileAddress.isNotEmpty) {
+          prefill['address'] = profileAddress;
+          address = profileAddress;
+        }
+
+        final dobValue = profile['dateOfBirth'];
+        if (dobValue is Timestamp) {
+          dob = dobValue.toDate();
+          prefill['dob'] = dob!.toIso8601String();
+        }
+
+        if (prefill.isNotEmpty) {
+          await LocalStorageService.saveEkycPrefill(prefill, userId: userId);
+        }
+      }
+
+      final latestApplication = await _loanService.getLatestApplication(userId);
+      if (latestApplication == null) return;
+
+      final applicationId = latestApplication['id'] as String?;
+      if (applicationId != null) {
+        _pendingApplicationId = applicationId;
+      }
+
+      _step2Completed = latestApplication['step2Completed'] as bool? ?? false;
+      _step3Completed = latestApplication['step3Completed'] as bool? ?? false;
+      _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
+      _step6Completed = latestApplication['step6Completed'] as bool? ?? false;
+
+      final status = (latestApplication['status'] as String? ?? 'none').toLowerCase();
+      switch (status) {
+        case 'processing':
+          _applicationStatus = ApplicationStatus.processing;
+          break;
+        case 'approved':
+        case 'completed':
+          _applicationStatus = ApplicationStatus.scored;
+          break;
+        case 'rejected':
+          _applicationStatus = ApplicationStatus.rejected;
+          break;
+        default:
+          _applicationStatus = ApplicationStatus.none;
+      }
+
+      Map<String, dynamic>? offer;
+      final offerId = latestApplication['offerId'] as String?;
+      if (offerId != null && offerId.isNotEmpty) {
+        offer = await _loanService.getLoanOfferById(offerId);
+      } else if (applicationId != null) {
+        offer = await _loanService.getLoanOfferByApplicationId(applicationId);
+      }
+
+      if (offer != null) {
+        _currentOffer = {
+          ...offer,
+          'offerId': offer['id'],
+          'applicationId': applicationId,
+        };
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('[LoanViewModel] Failed to restore flow from Firestore: $e');
+    }
+  }
+
+  bool _isEkycCompletedInProfile(Map<String, dynamic> profile) {
+    if (profile['ekycCompleted'] == true) return true;
+
+    final ekycStatus = (profile['ekycStatus'] as String?)?.toLowerCase().trim();
+    if (ekycStatus == 'verified' ||
+        ekycStatus == 'completed' ||
+        ekycStatus == 'approved' ||
+        ekycStatus == 'success') {
+      return true;
+    }
+
+    return profile['ekycVerifiedAt'] != null;
   }
 
   void _loadDraft() {
-    final draft = LocalStorageService.loadDraft();
+    final draft = LocalStorageService.loadDraft(userId: _firebase.currentUserId);
     if (draft != null) {
       fullName = draft['fullName'] ?? fullName;
       if (draft['dob'] != null) {
@@ -200,11 +347,12 @@ class LoanViewModel extends ChangeNotifier {
       'yearsCreditHistory': yearsCreditHistory,
       'hasPreviousDefaults': hasPreviousDefaults,
       'currentlyDefaulting': currentlyDefaulting,
-    });
+    }, userId: _firebase.currentUserId);
   }
 
   // Actions
   void completeStep1() async {
+    final wasCompleted = _step1Completed;
     _step1Completed = true;
     notifyListeners();
 
@@ -213,9 +361,18 @@ class LoanViewModel extends ChangeNotifier {
 
     // Persist local eKYC fields for future Step 1 skip -> Step 2 prefill.
     await persistEkycPrefill();
+
+    if (!wasCompleted) {
+      await _notifyFlowMilestone(
+        type: 'ekyc_completed',
+        title: 'eKYC Completed',
+        body: 'Your identity verification is complete.',
+      );
+    }
   }
 
   Future<void> persistEkycPrefill() async {
+    final userId = _firebase.currentUserId;
     final payload = <String, dynamic>{};
 
     if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
@@ -235,12 +392,14 @@ class LoanViewModel extends ChangeNotifier {
     }
 
     if (payload.isNotEmpty) {
-      await LocalStorageService.saveEkycPrefill(payload);
+      await LocalStorageService.saveEkycPrefill(payload, userId: userId);
     }
   }
 
   void applySavedEkycPrefill({bool notify = true}) {
-    final data = LocalStorageService.loadEkycPrefill();
+    final data = LocalStorageService.loadEkycPrefill(
+      userId: _firebase.currentUserId,
+    );
     if (data == null) return;
 
     bool changed = false;
@@ -296,6 +455,12 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Mark step 1 UI as completed without persisting eKYC verification.
+  void markStep1CompletedLocalOnly() {
+    _step1Completed = true;
+    notifyListeners();
+  }
+
   // Save eKYC extracted data to user profile
   Future<void> _saveEkycDataToProfile() async {
     final userId = _firebase.currentUserId;
@@ -330,6 +495,8 @@ class LoanViewModel extends ChangeNotifier {
 
       // Only update if we have data to save
       if (updateData.isNotEmpty) {
+        updateData['ekycCompleted'] = true;
+        updateData['ekycVerifiedAt'] = FieldValue.serverTimestamp();
         updateData['updatedAt'] = FieldValue.serverTimestamp();
 
         print(
@@ -340,6 +507,8 @@ class LoanViewModel extends ChangeNotifier {
         await _firebase.usersCollection
             .doc(userId)
             .set(updateData, SetOptions(merge: true));
+
+        await LocalStorageService.markEkycCompleted(userId: userId);
 
         print('[LoanViewModel] eKYC data saved successfully');
       } else {
@@ -356,38 +525,107 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void completeStep3() {
+  Future<void> completeStep3({Map<String, dynamic>? step3Data}) async {
+    final wasCompleted = _step3Completed;
     _step3Completed = true;
     notifyListeners();
+
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    if (userId == null || applicationId == null) return;
+
+    try {
+      await _loanService.saveStep3AdditionalInfo(
+        applicationId: applicationId,
+        userId: userId,
+        step3Data: step3Data ?? const <String, dynamic>{},
+      );
+
+      if (!wasCompleted) {
+        await _notifyFlowMilestone(
+          type: 'step3_completed',
+          title: 'Step 3 Completed',
+          body: 'Additional information has been saved successfully.',
+          applicationId: applicationId,
+        );
+      }
+    } catch (e) {
+      print('[LoanViewModel] Failed to save Step 3 data: $e');
+    }
   }
 
-  void completeStep4() {
+  Future<void> completeStep4() async {
+    final wasCompleted = _step4Completed;
     _step4Completed = true;
     notifyListeners();
+
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    final offerId = _currentOfferId;
+    if (userId == null || applicationId == null || offerId == null) return;
+
+    try {
+      await _loanService.saveStep4OfferSelection(
+        applicationId: applicationId,
+        offerId: offerId,
+        userId: userId,
+        selection: {
+          'loanPurpose': loanPurpose,
+          'loanAmountVnd': _asDouble(_currentOffer?['loanAmountVnd']),
+          'loanTermMonths': _asInt(_currentOffer?['loanTermMonths'], 12),
+          'monthlyPaymentVnd': _asDouble(_currentOffer?['monthlyPaymentVnd']),
+          'totalPaymentVnd': _asDouble(_currentOffer?['totalPaymentVnd']),
+          'totalInterestVnd': _asDouble(_currentOffer?['totalInterestVnd']),
+        },
+      );
+
+      if (!wasCompleted) {
+        await _notifyFlowMilestone(
+          type: 'step4_completed',
+          title: 'Step 4 Completed',
+          body: 'Loan offer details are confirmed. Please review your contract.',
+          applicationId: applicationId,
+        );
+      }
+    } catch (e) {
+      print('[LoanViewModel] Failed to save Step 4 data: $e');
+    }
   }
 
-  Future<void> completeStep6() async {
+  Future<void> completeStep6({Map<String, dynamic>? disbursementData}) async {
     _step6Completed = true;
     notifyListeners();
+
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    final offerId = _currentOfferId;
+
+    if (userId != null && applicationId != null && offerId != null) {
+      try {
+        await _loanService.saveStep6DisbursementInfo(
+          applicationId: applicationId,
+          offerId: offerId,
+          userId: userId,
+          disbursementData: disbursementData ?? const <String, dynamic>{},
+        );
+      } catch (e) {
+        print('[LoanViewModel] Failed to save Step 6 data: $e');
+      }
+    }
     
     // Generate installments if loan was accepted
     if (_currentOffer != null && _currentOffer!['accepted'] == true) {
       try {
-        final userId = _firebase.currentUserId;
-        if (userId != null) {
+        if (userId != null && offerId != null) {
           // Get the offer ID from lastCompletedOffer or construct from available data
-          final loanAmountVnd = _currentOffer!['loanAmountVnd'] as double? ?? 0.0;
-          final interestRate = _currentOffer!['interestRate'] as double? ?? 0.0;
-          final loanTermMonths = _currentOffer!['loanTermMonths'] as int? ?? 12;
-          final monthlyPaymentVnd = _currentOffer!['monthlyPaymentVnd'] as double? ?? 0.0;
-          final totalInterestVnd = _currentOffer!['totalInterestVnd'] as double? ?? 0.0;
+          final loanAmountVnd = _asDouble(_currentOffer!['loanAmountVnd']);
+          final interestRate = _asDouble(_currentOffer!['interestRate']);
+          final loanTermMonths = _asInt(_currentOffer!['loanTermMonths'], 12);
+          final monthlyPaymentVnd = _asDouble(_currentOffer!['monthlyPaymentVnd']);
+          final totalInterestVnd = _asDouble(_currentOffer!['totalInterestVnd']);
           
           // Calculate first due date (30 days from today)
           final firstDueDate = DateTime.now().add(const Duration(days: 30));
-          
-          // Note: offerId would normally come from Firestore when offer is created
-          // For now, we'll use a timestamp-based ID as fallback
-          final offerId = _currentOffer!['id'] as String? ?? 'offer_${DateTime.now().millisecondsSinceEpoch}';
           
           await _installmentService.generateInstallmentsForLoan(
             userId: userId,
@@ -412,8 +650,83 @@ class LoanViewModel extends ChangeNotifier {
   }
 
   // Backward compatibility for older call sites.
-  Future<void> completeStep5() async {
-    await completeStep6();
+  Future<void> completeStep5({
+    required String signature,
+    required bool agreedToTerms,
+    required bool agreedToDeduction,
+    required bool agreedToConsent,
+  }) async {
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    final offerId = _currentOfferId;
+    if (userId == null || applicationId == null || offerId == null) return;
+
+    final wasAccepted = _currentOffer?['accepted'] == true;
+
+    try {
+      await _loanService.saveStep5ContractSignature(
+        applicationId: applicationId,
+        offerId: offerId,
+        userId: userId,
+        contractData: {
+          'signature': signature.trim(),
+          'agreedToTerms': agreedToTerms,
+          'agreedToDeduction': agreedToDeduction,
+          'agreedToConsent': agreedToConsent,
+          'signedAt': FieldValue.serverTimestamp(),
+        },
+      );
+
+      if (_currentOffer != null) {
+        _currentOffer!['accepted'] = true;
+        _currentOffer!['acceptedAt'] = DateTime.now().toIso8601String();
+      }
+
+      if (!wasAccepted) {
+        await _notifyFlowMilestone(
+          type: 'step5_completed',
+          title: 'Step 5 Completed',
+          body: 'Contract signed successfully. Continue to disbursement.',
+          applicationId: applicationId,
+        );
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('[LoanViewModel] Failed to save Step 5 data: $e');
+    }
+  }
+
+  Future<void> _notifyFlowMilestone({
+    required String type,
+    required String title,
+    required String body,
+    String? applicationId,
+  }) async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) return;
+
+    try {
+      await _notificationService.createFlowMilestoneNotification(
+        userId: userId,
+        applicationId: applicationId,
+        type: type,
+        title: title,
+        body: body,
+        data: {
+          'flowType': 'loan_application',
+          'milestone': type,
+        },
+      );
+      await _pushNotificationService.showFlowMilestoneNotification(
+        type: type,
+        title: title,
+        body: body,
+        data: {'applicationId': applicationId ?? ''},
+      );
+    } catch (e) {
+      print('[LoanViewModel] Failed to create flow milestone notification: $e');
+    }
   }
 
   // Update the current offer with user's chosen loan parameters from Step 4
@@ -555,6 +868,7 @@ class LoanViewModel extends ChangeNotifier {
       final result = await _loanService.submitLoanApplication(
         userId: userId,
         loanRequest: request,
+        pendingApplicationId: applicationId,
       );
 
       print('[LoanViewModel] Received response from Firebase service');
@@ -567,6 +881,7 @@ class LoanViewModel extends ChangeNotifier {
 
       // Build currentOffer map from the two-step response
       _currentOffer = {
+        'id': result['offerId'],
         'applicationId': result['applicationId'],
         'offerId': result['offerId'],
         'approved': limitResponse.approved,
@@ -597,7 +912,7 @@ class LoanViewModel extends ChangeNotifier {
 
       // Clear draft after successful submission
       print('[LoanViewModel] Clearing draft...');
-      await LocalStorageService.clearDraft();
+      await LocalStorageService.clearDraft(userId: _firebase.currentUserId);
 
       // Show local push when scoring completes and result returns.
       await _pushNotificationService.showScoringResultNotification(
@@ -608,6 +923,8 @@ class LoanViewModel extends ChangeNotifier {
 
       _step2Completed = true;
       _step3Completed = true; // Processing done
+      _step4Completed = false;
+      _step6Completed = false;
       notifyListeners();
     } catch (e) {
       print('[LoanViewModel] ERROR during submission: $e');
@@ -670,7 +987,7 @@ class LoanViewModel extends ChangeNotifier {
             ? 'Active'
             : 'Rejected',
         'timestamp': DateTime.now().toIso8601String(),
-      });
+      }, userId: _firebase.currentUserId);
     }
 
     resetForNewApplication();
@@ -742,7 +1059,7 @@ class LoanViewModel extends ChangeNotifier {
     hasPreviousDefaults = false;
     currentlyDefaulting = false;
 
-    await LocalStorageService.clearDraft();
+    await LocalStorageService.clearDraft(userId: _firebase.currentUserId);
     notifyListeners();
   }
 
@@ -1092,6 +1409,7 @@ class LoanViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _authStateSubscription?.cancel();
     _vnptService.dispose();
     super.dispose();
   }

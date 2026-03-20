@@ -46,9 +46,7 @@ class InstallmentService {
         );
 
         final docRef = _firebase.firestore
-            .collection('users')
-            .doc(userId)
-            .collection('loan_offers')
+          .collection('loan_offers')
             .doc(loanOfferId)
             .collection('installments')
             .doc();
@@ -77,8 +75,6 @@ class InstallmentService {
   }) async {
     try {
       final snapshot = await _firebase.firestore
-          .collection('users')
-          .doc(userId)
           .collection('loan_offers')
           .doc(loanOfferId)
           .collection('installments')
@@ -100,9 +96,7 @@ class InstallmentService {
     required String loanOfferId,
   }) {
     return _firebase.firestore
-        .collection('users')
-        .doc(userId)
-        .collection('loan_offers')
+      .collection('loan_offers')
         .doc(loanOfferId)
         .collection('installments')
         .orderBy('installmentNumber')
@@ -120,8 +114,6 @@ class InstallmentService {
   }) async {
     try {
       await _firebase.firestore
-          .collection('users')
-          .doc(userId)
           .collection('loan_offers')
           .doc(loanOfferId)
           .collection('installments')
@@ -158,8 +150,6 @@ class InstallmentService {
       }
 
       await _firebase.firestore
-          .collection('users')
-          .doc(userId)
           .collection('loan_offers')
           .doc(loanOfferId)
           .collection('installments')
@@ -177,9 +167,8 @@ class InstallmentService {
   Future<Map<String, dynamic>> getPaymentSummary(String userId) async {
     try {
       final offers = await _firebase.firestore
-          .collection('users')
-          .doc(userId)
           .collection('loan_offers')
+          .where('userId', isEqualTo: userId)
           .where('accepted', isEqualTo: true)
           .get();
 

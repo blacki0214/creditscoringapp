@@ -199,6 +199,37 @@ class PushNotificationService {
     }
   }
 
+  Future<void> showFlowMilestoneNotification({
+    required String type,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) async {
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _defaultChannel.id,
+          _defaultChannel.name,
+          channelDescription: _defaultChannel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      payload: jsonEncode({
+        'type': type,
+        ...?data,
+      }),
+    );
+
+    if (kDebugMode) {
+      print('[Push] Flow milestone notification shown ($type)');
+    }
+  }
+
   Future<void> _syncFcmTokenToCurrentUser() async {
     final token = await _messaging.getToken();
     if (token == null) return;

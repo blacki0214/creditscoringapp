@@ -1,10 +1,18 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:creditscoring/services/api_service.dart'; // Adjust path if needed
 
 void main() {
+  setUpAll(() {
+    dotenv.testLoad(fileInput: '''
+GCP_API_URL=https://credit-scoring-h7mv.onrender.com/api
+VNPT_ACCESS_TOKEN=test-token
+''');
+  });
+
   group('SimpleLoanRequest', () {
     test('toJson returns correct map', () {
       final request = SimpleLoanRequest(
