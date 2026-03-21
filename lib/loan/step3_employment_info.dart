@@ -1,0 +1,498 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../utils/app_localization.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import 'step3_references_info.dart';
+
+class Step3EmploymentInfoPage extends StatefulWidget {
+  final Map<String, dynamic> personalData;
+
+  const Step3EmploymentInfoPage({super.key, required this.personalData});
+
+  @override
+  State<Step3EmploymentInfoPage> createState() =>
+      _Step3EmploymentInfoPageState();
+}
+
+class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _monthlyIncomeController = TextEditingController();
+  final _companyNameController = TextEditingController();
+  final _companyPhoneController = TextEditingController();
+  final _companyAddressController = TextEditingController();
+  final _occupationTitleController = TextEditingController();
+
+  String? _selectedJobType;
+  String? _selectedContractType;
+
+  bool _lockMonthlyIncome = false;
+  bool _lockJobType = false;
+
+  // Validation error tracking
+  final Map<String, String?> _fieldErrors = {};
+
+  final NumberFormat _vndFormatter = NumberFormat('#,###', 'vi_VN');
+
+  final List<String> _jobTypeOptions = [
+    'EMPLOYED',
+    'SELF_EMPLOYED',
+    'UNEMPLOYED',
+    'STUDENT',
+    'RETIRED',
+    'OTHER',
+  ];
+
+  final List<String> _contractTypeOptions = [
+    'INDEFINITE',
+    'FIXED_TERM',
+    'SEASONAL',
+    'PROBATION',
+    'OTHER',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromViewModel();
+  }
+
+  void _prefillFromViewModel() {
+    final vm = context.read<LoanViewModel>();
+
+    if (vm.step2Completed) {
+      if (vm.employmentStatus.trim().isNotEmpty) {
+        _selectedJobType = vm.employmentStatus;
+        _lockJobType = true;
+      }
+
+      final monthlyIncome = vm.monthlyIncome;
+      if (monthlyIncome > 0) {
+        _monthlyIncomeController.text = _formatCurrencyNumber(monthlyIncome);
+        _lockMonthlyIncome = true;
+      }
+    }
+  }
+
+  String _formatCurrencyNumber(num value) {
+    return _vndFormatter.format(value.round());
+  }
+
+  double? _parseCurrencyNumber(String raw) {
+    final cleaned = raw.replaceAll('.', '').replaceAll(',', '').trim();
+    return double.tryParse(cleaned);
+  }
+
+  @override
+  void dispose() {
+    _monthlyIncomeController.dispose();
+    _companyNameController.dispose();
+    _companyPhoneController.dispose();
+    _companyAddressController.dispose();
+    _occupationTitleController.dispose();
+    super.dispose();
+  }
+
+  String? _validateOptionalPhone(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+
+    final normalized = raw.replaceAll(RegExp(r'[^0-9+]'), '');
+    final isVietnamLocal = RegExp(r'^0\d{9}$').hasMatch(normalized);
+    final isVietnamIntl = RegExp(r'^\+84\d{9}$').hasMatch(normalized);
+
+    if (!isVietnamLocal && !isVietnamIntl) {
+      return context.t(
+        'Phone must be 10 digits (0xxxxxxxxx) or +84xxxxxxxxx',
+        'Số điện thoại phải có dạng 0xxxxxxxxx hoặc +84xxxxxxxxx',
+      );
+    }
+    return null;
+  }
+
+  String? _validateOptionalCurrency(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+
+    final parsed = _parseCurrencyNumber(raw);
+    if (parsed == null || parsed <= 0) {
+      return context.t(
+        'Monthly income must be greater than 0',
+        'Thu nhập hàng tháng phải lớn hơn 0',
+      );
+    }
+    return null;
+  }
+
+  String _displayJobType(String value) {
+    switch (value) {
+      case 'EMPLOYED':
+        return context.t('Employed', 'Nhân viên');
+      case 'SELF_EMPLOYED':
+        return context.t('Self-employed', 'Tự kinh doanh');
+      case 'UNEMPLOYED':
+        return context.t('Unemployed', 'Thất nghiệp');
+      case 'STUDENT':
+        return context.t('Student', 'Sinh viên');
+      case 'RETIRED':
+        return context.t('Retired', 'Nghỉ hưu');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
+  String _displayContractType(String value) {
+    switch (value) {
+      case 'INDEFINITE':
+        return context.t('Indefinite-term', 'Không xác định thời hạn');
+      case 'FIXED_TERM':
+        return context.t('Fixed-term', 'Xác định thời hạn');
+      case 'SEASONAL':
+        return context.t('Seasonal', 'Thời vụ');
+      case 'PROBATION':
+        return context.t('Probation', 'Thử việc');
+      case 'OTHER':
+        return context.t('Other', 'Khác');
+      default:
+        return value;
+    }
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String fieldKey,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int maxLines = 1,
+    int? maxLength,
+    bool readOnly = false,
+    String? Function(String?)? validator,
+  }) {
+    void validateNow([String? value]) {
+      final error = validator?.call(value ?? controller.text);
+      if (_fieldErrors[fieldKey] != error) {
+        setState(() {
+          _fieldErrors[fieldKey] = error;
+        });
+      }
+    }
+
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) {
+          validateNow();
+        }
+      },
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        readOnly: readOnly,
+        validator: (value) {
+          final error = validator?.call(value);
+          setState(() {
+            _fieldErrors[fieldKey] = error;
+          });
+          return error;
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          suffixIcon: readOnly
+              ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
+              : null,
+          filled: true,
+          fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : Colors.grey.shade300,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : const Color(0xFF4C40F7),
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+          ),
+          errorText: _fieldErrors[fieldKey],
+          counterText: '',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String fieldKey,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required String Function(String) display,
+    required ValueChanged<String?>? onChanged,
+    bool locked = false,
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+        suffixIcon: locked
+            ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
+            : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+        ),
+      ),
+      items: items.map((item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(display(item)),
+        );
+      }).toList(),
+      onChanged: locked ? null : onChanged,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          context.t(
+            'Step 3.2: Additional Information',
+            'Bước 3.2: Thông tin bổ sung',
+          ),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.t(
+                          'Employment & Income',
+                          'Công việc & Thu nhập',
+                        ),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1F3F),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.t(
+                          'Provide your employment details and income information',
+                          'Cung cấp thông tin công việc và thu nhập của bạn',
+                        ),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildDropdownField(
+                        label: context.t('Job Type', 'Loại công việc'),
+                        fieldKey: 'jobType',
+                        icon: Icons.work,
+                        value: _selectedJobType,
+                        items: _jobTypeOptions,
+                        display: _displayJobType,
+                        onChanged: (value) =>
+                            setState(() => _selectedJobType = value),
+                        locked: _lockJobType,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _monthlyIncomeController,
+                        label: context.t(
+                          'Monthly Income',
+                          'Thu nhập hàng tháng',
+                        ),
+                        fieldKey: 'monthlyIncome',
+                        icon: Icons.money,
+                        keyboardType: TextInputType.number,
+                        readOnly: _lockMonthlyIncome,
+                        validator: _validateOptionalCurrency,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _companyNameController,
+                        label: context.t('Company Name', 'Tên công ty'),
+                        fieldKey: 'companyName',
+                        icon: Icons.business,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _companyPhoneController,
+                        label: context.t(
+                          'Company Phone',
+                          'Số điện thoại công ty',
+                        ),
+                        fieldKey: 'companyPhone',
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        validator: _validateOptionalPhone,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _companyAddressController,
+                        label: context.t('Company Address', 'Địa chỉ công ty'),
+                        fieldKey: 'companyAddress',
+                        icon: Icons.location_on,
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdownField(
+                        label: context.t('Contract Type', 'Loại hợp đồng'),
+                        fieldKey: 'contractType',
+                        icon: Icons.description,
+                        value: _selectedContractType,
+                        items: _contractTypeOptions,
+                        display: _displayContractType,
+                        onChanged: (value) =>
+                            setState(() => _selectedContractType = value),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _occupationTitleController,
+                        label: context.t(
+                          'Occupation Title',
+                          'Chức danh công việc',
+                        ),
+                        fieldKey: 'occupationTitle',
+                        icon: Icons.badge,
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade300,
+                        foregroundColor: const Color(0xFF1A1F3F),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        context.t('Back', 'Quay lại'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (!_formKey.currentState!.validate()) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                context.t(
+                                  'Please fix all errors',
+                                  'Vui lòng sửa tất cả lỗi',
+                                ),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const Step3ReferencesInfoPage(
+                              personalData: {},
+                              employmentData: {},
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4C40F7),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        context.t('Next: References', 'Tiếp: Người tham chiếu'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

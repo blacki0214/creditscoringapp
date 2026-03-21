@@ -8,7 +8,7 @@ import '../utils/app_localization.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step1_id_capture.dart';
 import 'step2_personal_info.dart';
-import 'step3_additional_info.dart';
+import 'step3_personal_info.dart';
 import 'step4_offer_calculator.dart';
 import 'step5_contractreview.dart';
 import 'step6_disbursement.dart';
@@ -56,14 +56,11 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
   /// Routes to the appropriate step based on the application progress
   void _routeToCurrentStep(LoanViewModel viewModel) {
     final currentStep = viewModel.getCurrentStep;
-    
+
     // Determine which page to navigate to based on current step
     final Widget targetPage = _getPageForStep(currentStep, viewModel);
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => targetPage),
-    );
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => targetPage));
   }
 
   /// Returns the appropriate page widget for a given step number
@@ -74,7 +71,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
       case 2:
         return const Step2PersonalInfoPage();
       case 3:
-        return const Step3AdditionalInfoPage();
+        return const Step3PersonalInfoPage();
       case 4:
         // For step 4, if offer doesn't exist yet, go to processing
         // Otherwise go to offer calculator
@@ -230,7 +227,10 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                               if (AppEnvironment.shouldSkipEkyc(
                                 hasCompletedEkyc:
                                     LocalStorageService.hasCompletedEkyc(
-                                      userId: FirebaseAuth.instance.currentUser?.uid,
+                                      userId: FirebaseAuth
+                                          .instance
+                                          .currentUser
+                                          ?.uid,
                                     ),
                                 isTestAccountMode:
                                     LocalStorageService.isTestAccountMode(),
@@ -239,7 +239,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                                 if (!viewModel.step1Completed) {
                                   viewModel.markStep1CompletedLocalOnly();
                                 }
-                                
+
                                 // Route to the appropriate step based on progress
                                 // If there's an active application, use getCurrentStep
                                 if (viewModel.hasActiveApplication) {

@@ -14,17 +14,16 @@ import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
-import '../loan/step3_additional_info.dart';
+import '../loan/step3_personal_info.dart';
 import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'application_contract_status_page.dart';
 import '../utils/app_localization.dart';
+import 'offer_page.dart';
+import 'installment_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    this.onOpenSettings,
-  });
+  const HomePage({super.key, this.onOpenSettings});
 
   final VoidCallback? onOpenSettings;
 
@@ -44,9 +43,7 @@ class _HomePageState extends State<HomePage> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const SettingsPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const SettingsPage()),
     );
   }
 
@@ -165,7 +162,10 @@ class _HomePageState extends State<HomePage> {
       barrierColor: Colors.black.withOpacity(0.2),
       builder: (context) {
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 90),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 90,
+          ),
           backgroundColor: Colors.transparent,
           child: Container(
             decoration: BoxDecoration(
@@ -218,16 +218,24 @@ class _HomePageState extends State<HomePage> {
                   Divider(height: 1, color: Colors.grey.shade200),
                   Expanded(
                     child: StreamBuilder<List<NotificationModel>>(
-                      stream: NotificationService().getNotificationsStream(userId),
+                      stream: NotificationService().getNotificationsStream(
+                        userId,
+                      ),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
 
                         if (snapshot.hasError) {
                           return Center(
                             child: Text(
-                              context.t('Error loading notifications', 'Lỗi tải thông báo'),
+                              context.t(
+                                'Error loading notifications',
+                                'Lỗi tải thông báo',
+                              ),
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 14,
@@ -250,7 +258,10 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  context.t('No notifications yet', 'Chưa có thông báo'),
+                                  context.t(
+                                    'No notifications yet',
+                                    'Chưa có thông báo',
+                                  ),
                                   style: TextStyle(
                                     color: Colors.grey.shade600,
                                     fontSize: 14,
@@ -264,13 +275,15 @@ class _HomePageState extends State<HomePage> {
                         return ListView.separated(
                           padding: const EdgeInsets.all(10),
                           itemCount: notifications.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 9),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 9),
                           itemBuilder: (context, index) {
                             final notification = notifications[index];
-                            final localizedTitle = _getLocalizedNotificationTitle(
-                              context,
-                              notification,
-                            );
+                            final localizedTitle =
+                                _getLocalizedNotificationTitle(
+                                  context,
+                                  notification,
+                                );
                             final localizedBody = _getLocalizedNotificationBody(
                               context,
                               notification,
@@ -305,8 +318,9 @@ class _HomePageState extends State<HomePage> {
                                       ? null
                                       : [
                                           BoxShadow(
-                                            color: const Color(0xFF4D4AF9)
-                                                .withOpacity(0.06),
+                                            color: const Color(
+                                              0xFF4D4AF9,
+                                            ).withOpacity(0.06),
                                             blurRadius: 10,
                                             offset: const Offset(0, 2),
                                           ),
@@ -318,8 +332,9 @@ class _HomePageState extends State<HomePage> {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Color(notification.colorValue)
-                                            .withOpacity(0.12),
+                                        color: Color(
+                                          notification.colorValue,
+                                        ).withOpacity(0.12),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Icon(
@@ -343,20 +358,26 @@ class _HomePageState extends State<HomePage> {
                                                   margin: const EdgeInsets.only(
                                                     right: 6,
                                                   ),
-                                                  decoration: const BoxDecoration(
-                                                    color: Color(0xFF4D4AF9),
-                                                    shape: BoxShape.circle,
-                                                  ),
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        color: Color(
+                                                          0xFF4D4AF9,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
                                                 ),
                                               Expanded(
                                                 child: Text(
                                                   localizedTitle,
                                                   style: TextStyle(
-                                                    fontWeight: notification.isRead
+                                                    fontWeight:
+                                                        notification.isRead
                                                         ? FontWeight.w500
                                                         : FontWeight.w700,
                                                     fontSize: 15,
-                                                    color: const Color(0xFF1A1F3F),
+                                                    color: const Color(
+                                                      0xFF1A1F3F,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -395,7 +416,9 @@ class _HomePageState extends State<HomePage> {
                                         tooltip: context.t('Delete', 'Xóa'),
                                         onPressed: () async {
                                           await NotificationService()
-                                              .deleteNotification(notification.id);
+                                              .deleteNotification(
+                                                notification.id,
+                                              );
                                         },
                                         icon: Icon(
                                           Icons.close,
@@ -456,7 +479,10 @@ class _HomePageState extends State<HomePage> {
                               padding: const EdgeInsets.symmetric(vertical: 11),
                             ),
                             child: Text(
-                              context.t('Delete all read', 'Xóa thông báo đã đọc'),
+                              context.t(
+                                'Delete all read',
+                                'Xóa thông báo đã đọc',
+                              ),
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -761,7 +787,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
-                        // Period selector (always visible 2x2 grid)
+                        // Period selector (Offer and Installment in single row)
                         LayoutBuilder(
                           builder: (context, constraints) {
                             const spacing = 10.0;
@@ -774,34 +800,35 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 SizedBox(
                                   width: itemWidth,
-                                  child: _buildPeriodChip(
+                                  child: _buildNavChip(
                                     context,
-                                    viewModel,
-                                    'Overall',
+                                    'Offer',
+                                    Icons.hourglass_top_rounded,
+                                    () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const OfferPage(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                                 SizedBox(
                                   width: itemWidth,
-                                  child: _buildPeriodChip(
+                                  child: _buildNavChip(
                                     context,
-                                    viewModel,
-                                    'Application Center',
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: itemWidth,
-                                  child: _buildPeriodChip(
-                                    context,
-                                    viewModel,
-                                    'Application History',
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: itemWidth,
-                                  child: _buildPeriodChip(
-                                    context,
-                                    viewModel,
                                     'Installment',
+                                    Icons.calendar_month_rounded,
+                                    () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const InstallmentPage(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ],
@@ -809,8 +836,8 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                         const SizedBox(height: 32),
-                        // Content based on selected period
-                        if (viewModel.selectedPeriod == 'Overall') ...[
+                        // Content: Always show Overall/Welcome page
+                        if (true) ...[
                           // Credit score gauge
                           if (viewModel.creditScore != null) ...[
                             Center(
@@ -915,7 +942,10 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Text(
-                                      context.t('starting score', 'điểm ban đầu'),
+                                      context.t(
+                                        'starting score',
+                                        'điểm ban đầu',
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -989,9 +1019,12 @@ class _HomePageState extends State<HomePage> {
                                     }
                                   } else {
                                     // Navigate to loan application (but prevent if already active)
-                                    final loanViewModel = context.read<LoanViewModel>();
+                                    final loanViewModel = context
+                                        .read<LoanViewModel>();
                                     if (loanViewModel.hasActiveApplication) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text(
                                             context.t(
@@ -1038,7 +1071,7 @@ class _HomePageState extends State<HomePage> {
                                       )
                                     : context.t(
                                         'Apply for loan now',
-                                              'Chưa có dữ liệu',
+                                        'Chưa có dữ liệu',
                                       ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -1052,16 +1085,6 @@ class _HomePageState extends State<HomePage> {
                             context,
                             creditScore: viewModel.creditScore,
                           ),
-                        ] else if (viewModel.selectedPeriod ==
-                          'Application Center') ...[
-                          // Loan display section
-                          _buildLoanDisplay(context),
-                        ] else if (viewModel.selectedPeriod ==
-                            'Application History') ...[
-                          _buildLoanHistoryDisplay(context),
-                        ] else if (viewModel.selectedPeriod ==
-                            'Installment') ...[
-                          _buildInstallmentDisplay(context),
                         ],
                       ],
                     ),
@@ -1077,7 +1100,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: ' VND',
+    );
     final activeOffer = loanViewModel.currentOffer;
     final activeStatus = loanViewModel.applicationStatus;
     final showScoreStatus =
@@ -1233,7 +1259,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 12),
                         // Continue button to Step 3 (only show for active flow)
                         if (!loanViewModel.step3Completed ||
-                          !loanViewModel.step4Completed)
+                            !loanViewModel.step4Completed)
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -1242,7 +1268,7 @@ class _HomePageState extends State<HomePage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        const Step3AdditionalInfoPage(),
+                                        const Step3PersonalInfoPage(),
                                   ),
                                 );
                               },
@@ -1347,8 +1373,7 @@ class _HomePageState extends State<HomePage> {
         // Current Loan Offer Section (only show full details after Step 3 & 4 completion)
         if (activeOffer != null &&
             activeStatus == ApplicationStatus.scored &&
-          (loanViewModel.step3Completed &&
-            loanViewModel.step4Completed)) ...[
+            (loanViewModel.step3Completed && loanViewModel.step4Completed)) ...[
           Text(
             context.t('Current Offer', 'Đề nghị hiện tại'),
             style: TextStyle(
@@ -1491,7 +1516,10 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.money_off, size: 64, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  context.t('No Active Application', 'Không có hồ sơ đang xử lý'),
+                  context.t(
+                    'No Active Application',
+                    'Không có hồ sơ đang xử lý',
+                  ),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1500,7 +1528,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  context.t('Start a new loan application', 'Bắt đầu hồ sơ vay mới'),
+                  context.t(
+                    'Start a new loan application',
+                    'Bắt đầu hồ sơ vay mới',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
@@ -1540,7 +1571,10 @@ class _HomePageState extends State<HomePage> {
     final applicationHistory = LocalStorageService.getApplicationHistory(
       userId: userId,
     );
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: ' VND',
+    );
 
     if (applicationHistory.isEmpty) {
       return Center(
@@ -1572,9 +1606,14 @@ class _HomePageState extends State<HomePage> {
 
     // Calculate pagination
     final totalApplications = applicationHistory.length;
-    final totalPages = (totalApplications / viewModel.applicationsPerPage).ceil();
-    final startIndex = (viewModel.currentApplicationPage - 1) * viewModel.applicationsPerPage;
-    final endIndex = (startIndex + viewModel.applicationsPerPage).clamp(0, totalApplications);
+    final totalPages = (totalApplications / viewModel.applicationsPerPage)
+        .ceil();
+    final startIndex =
+        (viewModel.currentApplicationPage - 1) * viewModel.applicationsPerPage;
+    final endIndex = (startIndex + viewModel.applicationsPerPage).clamp(
+      0,
+      totalApplications,
+    );
     final paginatedHistory = applicationHistory.sublist(startIndex, endIndex);
 
     return Column(
@@ -1593,10 +1632,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               '${viewModel.currentApplicationPage}/$totalPages',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -1628,70 +1664,70 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               child: Row(
-                  children: [
-                    Icon(
-                      isApproved ? Icons.check_circle : Icons.cancel,
-                      color: isApproved
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFEF5350),
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isApproved
-                                ? context.t('Approved', 'Đã duyệt')
-                                : context.t('Rejected', 'Từ chối'),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isApproved
-                                  ? const Color(0xFF4CAF50)
-                                  : const Color(0xFFEF5350),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            dateStr,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Icon(
+                    isApproved ? Icons.check_circle : Icons.cancel,
+                    color: isApproved
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (isApproved &&
-                            app['loanAmount'] != null &&
-                            (app['loanAmount'] as num) > 0)
-                          Text(
-                            currencyFormat.format(app['loanAmount']),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1F3F),
-                            ),
-                          )
-                        else if (!isApproved)
-                          Text(
-                            context.t('Not approved', 'Không được duyệt'),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade500,
-                            ),
+                        Text(
+                          isApproved
+                              ? context.t('Approved', 'Đã duyệt')
+                              : context.t('Rejected', 'Từ chối'),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isApproved
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFEF5350),
                           ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          dateStr,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              );
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (isApproved &&
+                          app['loanAmount'] != null &&
+                          (app['loanAmount'] as num) > 0)
+                        Text(
+                          currencyFormat.format(app['loanAmount']),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F3F),
+                          ),
+                        )
+                      else if (!isApproved)
+                        Text(
+                          context.t('Not approved', 'Không được duyệt'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
           },
         ),
         // Pagination controls
@@ -1722,8 +1758,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 16),
             ElevatedButton.icon(
               onPressed: viewModel.currentApplicationPage < totalPages
-                  ? () =>
-                      viewModel.nextApplicationPage(totalApplications)
+                  ? () => viewModel.nextApplicationPage(totalApplications)
                   : null,
               icon: const Icon(Icons.chevron_right, size: 20),
               label: Text(context.t('Next', 'Tiếp')),
@@ -1749,21 +1784,28 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildInstallmentDisplay(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: ' VND',
+    );
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     final applicationHistory = LocalStorageService.getApplicationHistory(
       userId: userId,
     );
-    final approvedApplications =
-        applicationHistory.where((app) => app['approved'] == true).toList();
+    final approvedApplications = applicationHistory
+        .where((app) => app['approved'] == true)
+        .toList();
 
     final totalInstallments = approvedApplications.length;
-    final totalPages = (totalInstallments / viewModel.installmentsPerPage).ceil();
+    final totalPages = (totalInstallments / viewModel.installmentsPerPage)
+        .ceil();
     final startIndex =
-      (viewModel.currentInstallmentPage - 1) * viewModel.installmentsPerPage;
-    final endIndex =
-      (startIndex + viewModel.installmentsPerPage).clamp(0, totalInstallments);
+        (viewModel.currentInstallmentPage - 1) * viewModel.installmentsPerPage;
+    final endIndex = (startIndex + viewModel.installmentsPerPage).clamp(
+      0,
+      totalInstallments,
+    );
     final paginatedInstallments = approvedApplications.sublist(
       startIndex,
       endIndex,
@@ -1777,10 +1819,7 @@ class _HomePageState extends State<HomePage> {
             Icon(Icons.calendar_month, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              context.t(
-                'No Active Loans',
-                'Chưa có khoản vay đang hoạt động',
-              ),
+              context.t('No Active Loans', 'Chưa có khoản vay đang hoạt động'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1816,170 +1855,169 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               '${viewModel.currentInstallmentPage}/$totalPages',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             ),
           ],
         ),
         const SizedBox(height: 12),
         ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: paginatedInstallments.length,
-            itemBuilder: (context, index) {
-              final app = paginatedInstallments[index];
-              final monthlyPayment =
-                  app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: paginatedInstallments.length,
+          itemBuilder: (context, index) {
+            final app = paginatedInstallments[index];
+            final monthlyPayment =
+                app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.t('Monthly Repayment', 'Khoản trả hàng tháng'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.t(
+                              'Monthly Repayment',
+                              'Khoản trả hàng tháng',
                             ),
-                            Text(
-                              currencyFormat.format(monthlyPayment),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF4CAF50),
-                              ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
                             ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              context.t('Next Due', 'Đến hạn tiếp theo'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            FutureBuilder<DateTime?>(
-                              future: _getSyncedNextDueDateForApplication(app),
-                              builder: (context, snapshot) {
-                                final nextDueDate = snapshot.data;
-                                return Text(
-                                  nextDueDate != null
-                                      ? DateFormat('dd/MM/yyyy').format(nextDueDate)
-                                      : '-',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF1A1F3F),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ApplicationContractStatusPage(
-                                application: Map<String, dynamic>.from(app),
-                              ),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          context.t(
-                            'View Details',
-                            'Xem chi tiết',
                           ),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          Text(
+                            currencyFormat.format(monthlyPayment),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF4CAF50),
+                            ),
                           ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            context.t('Next Due', 'Đến hạn tiếp theo'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          FutureBuilder<DateTime?>(
+                            future: _getSyncedNextDueDateForApplication(app),
+                            builder: (context, snapshot) {
+                              final nextDueDate = snapshot.data;
+                              return Text(
+                                nextDueDate != null
+                                    ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(nextDueDate)
+                                    : '-',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1F3F),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4C40F7),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ApplicationContractStatusPage(
+                              application: Map<String, dynamic>.from(app),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        context.t('View Details', 'Xem chi tiết'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                onPressed: viewModel.currentInstallmentPage > 1
-                    ? () => viewModel.previousInstallmentPage()
-                    : null,
-                icon: const Icon(Icons.chevron_left, size: 20),
-                label: Text(context.t('Previous', 'Trước')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: viewModel.currentInstallmentPage > 1
-                      ? const Color(0xFF4C40F7)
-                      : Colors.grey.shade300,
-                  foregroundColor: viewModel.currentInstallmentPage > 1
-                      ? Colors.white
-                      : Colors.grey.shade600,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
                   ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: viewModel.currentInstallmentPage > 1
+                  ? () => viewModel.previousInstallmentPage()
+                  : null,
+              icon: const Icon(Icons.chevron_left, size: 20),
+              label: Text(context.t('Previous', 'Trước')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: viewModel.currentInstallmentPage > 1
+                    ? const Color(0xFF4C40F7)
+                    : Colors.grey.shade300,
+                foregroundColor: viewModel.currentInstallmentPage > 1
+                    ? Colors.white
+                    : Colors.grey.shade600,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
-              const SizedBox(width: 16),
-              ElevatedButton.icon(
-                onPressed: viewModel.currentInstallmentPage < totalPages
-                    ? () => viewModel.nextInstallmentPage(totalInstallments)
-                    : null,
-                icon: const Icon(Icons.chevron_right, size: 20),
-                label: Text(context.t('Next', 'Tiếp')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: viewModel.currentInstallmentPage < totalPages
-                      ? const Color(0xFF4C40F7)
-                      : Colors.grey.shade300,
-                  foregroundColor: viewModel.currentInstallmentPage < totalPages
-                      ? Colors.white
-                      : Colors.grey.shade600,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: viewModel.currentInstallmentPage < totalPages
+                  ? () => viewModel.nextInstallmentPage(totalInstallments)
+                  : null,
+              icon: const Icon(Icons.chevron_right, size: 20),
+              label: Text(context.t('Next', 'Tiếp')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: viewModel.currentInstallmentPage < totalPages
+                    ? const Color(0xFF4C40F7)
+                    : Colors.grey.shade300,
+                foregroundColor: viewModel.currentInstallmentPage < totalPages
+                    ? Colors.white
+                    : Colors.grey.shade600,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -2022,6 +2060,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildNavChip(
+    BuildContext context,
+    String label,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF0FF),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFC8D3FF), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF3D477A)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.t(label, _getLabelVi(label)),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF3D477A),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getLabelVi(String label) {
+    switch (label) {
+      case 'Offer':
+        return 'Đề nghị';
+      case 'Installment':
+        return 'Lịch thanh toán';
+      default:
+        return label;
+    }
+  }
+
   Widget _buildPeriodChip(
     BuildContext context,
     HomeViewModel viewModel,
@@ -2038,9 +2128,7 @@ class _HomePageState extends State<HomePage> {
         constraints: const BoxConstraints(minHeight: 56),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF4D4AF9)
-              : const Color(0xFFEAF0FF),
+          color: isSelected ? const Color(0xFF4D4AF9) : const Color(0xFFEAF0FF),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
@@ -2318,7 +2406,10 @@ class _HomePageState extends State<HomePage> {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     final offerId = await _resolveOfferIdForApplication(application, userId);
 
-    if (offerId == null || offerId.isEmpty || userId == null || userId.isEmpty) {
+    if (offerId == null ||
+        offerId.isEmpty ||
+        userId == null ||
+        userId.isEmpty) {
       return _getNextDueDateFromSubmission(application);
     }
 
@@ -2378,12 +2469,16 @@ class _HomePageState extends State<HomePage> {
 
         final offerLoanAmount = _asNullableDouble(data['loanAmountVnd']);
         final offerTenorMonths = _asNullableInt(data['loanTermMonths']);
-        final offerMonthlyPayment = _asNullableDouble(data['monthlyPaymentVnd']);
+        final offerMonthlyPayment = _asNullableDouble(
+          data['monthlyPaymentVnd'],
+        );
 
         if (appLoanAmount != null && offerLoanAmount != null) {
           if ((appLoanAmount - offerLoanAmount).abs() < 1) score += 2;
         }
-        if (appTenorMonths != null && offerTenorMonths != null && appTenorMonths == offerTenorMonths) {
+        if (appTenorMonths != null &&
+            offerTenorMonths != null &&
+            appTenorMonths == offerTenorMonths) {
           score += 2;
         }
         if (appMonthlyPayment != null && offerMonthlyPayment != null) {
@@ -2512,6 +2607,7 @@ class CreditScoreGaugePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
 // Widget to build credit score tips section
 Widget _buildCreditScoreTips(
   BuildContext context, {
@@ -3114,10 +3210,7 @@ String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
 
   if (difference.inDays > 0) {
     final days = difference.inDays;
-    return context.t(
-      '$days day${days > 1 ? 's' : ''} ago',
-      '$days ngày trước',
-    );
+    return context.t('$days day${days > 1 ? 's' : ''} ago', '$days ngày trước');
   }
 
   if (difference.inHours > 0) {
@@ -3164,5 +3257,3 @@ IconData _getNotificationIcon(String type) {
       return Icons.notifications;
   }
 }
-
-
