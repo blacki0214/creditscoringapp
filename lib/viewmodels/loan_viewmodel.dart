@@ -1051,7 +1051,7 @@ class LoanViewModel extends ChangeNotifier {
       );
 
       _step2Completed = true;
-      // Step 3 is completed only after Step3AdditionalInfoPage is submitted.
+      // Step 3 is completed only after the split Step 3 flow is submitted.
       _step3Completed = false;
       _step4Completed = false;
       _step6Completed = false;

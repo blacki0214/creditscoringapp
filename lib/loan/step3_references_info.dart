@@ -202,6 +202,8 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
     required List<String> items,
     required String Function(String) display,
     required ValueChanged<String?>? onChanged,
+    String? validatorMessage,
+    bool required = true,
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
@@ -226,6 +228,13 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
         );
       }).toList(),
       onChanged: onChanged,
+      validator: (selected) {
+        if (required && (selected == null || selected.isEmpty)) {
+          return validatorMessage ??
+              context.t('Please select $label', 'Vui lòng chọn $label');
+        }
+        return null;
+      },
     );
   }
 
@@ -321,7 +330,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Relationship', 'Mối quan hệ'),
+                        label: context.t('Relationship*', 'Mối quan hệ*'),
                         fieldKey: 'reference1Relationship',
                         icon: Icons.people,
                         value: _selectedReference1Relationship,
@@ -329,6 +338,10 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                         display: _displayRelationship,
                         onChanged: (value) => setState(
                           () => _selectedReference1Relationship = value,
+                        ),
+                        validatorMessage: context.t(
+                          'Please select relationship for reference 1',
+                          'Vui lòng chọn quan hệ người tham chiếu 1',
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -359,7 +372,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Relationship', 'Mối quan hệ'),
+                        label: context.t('Relationship*', 'Mối quan hệ*'),
                         fieldKey: 'reference2Relationship',
                         icon: Icons.people,
                         value: _selectedReference2Relationship,
@@ -367,6 +380,10 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                         display: _displayRelationship,
                         onChanged: (value) => setState(
                           () => _selectedReference2Relationship = value,
+                        ),
+                        validatorMessage: context.t(
+                          'Please select relationship for reference 2',
+                          'Vui lòng chọn quan hệ người tham chiếu 2',
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -554,6 +571,30 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                           Navigator.pop(context);
                           return;
                         }
+
+                        final step3Payload = <String, dynamic>{
+                          'personalInfo': widget.personalData,
+                          'employment': widget.employmentData,
+                          'references': [
+                            {
+                              'name': _reference1NameController.text.trim(),
+                              'relationship': _selectedReference1Relationship,
+                              'phone': _reference1PhoneController.text.trim(),
+                            },
+                            {
+                              'name': _reference2NameController.text.trim(),
+                              'relationship': _selectedReference2Relationship,
+                              'phone': _reference2PhoneController.text.trim(),
+                            },
+                          ],
+                          'documents':
+                              _additionalDocuments.map((doc) => doc.name).toList(),
+                          'updatedAt': DateTime.now().toIso8601String(),
+                        };
+
+                        await loanViewModel.completeStep3(
+                          step3Data: step3Payload,
+                        );
 
                         Navigator.push(
                           context,

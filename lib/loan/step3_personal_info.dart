@@ -870,8 +870,28 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const Step3EmploymentInfoPage(personalData: {}),
+                        builder: (_) => Step3EmploymentInfoPage(
+                          personalData: {
+                            'fullName': _fullNameController.text.trim(),
+                            'nationality': _nationalityController.text.trim(),
+                            'gender': _selectedGender,
+                            'cccd': _cccdController.text.trim(),
+                            'oldIdNumber': _oldIdController.text.trim(),
+                            'issuePlace': _issuePlaceController.text.trim(),
+                            'issueDate': _idIssueDate?.toIso8601String(),
+                            'expiryDate': _idExpiryDate?.toIso8601String(),
+                            'educationLevel': _selectedEducationLevel,
+                            'taxCode': _taxCodeController.text.trim(),
+                            'maritalStatus': _selectedMaritalStatus,
+                            'permanentAddress':
+                                _permanentAddressController.text.trim(),
+                            'currentAddress': _currentAddressController.text.trim(),
+                            'mobilePhone': _mobilePhoneController.text.trim(),
+                            'email': _emailController.text.trim(),
+                            'residencyStatus': _selectedResidencyStatus,
+                            'dob': _dob?.toIso8601String(),
+                          },
+                        ),
                       ),
                     );
                   },

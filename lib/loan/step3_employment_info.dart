@@ -463,9 +463,22 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const Step3ReferencesInfoPage(
-                              personalData: {},
-                              employmentData: {},
+                            builder: (_) => Step3ReferencesInfoPage(
+                              personalData: widget.personalData,
+                              employmentData: {
+                                'jobType': _selectedJobType,
+                                'monthlyIncome': _parseCurrencyNumber(
+                                  _monthlyIncomeController.text,
+                                ),
+                                'companyName': _companyNameController.text.trim(),
+                                'companyPhone':
+                                    _companyPhoneController.text.trim(),
+                                'companyAddress':
+                                    _companyAddressController.text.trim(),
+                                'contractType': _selectedContractType,
+                                'occupationTitle':
+                                    _occupationTitleController.text.trim(),
+                              },
                             ),
                           ),
                         );
