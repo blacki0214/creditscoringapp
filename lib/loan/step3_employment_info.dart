@@ -483,7 +483,10 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField(
-                        label: context.t('Contract Type(*)', 'Loại hợp đồng(*)'),
+                        label: context.t(
+                          'Contract Type(*)',
+                          'Loại hợp đồng(*)',
+                        ),
                         fieldKey: 'contractType',
                         icon: Icons.description,
                         value: _selectedContractType,

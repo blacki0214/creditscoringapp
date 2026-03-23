@@ -36,8 +36,6 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
   String? _selectedMaritalStatus;
   String? _selectedResidencyStatus;
 
-
-
   // Validation error tracking
   final Map<String, String?> _fieldErrors = {};
   DateTime? _lastInvalidSubmitNoticeAt;
@@ -315,7 +313,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
 
   String? _validateDob(DateTime? date) {
     if (date == null) {
-      return context.t('Please select date of birth', 'Vui lòng chọn ngày sinh');
+      return context.t(
+        'Please select date of birth',
+        'Vui lòng chọn ngày sinh',
+      );
     }
     if (_isUnder18(date)) {
       return context.t(
@@ -544,7 +545,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
+          suffixIcon: const Icon(
+            Icons.calendar_today,
+            color: Color(0xFF4C40F7),
+          ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -777,7 +781,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField(
-                        label: context.t('Education Level(*)', 'Trình độ học vấn(*)'),
+                        label: context.t(
+                          'Education Level(*)',
+                          'Trình độ học vấn(*)',
+                        ),
                         fieldKey: 'educationLevel',
                         icon: Icons.school,
                         value: _selectedEducationLevel,
@@ -921,7 +928,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _currentAddressController,
-                        label: context.t('Current Address(*)', 'Địa chỉ hiện tại(*)'),
+                        label: context.t(
+                          'Current Address(*)',
+                          'Địa chỉ hiện tại(*)',
+                        ),
                         fieldKey: 'currentAddress',
                         icon: Icons.location_on,
                         maxLines: 3,
@@ -947,7 +957,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _emailController,
-                        label: context.t('Email (Gmail)(*)', 'Email (Gmail)(*)'),
+                        label: context.t(
+                          'Email (Gmail)(*)',
+                          'Email (Gmail)(*)',
+                        ),
                         fieldKey: 'email',
                         icon: Icons.email,
                         keyboardType: TextInputType.emailAddress,

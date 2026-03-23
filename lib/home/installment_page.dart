@@ -612,7 +612,11 @@ class _InstallmentPageState extends State<InstallmentPage> {
 
   int _min(int a, int b) => a < b ? a : b;
 
-  Widget _buildSummaryMetric(String label, String value, {bool alignEnd = false}) {
+  Widget _buildSummaryMetric(
+    String label,
+    String value, {
+    bool alignEnd = false,
+  }) {
     return Column(
       crossAxisAlignment: alignEnd
           ? CrossAxisAlignment.end
