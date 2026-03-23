@@ -29,7 +29,6 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
   String? _selectedContractType;
 
   bool _lockMonthlyIncome = false;
-  bool _lockJobType = false;
 
   // Validation error tracking
   final Map<String, String?> _fieldErrors = {};
@@ -65,7 +64,6 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
     if (vm.step2Completed) {
       if (vm.employmentStatus.trim().isNotEmpty) {
         _selectedJobType = vm.employmentStatus;
-        _lockJobType = true;
       }
 
       final monthlyIncome = vm.monthlyIncome;
@@ -124,6 +122,37 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
       );
     }
     return null;
+  }
+
+  String? _validateRequiredCurrency(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) {
+      return context.t(
+        'Please enter monthly income',
+        'Vui lòng nhập thu nhập hàng tháng',
+      );
+    }
+    return _validateOptionalCurrency(raw);
+  }
+
+  String? _validateRequiredPhone(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) {
+      return context.t(
+        'Please enter company phone',
+        'Vui lòng nhập số điện thoại công ty',
+      );
+    }
+    return _validateOptionalPhone(raw);
+  }
+
+  String? Function(String?) _requiredValidator(String message) {
+    return (value) {
+      if (value == null || value.trim().isEmpty) {
+        return message;
+      }
+      return null;
+    };
   }
 
   String _displayJobType(String value) {
@@ -252,34 +281,75 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
     required List<String> items,
     required String Function(String) display,
     required ValueChanged<String?>? onChanged,
-    bool locked = false,
+    String? Function(String?)? validator,
   }) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-        suffixIcon: locked
-            ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
-            : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+    void validateNow([String? selected]) {
+      final error = validator?.call(selected ?? value);
+      if (_fieldErrors[fieldKey] != error) {
+        setState(() {
+          _fieldErrors[fieldKey] = error;
+        });
+      }
+    }
+
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) {
+          validateNow();
+        }
+      },
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : Colors.grey.shade300,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : const Color(0xFF4C40F7),
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+          ),
+          errorText: _fieldErrors[fieldKey],
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-        ),
+        items: items.map((item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(display(item)),
+          );
+        }).toList(),
+        onChanged: (selected) {
+          onChanged?.call(selected);
+          validateNow(selected);
+        },
+        validator: (selected) {
+          final error = validator?.call(selected);
+          setState(() {
+            _fieldErrors[fieldKey] = error;
+          });
+          return error;
+        },
       ),
-      items: items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(display(item)),
-        );
-      }).toList(),
-      onChanged: locked ? null : onChanged,
     );
   }
 
@@ -340,7 +410,7 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                       ),
                       const SizedBox(height: 24),
                       _buildDropdownField(
-                        label: context.t('Job Type', 'Loại công việc'),
+                        label: context.t('Job Type(*)', 'Loại công việc(*)'),
                         fieldKey: 'jobType',
                         icon: Icons.work,
                         value: _selectedJobType,
@@ -348,51 +418,72 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                         display: _displayJobType,
                         onChanged: (value) =>
                             setState(() => _selectedJobType = value),
-                        locked: _lockJobType,
+                        validator: (selected) =>
+                            (selected == null || selected.isEmpty)
+                            ? context.t(
+                                'Please select job type',
+                                'Vui lòng chọn loại công việc',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _monthlyIncomeController,
                         label: context.t(
-                          'Monthly Income',
-                          'Thu nhập hàng tháng',
+                          'Monthly Income(*)',
+                          'Thu nhập hàng tháng(*)',
                         ),
                         fieldKey: 'monthlyIncome',
                         icon: Icons.money,
                         keyboardType: TextInputType.number,
                         readOnly: _lockMonthlyIncome,
-                        validator: _validateOptionalCurrency,
+                        validator: _validateRequiredCurrency,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _companyNameController,
-                        label: context.t('Company Name', 'Tên công ty'),
+                        label: context.t('Company Name(*)', 'Tên công ty(*)'),
                         fieldKey: 'companyName',
                         icon: Icons.business,
+                        validator: _requiredValidator(
+                          context.t(
+                            'Please enter company name',
+                            'Vui lòng nhập tên công ty',
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _companyPhoneController,
                         label: context.t(
-                          'Company Phone',
-                          'Số điện thoại công ty',
+                          'Company Phone(*)',
+                          'Số điện thoại công ty(*)',
                         ),
                         fieldKey: 'companyPhone',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
-                        validator: _validateOptionalPhone,
+                        validator: _validateRequiredPhone,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _companyAddressController,
-                        label: context.t('Company Address', 'Địa chỉ công ty'),
+                        label: context.t(
+                          'Company Address(*)',
+                          'Địa chỉ công ty(*)',
+                        ),
                         fieldKey: 'companyAddress',
                         icon: Icons.location_on,
                         maxLines: 3,
+                        validator: _requiredValidator(
+                          context.t(
+                            'Please enter company address',
+                            'Vui lòng nhập địa chỉ công ty',
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField(
-                        label: context.t('Contract Type', 'Loại hợp đồng'),
+                        label: context.t('Contract Type(*)', 'Loại hợp đồng(*)'),
                         fieldKey: 'contractType',
                         icon: Icons.description,
                         value: _selectedContractType,
@@ -400,16 +491,29 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                         display: _displayContractType,
                         onChanged: (value) =>
                             setState(() => _selectedContractType = value),
+                        validator: (selected) =>
+                            (selected == null || selected.isEmpty)
+                            ? context.t(
+                                'Please select contract type',
+                                'Vui lòng chọn loại hợp đồng',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _occupationTitleController,
                         label: context.t(
-                          'Occupation Title',
-                          'Chức danh công việc',
+                          'Occupation Title(*)',
+                          'Chức danh công việc(*)',
                         ),
                         fieldKey: 'occupationTitle',
                         icon: Icons.badge,
+                        validator: _requiredValidator(
+                          context.t(
+                            'Please enter occupation title',
+                            'Vui lòng nhập chức danh công việc',
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 32),
                     ],
@@ -470,14 +574,16 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                                 'monthlyIncome': _parseCurrencyNumber(
                                   _monthlyIncomeController.text,
                                 ),
-                                'companyName': _companyNameController.text.trim(),
-                                'companyPhone':
-                                    _companyPhoneController.text.trim(),
-                                'companyAddress':
-                                    _companyAddressController.text.trim(),
+                                'companyName': _companyNameController.text
+                                    .trim(),
+                                'companyPhone': _companyPhoneController.text
+                                    .trim(),
+                                'companyAddress': _companyAddressController.text
+                                    .trim(),
                                 'contractType': _selectedContractType,
-                                'occupationTitle':
-                                    _occupationTitleController.text.trim(),
+                                'occupationTitle': _occupationTitleController
+                                    .text
+                                    .trim(),
                               },
                             ),
                           ),

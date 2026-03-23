@@ -14,6 +14,7 @@ class Step3PersonalInfoPage extends StatefulWidget {
 
 class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
+  static const Duration _invalidSubmitNoticeCooldown = Duration(seconds: 4);
 
   final _fullNameController = TextEditingController();
   final _nationalityController = TextEditingController(text: 'Việt Nam');
@@ -35,13 +36,11 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
   String? _selectedMaritalStatus;
   String? _selectedResidencyStatus;
 
-  bool _lockFullName = false;
-  bool _lockDob = false;
-  bool _lockCccd = false;
-  bool _lockMobilePhone = false;
+
 
   // Validation error tracking
   final Map<String, String?> _fieldErrors = {};
+  DateTime? _lastInvalidSubmitNoticeAt;
 
   final List<String> _genderOptions = ['MALE', 'FEMALE', 'OTHER'];
   final List<String> _maritalStatusOptions = [
@@ -115,18 +114,15 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
       final fullName = vm.fullName.trim();
       if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
         _fullNameController.text = fullName;
-        _lockFullName = true;
       }
 
       if (vm.dob != null) {
         _dob = vm.dob;
-        _lockDob = true;
       }
 
       final cccd = vm.idNumber.trim();
       if (RegExp(r'^\d{12}$').hasMatch(cccd)) {
         _cccdController.text = cccd;
-        _lockCccd = true;
       }
 
       final address = vm.address.trim();
@@ -142,7 +138,6 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
       final phone = vm.phoneNumber.trim();
       if (phone.isNotEmpty && phone != '(+84) 901234567') {
         _mobilePhoneController.text = phone;
-        _lockMobilePhone = true;
       }
     } else {
       final fullName = (ekycFront?.fullName ?? '').trim();
@@ -301,6 +296,36 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
     return _validateOptionalGmail(raw);
   }
 
+  bool _isUnder18(DateTime dob) {
+    final today = DateTime.now();
+    var age = today.year - dob.year;
+    final hasHadBirthdayThisYear =
+        today.month > dob.month ||
+        (today.month == dob.month && today.day >= dob.day);
+    if (!hasHadBirthdayThisYear) {
+      age -= 1;
+    }
+    return age < 18;
+  }
+
+  DateTime _latestEligibleDob() {
+    final today = DateTime.now();
+    return DateTime(today.year - 18, today.month, today.day);
+  }
+
+  String? _validateDob(DateTime? date) {
+    if (date == null) {
+      return context.t('Please select date of birth', 'Vui lòng chọn ngày sinh');
+    }
+    if (_isUnder18(date)) {
+      return context.t(
+        'Not eligible: applicant must be at least 18 years old',
+        'Không đủ điều kiện: người vay phải từ 18 tuổi trở lên',
+      );
+    }
+    return null;
+  }
+
   String _displayGender(String value) {
     switch (value) {
       case 'MALE':
@@ -402,6 +427,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        textAlignVertical: TextAlignVertical.center,
         inputFormatters: inputFormatters,
         maxLines: maxLines,
         maxLength: maxLength,
@@ -416,11 +442,8 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          suffixIcon: readOnly
-              ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
-              : null,
           filled: true,
-          fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+          fillColor: Colors.white,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -462,79 +485,94 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
     required ValueChanged<DateTime?> onChanged,
     required DateTime firstDate,
     required DateTime lastDate,
-    bool locked = false,
     String? Function(DateTime?)? validator,
   }) {
+    void validateNow([DateTime? dateValue]) {
+      final error = validator?.call(dateValue ?? initialValue);
+      if (_fieldErrors[fieldKey] != error) {
+        setState(() {
+          _fieldErrors[fieldKey] = error;
+        });
+      }
+    }
+
     final text = initialValue == null
         ? ''
         : '${initialValue.day.toString().padLeft(2, '0')}/${initialValue.month.toString().padLeft(2, '0')}/${initialValue.year}';
 
-    return TextFormField(
-      readOnly: true,
-      controller: TextEditingController(text: text),
-      onTap: locked
-          ? null
-          : () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: initialValue ?? DateTime.now(),
-                firstDate: firstDate,
-                lastDate: lastDate,
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: const ColorScheme.light(
-                        primary: Color(0xFF4C40F7),
-                      ),
-                    ),
-                    child: child!,
-                  );
-                },
-              );
-              if (picked != null) {
-                onChanged(picked);
-              }
-            },
-      validator: (value) {
-        final error = validator?.call(initialValue);
-        setState(() {
-          _fieldErrors[fieldKey] = error;
-        });
-        return error;
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) {
+          validateNow();
+        }
       },
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-        suffixIcon: locked
-            ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
-            : const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: _fieldErrors[fieldKey] != null
-                ? const Color(0xFFEF5350)
-                : Colors.grey.shade300,
+      child: TextFormField(
+        readOnly: true,
+        controller: TextEditingController(text: text),
+        textAlignVertical: TextAlignVertical.center,
+        onTap: () async {
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: initialValue ?? DateTime.now(),
+            firstDate: firstDate,
+            lastDate: lastDate,
+            builder: (context, child) {
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: Color(0xFF4C40F7),
+                  ),
+                ),
+                child: child!,
+              );
+            },
+          );
+          if (picked != null) {
+            onChanged(picked);
+            validateNow(picked);
+          } else {
+            validateNow();
+          }
+        },
+        validator: (value) {
+          final error = validator?.call(initialValue);
+          setState(() {
+            _fieldErrors[fieldKey] = error;
+          });
+          return error;
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : Colors.grey.shade300,
+            ),
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: _fieldErrors[fieldKey] != null
-                ? const Color(0xFFEF5350)
-                : const Color(0xFF4C40F7),
-            width: 2,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : const Color(0xFF4C40F7),
+              width: 2,
+            ),
           ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+          ),
+          errorText: _fieldErrors[fieldKey],
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF5350)),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
-        ),
-        errorText: _fieldErrors[fieldKey],
       ),
     );
   }
@@ -547,30 +585,76 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
     required List<String> items,
     required String Function(String) display,
     required ValueChanged<String?>? onChanged,
+    String? Function(String?)? validator,
   }) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+    void validateNow([String? selected]) {
+      final error = validator?.call(selected ?? value);
+      if (_fieldErrors[fieldKey] != error) {
+        setState(() {
+          _fieldErrors[fieldKey] = error;
+        });
+      }
+    }
+
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) {
+          validateNow();
+        }
+      },
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        isExpanded: true,
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : Colors.grey.shade300,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : const Color(0xFF4C40F7),
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+          ),
+          errorText: _fieldErrors[fieldKey],
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-        ),
+        items: items.map((item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(display(item)),
+          );
+        }).toList(),
+        onChanged: (selected) {
+          onChanged?.call(selected);
+          validateNow(selected);
+        },
+        validator: (selected) {
+          final error = validator?.call(selected);
+          setState(() {
+            _fieldErrors[fieldKey] = error;
+          });
+          return error;
+        },
       ),
-      items: items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(display(item)),
-        );
-      }).toList(),
-      onChanged: onChanged,
     );
   }
 
@@ -629,34 +713,25 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       const SizedBox(height: 24),
                       _buildTextField(
                         controller: _fullNameController,
-                        label: context.t('Full Name', 'Họ và tên'),
+                        label: context.t('Full Name(*)', 'Họ và tên(*)'),
                         fieldKey: 'fullName',
                         icon: Icons.person,
-                        readOnly: _lockFullName,
                         validator: _validateRequiredName,
                       ),
                       const SizedBox(height: 16),
                       _buildDateField(
-                        label: context.t('Date of Birth', 'Ngày sinh'),
+                        label: context.t('Date of Birth(*)', 'Ngày sinh(*)'),
                         fieldKey: 'dob',
                         icon: Icons.cake,
                         initialValue: _dob,
                         onChanged: (date) => setState(() => _dob = date),
                         firstDate: DateTime(1950),
-                        lastDate: DateTime.now().subtract(
-                          const Duration(days: 18 * 365),
-                        ),
-                        locked: _lockDob,
-                        validator: (date) => date == null
-                            ? context.t(
-                                'Please select date of birth',
-                                'Vui lòng chọn ngày sinh',
-                              )
-                            : null,
+                        lastDate: _latestEligibleDob(),
+                        validator: _validateDob,
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField(
-                        label: context.t('Gender', 'Giới tính'),
+                        label: context.t('Gender(*)', 'Giới tính(*)'),
                         fieldKey: 'gender',
                         icon: Icons.wc,
                         value: _selectedGender,
@@ -664,19 +739,26 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                         display: _displayGender,
                         onChanged: (value) =>
                             setState(() => _selectedGender = value),
+                        validator: (selected) =>
+                            (selected == null || selected.isEmpty)
+                            ? context.t(
+                                'Please select gender',
+                                'Vui lòng chọn giới tính',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _nationalityController,
-                        label: context.t('Nationality', 'Quốc tịch'),
+                        label: context.t('Nationality(*)', 'Quốc tịch(*)'),
                         fieldKey: 'nationality',
                         icon: Icons.public,
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField(
                         label: context.t(
-                          'Marital Status',
-                          'Tình trạng hôn nhân',
+                          'Marital Status(*)',
+                          'Tình trạng hôn nhân(*)',
                         ),
                         fieldKey: 'maritalStatus',
                         icon: Icons.favorite,
@@ -685,10 +767,17 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                         display: _displayMaritalStatus,
                         onChanged: (value) =>
                             setState(() => _selectedMaritalStatus = value),
+                        validator: (selected) =>
+                            (selected == null || selected.isEmpty)
+                            ? context.t(
+                                'Please select marital status',
+                                'Vui lòng chọn tình trạng hôn nhân',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField(
-                        label: context.t('Education Level', 'Trình độ học vấn'),
+                        label: context.t('Education Level(*)', 'Trình độ học vấn(*)'),
                         fieldKey: 'educationLevel',
                         icon: Icons.school,
                         value: _selectedEducationLevel,
@@ -696,17 +785,23 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                         display: _displayEducationLevel,
                         onChanged: (value) =>
                             setState(() => _selectedEducationLevel = value),
+                        validator: (selected) =>
+                            (selected == null || selected.isEmpty)
+                            ? context.t(
+                                'Please select education level',
+                                'Vui lòng chọn trình độ học vấn',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _cccdController,
                         label: context.t(
-                          'CCCD / Passport ID',
-                          'CCCD / Hộ chiếu',
+                          'CCCD / Passport ID(*)',
+                          'CCCD / Hộ chiếu(*)',
                         ),
                         fieldKey: 'cccd',
                         icon: Icons.credit_card,
-                        readOnly: _lockCccd,
                         validator: (value) {
                           final raw = value?.trim() ?? '';
                           if (raw.isEmpty) {
@@ -737,13 +832,19 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _issuePlaceController,
-                        label: context.t('Issue Place', 'Nơi cấp'),
+                        label: context.t('Issue Place(*)', 'Nơi cấp(*)'),
                         fieldKey: 'issuePlace',
                         icon: Icons.location_on,
+                        validator: _requiredValidator(
+                          context.t(
+                            'Please enter issue place',
+                            'Vui lòng nhập nơi cấp',
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildDateField(
-                        label: context.t('Issue Date', 'Ngày cấp'),
+                        label: context.t('Issue Date(*)', 'Ngày cấp(*)'),
                         fieldKey: 'issueDate',
                         icon: Icons.event,
                         initialValue: _idIssueDate,
@@ -754,7 +855,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildDateField(
-                        label: context.t('Expiry Date', 'Ngày hết hạn'),
+                        label: context.t('Expiry Date(*)', 'Ngày hết hạn(*)'),
                         fieldKey: 'expiryDate',
                         icon: Icons.event,
                         initialValue: _idExpiryDate,
@@ -762,6 +863,12 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                             setState(() => _idExpiryDate = date),
                         firstDate: DateTime.now(),
                         lastDate: DateTime(2100),
+                        validator: (expiryDate) => expiryDate == null
+                            ? context.t(
+                                'Please select expiry date',
+                                'Vui lòng chọn ngày hết hạn',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -776,8 +883,8 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       const SizedBox(height: 16),
                       _buildDropdownField(
                         label: context.t(
-                          'Residency Status',
-                          'Tình trạng cư trú',
+                          'Residency Status(*)',
+                          'Tình trạng cư trú(*)',
                         ),
                         fieldKey: 'residencyStatus',
                         icon: Icons.home,
@@ -786,13 +893,20 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                         display: _displayResidencyStatus,
                         onChanged: (value) =>
                             setState(() => _selectedResidencyStatus = value),
+                        validator: (selected) =>
+                            (selected == null || selected.isEmpty)
+                            ? context.t(
+                                'Please select residency status',
+                                'Vui lòng chọn tình trạng cư trú',
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _permanentAddressController,
                         label: context.t(
-                          'Permanent Address',
-                          'Địa chỉ thường trú',
+                          'Permanent Address(*)',
+                          'Địa chỉ thường trú(*)',
                         ),
                         fieldKey: 'permanentAddress',
                         icon: Icons.location_on,
@@ -807,7 +921,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _currentAddressController,
-                        label: context.t('Current Address', 'Địa chỉ hiện tại'),
+                        label: context.t('Current Address(*)', 'Địa chỉ hiện tại(*)'),
                         fieldKey: 'currentAddress',
                         icon: Icons.location_on,
                         maxLines: 3,
@@ -822,19 +936,18 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                       _buildTextField(
                         controller: _mobilePhoneController,
                         label: context.t(
-                          'Mobile Phone',
-                          'Số điện thoại di động',
+                          'Mobile Phone(*)',
+                          'Số điện thoại di động(*)',
                         ),
                         fieldKey: 'mobilePhone',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
-                        readOnly: _lockMobilePhone,
                         validator: _validateRequiredPhone,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _emailController,
-                        label: context.t('Email (Gmail)', 'Email (Gmail)'),
+                        label: context.t('Email (Gmail)(*)', 'Email (Gmail)(*)'),
                         fieldKey: 'email',
                         icon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
@@ -853,17 +966,26 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (!_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            context.t(
-                              'Please fix all errors',
-                              'Vui lòng sửa tất cả lỗi',
+                      final now = DateTime.now();
+                      final canShowNotice =
+                          _lastInvalidSubmitNoticeAt == null ||
+                          now.difference(_lastInvalidSubmitNoticeAt!) >=
+                              _invalidSubmitNoticeCooldown;
+
+                      if (canShowNotice) {
+                        _lastInvalidSubmitNoticeAt = now;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              context.t(
+                                'Please complete all required information before continuing.',
+                                'Vui lòng nhập đầy đủ các thông tin bắt buộc trước khi tiếp tục.',
+                              ),
                             ),
+                            backgroundColor: Colors.red,
                           ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                        );
+                      }
                       return;
                     }
 
@@ -883,9 +1005,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                             'educationLevel': _selectedEducationLevel,
                             'taxCode': _taxCodeController.text.trim(),
                             'maritalStatus': _selectedMaritalStatus,
-                            'permanentAddress':
-                                _permanentAddressController.text.trim(),
-                            'currentAddress': _currentAddressController.text.trim(),
+                            'permanentAddress': _permanentAddressController.text
+                                .trim(),
+                            'currentAddress': _currentAddressController.text
+                                .trim(),
                             'mobilePhone': _mobilePhoneController.text.trim(),
                             'email': _emailController.text.trim(),
                             'residencyStatus': _selectedResidencyStatus,
