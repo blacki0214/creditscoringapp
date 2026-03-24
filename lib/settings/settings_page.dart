@@ -51,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final languageViewModel = context.watch<LanguageViewModel>();
     final isVietnamese = languageViewModel.isVietnamese;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -59,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                padding: EdgeInsets.fromLTRB(24, 16, 24, 120 + bottomInset),
                 child: Column(
                   children: [
                     // Settings options
