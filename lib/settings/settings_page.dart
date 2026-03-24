@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth/login_page.dart';
-import '../viewmodels/settings_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
 import 'profile_page.dart';
@@ -26,10 +25,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Load user profile when page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<SettingsViewModel>().loadUserProfile();
         _loadSupportRole();
       }
     });
@@ -52,7 +49,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final settingsViewModel = context.watch<SettingsViewModel>();
     final languageViewModel = context.watch<LanguageViewModel>();
     final isVietnamese = languageViewModel.isVietnamese;
 
@@ -66,67 +62,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: Column(
                   children: [
-                    // Profile header
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4D4AF9), Color(0xFF6D7CFF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 35,
-                            backgroundColor: Colors.white,
-                            child: settingsViewModel.avatarUrl != null
-                                ? CircleAvatar(
-                                    radius: 32,
-                                    backgroundImage: NetworkImage(
-                                      settingsViewModel.avatarUrl!,
-                                    ),
-                                  )
-                                : CircleAvatar(
-                                    radius: 32,
-                                    backgroundColor: Colors.grey.shade200,
-                                    child: const Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Color(0xFF4D4AF9),
-                                    ),
-                                  ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  settingsViewModel.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  settingsViewModel.email,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
                     // Settings options
                     _buildSettingItem(
                       context,
