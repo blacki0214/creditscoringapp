@@ -180,39 +180,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         );
                       },
                     ),
-                    const SizedBox(height: 12),
-                    _buildSettingItem(
-                      context,
-                      icon: Icons.privacy_tip_outlined,
-                      title: isVietnamese
-                          ? 'Chính sách bảo mật'
-                          : 'Privacy Policy',
-                      subtitle: isVietnamese
-                          ? 'Cách chúng tôi xử lý dữ liệu'
-                          : 'How we handle your data',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const PrivacyPolicyPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSettingItem(
-                      context,
-                      icon: Icons.description_outlined,
-                      title: isVietnamese
-                          ? 'Điều khoản & Điều kiện'
-                          : 'Terms & Conditions',
-                      subtitle: isVietnamese
-                          ? 'Đọc điều khoản và điều kiện'
-                          : 'Read our terms and conditions',
-                      onTap: () {
-                        // Navigate to terms
-                      },
-                    ),
                     const SizedBox(height: 24),
                     // Logout button
                     SizedBox(
@@ -262,13 +229,57 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Version 1.0.0',
+                            'Version 0.0.10',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade500,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const PrivacyPolicyPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  isVietnamese ? 'Chính sách bảo mật' : 'Privacy Policy',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: const Color(0xFF4D4AF9),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                ' | ',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  // Navigate to terms
+                                },
+                                child: Text(
+                                  isVietnamese ? 'Điều khoản & Điều kiện' : 'Terms & Conditions',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: const Color(0xFF4D4AF9),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           Text(
                             '© 2025 SwinCredit. All rights reserved.',
                             style: TextStyle(
