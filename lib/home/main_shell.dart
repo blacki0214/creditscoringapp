@@ -4,7 +4,7 @@ import '../viewmodels/home_viewmodel.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../loan/demo_calculator_page.dart';
-import '../loan/student_step_1_profile.dart';
+import '../loan/student_verification_gate_page.dart';
 import 'home_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -28,7 +28,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
       HomePage(onOpenSettings: () => _onNavItemTap(4)),
       const LoanApplicationPage(),
       const DemoCalculatorPage(),
-      const StudentStepAProfilePage(),
+      const StudentVerificationGatePage(),
       const SettingsPage(),
     ];
     _animationController = AnimationController(
