@@ -37,7 +37,8 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
   final Map<String, String?> _fieldErrors = {};
 
   final List<String> _relationshipOptions = [
-    'PARENT',
+    'MOTHER',
+    'FATHER',
     'SPOUSE',
     'SIBLING',
     'CHILD',
@@ -107,8 +108,10 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
 
   String _displayRelationship(String value) {
     switch (value) {
-      case 'PARENT':
-        return context.t('Parent', 'Cha/Mẹ');
+      case 'MOTHER':
+        return context.t('Mother', 'Mẹ');
+      case 'FATHER':
+        return context.t('Father', 'Cha');
       case 'SPOUSE':
         return context.t('Spouse', 'Vợ/Chồng');
       case 'SIBLING':
@@ -205,36 +208,81 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
     String? validatorMessage,
     bool required = true,
   }) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-        ),
-      ),
-      items: items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(display(item)),
-        );
-      }).toList(),
-      onChanged: onChanged,
-      validator: (selected) {
-        if (required && (selected == null || selected.isEmpty)) {
-          return validatorMessage ??
-              context.t('Please select $label', 'Vui lòng chọn $label');
+    String? validateSelection(String? selected) {
+      if (required && (selected == null || selected.isEmpty)) {
+        return validatorMessage ??
+            context.t('Please select $label', 'Vui lòng chọn $label');
+      }
+      return null;
+    }
+
+    void validateNow([String? selected]) {
+      final error = validateSelection(selected ?? value);
+      if (_fieldErrors[fieldKey] != error) {
+        setState(() {
+          _fieldErrors[fieldKey] = error;
+        });
+      }
+    }
+
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) {
+          validateNow();
         }
-        return null;
       },
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : Colors.grey.shade300,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: _fieldErrors[fieldKey] != null
+                  ? const Color(0xFFEF5350)
+                  : const Color(0xFF4C40F7),
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+          ),
+          errorText: _fieldErrors[fieldKey],
+        ),
+        items: items.map((item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(display(item)),
+          );
+        }).toList(),
+        onChanged: (selected) {
+          onChanged?.call(selected);
+          validateNow(selected);
+        },
+        validator: (selected) {
+          final error = validateSelection(selected);
+          setState(() {
+            _fieldErrors[fieldKey] = error;
+          });
+          return error;
+        },
+      ),
     );
   }
 
@@ -314,7 +362,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _reference1NameController,
-                        label: context.t('Name', 'Tên'),
+                        label: context.t('Name(*)', 'Tên(*)'),
                         fieldKey: 'reference1Name',
                         icon: Icons.person,
                         validator: _validateRequiredName,
@@ -322,7 +370,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _reference1PhoneController,
-                        label: context.t('Phone Number', 'Số điện thoại'),
+                        label: context.t('Phone Number(*)', 'Số điện thoại(*)'),
                         fieldKey: 'reference1Phone',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
@@ -330,7 +378,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Relationship*', 'Mối quan hệ*'),
+                        label: context.t('Relationship(*)', 'Mối quan hệ(*)'),
                         fieldKey: 'reference1Relationship',
                         icon: Icons.people,
                         value: _selectedReference1Relationship,
@@ -356,7 +404,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _reference2NameController,
-                        label: context.t('Name', 'Tên'),
+                        label: context.t('Name(*)', 'Tên(*)'),
                         fieldKey: 'reference2Name',
                         icon: Icons.person,
                         validator: _validateRequiredName,
@@ -364,7 +412,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       const SizedBox(height: 12),
                       _buildTextField(
                         controller: _reference2PhoneController,
-                        label: context.t('Phone Number', 'Số điện thoại'),
+                        label: context.t('Phone Number(*)', 'Số điện thoại(*)'),
                         fieldKey: 'reference2Phone',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
@@ -372,7 +420,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       ),
                       const SizedBox(height: 12),
                       _buildDropdownField(
-                        label: context.t('Relationship*', 'Mối quan hệ*'),
+                        label: context.t('Relationship(*)', 'Mối quan hệ(*)'),
                         fieldKey: 'reference2Relationship',
                         icon: Icons.people,
                         value: _selectedReference2Relationship,
@@ -587,8 +635,9 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                               'phone': _reference2PhoneController.text.trim(),
                             },
                           ],
-                          'documents':
-                              _additionalDocuments.map((doc) => doc.name).toList(),
+                          'documents': _additionalDocuments
+                              .map((doc) => doc.name)
+                              .toList(),
                           'updatedAt': DateTime.now().toIso8601String(),
                         };
 

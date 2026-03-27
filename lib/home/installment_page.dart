@@ -145,9 +145,47 @@ class _InstallmentPageState extends State<InstallmentPage> {
       endIndex,
     );
 
+    final totalMonthlyDue = approvedApplications.fold<num>(0, (sum, app) {
+      final amount = app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
+      if (amount is num) return sum + amount;
+      return sum;
+    });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFEEF0FF), Color(0xFFF8F9FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFDDE1FF)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildSummaryMetric(
+                  context.t('Active Loans', 'Khoản vay hoạt động'),
+                  '$totalInstallments',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryMetric(
+                  context.t('Monthly Due', 'Tổng trả/tháng'),
+                  currencyFormat.format(totalMonthlyDue),
+                  alignEnd: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
         Text(
           context.t('Payment Schedule', 'Lịch thanh toán'),
           style: const TextStyle(
@@ -166,6 +204,14 @@ class _InstallmentPageState extends State<InstallmentPage> {
             final app = paginatedInstallments[index];
             final monthlyPayment =
                 app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
+            final contractId =
+                (app['contractId'] ??
+                        app['offerId'] ??
+                        app['loanOfferId'] ??
+                        app['applicationId'] ??
+                        app['id'] ??
+                        '')
+                    .toString();
 
             return Container(
               padding: const EdgeInsets.all(16),
@@ -173,6 +219,13 @@ class _InstallmentPageState extends State<InstallmentPage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade200),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x11000000),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,6 +250,11 @@ class _InstallmentPageState extends State<InstallmentPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMetaRow(
+                    context.t('Contract ID', 'Mã hợp đồng'),
+                    contractId.isEmpty ? '--' : contractId,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -553,6 +611,68 @@ class _InstallmentPageState extends State<InstallmentPage> {
   }
 
   int _min(int a, int b) => a < b ? a : b;
+
+  Widget _buildSummaryMetric(
+    String label,
+    String value, {
+    bool alignEnd = false,
+  }) {
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF60678A),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFF1A1F3F),
+            fontWeight: FontWeight.w700,
+          ),
+          textAlign: alignEnd ? TextAlign.right : TextAlign.left,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetaRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF60678A),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF1A1F3F),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   String _formatDate(DateTime date) {
     final format = DateFormat('dd/MM/yyyy');
