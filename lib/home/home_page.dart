@@ -2422,13 +2422,91 @@ class _HomePageState extends State<HomePage> {
       if (unpaid.isEmpty) return null;
 
       final paidCount = installments.where((item) => item.isPaid).length;
+      final currentInstallmentNumber =
+          await _getInstallmentNumberFromCreditApplication(
+            application: application,
+            userId: userId,
+            fallbackValue: paidCount + 1,
+          );
       return _addMonthsSafe(
         DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
-        paidCount + 1,
+        currentInstallmentNumber,
       );
     } catch (_) {
       return _getNextDueDateFromSubmission(application);
     }
+  }
+
+  Future<int> _getInstallmentNumberFromCreditApplication({
+    required Map<String, dynamic> application,
+    required String userId,
+    required int fallbackValue,
+  }) async {
+    final normalizedFallback = fallbackValue < 1 ? 1 : fallbackValue;
+    final applicationId = _extractApplicationId(application);
+    final offerId = _extractOfferId(application);
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>>? appDoc;
+
+      if (applicationId != null && applicationId.isNotEmpty) {
+        final byId = await FirebaseFirestore.instance
+            .collection('credit_applications')
+            .doc(applicationId)
+            .get();
+        if (byId.exists) {
+          appDoc = byId;
+        }
+      }
+
+      if (appDoc == null && offerId != null && offerId.isNotEmpty) {
+        final byOffer = await FirebaseFirestore.instance
+            .collection('credit_applications')
+            .where('userId', isEqualTo: userId)
+            .where('offerId', isEqualTo: offerId)
+            .limit(1)
+            .get();
+
+        if (byOffer.docs.isNotEmpty) {
+          appDoc = byOffer.docs.first;
+        }
+      }
+
+      final data = appDoc?.data();
+      if (data == null) return normalizedFallback;
+
+      final firestoreInstallmentNumber =
+          _asNullableInt(data['installmentNumber']) ??
+          _asNullableInt(data['currentInstallment']) ??
+          _asNullableInt(data['currentInstallmentNumber']) ??
+          _asNullableInt(data['installmentNo']) ??
+          _asNullableInt(data['installment_no']);
+
+      if (firestoreInstallmentNumber == null || firestoreInstallmentNumber < 1) {
+        return normalizedFallback;
+      }
+
+      return firestoreInstallmentNumber;
+    } catch (_) {
+      return normalizedFallback;
+    }
+  }
+
+  String? _extractApplicationId(Map<String, dynamic> application) {
+    final raw =
+        application['applicationId'] ??
+        application['creditApplicationId'] ??
+        application['id'];
+    final parsed = raw?.toString();
+    if (parsed == null || parsed.isEmpty) return null;
+    return parsed;
+  }
+
+  String? _extractOfferId(Map<String, dynamic> application) {
+    final raw = application['offerId'] ?? application['loanOfferId'];
+    final parsed = raw?.toString();
+    if (parsed == null || parsed.isEmpty) return null;
+    return parsed;
   }
 
   Future<String?> _resolveOfferIdForApplication(

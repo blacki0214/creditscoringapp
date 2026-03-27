@@ -1107,6 +1107,8 @@ class LoanViewModel extends ChangeNotifier {
 
       await LocalStorageService.saveApplicationHistory({
         'offerId': _currentOfferId ?? _currentOffer!['offerId'] ?? _currentOffer!['id'],
+        'contractId':
+            _currentOfferId ?? _currentOffer!['offerId'] ?? _currentOffer!['id'],
         'approved': _currentOffer!['approved'],
         'creditScore': _currentOffer!['creditScore'],
         'loanAmount': _currentOffer!['loanAmountVnd'],

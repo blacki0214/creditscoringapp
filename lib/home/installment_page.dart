@@ -204,14 +204,7 @@ class _InstallmentPageState extends State<InstallmentPage> {
             final app = paginatedInstallments[index];
             final monthlyPayment =
                 app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
-            final contractId =
-                (app['contractId'] ??
-                        app['offerId'] ??
-                        app['loanOfferId'] ??
-                        app['applicationId'] ??
-                        app['id'] ??
-                        '')
-                    .toString();
+            final fallbackContractId = _getFallbackContractId(app);
 
             return Container(
               padding: const EdgeInsets.all(16),
@@ -252,9 +245,20 @@ class _InstallmentPageState extends State<InstallmentPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  _buildMetaRow(
-                    context.t('Contract ID', 'Mã hợp đồng'),
-                    contractId.isEmpty ? '--' : contractId,
+                  FutureBuilder<String>(
+                    future: _getContractIdFromFirestore(app),
+                    builder: (context, snapshot) {
+                      final resolvedId = snapshot.data;
+                      final contractId =
+                          (resolvedId != null && resolvedId.isNotEmpty)
+                          ? resolvedId
+                          : fallbackContractId;
+
+                      return _buildMetaRow(
+                        context.t('Contract ID', 'Mã hợp đồng'),
+                        contractId.isEmpty ? '--' : contractId,
+                      );
+                    },
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -494,13 +498,91 @@ class _InstallmentPageState extends State<InstallmentPage> {
       if (unpaid.isEmpty) return null;
 
       final paidCount = installments.where((item) => item.isPaid).length;
+      final currentInstallmentNumber =
+          await _getInstallmentNumberFromCreditApplication(
+            application: application,
+            userId: userId,
+            fallbackValue: paidCount + 1,
+          );
       return _addMonthsSafe(
         DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
-        paidCount + 1,
+        currentInstallmentNumber,
       );
     } catch (_) {
       return _getNextDueDateFromSubmission(application);
     }
+  }
+
+  Future<int> _getInstallmentNumberFromCreditApplication({
+    required Map<String, dynamic> application,
+    required String userId,
+    required int fallbackValue,
+  }) async {
+    final normalizedFallback = fallbackValue < 1 ? 1 : fallbackValue;
+    final applicationId = _extractApplicationId(application);
+    final offerId = _extractOfferId(application);
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>>? appDoc;
+
+      if (applicationId != null && applicationId.isNotEmpty) {
+        final byId = await FirebaseFirestore.instance
+            .collection('credit_applications')
+            .doc(applicationId)
+            .get();
+        if (byId.exists) {
+          appDoc = byId;
+        }
+      }
+
+      if (appDoc == null && offerId != null && offerId.isNotEmpty) {
+        final byOffer = await FirebaseFirestore.instance
+            .collection('credit_applications')
+            .where('userId', isEqualTo: userId)
+            .where('offerId', isEqualTo: offerId)
+            .limit(1)
+            .get();
+
+        if (byOffer.docs.isNotEmpty) {
+          appDoc = byOffer.docs.first;
+        }
+      }
+
+      final data = appDoc?.data();
+      if (data == null) return normalizedFallback;
+
+      final firestoreInstallmentNumber =
+          _asNullableInt(data['installmentNumber']) ??
+          _asNullableInt(data['currentInstallment']) ??
+          _asNullableInt(data['currentInstallmentNumber']) ??
+          _asNullableInt(data['installmentNo']) ??
+          _asNullableInt(data['installment_no']);
+
+      if (firestoreInstallmentNumber == null || firestoreInstallmentNumber < 1) {
+        return normalizedFallback;
+      }
+
+      return firestoreInstallmentNumber;
+    } catch (_) {
+      return normalizedFallback;
+    }
+  }
+
+  String? _extractApplicationId(Map<String, dynamic> application) {
+    final raw =
+        application['applicationId'] ??
+        application['creditApplicationId'] ??
+        application['id'];
+    final parsed = raw?.toString();
+    if (parsed == null || parsed.isEmpty) return null;
+    return parsed;
+  }
+
+  String? _extractOfferId(Map<String, dynamic> application) {
+    final raw = application['offerId'] ?? application['loanOfferId'];
+    final parsed = raw?.toString();
+    if (parsed == null || parsed.isEmpty) return null;
+    return parsed;
   }
 
   Future<String?> _resolveOfferIdForApplication(
@@ -677,6 +759,57 @@ class _InstallmentPageState extends State<InstallmentPage> {
   String _formatDate(DateTime date) {
     final format = DateFormat('dd/MM/yyyy');
     return format.format(date);
+  }
+
+  String _getFallbackContractId(Map<String, dynamic> application) {
+    return (application['contractId'] ??
+            application['offerId'] ??
+            application['loanOfferId'] ??
+            application['applicationId'] ??
+            application['id'] ??
+            '')
+        .toString();
+  }
+
+  Future<String> _getContractIdFromFirestore(
+    Map<String, dynamic> application,
+  ) async {
+    final fallback = _getFallbackContractId(application);
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null || userId.isEmpty) return fallback;
+
+    final offerId = await _resolveOfferIdForApplication(application, userId);
+    if (offerId == null || offerId.isEmpty) return fallback;
+
+    try {
+      final offerDoc = await FirebaseFirestore.instance
+          .collection('loan_offers')
+          .doc(offerId)
+          .get();
+
+      if (!offerDoc.exists) {
+        return fallback;
+      }
+
+      final data = offerDoc.data();
+      final contractId =
+          _asNullableString(data?['contractId']) ?? offerDoc.id;
+
+      if (contractId.isNotEmpty) {
+        return contractId;
+      }
+    } catch (_) {
+      return fallback;
+    }
+
+    return fallback;
+  }
+
+  String? _asNullableString(dynamic value) {
+    if (value == null) return null;
+    final parsed = value.toString().trim();
+    if (parsed.isEmpty) return null;
+    return parsed;
   }
 
   int? _asNullableInt(dynamic value) {
