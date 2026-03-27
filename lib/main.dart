@@ -14,6 +14,7 @@ import 'viewmodels/settings_viewmodel.dart';
 import 'viewmodels/feedback_viewmodel.dart';
 import 'viewmodels/support_viewmodel.dart';
 import 'viewmodels/language_viewmodel.dart';
+import 'viewmodels/student_loan_viewmodel.dart';
 import 'services/local_storage_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/vnpt_ekyc_service.dart';
@@ -99,6 +100,7 @@ class VietCreditApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
         ChangeNotifierProvider(create: (_) => SupportViewModel()),
         ChangeNotifierProvider(create: (_) => LanguageViewModel()),
+        ChangeNotifierProvider(create: (_) => StudentLoanViewModel()),
       ],
       child: Consumer<LanguageViewModel>(
         builder: (context, languageVm, _) => MaterialApp(

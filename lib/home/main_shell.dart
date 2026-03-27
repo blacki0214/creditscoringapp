@@ -4,6 +4,7 @@ import '../viewmodels/home_viewmodel.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../loan/demo_calculator_page.dart';
+import '../loan/student_step_1_profile.dart';
 import 'home_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -24,9 +25,10 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _pages = [
-      HomePage(onOpenSettings: () => _onNavItemTap(3)),
+      HomePage(onOpenSettings: () => _onNavItemTap(4)),
       const LoanApplicationPage(),
       const DemoCalculatorPage(),
+      const StudentStepAProfilePage(),
       const SettingsPage(),
     ];
     _animationController = AnimationController(
@@ -72,7 +74,8 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                 _buildNavItem(Icons.home, 0),
                 _buildNavItem(Icons.upload_file, 1),
                 _buildNavItem(Icons.calculate, 2),
-                _buildNavItem(Icons.settings_outlined, 3),
+                _buildNavItem(Icons.school_outlined, 3),
+                _buildNavItem(Icons.settings_outlined, 4),
               ],
             ),
           ),
