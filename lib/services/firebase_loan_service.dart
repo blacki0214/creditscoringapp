@@ -121,8 +121,13 @@ class FirebaseLoanService {
           'step6Completed': false,
         });
 
+        await _firebase.loanOffersCollection.doc(offerRef.id).set({
+          'contractId': offerRef.id,
+        }, SetOptions(merge: true));
+
         await _firebase.creditApplicationsCollection.doc(applicationId).set({
           'offerId': offerRef.id,
+          'contractId': offerRef.id,
         }, SetOptions(merge: true));
 
         // Create notification for rejected loan
@@ -221,8 +226,13 @@ class FirebaseLoanService {
       });
       print('[FirebaseLoanService] Loan offer document created: ${offerRef.id}');
 
+      await _firebase.loanOffersCollection.doc(offerRef.id).set({
+        'contractId': offerRef.id,
+      }, SetOptions(merge: true));
+
       await _firebase.creditApplicationsCollection.doc(applicationId).set({
         'offerId': offerRef.id,
+        'contractId': offerRef.id,
       }, SetOptions(merge: true));
 
       // Add to application history
@@ -313,6 +323,7 @@ class FirebaseLoanService {
   Future<void> acceptLoanOffer(String offerId) async {
     try {
       await _firebase.loanOffersCollection.doc(offerId).update({
+        'contractId': offerId,
         'accepted': true,
         'acceptedAt': FieldValue.serverTimestamp(),
       });

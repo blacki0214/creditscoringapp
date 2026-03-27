@@ -55,6 +55,8 @@ class InstallmentService {
         batch.set(docRef, {
           ...installment.toFirestore(),
           'id': docRef.id,
+          'installmentId': docRef.id,
+          'contractId': loanOfferId,
         });
 
         installmentIds.add(docRef.id);
