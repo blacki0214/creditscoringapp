@@ -124,7 +124,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
               _SectionCard(
                 title: context.t('Verification Phase', 'Giai doan xac minh'),
                 child: DropdownButtonFormField<StudentVerificationPhase>(
-                  value: _phase,
+                  initialValue: _phase,
                   decoration: const InputDecoration(border: OutlineInputBorder()),
                   items: StudentVerificationPhase.values
                       .map(

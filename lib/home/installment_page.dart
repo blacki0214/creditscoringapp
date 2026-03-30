@@ -18,6 +18,7 @@ class InstallmentPage extends StatefulWidget {
 
 class _InstallmentPageState extends State<InstallmentPage> {
   final InstallmentService _installmentService = InstallmentService();
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF5A57F8),
@@ -199,7 +200,7 @@ class _InstallmentPageState extends State<InstallmentPage> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: paginatedInstallments.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final app = paginatedInstallments[index];
             final monthlyPayment =

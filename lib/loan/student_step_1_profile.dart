@@ -125,7 +125,7 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
               _SectionCard(
                 title: context.t('Academic year', 'Năm học'),
                 child: DropdownButtonFormField<int>(
-                  value: vm.academicYear,
+                  initialValue: vm.academicYear,
                   decoration: const InputDecoration(border: OutlineInputBorder()),
                   items: List.generate(
                     5,
@@ -433,7 +433,7 @@ class _MajorBottomSheetState extends State<_MajorBottomSheet> {
               height: 280,
               child: ListView.separated(
                 itemCount: majors.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final major = majors[index];
                   return ListTile(
