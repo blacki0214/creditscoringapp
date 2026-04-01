@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../config/domain_map.dart';
 import '../utils/app_localization.dart';
@@ -43,17 +44,6 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
     }
   }
 
-  String _phaseLabel(BuildContext context, StudentVerificationPhase phase) {
-    switch (phase) {
-      case StudentVerificationPhase.demo:
-        return context.t('Demo / Hackathon', 'Demo / Hackathon');
-      case StudentVerificationPhase.beta:
-        return context.t('Beta / Pilot', 'Beta / Pilot');
-      case StudentVerificationPhase.production:
-        return context.t('Production (future)', 'Production (tuong lai)');
-    }
-  }
-
   String? _extractDomain(String email) {
     final normalized = email.trim().toLowerCase();
     final at = normalized.lastIndexOf('@');
@@ -63,11 +53,14 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
 
   void _sendOtp() {
     final domain = _extractDomain(_emailController.text);
-    if (domain == null) {
+    if (domain == null || !domain.endsWith('edu.vn')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.t('Please enter a valid university email.', 'Vui long nhap email truong hop le.'),
+            context.t(
+              'Please enter a valid university email (must end with @edu.vn).',
+              'Vui lòng nhập email trường hợp lệ (phải kết thúc bằng @edu.vn).',
+            ),
           ),
           backgroundColor: Colors.red,
         ),
@@ -87,13 +80,43 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
         content: Text(
           mapped == null
               ? context.t(
-                  'OTP sent. Domain is not mapped yet, but verification can continue.',
-                  'Da gui OTP. Ten mien chua map, nhung van co the tiep tuc xac minh.',
+                  'OTP sent. Please check your email.',
+                  'Đã gửi OTP. Vui lòng kiểm tra email.',
                 )
               : context.t(
                   'OTP sent to university email.',
-                  'Da gui OTP den email truong.',
+                  'Đã gửi OTP đến email trường.',
                 ),
+        ),
+        backgroundColor: const Color(0xFF2E7D32),
+      ),
+    );
+  }
+
+  Future<void> _pickDocument({required bool isStudentId}) async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+    );
+
+    if (!mounted) return;
+    if (result == null || result.files.isEmpty) return;
+
+    setState(() {
+      if (isStudentId) {
+        _studentCardUploaded = true;
+      } else {
+        _transcriptUploaded = true;
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isStudentId
+              ? context.t('Student ID selected.', 'Đã chọn tệp thẻ sinh viên.')
+              : context.t('Transcript selected.', 'Đã chọn tệp bảng điểm.'),
         ),
         backgroundColor: const Color(0xFF2E7D32),
       ),
@@ -108,7 +131,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
         title: Text(
           context.t(
             'Student Verification',
-            'Xac minh thong tin sinh vien',
+            'Xác minh thông tin sinh viên',
           ),
         ),
         backgroundColor: Colors.white,
@@ -122,66 +145,9 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _SectionCard(
-                title: context.t('Verification Phase', 'Giai doan xac minh'),
-                child: DropdownButtonFormField<StudentVerificationPhase>(
-                  value: _phase,
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  items: StudentVerificationPhase.values
-                      .map(
-                        (phase) => DropdownMenuItem(
-                          value: phase,
-                          child: Text(_phaseLabel(context, phase)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      _phase = value;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
                 title: context.t(
-                  'Field Verification Strategy',
-                  'Chien luoc xac minh truong thong tin',
-                ),
-                child: Column(
-                  children: [
-                    _riskRow(
-                      context,
-                      field: context.t('Major, Program level, Living status', 'Nganh hoc, Bac hoc, Cho o'),
-                      risk: context.t('Low', 'Thap'),
-                      verification: context.t('Self-declare OK', 'Tu khai bao chap nhan'),
-                    ),
-                    _riskRow(
-                      context,
-                      field: context.t('Academic year', 'Nam hoc'),
-                      risk: context.t('Medium', 'Trung binh'),
-                      verification: context.t('Soft verify', 'Xac minh mem'),
-                    ),
-                    _riskRow(
-                      context,
-                      field: 'GPA',
-                      risk: context.t('High', 'Cao'),
-                      verification: context.t('Friction required', 'Bat buoc co ma sat xac minh'),
-                    ),
-                    _riskRow(
-                      context,
-                      field: context.t('Income', 'Thu nhap'),
-                      risk: context.t('High', 'Cao'),
-                      verification: context.t('Friction required', 'Bat buoc co ma sat xac minh'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t(
-                  'Method 1 - University Email OTP',
-                  'Phuong thuc 1 - OTP email truong',
+                  'University Email OTP',
+                  'OTP email trường',
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +157,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
-                        labelText: context.t('University email', 'Email truong'),
+                        labelText: context.t('University email', 'Email trường'),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -204,7 +170,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                             backgroundColor: const Color(0xFF4D4AF9),
                             foregroundColor: Colors.white,
                           ),
-                          child: Text(context.t('Send OTP', 'Gui OTP')),
+                          child: Text(context.t('Send OTP', 'Gửi OTP')),
                         ),
                         OutlinedButton(
                           onPressed: _otpSent
@@ -215,7 +181,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                                 }
                               : null,
                           child: Text(
-                            context.t('Mark OTP verified', 'Danh dau OTP da xac minh'),
+                            context.t('Mark OTP verified', 'Đánh dấu OTP đã xác minh'),
                           ),
                         ),
                       ],
@@ -225,7 +191,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                       Text(
                         context.t(
                           'Detected university: $_mappedUniversity',
-                          'Da nhan dien truong: $_mappedUniversity',
+                          'Đã nhận diện trường: $_mappedUniversity',
                         ),
                         style: const TextStyle(
                           fontSize: 12,
@@ -240,51 +206,52 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
               const SizedBox(height: 10),
               _SectionCard(
                 title: context.t(
-                  'Method 2 - Document Upload (Checklist)',
-                  'Phuong thuc 2 - Tai lieu xac minh (Danh dau)',
+                  'Document Upload',
+                  'Tài liệu xác minh',
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: _studentCardUploaded,
-                      onChanged: (value) {
-                        setState(() {
-                          _studentCardUploaded = value ?? false;
-                        });
-                      },
-                      title: Text(
-                        context.t('Student ID uploaded', 'Da tai len the sinh vien'),
-                      ),
-                      subtitle: Text(
-                        context.t(
-                          'Path: student_docs/{uid}/student_id.jpg',
-                          'Duong dan: student_docs/{uid}/student_id.jpg',
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickDocument(isStudentId: true),
+                        icon: const Icon(Icons.badge_outlined),
+                        label: Text(
+                          context.t('Upload Student ID', 'Tải lên thẻ sinh viên'),
                         ),
                       ),
                     ),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: _transcriptUploaded,
-                      onChanged: (value) {
-                        setState(() {
-                          _transcriptUploaded = value ?? false;
-                        });
-                      },
-                      title: Text(
-                        context.t('Transcript uploaded', 'Da tai len bang diem'),
-                      ),
-                      subtitle: Text(
-                        context.t(
-                          'Path: student_docs/{uid}/transcript.jpg',
-                          'Duong dan: student_docs/{uid}/transcript.jpg',
+                    const SizedBox(height: 6),
+                    Text(
+                      _studentCardUploaded
+                          ? context.t('Status: Uploaded', 'Trạng thái: Đã tải lên')
+                          : context.t('Status: Not uploaded', 'Trạng thái: Chưa tải lên'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickDocument(isStudentId: false),
+                        icon: const Icon(Icons.description_outlined),
+                        label: Text(
+                          context.t('Upload Transcript', 'Tải lên bảng điểm'),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _transcriptUploaded
+                          ? context.t('Status: Uploaded', 'Trạng thái: Đã tải lên')
+                          : context.t('Status: Not uploaded', 'Trạng thái: Chưa tải lên'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 8),
                     Text(
                       context.t(
                         'Upload is optional at Step 1 but required before disbursement (Step 5).',
-                        'Tai lieu la tuy chon o Buoc 1 nhung bat buoc truoc giai ngan (Buoc 5).',
+                        'Tài liệu là tùy chọn ở Bước 1 nhưng bắt buộc trước giải ngân (Bước 5).',
                       ),
                       style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
                     ),
@@ -294,8 +261,8 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
               const SizedBox(height: 10),
               _SectionCard(
                 title: context.t(
-                  'Method 3 - Legal Self-Declaration',
-                  'Phuong thuc 3 - Cam ket phap ly tu khai bao',
+                  'Legal Self-Declaration',
+                  'Cam kết pháp lý tự khai báo',
                 ),
                 child: CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
@@ -308,43 +275,12 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                   title: Text(
                     context.t(
                       'I confirm the above information is accurate. This information will be verified before disbursement. False declaration may cause rejection now and in future applications.',
-                      'Toi xac nhan thong tin tren la chinh xac. Thong tin se duoc xac minh truoc giai ngan. Khai bao sai co the bi tu choi hien tai va cac lan sau.',
+                      'Tôi xác nhận thông tin trên là chính xác. Thông tin sẽ được xác minh trước giải ngân. Khai báo sai có thể bị từ chối hiện tại và các lần sau.',
                     ),
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t(
-                  'Method 4 - In-form Consistency Checks',
-                  'Phuong thuc 4 - Kiem tra nhat quan trong form',
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'if (gpaLatest > 3.8 && academicYear == 1) showWarning();',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'if (monthlyIncome > 4000000 && supportSources.isEmpty) showWarning();',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _PhaseMethodSummary(phase: _phase),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -367,7 +303,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                   child: Text(
                     context.t(
                       'Continue to Student Step 1',
-                      'Tiep tuc vao Buoc 1 Sinh vien',
+                      'Tiếp tục vào Bước 1 Sinh viên',
                     ),
                   ),
                 ),
@@ -375,45 +311,6 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _riskRow(
-    BuildContext context, {
-    required String field,
-    required String risk,
-    required String verification,
-  }) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FF),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE3E8FF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            field,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1F3F),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${context.t('Risk', 'Rui ro')}: $risk',
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            '${context.t('Verification', 'Xac minh')}: $verification',
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
       ),
     );
   }
@@ -448,52 +345,6 @@ class _SectionCard extends StatelessWidget {
           const SizedBox(height: 10),
           child,
         ],
-      ),
-    );
-  }
-}
-
-class _PhaseMethodSummary extends StatelessWidget {
-  const _PhaseMethodSummary({required this.phase});
-
-  final StudentVerificationPhase phase;
-
-  @override
-  Widget build(BuildContext context) {
-    String method;
-    switch (phase) {
-      case StudentVerificationPhase.demo:
-        method = context.t('Self-declare + legal checkbox', 'Tu khai bao + checkbox phap ly');
-        break;
-      case StudentVerificationPhase.beta:
-        method = context.t(
-          'University email OTP + transcript upload at disbursement',
-          'OTP email truong + tai bang diem truoc giai ngan',
-        );
-        break;
-      case StudentVerificationPhase.production:
-        method = context.t(
-          'OCR transcript / university API partnership',
-          'OCR bang diem / ket noi API truong dai hoc',
-        );
-        break;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFB9E2C1)),
-      ),
-      child: Text(
-        '${context.t('Selected phase method', 'Phuong thuc giai doan da chon')}: $method',
-        style: const TextStyle(
-          fontSize: 12,
-          color: Color(0xFF1B5E20),
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
