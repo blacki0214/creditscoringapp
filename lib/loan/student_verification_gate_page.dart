@@ -19,8 +19,8 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
   final TextEditingController _emailController = TextEditingController();
 
   StudentVerificationPhase _phase = StudentVerificationPhase.demo;
-  bool _otpSent = false;
-  bool _otpVerified = false;
+  bool _emailSent = false;
+  bool _emailVerified = false;
   bool _legalConfirmed = false;
   bool _studentCardUploaded = false;
   bool _transcriptUploaded = false;
@@ -38,9 +38,9 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
       case StudentVerificationPhase.demo:
         return _legalConfirmed;
       case StudentVerificationPhase.beta:
-        return _legalConfirmed && _otpVerified;
+        return _legalConfirmed && _emailVerified;
       case StudentVerificationPhase.production:
-        return _legalConfirmed && _otpVerified && _transcriptUploaded;
+        return _legalConfirmed && _emailVerified && _transcriptUploaded;
     }
   }
 
@@ -51,15 +51,15 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
     return normalized.substring(at + 1);
   }
 
-  void _sendOtp() {
+  void _sendEmail() {
     final domain = _extractDomain(_emailController.text);
-    if (domain == null || !domain.endsWith('edu.vn')) {
+    if (domain == null || !domain.endsWith('edu.vn') && !domain.endsWith('student.swin.edu.au')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.t(
-              'Please enter a valid university email (must end with @edu.vn).',
-              'Vui lòng nhập email trường hợp lệ (phải kết thúc bằng @edu.vn).',
+              'Please enter a valid university email.',
+              'Vui lòng nhập email trường hợp lệ.',
             ),
           ),
           backgroundColor: Colors.red,
@@ -70,9 +70,9 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
 
     final mapped = universityDomains[domain];
     setState(() {
-      _otpSent = true;
+      _emailSent = true;
       _mappedUniversity = mapped;
-      _otpVerified = false;
+      _emailVerified = false;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -80,12 +80,12 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
         content: Text(
           mapped == null
               ? context.t(
-                  'OTP sent. Please check your email.',
-                  'Đã gửi OTP. Vui lòng kiểm tra email.',
+                  'Email sent. Please check your inbox.',
+                  'Email đã được gửi. Vui lòng kiểm tra hộp thư.',
                 )
               : context.t(
-                  'OTP sent to university email.',
-                  'Đã gửi OTP đến email trường.',
+                  'Verification email sent to your university address.',
+                  'Email xác minh đã được gửi đến địa chỉ email trường của bạn.',
                 ),
         ),
         backgroundColor: const Color(0xFF2E7D32),
@@ -145,31 +145,9 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _SectionCard(
-                title: context.t('Verification Phase', 'Giai doan xac minh'),
-                child: DropdownButtonFormField<StudentVerificationPhase>(
-                  initialValue: _phase,
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  items: StudentVerificationPhase.values
-                      .map(
-                        (phase) => DropdownMenuItem(
-                          value: phase,
-                          child: Text(_phaseLabel(context, phase)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      _phase = value;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
                 title: context.t(
-                  'University Email OTP',
-                  'OTP email trường',
+                  'University Email Authentication',
+                  'Xác thực email trường',
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,23 +165,23 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                       spacing: 8,
                       children: [
                         ElevatedButton(
-                          onPressed: _sendOtp,
+                          onPressed: _sendEmail,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4D4AF9),
                             foregroundColor: Colors.white,
                           ),
-                          child: Text(context.t('Send OTP', 'Gửi OTP')),
+                          child: Text(context.t('Send Email', 'Gửi Email')),
                         ),
                         OutlinedButton(
-                          onPressed: _otpSent
+                          onPressed: _emailSent
                               ? () {
                                   setState(() {
-                                    _otpVerified = true;
+                                    _emailVerified = true;
                                   });
                                 }
                               : null,
                           child: Text(
-                            context.t('Mark OTP verified', 'Đánh dấu OTP đã xác minh'),
+                            context.t('Email Verified', 'Email đã được xác minh'),
                           ),
                         ),
                       ],
