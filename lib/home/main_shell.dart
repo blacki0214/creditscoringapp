@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../viewmodels/home_viewmodel.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../loan/demo_calculator_page.dart';
@@ -47,38 +45,59 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<HomeViewModel>();
-
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 76),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 360;
+            final horizontalPadding = isCompact ? 8.0 : 16.0;
+            final verticalPadding = isCompact ? 8.0 : 10.0;
+            final iconSize = isCompact ? 24.0 : 26.0;
+
+            return Container(
+              constraints: BoxConstraints(minHeight: isCompact ? 68 : 76),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(Icons.home, 0),
-                _buildNavItem(Icons.upload_file, 1),
-                _buildNavItem(Icons.calculate, 2),
-                _buildNavItem(Icons.school_outlined, 3),
-                _buildNavItem(Icons.settings_outlined, 4),
-              ],
-            ),
-          ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: verticalPadding,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildNavItem(Icons.home, 0, iconSize)),
+                    Expanded(
+                      child: _buildNavItem(Icons.upload_file, 1, iconSize),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(Icons.calculate, 2, iconSize),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(Icons.school_outlined, 3, iconSize),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.settings_outlined,
+                        4,
+                        iconSize,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -93,7 +112,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     _animationController.forward(from: 0.0);
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
+  Widget _buildNavItem(IconData icon, int index, double iconSize) {
     final isCurrentlySelected = _selectedIndex == index;
     final wasPreviouslySelected = _previousIndex == index;
     final inactiveColor = Colors.grey.shade600;
@@ -105,7 +124,6 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
         _onNavItemTap(index);
       },
       child: SizedBox(
-        width: 64,
         height: 52,
         child: Center(
           child: AnimatedBuilder(
@@ -127,7 +145,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
               return Icon(
                 icon,
                 color: Color.lerp(inactiveColor, activeColor, animationValue),
-                size: 26,
+                size: iconSize,
               );
             },
           ),

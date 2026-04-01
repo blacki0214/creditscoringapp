@@ -302,7 +302,7 @@ class LoanViewModel extends ChangeNotifier {
         final rawStep3Completed = latestApplication['step3Completed'] as bool? ?? false;
         final step3Data = latestApplication['step3Data'];
         final hasStep3Data =
-            step3Data is Map && (step3Data as Map).isNotEmpty;
+            step3Data is Map && (step3Data).isNotEmpty;
         // Backward-compat: old records may mark step3Completed=true right after scoring.
         _step3Completed = rawStep3Completed && hasStep3Data;
         _step4Completed = latestApplication['step4Completed'] as bool? ?? false;

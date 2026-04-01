@@ -293,7 +293,7 @@ class _PaymentPageState extends State<PaymentPage> {
             child: Image.network(
               _hardcodedQrUrl,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Center(
+              errorBuilder: (_, _, _) => const Center(
                 child: Icon(Icons.qr_code_2, size: 120, color: Color(0xFF4C40F7)),
               ),
             ),

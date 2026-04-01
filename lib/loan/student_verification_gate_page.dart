@@ -145,6 +145,28 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _SectionCard(
+                title: context.t('Verification Phase', 'Giai doan xac minh'),
+                child: DropdownButtonFormField<StudentVerificationPhase>(
+                  initialValue: _phase,
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                  items: StudentVerificationPhase.values
+                      .map(
+                        (phase) => DropdownMenuItem(
+                          value: phase,
+                          child: Text(_phaseLabel(context, phase)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _phase = value;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              _SectionCard(
                 title: context.t(
                   'University Email OTP',
                   'OTP email trường',
