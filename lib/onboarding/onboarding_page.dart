@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/onboarding_viewmodel.dart';
+
 import '../auth/login_page.dart';
+import '../viewmodels/onboarding_viewmodel.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -11,186 +12,209 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  PageController _pageController = PageController();
+  late final PageController _pageController;
 
-  final List<OnboardingContent> _pages = [
-    OnboardingContent(
-      image: 'assets/images/splash1.png',
+  final List<_LandingSlide> _slides = const [
+    _LandingSlide(
       title: 'Unlock Your Financial Future',
-      description: 'Get instant access to your credit score and personalized financial insights',
+      description:
+          'Precision-engineered credit insights tailored to your unique financial footprint. Start your journey with VietCredit Score.',
     ),
-    OnboardingContent(
-      image: 'assets/images/splash2.png',
-      title: 'Track Your Credit Journey',
-      description: 'Monitor your credit score changes and receive alerts for important updates',
+    _LandingSlide(
+      title: 'Track Your Journey',
+      description:
+          'Follow score movement, see monthly gains, and stay informed with concise status insights.',
     ),
-    OnboardingContent(
-      image: 'assets/images/splash3.png',
-      title: 'Smart Financial Decisions',
-      description: 'Make informed choices with personalized recommendations and credit tips',
+    _LandingSlide(
+      title: 'Smart Decisions',
+      description:
+          'Get practical loan recommendations and move confidently with clear next actions.',
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    // Initialize PageController with current page from ViewModel
-    final viewModel = context.read<OnboardingViewModel>();
-     _pageController = PageController(initialPage: viewModel.currentPage); 
+    final vm = context.read<OnboardingViewModel>();
+    _pageController = PageController(initialPage: vm.currentPage);
   }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<OnboardingViewModel>();
+    final vm = context.watch<OnboardingViewModel>();
+    final currentIndex = vm.currentPage.clamp(0, _slides.length - 1);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1F3F),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Skip button
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: () => _navigateToLogin(),
-                child: const Text(
-                  'Skip',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-              ),
-            ),
-            // PageView
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  viewModel.setCurrentPage(index);
-                },
-                itemCount: _pages.length,
-                itemBuilder: (context, index) {
-                  return _buildPage(_pages[index]);
-                },
-              ),
-            ),
-            // Page indicators
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => _buildIndicator(index == viewModel.currentPage),
-              ),
-            ),
-            const SizedBox(height: 40),
-            // Next/Get Started button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (viewModel.currentPage == _pages.length - 1) {
-                      _navigateToLogin();
-                    } else {
-                       viewModel.setCurrentPage(viewModel.currentPage + 1);
-                      _pageController.animateToPage(
-                        viewModel.currentPage, // It's already updated
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1A1F3F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF171C57), Color(0xFF020817)],
+          ),
+        ),
+        child: SafeArea(
+          bottom: true,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const _LandingHeader(),
+                const SizedBox(height: 20),
+                const _ScoreHeroRing(),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: Colors.white.withOpacity(0.12)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF1A2447).withOpacity(0.95),
+                        const Color(0xFF121D3D).withOpacity(0.85),
+                      ],
                     ),
                   ),
-                  child: Text(
-                    viewModel.currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  child: SizedBox(
+                    height: 140,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _slides.length,
+                      onPageChanged: vm.setCurrentPage,
+                      itemBuilder: (context, index) {
+                        final slide = _slides[index];
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              slide.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                height: 1.16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              slide.description,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.65),
+                                fontSize: 15,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _slides.length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: index == currentIndex ? 28 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: index == currentIndex
+                            ? const Color(0xFF5D67FF)
+                            : Colors.white.withOpacity(0.26),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4F5CFF).withOpacity(0.38),
+                        blurRadius: 34,
+                        offset: const Offset(0, 16),
+                      ),
+                    ],
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF444DF6), Color(0xFF8995FF)],
+                    ),
+                  ),
+                  child: SizedBox(
+                    height: 66,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                      onPressed: _navigateToLogin,
+                      child: const Text(
+                        'Get Started',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: const [
+                    Expanded(
+                      child: _FeatureBadge(
+                        icon: Icons.insights_rounded,
+                        title: 'Track Your Journey',
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: _FeatureBadge(
+                        icon: Icons.psychology_alt_rounded,
+                        title: 'Smart Decisions',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'By continuing, you agree to Lumina Finance',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.52),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Terms of Service and Privacy Policy',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.70),
+                    decoration: TextDecoration.underline,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 40),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPage(OnboardingContent content) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            content.image,
-            height: 300,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.credit_score,
-                  size: 120,
-                  color: Colors.white38,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 48),
-          Text(
-            content.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            content.description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 16,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIndicator(bool isActive) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      height: 8,
-      width: isActive ? 24 : 8,
-      decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white38,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    );
-  }
-
-  /// Navigate to login page after onboarding is complete
-  /// Marks onboarding as seen to prevent showing it again after logout
   void _navigateToLogin() {
-    // Mark onboarding as seen before navigating
     context.read<OnboardingViewModel>().completeOnboarding();
     Navigator.pushReplacement(
       context,
@@ -205,14 +229,228 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 }
 
-class OnboardingContent {
-  final String image;
+class _LandingSlide {
   final String title;
   final String description;
 
-  OnboardingContent({
-    required this.image,
-    required this.title,
-    required this.description,
-  });
+  const _LandingSlide({required this.title, required this.description});
+}
+
+class _LandingHeader extends StatelessWidget {
+  const _LandingHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: const Color(0xFF5B66FF),
+          ),
+          child: const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+        ),
+        const SizedBox(width: 12),
+        const Text(
+          'Lumina Finance',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 40,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.6,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ScoreHeroRing extends StatelessWidget {
+  const _ScoreHeroRing();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 430,
+      child: Stack(
+        children: [
+          Align(
+            child: SizedBox(
+              width: 360,
+              height: 360,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 340,
+                    height: 340,
+                    child: CircularProgressIndicator(
+                      value: 0.88,
+                      strokeWidth: 28,
+                      backgroundColor: Colors.white.withOpacity(0.12),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF69EBC0),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF0F1742),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.28),
+                          blurRadius: 40,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'VIETCREDIT SCORE',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.62),
+                            fontSize: 18,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          '784',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 72,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF74F6B8),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'EXCELLENT',
+                            style: TextStyle(
+                              color: Color(0xFF042F25),
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 52,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.16)),
+                color: const Color(0xFF1A264B).withOpacity(0.92),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2D4A5A),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.trending_up_rounded,
+                      color: Color(0xFF74F6B8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '+12 pts',
+                        style: TextStyle(
+                          color: Color(0xFFD1FFF0),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'Monthly gain',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.56),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureBadge extends StatelessWidget {
+  const _FeatureBadge({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 94,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF1A2447).withOpacity(0.90),
+            const Color(0xFF0F1B38).withOpacity(0.80),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: const Color(0xFF9EA7FF)),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

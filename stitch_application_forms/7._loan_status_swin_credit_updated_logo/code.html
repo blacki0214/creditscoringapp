@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2E5YzM1N2NmZTlkZTQ1ODA5OTlmYmRkNzZhNjA1ODg0EgsSBxDV4pi6th4YAZIBIwoKcHJvamVjdF9pZBIVQhM5NDg5ODU5OTQxOTAyMTY3MDI0%26filename%3D%26opi%3D89354086&amp;app=com.microsoft.edgemac&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-java&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#fff0e4",
+              "on-background": "#2c2f31",
+              "primary-dim": "#3d44ff",
+              "surface-dim": "#d1d5d9",
+              "secondary": "#00693f",
+              "tertiary": "#844f00",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary": "#cbffda",
+              "on-tertiary-container": "#4c2b00",
+              "on-primary": "#f4f1ff",
+              "error-container": "#f74b6d",
+              "secondary-fixed": "#72fcb1",
+              "primary-fixed-dim": "#8087ff",
+              "on-secondary-container": "#005e38",
+              "secondary-fixed-dim": "#63eda4",
+              "tertiary-dim": "#744500",
+              "on-surface-variant": "#595c5e",
+              "background": "#f8fafc",
+              "on-primary-fixed-variant": "#03009f",
+              "on-primary-fixed": "#000000",
+              "on-primary-container": "#020083",
+              "primary-fixed": "#9197ff",
+              "error": "#b41340",
+              "surface-bright": "#f8fafc",
+              "on-secondary-fixed-variant": "#00693f",
+              "on-error-container": "#510017",
+              "error-dim": "#a70138",
+              "on-secondary-fixed": "#00492b",
+              "surface-container-low": "#f1f5f9",
+              "tertiary-fixed-dim": "#ec9100",
+              "surface-tint": "#4A52FF",
+              "on-tertiary-fixed": "#2b1600",
+              "tertiary-fixed": "#fe9d00",
+              "surface-variant": "#e2e8f0",
+              "on-error": "#ffefef",
+              "primary": "#4A52FF",
+              "surface-container-highest": "#cbd5e1",
+              "secondary-dim": "#005c37",
+              "outline": "#75777a",
+              "on-surface": "#0f172a",
+              "inverse-on-surface": "#94a3b8",
+              "secondary-container": "#72fcb1",
+              "on-tertiary-fixed-variant": "#583300",
+              "primary-container": "#9197ff",
+              "inverse-primary": "#7d84ff",
+              "outline-variant": "#94a3b8",
+              "surface-container": "#f1f5f9",
+              "surface-container-high": "#e2e8f0",
+              "surface": "#f8fafc",
+              "tertiary-container": "#fe9d00",
+              "inverse-surface": "#0f172a"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .signature-gradient {
+            background: linear-gradient(135deg, #4A52FF 0%, #8087ff 100%);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-32">
+<!-- TopAppBar Shell (Updated with Component 37 & Logo 9) -->
+<header class="fixed top-0 w-full z-50 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl">
+<div class="flex items-center justify-between px-6 py-4 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center overflow-hidden">
+<img alt="User profile photo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5jB9vb4m9y3Z7giqCX3ifU4gtAu4NrcBNXjq9AjGOix72j7jtxkp9B3B4wie48E2G-MRgwdMcmnK9SV4ZstMGK0VF0aDGvW0YcsFBgP10opwAi1X1r7cP-uW18Se2yhtSikLefEc3tBNCy_cvojczyQLH3qlTkbho6VVZS-2d31TEn4iVgGp0AeACHw7yt3mCn5I31u6788XTxLwuVGGHxe6jNGnGwKKPHOrdr1OosZajOB_ssno0KKOb3T2WyPSZmMLPA33eEPI"/>
+</div>
+<div class="flex items-center gap-2">
+<img alt="Swin Credit Logo" class="h-10 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7eA2OMeHJqXqV8kwTgPL-x3TwuAAXciTiNw3FZ_M4beq7oYejR1DCg45ZA5yL4Dxv5G1BI74gnhpPmdRAcro8oGN3CTQLyRPXxHWe51tNMUPtDpbSrfdEQhMus9be3LNlRMJ3gR_QEgsY0otxHU9paygmznVqdSRkN2wAiXNrDKzuSYot3sA_y-YS6nmPSj0_8c1EAUwmr8ciQvZLD2PbkRyayfBFYDxt2ktRydf2niJDUjE3vuI09fSQbtyQ-KuARCx9jNnrzCk"/>
+<h1 class="font-manrope font-extrabold tracking-tighter text-2xl text-indigo-700 dark:text-indigo-400">Swin Credit</h1>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-500">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-7xl mx-auto space-y-8">
+<!-- Hero Section: Loan Status -->
+<section class="bg-surface-container-lowest rounded-xl p-8 relative overflow-hidden border border-slate-100">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+<div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-4">
+<div class="inline-flex items-center px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold tracking-wide uppercase">
+                        Active
+                    </div>
+<h2 class="font-headline font-bold text-4xl text-on-surface tracking-tight">Personal Loan #SC-8829</h2>
+<p class="font-body text-on-surface-variant max-w-md">Your loan is currently in good standing. Your next payment is scheduled for September 15th.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg flex flex-col items-end min-w-[240px]">
+<span class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant opacity-60">Remaining Balance</span>
+<span class="font-headline font-extrabold text-3xl text-primary mt-1">34.250.000 d</span>
+</div>
+</div>
+</section>
+<!-- Summary Cards Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-slate-100 transition-all hover:shadow-[0_20px_40px_rgba(12,15,17,0.06)]">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary">payments</span>
+</div>
+<p class="text-sm font-semibold text-on-surface-variant">Loan Amount</p>
+<p class="font-headline font-bold text-xl mt-1">50.000.000 d</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-slate-100 transition-all hover:shadow-[0_20px_40px_rgba(12,15,17,0.06)]">
+<div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-tertiary">trending_up</span>
+</div>
+<p class="text-sm font-semibold text-on-surface-variant">Interest Rate</p>
+<p class="font-headline font-bold text-xl mt-1">12.50%</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-slate-100 transition-all hover:shadow-[0_20px_40px_rgba(12,15,17,0.06)]">
+<div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-secondary">calendar_month</span>
+</div>
+<p class="text-sm font-semibold text-on-surface-variant">Tenor</p>
+<p class="font-headline font-bold text-xl mt-1">38 months</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-slate-100 transition-all hover:shadow-[0_20px_40px_rgba(12,15,17,0.06)]">
+<div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+</div>
+<p class="text-sm font-semibold text-on-surface-variant">Monthly Payment</p>
+<p class="font-headline font-bold text-xl mt-1">1.750.009 d</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Repayment Timeline -->
+<section class="lg:col-span-2 space-y-6">
+<div class="flex items-center justify-between px-2">
+<h3 class="font-headline font-bold text-2xl">Repayment Timeline</h3>
+<button class="text-primary font-bold text-sm hover:underline">View History</button>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-8 border border-slate-100">
+<div class="relative pb-4">
+<div class="absolute left-6 top-0 bottom-0 w-0.5 bg-surface-container-high rounded-full"></div>
+<div class="space-y-10">
+<!-- Completed Step -->
+<div class="relative flex items-start gap-6">
+<div class="relative z-10 w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center border-4 border-white">
+<span class="material-symbols-outlined text-on-secondary-container text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline font-bold text-lg">August Payment</h4>
+<span class="text-sm font-bold text-secondary">PAID</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-1">Successfully processed on Aug 15, 2023</p>
+</div>
+</div>
+<!-- Current/Active Step -->
+<div class="relative flex items-start gap-6">
+<div class="relative z-10 w-12 h-12 rounded-full signature-gradient flex items-center justify-center border-4 border-white shadow-lg">
+<span class="material-symbols-outlined text-white text-lg">schedule</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-6 rounded-lg">
+<div class="flex justify-between items-center">
+<h4 class="font-headline font-bold text-lg">September Payment</h4>
+<span class="text-xs font-bold tracking-widest text-primary uppercase">Upcoming</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-1 mb-4">Due on Sep 15, 2023</p>
+<div class="flex items-center justify-between">
+<span class="font-headline font-bold text-xl">1.750.009 d</span>
+<button class="signature-gradient text-white px-8 py-3 rounded-lg font-bold text-sm shadow-lg active:scale-95 transition-all">
+                                            PAY NOW
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Future Step -->
+<div class="relative flex items-start gap-6 opacity-40">
+<div class="relative z-10 w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center border-4 border-white">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">lock</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<h4 class="font-headline font-bold text-lg">October Payment</h4>
+</div>
+<p class="text-on-surface-variant text-sm mt-1">Expected on Oct 15, 2023</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Installment Schedule Side Panel -->
+<section class="space-y-6">
+<div class="flex items-center justify-between px-2">
+<h3 class="font-headline font-bold text-2xl">Installments</h3>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-6 space-y-4 border border-slate-100">
+<div class="group flex items-center justify-between p-4 rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex flex-col items-center justify-center text-[10px] font-bold">
+<span>SEP</span>
+<span class="text-sm">15</span>
+</div>
+<div>
+<p class="font-bold text-sm">Installment #9</p>
+<p class="text-xs text-on-surface-variant">Due in 12 days</p>
+</div>
+</div>
+<span class="font-headline font-bold text-sm">1.750.009 d</span>
+</div>
+<div class="group flex items-center justify-between p-4 rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex flex-col items-center justify-center text-[10px] font-bold">
+<span>OCT</span>
+<span class="text-sm">15</span>
+</div>
+<div>
+<p class="font-bold text-sm">Installment #10</p>
+<p class="text-xs text-on-surface-variant">Upcoming</p>
+</div>
+</div>
+<span class="font-headline font-bold text-sm">1.750.009 d</span>
+</div>
+<div class="group flex items-center justify-between p-4 rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex flex-col items-center justify-center text-[10px] font-bold">
+<span>NOV</span>
+<span class="text-sm">15</span>
+</div>
+<div>
+<p class="font-bold text-sm">Installment #11</p>
+<p class="text-xs text-on-surface-variant">Upcoming</p>
+</div>
+</div>
+<span class="font-headline font-bold text-sm">1.750.009 d</span>
+</div>
+<button class="w-full py-4 text-on-surface-variant font-bold text-sm border-t border-dashed border-outline-variant/30 mt-4 hover:text-primary transition-colors">
+                        View Full Schedule
+                    </button>
+</div>
+<!-- Decorative Promotion Card -->
+<div class="relative bg-inverse-surface rounded-xl p-6 text-white overflow-hidden shadow-xl">
+<img alt="Abstract particles" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs8c2gVXkOa0K-CpfSwtRcfA8x17EmPf0I77_3eM6VIbqf0ZOz4nZL6X3otJtPcDHM2nBYjauoWf9xAjsovPIthZOF4E5jNPd8_NztQh7o1Rg6rkV7z5el-JvBi3PVKGhTcYKeH3kkJUdou-XQXnEONTB2fOtOPwfnwYFcOz8BIVUiLiDnguJhPcxSBHtnnWS-HS8a6aKAcj8lPyuSDeHB-SoAYXbdF5qC8d-gp5cFNF5RmGfG47wZe5cJCkVfne-D4xZY5iDD8CI"/>
+<div class="relative z-10">
+<h4 class="font-headline font-bold text-lg mb-2">Upgrade your limit</h4>
+<p class="text-xs text-slate-400 mb-6 font-medium">Eligible for an additional credit line of up to 25.000.000 d based on your history.</p>
+<button class="bg-white text-black px-6 py-2.5 rounded-lg font-bold text-xs hover:bg-primary hover:text-white transition-all">
+                            Check Eligibility
+                        </button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar Shell (Updated with Component 37) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2rem] md:hidden">
+<div class="flex justify-around items-center px-4 pb-8 pt-4">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-indigo-500 transition-all duration-300 ease-out active:scale-90">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-indigo-600 dark:bg-indigo-500 text-white rounded-2xl px-5 py-2 scale-110 shadow-lg shadow-indigo-500/20 active:scale-90 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Loans</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-indigo-500 transition-all duration-300 ease-out active:scale-90">
+<span class="material-symbols-outlined mb-1">insights</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Insights</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-indigo-500 transition-all duration-300 ease-out active:scale-90">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Profile</span>
+</div>
+</div>
+</nav>
+<!-- Desktop Navigation Side Anchors -->
+<div class="hidden md:flex fixed left-0 top-0 h-full w-20 flex-col items-center py-12 gap-8 z-40 bg-surface-container-low shadow-lg">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">home</span>
+<span class="material-symbols-outlined text-primary cursor-pointer" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">insights</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">person</span>
+</div>
+</body></html>

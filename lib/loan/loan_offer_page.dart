@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../viewmodels/loan_viewmodel.dart';
+import 'loan_step_transitions.dart';
 import 'step4_offer_calculator.dart';
 import '../utils/app_localization.dart';
 
@@ -132,9 +133,7 @@ class LoanOfferPage extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const Step4OfferCalculatorPage(),
-                        ),
+                        buildLoanStepRoute(const Step4OfferCalculatorPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina Finance - Sign In</title>
+<script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzZmYmE4MWMwNWJmZDQzMWU4NDNiMTczMGNmNWJkMWZjEgsSBxDV4pi6th4YAZIBIwoKcHJvamVjdF9pZBIVQhM5NDg5ODU5OTQxOTAyMTY3MDI0%26filename%3D%26opi%3D89354086&amp;app=com.microsoft.edgemac&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-java&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary": "#fff0e4",
+                        "on-background": "#2c2f31",
+                        "primary-dim": "#282de4",
+                        "surface-dim": "#d1d5d9",
+                        "secondary": "#00693f",
+                        "tertiary": "#844f00",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#cbffda",
+                        "on-tertiary-container": "#4c2b00",
+                        "on-primary": "#f4f1ff",
+                        "error-container": "#f74b6d",
+                        "secondary-fixed": "#72fcb1",
+                        "primary-fixed-dim": "#8087ff",
+                        "on-secondary-container": "#005e38",
+                        "secondary-fixed-dim": "#63eda4",
+                        "tertiary-dim": "#744500",
+                        "on-surface-variant": "#595c5e",
+                        "background": "#f5f6f9",
+                        "on-primary-fixed-variant": "#03009f",
+                        "on-primary-fixed": "#000000",
+                        "on-primary-container": "#020083",
+                        "primary-fixed": "#9197ff",
+                        "error": "#b41340",
+                        "surface-bright": "#f5f6f9",
+                        "on-secondary-fixed-variant": "#00693f",
+                        "on-error-container": "#510017",
+                        "error-dim": "#a70138",
+                        "on-secondary-fixed": "#00492b",
+                        "surface-container-low": "#eff1f4",
+                        "tertiary-fixed-dim": "#ec9100",
+                        "surface-tint": "#383eef",
+                        "on-tertiary-fixed": "#2b1600",
+                        "tertiary-fixed": "#fe9d00",
+                        "surface-variant": "#dadde1",
+                        "on-error": "#ffefef",
+                        "primary": "#383eef",
+                        "surface-container-highest": "#dadde1",
+                        "secondary-dim": "#005c37",
+                        "outline": "#75777a",
+                        "on-surface": "#2c2f31",
+                        "inverse-on-surface": "#9b9da0",
+                        "secondary-container": "#72fcb1",
+                        "on-tertiary-fixed-variant": "#583300",
+                        "primary-container": "#9197ff",
+                        "inverse-primary": "#7d84ff",
+                        "outline-variant": "#abadb0",
+                        "surface-container": "#e6e8ec",
+                        "surface-container-high": "#e0e3e6",
+                        "surface": "#f5f6f9",
+                        "tertiary-container": "#fe9d00",
+                        "inverse-surface": "#0c0f11"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .signature-gradient {
+            background: linear-gradient(135deg, #383eef 0%, #9197ff 100%);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface antialiased min-h-screen flex flex-col">
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12">
+<div class="w-full max-w-[440px] space-y-10">
+<header class="flex flex-col items-center text-center space-y-4">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-4xl text-primary" data-icon="lightbulb" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<h1 class="font-headline font-extrabold text-3xl tracking-tighter text-primary">Lumina Finance</h1>
+</div>
+<div class="space-y-1">
+<h2 class="font-headline font-bold text-2xl text-on-surface">Welcome back</h2>
+<p class="text-on-surface-variant font-medium">Please enter your details to sign in</p>
+</div>
+</header>
+<div class="bg-surface-container-lowest p-8 rounded-3xl shadow-[0_20px_40px_rgba(12,15,17,0.06)] space-y-8">
+<form class="space-y-6">
+<div class="space-y-5">
+<div class="group">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 ml-1 tracking-wide" for="email">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant group-focus-within:text-primary transition-colors" data-icon="mail">mail</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline-variant font-medium" id="email" name="email" placeholder="name@company.com" type="email"/>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between items-center mb-2 ml-1">
+<label class="block text-sm font-semibold text-on-surface-variant tracking-wide" for="password">Password</label>
+<a class="text-xs font-bold text-primary hover:text-primary-dim transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant group-focus-within:text-primary transition-colors" data-icon="lock">lock</span>
+<input class="w-full pl-12 pr-12 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline-variant font-medium" id="password" name="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<button class="w-full signature-gradient text-white font-bold py-4 rounded-3xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2" type="submit">
+<span>Sign in</span>
+<span class="material-symbols-outlined text-xl" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<div class="relative flex items-center py-2">
+<div class="flex-grow border-t border-surface-variant/50"></div>
+<span class="flex-shrink mx-4 text-xs font-bold text-outline-variant uppercase tracking-widest">or continue with</span>
+<div class="flex-grow border-t border-surface-variant/50"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center space-x-3 py-3.5 px-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-2xl active:scale-[0.98]">
+<img alt="" class="w-5 h-5" data-alt="Official Google logo with vibrant primary colors on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyXsIMA9y51v3TaSXVfC7kpGCneODn_rRBLYybuVjiJp943169F_C35UiJMFo1p2n6j6OvKANJ2BiOmCm8-Rz4D0PgyGS_TRPQzXKFtMVlLOT9VY1mq3BEvP_7QM9ITijHTFCInF0mU9vYOjq5pDJMnI_Kms0zh35AH_gGv_uxKT3mVUy0svEbHA-PeznDpoaWANPiIyByAWhrZcLQ9kVAjhg7Dj9pzI2p48tfPX14EhfU7Q3ERF8MWstt4t_DePZ6qjcHiIjIHBI"/>
+<span class="text-sm font-bold text-on-surface">Google</span>
+</button>
+<button class="flex items-center justify-center space-x-3 py-3.5 px-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-2xl active:scale-[0.98]">
+<span class="material-symbols-outlined text-on-surface" data-icon="phone_android">phone_android</span>
+<span class="text-sm font-bold text-on-surface">Phone</span>
+</button>
+</div>
+</div>
+<footer class="text-center space-y-6">
+<p class="text-on-surface-variant font-medium">
+                    Don't have an account? 
+                    <a class="text-primary font-bold hover:underline decoration-2 underline-offset-4" href="#">Create account</a>
+</p>
+<div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 px-4">
+<button class="text-xs font-semibold text-outline-variant hover:text-on-surface transition-colors">Privacy Policy</button>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<button class="text-xs font-semibold text-outline-variant hover:text-on-surface transition-colors">Terms of Service</button>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<button class="text-xs font-semibold text-outline-variant hover:text-on-surface transition-colors">Help Center</button>
+</div>
+</footer>
+</div>
+</main>
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-inverse-surface/40 backdrop-blur-sm">
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[707px]">
+<div class="px-8 py-6 flex items-center justify-between border-b border-surface-variant/20">
+<h3 class="font-headline font-bold text-xl text-on-surface">Terms of Service</h3>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="close">close</span>
+</button>
+</div>
+<div class="p-8 overflow-y-auto space-y-6 text-on-surface-variant leading-relaxed">
+<p>Welcome to Lumina Finance. By using our platform, you agree to comply with and be bound by the following terms and conditions of use.</p>
+<div class="space-y-4">
+<h4 class="font-bold text-on-surface">1. User Account</h4>
+<p class="text-sm">You are responsible for maintaining the confidentiality of your account and password and for restricting access to your computer or mobile device.</p>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-on-surface">2. Financial Services</h4>
+<p class="text-sm">Lumina Finance provides financial management tools. We are not a bank, but a financial technology company. All banking services are provided by our partner banks.</p>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-on-surface">3. Privacy</h4>
+<p class="text-sm">Your privacy is important to us. Please review our Privacy Policy, which also governs your use of Lumina Finance, to understand our practices.</p>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low flex justify-end">
+<button class="px-8 py-3 signature-gradient text-white font-bold rounded-2xl shadow-md">I Accept</button>
+</div>
+</div>
+</div>
+<div class="fixed top-12 left-12 hidden lg:block">
+<div class="w-64 p-6 bg-surface-container-lowest/50 backdrop-blur-md rounded-3xl space-y-4 shadow-sm border border-white/20">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full signature-gradient flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xl" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="space-y-0.5">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Security First</p>
+<p class="text-sm font-bold text-on-surface leading-tight">Bank-grade encryption</p>
+</div>
+</div>
+</div>
+</div>
+</body></html>

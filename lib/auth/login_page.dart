@@ -4,14 +4,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/auth_viewmodel.dart';
+
+import '../home/main_shell.dart';
 import '../services/local_storage_service.dart';
-import 'signup_page.dart';
+import '../viewmodels/auth_viewmodel.dart';
 import 'forgot_password.dart';
 import 'phone_login_page.dart';
+import 'signup_page.dart';
 import 'termOfService.dart';
-import '../home/main_shell.dart';
-import '../utils/app_localization.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,30 +40,25 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  /// Validate email format
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter your email', 'Vui lòng nhập email');
+      return 'Please enter your email';
     }
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
     if (!emailRegex.hasMatch(value)) {
-      return context.t(
-        'Please enter a valid email address',
-        'Vui lòng nhập địa chỉ email hợp lệ',
-      );
+      return 'Please enter a valid email address';
     }
     return null;
   }
 
-  /// Validate password syntax: min 8 chars, 1 uppercase, 1 number
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter your password', 'Vui lòng nhập mật khẩu');
+      return 'Please enter your password';
     }
     if (value.length < 8 ||
         !value.contains(RegExp(r'[A-Z]')) ||
         !value.contains(RegExp(r'[0-9]'))) {
-      return context.t('Invalid password', 'Mật khẩu không hợp lệ');
+      return 'Invalid password';
     }
     return null;
   }
@@ -82,14 +77,11 @@ class _LoginPageState extends State<LoginPage> {
           onWillPop: () async => false,
           child: AlertDialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
             ),
-            title: Text(
-              context.t('Terms of Service', 'Điều khoản dịch vụ'),
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1A1F3F),
-              ),
+            title: const Text(
+              'Terms of Service',
+              style: TextStyle(fontWeight: FontWeight.w800),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -100,16 +92,16 @@ class _LoginPageState extends State<LoginPage> {
                     style: const TextStyle(
                       fontSize: 14,
                       height: 1.4,
-                      color: Color(0xFF3E4566),
+                      color: Color(0xFF676B78),
                     ),
                     children: [
-                      TextSpan(text: context.t('I agree to ', 'Tôi đồng ý với ')),
+                      const TextSpan(text: 'I agree to '),
                       TextSpan(
-                        text: context.t('Terms of Service', 'Điều khoản dịch vụ'),
+                        text: 'Terms of Service',
                         style: const TextStyle(
                           decoration: TextDecoration.underline,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF3F4BFF),
                         ),
                         recognizer: _tosLinkRecognizer
                           ..onTap = () {
@@ -126,40 +118,12 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.redAccent, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    minimumSize: const Size(double.infinity, 48),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  child: Text(
-                    context.t('Decline', 'Từ chối'),
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: const Text('Decline'),
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    minimumSize: const Size(double.infinity, 48),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  child: Text(
-                    context.t('Agree to all', 'Đồng ý tất cả'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: const Text('Agree to all'),
                 ),
               ],
             ),
@@ -179,175 +143,343 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Widget _buildSignInOptions(AuthViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Email field
-        TextFormField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          maxLength: 50,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(50),
-            FilteringTextInputFormatter.deny(RegExp(r'\s')),
-          ],
-          decoration: InputDecoration(
-            labelText: 'Email',
-            hintText: context.t('Enter your email', 'Nhập email của bạn'),
-            prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-            ),
-            counterText: '',
-          ),
-          validator: _validateEmail,
-        ),
-        const SizedBox(height: 20),
-        // Password field
-        TextFormField(
-          controller: _passwordController,
-          maxLength: 50,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(50),
-            FilteringTextInputFormatter.deny(RegExp(r'\s')),
-          ],
-          obscureText: viewModel.obscurePassword,
-          decoration: InputDecoration(
-            labelText: context.t('Password', 'Mật khẩu'),
-            hintText: context.t('Enter your password', 'Nhập mật khẩu của bạn'),
-            prefixIcon: const Icon(Icons.lock_outline),
-            suffixIcon: IconButton(
-              icon: Icon(
-                viewModel.obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
-              onPressed: () {
-                context.read<AuthViewModel>().togglePasswordVisibility();
-              },
-            ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-            ),
-            counterText: '',
-          ),
-          validator: _validatePassword,
-        ),
-        const SizedBox(height: 16),
-        // Forgot password
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-              );
-            },
-            child: Text(
-              context.t('Forgot password?', 'Quên mật khẩu?'),
-              style: const TextStyle(
-                color: Color(0xFF4C40F7),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        // Sign in button
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: viewModel.isLoading
-                ? null
-                : () async {
-                    if (_formKey.currentState!.validate()) {
-                      // Sign in with email and password
-                      final success = await viewModel.signInWithEmail(
-                        email: _emailController.text.trim(),
-                        password: _passwordController.text.trim(),
-                      );
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<AuthViewModel>();
+    final size = MediaQuery.of(context).size;
+    final isSmallDevice = size.height < 760 || size.width < 380;
+    final headingSize = isSmallDevice ? 42.0 : 54.0;
+    final subtitleSize = isSmallDevice ? 16.0 : 20.0;
+    final accountTextSize = isSmallDevice ? 16.0 : 22.0;
 
-                      if (success && mounted) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const MainShell()),
-                        );
-                      }
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C40F7),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: viewModel.isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : Text(
-                  context.t('Sign in', 'Đăng nhập'),
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F3F7),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24, isSmallDevice ? 8 : 18, 24, 18),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _LoginBrandHeader(),
+                    SizedBox(height: isSmallDevice ? 14 : 26),
+                    Text(
+                      'Welcome back',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: headingSize,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E222B),
+                        letterSpacing: -0.6,
+                      ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please enter your details to sign in',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: subtitleSize,
+                        color: const Color(0xFF5B5F69),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSignInCard(viewModel),
+                    SizedBox(height: isSmallDevice ? 18 : 28),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 2,
+                      runSpacing: 0,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: TextStyle(
+                            fontSize: accountTextSize,
+                            color: const Color(0xFF3F4450),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.read<AuthViewModel>().reset();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SignupPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Create account',
+                            style: TextStyle(
+                              color: Color(0xFF3445FF),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Privacy Policy    •    Terms of Service    •    Help Center',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: const Color(0xFF636876).withOpacity(0.5),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_isTosDialogVisible)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(color: Colors.black.withOpacity(0.06)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignInCard(AuthViewModel viewModel) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFC),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Email Address',
+            style: TextStyle(
+              fontSize: 20,
+              color: Color(0xFF4A4F59),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            maxLength: 50,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(50),
+              FilteringTextInputFormatter.deny(RegExp(r'\s')),
+            ],
+            validator: _validateEmail,
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: 'name@company.com',
+              hintStyle: const TextStyle(color: Color(0xFFA2A7B2)),
+              filled: true,
+              fillColor: const Color(0xFFEEF0F4),
+              prefixIcon: const Icon(
+                Icons.email_outlined,
+                color: Color(0xFFA0A5AF),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(
+                  color: Color(0xFF5863FF),
+                  width: 1.2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Password',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Color(0xFF4A4F59),
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ForgotPasswordPage(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Forgot password?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E3BFF),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
-        // Sign in with Phone (OTP) button
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: OutlinedButton.icon(
-            onPressed: viewModel.isLoading
-                ? null
-                : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PhoneLoginPage()),
-                    );
-                  },
-            icon: const Icon(Icons.phone_outlined, color: Color(0xFF4C40F7)),
-            label: Text(
-              context.t('Sign in with Phone', 'Đăng nhập bằng số điện thoại'),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: viewModel.obscurePassword,
+            maxLength: 50,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(50),
+              FilteringTextInputFormatter.deny(RegExp(r'\s')),
+            ],
+            validator: _validatePassword,
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '••••••••',
+              hintStyle: const TextStyle(
+                color: Color(0xFFA2A7B2),
+                letterSpacing: 2,
+              ),
+              filled: true,
+              fillColor: const Color(0xFFEEF0F4),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                color: Color(0xFFA0A5AF),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  viewModel.obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: const Color(0xFFA0A5AF),
+                ),
+                onPressed: context
+                    .read<AuthViewModel>()
+                    .togglePasswordVisibility,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(
+                  color: Color(0xFF5863FF),
+                  width: 1.2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF3F4BFF), Color(0xFF7C88FF)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF5B66FF).withOpacity(0.32),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              height: 62,
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+                onPressed: viewModel.isLoading
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          final success = await viewModel.signInWithEmail(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text.trim(),
+                          );
+                          if (success && mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MainShell(),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Sign in',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (viewModel.errorMessage != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              viewModel.errorMessage!,
               style: const TextStyle(
-                fontSize: 16,
+                color: Colors.redAccent,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF4C40F7),
               ),
             ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFF4C40F7), width: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          ],
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Expanded(child: Divider(color: Color(0xFFD7DAE0))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'OR CONTINUE WITH',
+                  style: TextStyle(
+                    color: const Color(0xFF6B707D).withOpacity(0.6),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
               ),
-            ),
+              const Expanded(child: Divider(color: Color(0xFFD7DAE0))),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
-        // Continue with Google button
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: OutlinedButton.icon(
-            onPressed: viewModel.isLoading
-                ? null
-                : () async {
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _smallAuthButton(
+                  label: 'Google',
+                  icon: Image.asset(
+                    'assets/images/gg_logo.png',
+                    height: 20,
+                    width: 20,
+                  ),
+                  onTap: () async {
                     final success = await context
                         .read<AuthViewModel>()
                         .signInWithGoogle();
@@ -358,141 +490,62 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     }
                   },
-            icon: Image.asset(
-              'assets/images/gg_logo.png',
-              height: 24,
-              width: 24,
-            ),
-            label: Text(
-              context.t('Continue with Google', 'Tiếp tục với Google'),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1A1F3F),
+                ),
               ),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey.shade300, width: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ),
-        // Show error message if any
-        if (viewModel.errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red.shade700),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      viewModel.errorMessage!,
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _smallAuthButton(
+                  label: 'Phone',
+                  icon: const Icon(
+                    Icons.phone_android_rounded,
+                    color: Color(0xFF1E222B),
                   ),
-                ],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PhoneLoginPage()),
+                    );
+                  },
+                ),
               ),
-            ),
+            ],
           ),
-      ],
+        ],
+      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Access ViewModel
-    final viewModel = context.watch<AuthViewModel>();
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 40),
-                      // Title
-                      Text(
-                        context.t('Sign in', 'Đăng nhập'),
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t('Welcome back', 'Chào mừng bạn quay lại'),
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      _buildSignInOptions(viewModel),
-                      const SizedBox(height: 32),
-                      // Sign up link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            context.t(
-                              "Don't have an account? ",
-                              'Bạn chưa có tài khoản? ',
-                            ),
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              // Reset view model state before navigating
-                              context.read<AuthViewModel>().reset();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const SignupPage(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              context.t('Sign up', 'Đăng ký'),
-                              style: const TextStyle(
-                                color: Color(0xFF4C40F7),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+  Widget _smallAuthButton({
+    required String label,
+    required Widget icon,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      height: 64,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFEEF0F4),
+          side: BorderSide.none,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          if (_isTosDialogVisible)
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                child: Container(color: Colors.black.withOpacity(0.05)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icon,
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF1E222B),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -503,5 +556,33 @@ class _LoginPageState extends State<LoginPage> {
     _passwordController.dispose();
     _tosLinkRecognizer.dispose();
     super.dispose();
+  }
+}
+
+class _LoginBrandHeader extends StatelessWidget {
+  const _LoginBrandHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: const [
+        Icon(
+          Icons.tips_and_updates_rounded,
+          color: Color(0xFF3445FF),
+          size: 42,
+        ),
+        SizedBox(width: 10),
+        Text(
+          'Lumina Finance',
+          style: TextStyle(
+            color: Color(0xFF3445FF),
+            fontSize: 34,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.4,
+          ),
+        ),
+      ],
+    );
   }
 }

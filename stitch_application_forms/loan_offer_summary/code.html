@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Loan Offer Summary | Lumina Finance</title>
+<script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzExM2I5NTI0OTcxOTQ5MWI4NzVjMTI0NTUzZWIzODM3EgsSBxDV4pi6th4YAZIBIwoKcHJvamVjdF9pZBIVQhM5NDg5ODU5OTQxOTAyMTY3MDI0%26filename%3D%26opi%3D89354086&amp;app=com.microsoft.edgemac&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-java&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#7d84ff",
+                        "secondary-fixed-dim": "#63eda4",
+                        "surface": "#f5f6f9",
+                        "surface-bright": "#f5f6f9",
+                        "tertiary-dim": "#744500",
+                        "secondary-dim": "#005c37",
+                        "primary": "#383eef",
+                        "on-primary": "#f4f1ff",
+                        "error-dim": "#a70138",
+                        "on-tertiary-container": "#4c2b00",
+                        "on-tertiary": "#fff0e4",
+                        "surface-tint": "#383eef",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#72fcb1",
+                        "on-error": "#ffefef",
+                        "error-container": "#f74b6d",
+                        "on-error-container": "#510017",
+                        "on-secondary-container": "#005e38",
+                        "on-primary-fixed": "#000000",
+                        "on-tertiary-fixed-variant": "#583300",
+                        "on-secondary-fixed": "#00492b",
+                        "outline-variant": "#abadb0",
+                        "primary-fixed-dim": "#8087ff",
+                        "error": "#b41340",
+                        "on-surface-variant": "#595c5e",
+                        "primary-dim": "#282de4",
+                        "surface-container-highest": "#dadde1",
+                        "secondary": "#00693f",
+                        "on-primary-container": "#020083",
+                        "on-secondary-fixed-variant": "#00693f",
+                        "tertiary-container": "#fe9d00",
+                        "on-secondary": "#cbffda",
+                        "inverse-surface": "#0c0f11",
+                        "tertiary": "#844f00",
+                        "surface-container-high": "#e0e3e6",
+                        "on-background": "#2c2f31",
+                        "surface-dim": "#d1d5d9",
+                        "secondary-fixed": "#72fcb1",
+                        "tertiary-fixed-dim": "#ec9100",
+                        "inverse-on-surface": "#9b9da0",
+                        "surface-container-low": "#eff1f4",
+                        "on-primary-fixed-variant": "#03009f",
+                        "background": "#f5f6f9",
+                        "tertiary-fixed": "#fe9d00",
+                        "surface-variant": "#dadde1",
+                        "on-surface": "#2c2f31",
+                        "surface-container": "#e6e8ec",
+                        "on-tertiary-fixed": "#2b1600",
+                        "outline": "#75777a",
+                        "primary-fixed": "#9197ff",
+                        "primary-container": "#9197ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .signature-gradient {
+            background: linear-gradient(135deg, #383eef 0%, #9197ff 100%);
+        }
+        .glass-header {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#f5f6f9]/80 backdrop-blur-xl no-border bg-gradient-to-b from-[#f5f6f9] to-transparent">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4A52FF]" data-icon="menu">menu</span>
+<h1 class="text-xl font-extrabold text-[#2c2f31] font-headline tracking-tight">Lumina Finance</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-500 hover:opacity-80 transition-opacity cursor-pointer" data-icon="notifications">notifications</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a professional man with a friendly expression in a brightly lit office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2Ms8p4RODJbOTqED8IzgQdWZhO5qnHxygSHAJ4zhw4Rak8yfhegUxCfy2kkknNOfkucdoot0RCBirFOkbsX9fGJ2a0SxCnU59f3flj12HPwXB2YG9tQJkR82ENOoLTbXBisJI2sW5SZlJjZO60k0csLWB1AOObOZS2yqt5h1eKXk1peiuutYnPzOv9lrC3LmygGHh7t8bHks7YvBENZDEwL7kN8MQrQY6WpWarVFanPnTVhEZbSXkTXAfpMFMAxGyBLmkvj_PXbs"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-lg mx-auto">
+<!-- Success/Celebration State -->
+<div class="flex flex-col items-center text-center mb-10">
+<div class="w-20 h-20 signature-gradient rounded-full flex items-center justify-center mb-6 shadow-[0_10px_30px_rgba(56,62,239,0.3)]">
+<span class="material-symbols-outlined text-white text-4xl" data-icon="celebration" style="font-variation-settings: 'FILL' 1;">celebration</span>
+</div>
+<span class="text-primary font-label font-semibold tracking-wider uppercase text-xs mb-2">Application Approved</span>
+<h2 class="text-3xl font-headline font-extrabold tracking-tight text-on-surface">Your offer is ready!</h2>
+<p class="text-on-surface-variant mt-3 text-sm max-w-[280px]">We've analyzed your profile and prepared a personalized loan package tailored to your needs.</p>
+</div>
+<!-- Main Loan Card (Bento Style Layout) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Loan Amount Box -->
+<div class="col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-none flex flex-col items-center">
+<span class="text-on-surface-variant font-label text-xs uppercase tracking-widest mb-1">Approved Amount</span>
+<div class="flex items-baseline">
+<span class="text-2xl font-headline font-bold text-primary mr-1">$</span>
+<span class="text-6xl font-headline font-extrabold tracking-tighter text-on-surface">5,000</span>
+</div>
+<div class="mt-6 flex items-center gap-2 px-3 py-1 bg-secondary-container rounded-full">
+<span class="material-symbols-outlined text-on-secondary-container text-sm" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-on-secondary-container font-label text-[11px] font-bold uppercase tracking-wider">Best Rate Match</span>
+</div>
+</div>
+<!-- Monthly Payment -->
+<div class="bg-surface-container-low p-6 rounded-xl">
+<span class="material-symbols-outlined text-primary mb-3" data-icon="calendar_month">calendar_month</span>
+<span class="block text-on-surface-variant font-label text-[10px] uppercase tracking-widest mb-1">Monthly Payment</span>
+<span class="text-xl font-headline font-bold text-on-surface tracking-tight">$245.50</span>
+</div>
+<!-- Interest Rate -->
+<div class="bg-surface-container-low p-6 rounded-xl">
+<span class="material-symbols-outlined text-primary mb-3" data-icon="percent">percent</span>
+<span class="block text-on-surface-variant font-label text-[10px] uppercase tracking-widest mb-1">Interest Rate</span>
+<span class="text-xl font-headline font-bold text-on-surface tracking-tight">4.2% <span class="text-xs font-normal text-on-surface-variant">APR</span></span>
+</div>
+<!-- Term Info -->
+<div class="col-span-2 bg-surface-container-lowest p-6 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="schedule">schedule</span>
+</div>
+<div>
+<span class="block text-on-surface-variant font-label text-[10px] uppercase tracking-widest">Loan Term</span>
+<span class="text-on-surface font-semibold">24 Months</span>
+</div>
+</div>
+<div class="text-right">
+<span class="block text-on-surface-variant font-label text-[10px] uppercase tracking-widest">Total Repayable</span>
+<span class="text-on-surface font-semibold">$5,892.00</span>
+</div>
+</div>
+</div>
+<!-- Progress Indicator -->
+<div class="mt-10 mb-8">
+<div class="flex justify-between items-center mb-4 px-2">
+<span class="text-xs font-label font-bold uppercase text-primary">Application Progress</span>
+<span class="text-xs font-label font-bold text-on-surface-variant">Step 2 of 3</span>
+</div>
+<div class="flex gap-2 h-1.5 px-1">
+<div class="flex-1 signature-gradient rounded-full"></div>
+<div class="flex-1 signature-gradient rounded-full opacity-40"></div>
+<div class="flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+</div>
+<!-- Actions -->
+<div class="space-y-4">
+<button class="w-full signature-gradient text-white font-headline font-bold py-5 px-12 rounded-xl active:scale-95 transition-all duration-200 shadow-[0_15px_35px_rgba(56,62,239,0.2)] flex items-center justify-center gap-3">
+                Continue to Complete Profile
+                <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="w-full bg-surface-container-highest text-on-surface font-headline font-bold py-5 px-12 rounded-xl hover:opacity-80 active:scale-95 transition-all duration-200">
+                Adjust Loan Terms
+            </button>
+</div>
+<!-- Security Disclaimer -->
+<div class="mt-8 flex items-start gap-3 px-4 py-4 bg-surface-container/30 rounded-xl">
+<span class="material-symbols-outlined text-outline-variant text-lg mt-0.5" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<p class="text-[11px] text-on-surface-variant leading-relaxed">
+                Your data is protected with bank-grade encryption. This offer is valid for the next 48 hours and subject to final credit verification.
+            </p>
+</div>
+</main>
+<!-- BottomNavBar (Hidden on desktop as per Shell visibility rules) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 backdrop-blur-2xl rounded-t-[1.5rem] shadow-[0_-10px_40px_rgba(12,15,17,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#2c2f31]/50 px-5 py-2 hover:bg-slate-100 rounded-[1.25rem] transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#383eef] to-[#9197ff] text-white rounded-[1.25rem] px-5 py-2 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="account_balance" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Loans</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#2c2f31]/50 px-5 py-2 hover:bg-slate-100 rounded-[1.25rem] transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="payments">payments</span>
+<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Payments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#2c2f31]/50 px-5 py-2 hover:bg-slate-100 rounded-[1.25rem] transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Profile</span>
+</a>
+</nav>
+</body></html>

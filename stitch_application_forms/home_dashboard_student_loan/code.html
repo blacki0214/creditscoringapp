@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Financial Atelier - Dashboard</title>
+<script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzA4YzM3OGViZDViYzQxMmM5MzY1ZDA4MzYwNGNiZjBjEgsSBxDV4pi6th4YAZIBIwoKcHJvamVjdF9pZBIVQhM5NDg5ODU5OTQxOTAyMTY3MDI0%26filename%3D%26opi%3D89354086&amp;app=com.microsoft.edgemac&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-java&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#583300",
+              "outline-variant": "#abadb0",
+              "on-tertiary-fixed": "#2b1600",
+              "surface-container-low": "#eff1f4",
+              "primary-container": "#9197ff",
+              "error-container": "#f74b6d",
+              "on-secondary-fixed-variant": "#00693f",
+              "surface-container-highest": "#dadde1",
+              "tertiary-dim": "#744500",
+              "outline": "#75777a",
+              "surface-container": "#e6e8ec",
+              "background": "#f5f6f9",
+              "on-secondary-container": "#005e38",
+              "on-primary-container": "#020083",
+              "surface-bright": "#f5f6f9",
+              "surface": "#f5f6f9",
+              "secondary": "#00693f",
+              "surface-dim": "#d1d5d9",
+              "on-background": "#2c2f31",
+              "on-secondary-fixed": "#00492b",
+              "inverse-on-surface": "#9b9da0",
+              "surface-container-high": "#e0e3e6",
+              "primary-fixed": "#9197ff",
+              "secondary-dim": "#005c37",
+              "tertiary-container": "#fe9d00",
+              "on-primary-fixed-variant": "#03009f",
+              "on-error": "#ffefef",
+              "inverse-surface": "#0c0f11",
+              "tertiary-fixed": "#fe9d00",
+              "inverse-primary": "#7d84ff",
+              "error-dim": "#a70138",
+              "secondary-fixed-dim": "#63eda4",
+              "tertiary-fixed-dim": "#ec9100",
+              "tertiary": "#844f00",
+              "surface-variant": "#dadde1",
+              "on-surface-variant": "#595c5e",
+              "secondary-container": "#72fcb1",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#f4f1ff",
+              "on-error-container": "#510017",
+              "error": "#b41340",
+              "primary-fixed-dim": "#8087ff",
+              "primary": "#383eef",
+              "surface-tint": "#383eef",
+              "secondary-fixed": "#72fcb1",
+              "primary-dim": "#282de4",
+              "on-primary-fixed": "#000000",
+              "on-surface": "#2c2f31",
+              "on-tertiary": "#fff0e4",
+              "on-tertiary-container": "#4c2b00",
+              "on-secondary": "#cbffda"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"],
+              "manrope": ["Manrope"],
+              "inter": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-signature-gradient {
+            background: linear-gradient(135deg, #383eef 0%, #9197ff 100%);
+        }
+        .gauge-conic {
+            background: conic-gradient(from 180deg at 50% 100%, #f74b6d 0deg, #fe9d00 90deg, #72fcb1 180deg);
+            mask: radial-gradient(circle at 50% 100%, transparent 65%, black 66%);
+            -webkit-mask: radial-gradient(circle at 50% 100%, transparent 65%, black 66%);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/20">
+<!-- TopAppBar based on COMPONENTS_13 -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-none flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3 active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer">
+<span class="material-symbols-outlined text-[#4A52FF] dark:text-[#9197ff]" data-icon="account_balance">account_balance</span>
+<h1 class="font-manrope font-bold text-xl tracking-tight text-[#4A52FF] dark:text-[#9197ff]">Financial Atelier</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high ring-2 ring-white shadow-sm active:scale-95 duration-200 transition-transform cursor-pointer">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb49ItZd6XBP1to5aPi0fKip-WWCCW7DQr1F8p7LiGD5jJOV7MeCuQ2efDAbW2bxDXZzsUMkrm0PJqRV0kfU3HrBhkHcCcDs11fevG9EVHQ5VNhTVI6W7-KePyPBsZfpNif31WrQaV7TpPI1aAUXtLe8lNrr7I0ZixBizvNiJdaBQOE649QpiODCuMO7a8kM74Rs1NNBP_nNdVlxjxXJZs2hkLRMSgj32jig9x_5TkrDQznqdWr4se89XvjEpH1bRs5X_HDF3LSBk"/>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-md mx-auto space-y-8">
+<!-- User Identity Section -->
+<section class="flex flex-col items-center text-center space-y-2">
+<div class="w-20 h-20 rounded-full overflow-hidden mb-2 shadow-xl ring-4 ring-white">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk1dxb3uvsEf35-FZU83ETkN-3P9FIQMg1LMRDb-kLGdDd1OZMU6SOT8xgbiAH1JpFdan3SKO1w62qODPY-gfO4Ak2h_G8xBYUEZy8m-OQlegXnuaZ6f3ZNcoBAoQORnJ2FS55sdEoV-CQAGfhjy27_JgEEBbHNepL_tgxF4BHUv3dUrKSgSfHiDKBeVDg1j3OQB5xmt7I8sjgZLYeKNtq3v1bwmby8qssykjWv344Ask7WTGwhFV7-rAVZYB17BFa3n17rrfpWGo"/>
+</div>
+<h2 class="font-headline font-extrabold text-2xl tracking-tight text-on-surface">NGUYEN TAN PHAT</h2>
+<p class="font-label text-sm text-on-surface-variant/80 tracking-wide">nguyentanphat@finance.com</p>
+</section>
+<!-- Segmented Control with Student Loan -->
+<section class="bg-surface-container-low p-1.5 rounded-xl flex gap-1">
+<button class="flex-1 py-3 px-1 text-center rounded-xl font-label font-semibold text-xs transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1.5">
+            Offer
+        </button>
+<button class="flex-1 py-3 px-1 text-center rounded-xl font-label font-medium text-xs transition-all text-on-surface-variant hover:bg-surface-container-high/50 flex items-center justify-center gap-1.5">
+            Installment
+        </button>
+<button class="flex-1 py-3 px-1 text-center rounded-xl font-label font-medium text-xs transition-all text-on-surface-variant hover:bg-surface-container-high/50 flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-lg" data-icon="school">school</span>
+            Student
+        </button>
+</section>
+<!-- Credit Score Gauge Section -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(12,15,17,0.06)] flex flex-col items-center relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl" data-icon="verified_user">verified_user</span>
+</div>
+<div class="relative w-64 h-32 mb-4">
+<div class="gauge-conic w-full h-full rounded-t-full"></div>
+<!-- Needle -->
+<div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-28 origin-bottom rotate-[45deg] transition-transform duration-1000">
+<div class="w-full h-full bg-on-surface rounded-full shadow-lg"></div>
+</div>
+<!-- Needle Center Dot -->
+<div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-on-surface rounded-full border-4 border-surface-container-lowest shadow-md"></div>
+</div>
+<div class="text-center mt-6">
+<div class="font-headline font-extrabold text-6xl text-on-surface mb-1">680</div>
+<div class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-widest">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Good
+            </div>
+</div>
+<div class="mt-8 grid grid-cols-2 w-full gap-4 pt-6 border-t border-surface-container-low">
+<div class="text-center">
+<p class="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-tighter">Starting Score</p>
+<p class="font-headline font-bold text-lg text-on-surface">680</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-tighter">Change to date</p>
+<p class="font-headline font-bold text-lg text-secondary">+0</p>
+</div>
+</div>
+</section>
+<!-- Update Credit Score Button -->
+<section>
+<button class="w-full bg-signature-gradient text-white py-5 px-6 rounded-xl font-headline font-bold text-lg shadow-lg shadow-primary/20 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3">
+            Update your credit score
+            <span class="material-symbols-outlined text-xl" data-icon="refresh">refresh</span>
+</button>
+</section>
+<!-- NEW: Student Loan CTA -->
+<section class="bg-primary/5 border border-primary/10 rounded-xl p-6 flex items-center justify-between group cursor-pointer hover:bg-primary/10 transition-colors">
+<div class="flex items-center gap-4">
+<div class="bg-white p-3 rounded-full shadow-sm text-[#4A52FF] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="school">school</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-on-surface text-lg leading-tight">Get a Student Loan</h3>
+<p class="text-sm text-on-surface-variant">Low rates for your education</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary font-bold" data-icon="arrow_forward">arrow_forward</span>
+</section>
+<!-- Informational Card -->
+<section class="bg-surface-container-low rounded-xl p-6 flex items-start gap-5 group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="bg-surface-container-lowest p-3 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="lightbulb">lightbulb</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline font-bold text-on-surface text-lg mb-1 leading-tight">How to Improve Your Credit Score</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">Discover personalized steps to boost your financial health and unlock better loan rates.</p>
+</div>
+<div class="self-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar based on COMPONENTS_13 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-t-[1.5rem] z-50 shadow-[0_-10px_40px_rgba(12,15,17,0.06)] border-t border-slate-100/50 dark:border-slate-800/50">
+<div class="flex flex-col items-center justify-center bg-[#4A52FF]/10 dark:bg-[#4A52FF]/20 text-[#4A52FF] dark:text-[#9197ff] rounded-2xl px-4 py-2 transition-all active:scale-90 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-inter text-[11px] font-medium tracking-wide uppercase mt-0.5">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl active:scale-90 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-inter text-[11px] font-medium tracking-wide uppercase mt-0.5">Loans</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl active:scale-90 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-inter text-[11px] font-medium tracking-wide uppercase mt-0.5">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl active:scale-90 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-inter text-[11px] font-medium tracking-wide uppercase mt-0.5">Settings</span>
+</div>
+</nav>
+</body></html>

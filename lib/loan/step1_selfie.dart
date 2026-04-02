@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
+import 'loan_step_transitions.dart';
 import 'step2_personal_info.dart';
 import '../utils/app_localization.dart';
 
@@ -15,6 +16,10 @@ class Step1SelfiePage extends StatefulWidget {
 }
 
 class _Step1SelfiePageState extends State<Step1SelfiePage> {
+  static const Color _accent = Color(0xFF3F4BFF);
+  static const Color _pageBg = Color(0xFFE5E7EC);
+  static const Color _surface = Color(0xFFF4F5F8);
+
   Uint8List? imageData;
   bool isLoading = false;
   final ImagePicker _picker = ImagePicker();
@@ -133,14 +138,12 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
 
   void _continueToNext() {
     final loanViewModel = context.read<LoanViewModel>();
-    
+
     // Complete Step 1 and navigate to Step 2
     loanViewModel.completeStep1();
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const Step2PersonalInfoPage(),
-      ),
+      buildLoanStepRoute(const Step2PersonalInfoPage()),
     );
   }
 
@@ -153,9 +156,9 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
        
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: _pageBg,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -163,13 +166,20 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
             ),
             title: Text(
               context.t('Scoring - Step 1 EKYC', 'Chấm điểm - Bước 1 EKYC'),
-              style: const TextStyle(color: Colors.black, fontSize: 16),
+              style: const TextStyle(color: _accent, fontSize: 16, fontWeight: FontWeight.w700),
             ),
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                decoration: BoxDecoration(
+                  color: _surface,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Column(
                 children: [
                   const SizedBox(height: 20),
                   Text(
@@ -201,7 +211,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF4C40F7),
+                            color: _accent,
                             width: 2,
                           ),
                         ),
@@ -214,7 +224,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                               Icon(
                                 Icons.camera_alt,
                                 size: 80,
-                                color: const Color(0xFF4C40F7),
+                                color: _accent,
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -242,7 +252,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             border: Border.all(
                               color: faceMatchData?.isMatch == true
                                   ? const Color(0xFF4CAF50)
-                                  : const Color(0xFF4C40F7),
+                                  : _accent,
                               width: 2,
                             ),
                           ),
@@ -373,7 +383,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           width: 50,
                           height: 50,
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                            valueColor: AlwaysStoppedAnimation<Color>(_accent),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -397,7 +407,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           height: 80,
                           decoration: BoxDecoration(
                             color: imageData != null
-                                ? const Color(0xFF4C40F7)
+                                ? _accent
                                 : Colors.grey.shade300,
                             shape: BoxShape.circle,
                           ),
@@ -417,7 +427,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: imageData != null
-                                ? const Color(0xFF4C40F7)
+                                ? _accent
                                 : Colors.grey.shade400,
                           ),
                         ),
@@ -488,6 +498,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                   
                   const SizedBox(height: 40),
                 ],
+                ),
               ),
             ),
           ),

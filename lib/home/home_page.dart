@@ -568,16 +568,15 @@ class _HomePageState extends State<HomePage> {
                                                               BorderRadius.circular(
                                                                 8,
                                                               ),
-                                                          border: notification
+                                                          border:
+                                                              notification
                                                                   .isRead
                                                               ? null
                                                               : Border.all(
                                                                   color: Color(
                                                                     notification
                                                                         .colorValue,
-                                                                  ).withOpacity(
-                                                                    0.35,
-                                                                  ),
+                                                                  ).withOpacity(0.35),
                                                                   width: 1.2,
                                                                 ),
                                                         ),
@@ -589,7 +588,8 @@ class _HomePageState extends State<HomePage> {
                                                             notification
                                                                 .colorValue,
                                                           ),
-                                                          size: notification
+                                                          size:
+                                                              notification
                                                                   .isRead
                                                               ? 20
                                                               : 22,
@@ -630,13 +630,13 @@ class _HomePageState extends State<HomePage> {
                                                                           notification
                                                                               .isRead
                                                                           ? FontWeight.w500
-                                                                        : FontWeight.w700,
+                                                                          : FontWeight.w700,
                                                                       fontSize:
                                                                           14,
-                                                                      color: notification
+                                                                      color:
+                                                                          notification
                                                                               .isRead
-                                                                          ? Colors.grey
-                                                                              .shade700
+                                                                          ? Colors.grey.shade700
                                                                           : const Color(
                                                                               0xFF1A1F3F,
                                                                             ),
@@ -651,19 +651,23 @@ class _HomePageState extends State<HomePage> {
                                                             Text(
                                                               localizedBody,
                                                               style: TextStyle(
-                                                              fontSize: 12,
-                                                              fontWeight: notification
-                                                                  .isRead
-                                                                ? FontWeight.w400
-                                                                : FontWeight.w600,
-                                                              color: notification
-                                                                  .isRead
-                                                                ? Colors
-                                                                  .grey
-                                                                  .shade600
-                                                                : Colors
-                                                                  .grey
-                                                                  .shade800,
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    notification
+                                                                        .isRead
+                                                                    ? FontWeight
+                                                                          .w400
+                                                                    : FontWeight
+                                                                          .w600,
+                                                                color:
+                                                                    notification
+                                                                        .isRead
+                                                                    ? Colors
+                                                                          .grey
+                                                                          .shade600
+                                                                    : Colors
+                                                                          .grey
+                                                                          .shade800,
                                                               ),
                                                               maxLines: 2,
                                                               overflow:
@@ -874,7 +878,10 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Text(
-                                      context.t('starting score', 'điểm ban đầu'),
+                                      context.t(
+                                        'starting score',
+                                        'điểm ban đầu',
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -1355,7 +1362,10 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.money_off, size: 64, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  context.t('No Active Loan', 'Không có khoản vay đang hoạt động'),
+                  context.t(
+                    'No Active Loan',
+                    'Không có khoản vay đang hoạt động',
+                  ),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1364,7 +1374,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  context.t('Start a new loan application', 'Bắt đầu hồ sơ vay mới'),
+                  context.t(
+                    'Start a new loan application',
+                    'Bắt đầu hồ sơ vay mới',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
@@ -1655,6 +1668,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // ignore: unused_element
   Widget _buildMetricCard(
     BuildContext context,
     String title,
@@ -2394,8 +2408,7 @@ String _getLocalizedNotificationBody(
     );
   }
 
-  if (notification.body ==
-      'Your loan application needs review') {
+  if (notification.body == 'Your loan application needs review') {
     return context.t(
       'Your loan application needs review',
       'Hồ sơ vay của bạn cần được xem xét thêm',
@@ -2423,10 +2436,7 @@ String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
 
   if (difference.inDays > 0) {
     final days = difference.inDays;
-    return context.t(
-      '$days day${days > 1 ? 's' : ''} ago',
-      '$days ngày trước',
-    );
+    return context.t('$days day${days > 1 ? 's' : ''} ago', '$days ngày trước');
   }
 
   if (difference.inHours > 0) {

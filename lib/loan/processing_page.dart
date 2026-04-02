@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'loan_offer_page.dart';
+import 'loan_step_transitions.dart';
 import '../utils/app_localization.dart';
 
 /// Processing screen: triggers submission and routes to offer or shows error.
@@ -29,7 +30,7 @@ class _ProcessingPageState extends State<ProcessingPage> {
     if (success) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoanOfferPage()),
+        buildLoanStepRoute(const LoanOfferPage()),
       );
     } else {
       _showError(vm.errorMessage ?? context.t('Unknown error occurred', 'Đã xảy ra lỗi không xác định'));

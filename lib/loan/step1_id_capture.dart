@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../config/app_environment.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../utils/app_localization.dart';
+import 'loan_step_transitions.dart';
 import 'step1_selfie.dart';
 
 class Step1IDCapturePage extends StatefulWidget {
@@ -16,6 +17,10 @@ class Step1IDCapturePage extends StatefulWidget {
 }
 
 class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
+  static const Color _accent = Color(0xFF3F4BFF);
+  static const Color _pageBg = Color(0xFFE5E7EC);
+  static const Color _surface = Color(0xFFF4F5F8);
+
   Uint8List? frontImageData;
   Uint8List? backImageData;
   bool isFrontLoading = false;
@@ -219,7 +224,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
   void _continueToNext() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const Step1SelfiePage()),
+      buildLoanStepRoute(const Step1SelfiePage()),
     );
   }
 
@@ -237,9 +242,9 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
         final canContinue = isFrontProcessed && isBackProcessed;
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: _pageBg,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -247,7 +252,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
             ),
             title: Text(
               context.t('Scoring - Step 1 EKYC', 'Chấm điểm - Bước 1 EKYC'),
-              style: const TextStyle(color: Colors.black, fontSize: 16),
+              style: const TextStyle(color: _accent, fontSize: 16, fontWeight: FontWeight.w700),
             ),
           ),
           body: SafeArea(
@@ -255,8 +260,15 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
+                    padding: const EdgeInsets.all(16),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                      decoration: BoxDecoration(
+                        color: _surface,
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Column(
                       children: [
                         const SizedBox(height: 20),
                         Text(
@@ -343,7 +355,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                                     : context.t('Retry Auto-Scan', 'Thử quét lại tự động'),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4C40F7),
+                                backgroundColor: _accent,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
@@ -352,6 +364,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                             ),
                           ),
                       ],
+                      ),
                     ),
                   ),
                 ),
@@ -371,7 +384,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                             ? const Color(0xFF4CAF50)
                             : Colors.grey.shade300,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: Text(

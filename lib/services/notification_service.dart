@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../models/notification_model.dart';
-import 'firebase_service.dart';
 
 /// Service for managing real-time notifications
 class NotificationService {
-  final FirebaseService _firebase = FirebaseService();
   final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
   /// Create notification when loan application is processed
@@ -23,7 +21,8 @@ class NotificationService {
 
       if (approved) {
         title = 'Loan Approved';
-        body = 'Your loan of ${_currencyFormat.format(loanAmount)} has been approved';
+        body =
+            'Your loan of ${_currencyFormat.format(loanAmount)} has been approved';
         type = 'loan_approved';
       } else {
         title = 'Loan Application Update';
@@ -92,7 +91,9 @@ class NotificationService {
 
       print('[NotificationService] Created credit score notification');
     } catch (e) {
-      print('[NotificationService] Error creating credit score notification: $e');
+      print(
+        '[NotificationService] Error creating credit score notification: $e',
+      );
     }
   }
 
@@ -103,17 +104,17 @@ class NotificationService {
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-      // Sort in memory instead of using orderBy to avoid index requirement
-      final notifications = snapshot.docs
-          .map((doc) => NotificationModel.fromFirestore(doc))
-          .toList();
-      
-      // Sort by createdAt descending (newest first)
-      notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      
-      // Limit to last 50 notifications
-      return notifications.take(50).toList();
-    });
+          // Sort in memory instead of using orderBy to avoid index requirement
+          final notifications = snapshot.docs
+              .map((doc) => NotificationModel.fromFirestore(doc))
+              .toList();
+
+          // Sort by createdAt descending (newest first)
+          notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          // Limit to last 50 notifications
+          return notifications.take(50).toList();
+        });
   }
 
   /// Get unread count stream (real-time)

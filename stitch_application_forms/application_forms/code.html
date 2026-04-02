@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzdhODI2NzU0Y2VhZDQyMzM4ZGQyMmE4MjhhYTg0NGIwEgsSBxDV4pi6th4YAZIBIwoKcHJvamVjdF9pZBIVQhM5NDg5ODU5OTQxOTAyMTY3MDI0%26filename%3D%26opi%3D89354086&amp;app=com.microsoft.edgemac&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-java&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="131d6c5e97204ccf841da5414ce" src="//local.adguard.org?ts=1775146477594&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error": "#b41340",
+              "primary": "#383eef",
+              "error-dim": "#a70138",
+              "primary-dim": "#282de4",
+              "on-secondary-fixed-variant": "#00693f",
+              "on-tertiary-fixed-variant": "#583300",
+              "surface-container-highest": "#dadde1",
+              "outline-variant": "#abadb0",
+              "primary-fixed": "#9197ff",
+              "on-secondary": "#cbffda",
+              "tertiary-fixed-dim": "#ec9100",
+              "on-primary": "#f4f1ff",
+              "primary-container": "#9197ff",
+              "surface-dim": "#d1d5d9",
+              "on-secondary-container": "#005e38",
+              "on-error-container": "#510017",
+              "surface-tint": "#383eef",
+              "surface-variant": "#dadde1",
+              "on-surface-variant": "#595c5e",
+              "on-primary-container": "#020083",
+              "on-secondary-fixed": "#00492b",
+              "background": "#f5f6f9",
+              "inverse-on-surface": "#9b9da0",
+              "inverse-surface": "#0c0f11",
+              "tertiary-dim": "#744500",
+              "surface-container-low": "#eff1f4",
+              "surface-bright": "#f5f6f9",
+              "on-primary-fixed-variant": "#03009f",
+              "primary-fixed-dim": "#8087ff",
+              "surface-container": "#e6e8ec",
+              "tertiary-fixed": "#fe9d00",
+              "secondary-container": "#72fcb1",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary-container": "#4c2b00",
+              "on-tertiary": "#fff0e4",
+              "on-primary-fixed": "#000000",
+              "on-tertiary-fixed": "#2b1600",
+              "secondary-dim": "#005c37",
+              "on-background": "#2c2f31",
+              "outline": "#75777a",
+              "inverse-primary": "#7d84ff",
+              "error-container": "#f74b6d",
+              "secondary-fixed": "#72fcb1",
+              "surface": "#f5f6f9",
+              "secondary-fixed-dim": "#63eda4",
+              "on-error": "#ffefef",
+              "tertiary-container": "#fe9d00",
+              "tertiary": "#844f00",
+              "on-surface": "#2c2f31",
+              "surface-container-high": "#e0e3e6",
+              "secondary": "#00693f"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .signature-gradient {
+            background: linear-gradient(135deg, #383eef 0%, #9197ff 100%);
+        }
+        .step-active {
+            box-shadow: 0 0 0 2px #383eef;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-50 glass-header shadow-sm shadow-slate-200/50">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200 ease-in-out">
+<span class="material-symbols-outlined text-slate-400" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline font-extrabold text-xl tracking-tighter text-primary">Financial Atelier</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden md:flex items-center gap-6 mr-6">
+<span class="font-label text-sm font-medium text-primary cursor-pointer">Loans</span>
+<span class="font-label text-sm font-medium text-slate-400 hover:text-primary transition-colors cursor-pointer">Alerts</span>
+<span class="font-label text-sm font-medium text-slate-400 hover:text-primary transition-colors cursor-pointer">Settings</span>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/10">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a financial advisor in a light-filled modern office space with soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS1cGt2ZjbxQ41fWoQ0iNIm_rUpkFwZ57hwUP3ppgpIiQRij21t9MwpVzyndLEuAmLDfIjZ_RfhJ7EGzqmZiRKufd0Q-AC7uCw-RrccTPjNGLz0BNVa9MZhehq3bIfeBosaNfK-JXuCb51z4xktb6DCbMDrd5ZB1uT0MTB2w0Pfe7vlxy5bH0R92cFNUqCefCXIIy-p8AphIhQc2RIKM9zgEcbhDxHGRu9YyzGCLpEKxCv_ogD_GcgnoeBD0TIsudFYqtMBgsE9jU"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-6 py-12 pb-32">
+<!-- Multi-Step Progress Indicator -->
+<div class="mb-12">
+<div class="flex items-center justify-between max-w-2xl mx-auto">
+<!-- Step 1 -->
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-10 h-10 rounded-full signature-gradient flex items-center justify-center text-on-primary font-bold shadow-lg shadow-primary/20">1</div>
+<span class="font-label text-[11px] font-bold tracking-widest uppercase text-primary">Personal</span>
+</div>
+<div class="flex-1 h-1 mx-4 bg-primary/20 rounded-full">
+<div class="h-full w-1/2 signature-gradient rounded-full"></div>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-bold border-2 border-white">2</div>
+<span class="font-label text-[11px] font-bold tracking-widest uppercase text-on-surface-variant">Employment</span>
+</div>
+<div class="flex-1 h-1 mx-4 bg-surface-container-highest rounded-full"></div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-bold border-2 border-white">3</div>
+<span class="font-label text-[11px] font-bold tracking-widest uppercase text-on-surface-variant">References</span>
+</div>
+</div>
+</div>
+<!-- Application Form Canvas -->
+<div class="space-y-10">
+<!-- Header Section -->
+<section class="space-y-2">
+<span class="font-label text-[11px] font-bold tracking-[0.2em] uppercase text-primary/60">Step 01 of 03</span>
+<h2 class="font-headline font-bold text-4xl text-on-surface tracking-tight">Personal Information</h2>
+<p class="text-on-surface-variant max-w-lg leading-relaxed">Let's start with your basics. We use this information to verify your identity and curate your loan offer.</p>
+</section>
+<!-- Form Body -->
+<div class="bg-surface-container-lowest rounded-[2rem] p-8 md:p-12 shadow-[0_20px_40px_rgba(12,15,17,0.04)] space-y-12">
+<!-- Personal Info Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+<div class="space-y-3">
+<label class="font-label text-[11px] font-bold tracking-widest uppercase text-on-surface-variant px-1">Full Name</label>
+<input class="w-full h-14 px-6 rounded-xl bg-surface-container-low border-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all text-on-surface font-medium placeholder:text-outline-variant" placeholder="e.g. Alexander Sterling" type="text"/>
+</div>
+<div class="space-y-3">
+<label class="font-label text-[11px] font-bold tracking-widest uppercase text-on-surface-variant px-1">Date of Birth</label>
+<div class="relative">
+<input class="w-full h-14 px-6 rounded-xl bg-surface-container-low border-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all text-on-surface font-medium" type="date"/>
+</div>
+</div>
+<div class="space-y-3">
+<label class="font-label text-[11px] font-bold tracking-widest uppercase text-on-surface-variant px-1">Gender Identity</label>
+<div class="flex gap-3">
+<button class="flex-1 h-14 rounded-xl bg-primary/10 text-primary font-semibold text-sm transition-all border-2 border-primary/20">Male</button>
+<button class="flex-1 h-14 rounded-xl bg-surface-container-low text-on-surface-variant font-semibold text-sm hover:bg-surface-container transition-all">Female</button>
+<button class="flex-1 h-14 rounded-xl bg-surface-container-low text-on-surface-variant font-semibold text-sm hover:bg-surface-container transition-all">Other</button>
+</div>
+</div>
+<div class="space-y-3">
+<label class="font-label text-[11px] font-bold tracking-widest uppercase text-on-surface-variant px-1">Nationality</label>
+<select class="w-full h-14 px-6 rounded-xl bg-surface-container-low border-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all text-on-surface font-medium appearance-none">
+<option>United Kingdom</option>
+<option>United States</option>
+<option>European Union</option>
+<option>Singapore</option>
+</select>
+</div>
+</div>
+<!-- Decorative Asset -->
+<div class="relative h-48 rounded-2xl overflow-hidden group">
+<img class="w-full h-full object-cover" data-alt="abstract artistic background with flowing blue silk textures and soft white highlights representing data security and luxury" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiveLkXNgXoWx9r2msXja5-W59e3UiAb5poU-qzKAu3VvBs429Qw8AqzaIpexUOfK6begdQMWKOd7W3Sbcrz-NKyGgmFN9Eje3TomfMszuroI4DdgLHJc0soLzZay1x0zdDYGmVqhgWgJZwINJVv5BGXAbbUYMco7F0CTh4NrOjv3Zen__DEA1OCQ37Akbo27175AWjXNKZ8Wscp1uR1v1C6AtC84DEnGAzuiXgB9_5H5mHS-QxL554tfg3c4TtNZbrspl8g_L2Lc"/>
+<div class="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center">
+<div class="bg-white/90 px-6 py-3 rounded-full flex items-center gap-3 shadow-xl">
+<span class="material-symbols-outlined text-primary" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label text-xs font-bold text-on-surface tracking-tight">Encrypted &amp; Secure Transaction Environment</span>
+</div>
+</div>
+</div>
+<!-- Navigation -->
+<div class="flex items-center justify-between pt-4">
+<button class="flex items-center gap-2 px-8 h-14 rounded-xl bg-surface-container-highest text-on-surface font-bold hover:bg-slate-300 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span>
+                        Back
+                    </button>
+<button class="flex items-center gap-2 px-10 h-14 rounded-xl signature-gradient text-on-primary font-bold shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all active:scale-95">
+                        Next Step
+                        <span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Contextual Help / Bento Grid Side Note -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-6 rounded-[1.5rem] bg-secondary-container/20 border border-secondary-container/30 flex flex-col gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="verified_user">verified_user</span>
+</div>
+<div>
+<h4 class="font-headline font-bold text-on-secondary-container">Trust Guaranteed</h4>
+<p class="text-xs text-on-secondary-container/80 mt-1 leading-relaxed">Your data is stored in ISO-compliant vaults with 256-bit encryption.</p>
+</div>
+</div>
+<div class="md:col-span-2 p-6 rounded-[1.5rem] bg-surface-container-low flex items-center justify-between">
+<div class="space-y-1">
+<h4 class="font-headline font-bold text-on-surface">Need assistance?</h4>
+<p class="text-xs text-on-surface-variant">Our concierge team is available 24/7 for application support.</p>
+</div>
+<button class="px-5 py-2.5 rounded-full bg-surface-container-lowest text-primary font-bold text-xs shadow-sm hover:shadow-md transition-all">Chat Now</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 backdrop-blur-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.03)] rounded-t-[1.5rem]">
+<div class="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-2xl px-5 py-2">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label text-[11px] font-medium tracking-wide uppercase mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 px-5 py-2">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-label text-[11px] font-medium tracking-wide uppercase mt-1">Loans</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 px-5 py-2">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label text-[11px] font-medium tracking-wide uppercase mt-1">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 px-5 py-2">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label text-[11px] font-medium tracking-wide uppercase mt-1">Settings</span>
+</div>
+</nav>
+</body></html>
