@@ -131,17 +131,23 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     final vm = context.watch<LoanViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           context.t('Step 2: Personal Information', 'Bước 2: Thông tin cá nhân'),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -155,85 +161,94 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                 ),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('Complete your profile', 'Hoàn thiện hồ sơ của bạn'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t('Please provide accurate information for credit scoring.', 'Vui lòng cung cấp thông tin chính xác để chấm điểm tín dụng.'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Credit History Selection (Radio)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4C40F7).withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4C40F7).withOpacity(0.2),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t('Complete your profile', 'Hoàn thiện hồ sơ của bạn'),
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.t('Do you have credit history?', 'Bạn có lịch sử tín dụng không?'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1F3F),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile<bool>(
-                                    title: Text(context.t('Yes, I have credit history', 'Có, tôi có lịch sử tín dụng')),
-                                    value: true,
-                                    groupValue: _hasCreditHistory,
-                                    onChanged: (val) =>
-                                        setState(() => _hasCreditHistory = val),
-                                    activeColor: const Color(0xFF4C40F7),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile<bool>(
-                                    title: Text(context.t('No, I\'m new to credit', 'Không, tôi mới bắt đầu tín dụng')),
-                                    value: false,
-                                    groupValue: _hasCreditHistory,
-                                    onChanged: (val) =>
-                                        setState(() => _hasCreditHistory = val),
-                                    activeColor: const Color(0xFF4C40F7),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        const SizedBox(height: 8),
+                        Text(
+                          context.t('Please provide accurate information for credit scoring.', 'Vui lòng cung cấp thông tin chính xác để chấm điểm tín dụng.'),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.45,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 20),
 
-                      if (_hasCreditHistory != null) ...[
-                        const SizedBox(height: 24),
+                        // Credit History Selection (Radio)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF0FF),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFFCED4FF),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.t('Do you have credit history?', 'Bạn có lịch sử tín dụng không?'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<bool>(
+                                      title: Text(context.t('Yes, I have credit history', 'Có, tôi có lịch sử tín dụng')),
+                                      value: true,
+                                      groupValue: _hasCreditHistory,
+                                      onChanged: (val) =>
+                                          setState(() => _hasCreditHistory = val),
+                                      activeColor: const Color(0xFF4D4AF9),
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<bool>(
+                                      title: Text(context.t('No, I\'m new to credit', 'Không, tôi mới bắt đầu tín dụng')),
+                                      value: false,
+                                      groupValue: _hasCreditHistory,
+                                      onChanged: (val) =>
+                                          setState(() => _hasCreditHistory = val),
+                                      activeColor: const Color(0xFF4D4AF9),
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        if (_hasCreditHistory != null) ...[
+                          const SizedBox(height: 24),
 
                         _buildSectionHeader(
                           context.t('Personal Details', 'Thông tin cá nhân'),
@@ -448,8 +463,9 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                             ),
                           ),
                         ],
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -467,10 +483,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ? null
                       : _submitApplication,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     disabledBackgroundColor: Colors.grey.shade400,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: vm.isProcessing
@@ -502,8 +519,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         title,
         style: const TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF4C40F7),
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF334155),
         ),
       ),
     );
@@ -553,11 +570,16 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       },
       decoration: InputDecoration(
         labelText: context.t('Date of Birth', 'Ngày sinh'),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -598,10 +620,15 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           },
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -732,10 +759,15 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

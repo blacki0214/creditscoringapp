@@ -444,14 +444,17 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
           filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -549,13 +552,18 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             Icons.calendar_today,
             color: Color(0xFF4C40F7),
           ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -613,13 +621,18 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -665,12 +678,14 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -678,7 +693,11 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             'Step 3.1: Additional Information',
             'Bước 3.1: Thông tin bổ sung',
           ),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -692,29 +711,38 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                 ),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('Personal Information', 'Thông tin cá nhân'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t('Personal Information', 'Thông tin cá nhân'),
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t(
-                          'Complete your personal details from your ID',
-                          'Hoàn thành thông tin cá nhân từ CCCD/Hộ chiếu của bạn',
+                        const SizedBox(height: 8),
+                        Text(
+                          context.t(
+                            'Complete your personal details from your ID',
+                            'Hoàn thành thông tin cá nhân từ CCCD/Hộ chiếu của bạn',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.45,
+                          ),
                         ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
                       _buildTextField(
                         controller: _fullNameController,
                         label: context.t('Full Name(*)', 'Họ và tên(*)'),
@@ -966,8 +994,9 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                         keyboardType: TextInputType.emailAddress,
                         validator: _validateRequiredGmail,
                       ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1032,11 +1061,12 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     foregroundColor: Colors.white,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: Text(

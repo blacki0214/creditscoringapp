@@ -11,32 +11,37 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  PageController _pageController = PageController();
+  late PageController _pageController;
 
   final List<OnboardingContent> _pages = [
     OnboardingContent(
-      image: 'assets/images/splash1.png',
-      title: 'Unlock Your Financial Future',
-      description: 'Get instant access to your credit score and personalized financial insights',
+      icon: Icons.account_balance_wallet,
+      title: 'Unlock Your\nFinancial Future',
+      description: 'Personalized credit scoring tailored to your lifestyle and financial aspirations.',
+      gradientStart: const Color(0xFF4A52FF),
+      gradientEnd: const Color(0xFF7E85FF),
     ),
     OnboardingContent(
-      image: 'assets/images/splash2.png',
-      title: 'Track Your Credit Journey',
-      description: 'Monitor your credit score changes and receive alerts for important updates',
+      icon: Icons.trending_up,
+      title: 'Track Your\nCredit Journey',
+      description: 'Global security standards protecting your data across every border.',
+      gradientStart: const Color(0xFF7E85FF),
+      gradientEnd: const Color(0xFF4A52FF),
     ),
     OnboardingContent(
-      image: 'assets/images/splash3.png',
-      title: 'Smart Financial Decisions',
-      description: 'Make informed choices with personalized recommendations and credit tips',
+      icon: Icons.lightbulb,
+      title: 'Smart Financial\nDecisions',
+      description: 'Harness AI-driven insights to optimize your spending and boost your score.',
+      gradientStart: const Color(0xFF4A52FF),
+      gradientEnd: const Color(0xFF475569),
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    // Initialize PageController with current page from ViewModel
     final viewModel = context.read<OnboardingViewModel>();
-     _pageController = PageController(initialPage: viewModel.currentPage); 
+    _pageController = PageController(initialPage: viewModel.currentPage);
   }
 
   @override
@@ -44,34 +49,150 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final viewModel = context.watch<OnboardingViewModel>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1F3F),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Skip button
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: () => _navigateToLogin(),
-                child: const Text(
-                  'Skip',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-              ),
-            ),
             // PageView
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  viewModel.setCurrentPage(index);
-                },
-                itemCount: _pages.length,
-                itemBuilder: (context, index) {
-                  return _buildPage(_pages[index]);
-                },
+            PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                viewModel.setCurrentPage(index);
+              },
+              itemCount: _pages.length,
+              itemBuilder: (context, index) {
+                return _buildPage(_pages[index], index);
+              },
+            ),
+            // Header with Skip button
+            Positioned(
+              top: 16,
+              right: 16,
+              child: viewModel.currentPage < _pages.length - 1
+                  ? GestureDetector(
+                      onTap: _navigateToLogin,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          border: Border.all(
+                            color: const Color(0xFF4A52FF),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: Color(0xFF4A52FF),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            // Bottom indicators and buttons
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildBottomBar(viewModel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPage(OnboardingContent content, int index) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 60),
+          // Hero icon
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  content.gradientStart,
+                  content.gradientEnd,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: content.gradientStart.withValues(alpha: 0.3),
+                  blurRadius: 30,
+                  spreadRadius: 8,
+                ),
+              ],
+            ),
+            child: Icon(
+              content.icon,
+              size: 70,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 60),
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              content.title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 36,
+                fontWeight: FontWeight.w800,
+                height: 1.2,
+                letterSpacing: -0.5,
               ),
             ),
+          ),
+          const SizedBox(height: 20),
+          // Description
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              content.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(OnboardingViewModel viewModel) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             // Page indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -80,96 +201,55 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 (index) => _buildIndicator(index == viewModel.currentPage),
               ),
             ),
-            const SizedBox(height: 40),
-            // Next/Get Started button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (viewModel.currentPage == _pages.length - 1) {
-                      _navigateToLogin();
-                    } else {
-                       viewModel.setCurrentPage(viewModel.currentPage + 1);
-                      _pageController.animateToPage(
-                        viewModel.currentPage, // It's already updated
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1A1F3F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+            const SizedBox(height: 24),
+            // Buttons
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (viewModel.currentPage == _pages.length - 1) {
+                    _navigateToLogin();
+                  } else {
+                    viewModel.setCurrentPage(viewModel.currentPage + 1);
+                    _pageController.animateToPage(
+                      viewModel.currentPage,
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4A52FF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    viewModel.currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  elevation: 2,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      viewModel.currentPage == _pages.length - 1
+                          ? 'Get Started'
+                          : 'Next',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
                     ),
-                  ),
+                    if (viewModel.currentPage < _pages.length - 1) ...[
+                      const SizedBox(width: 12),
+                      const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                    ],
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPage(OnboardingContent content) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            content.image,
-            height: 300,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.credit_score,
-                  size: 120,
-                  color: Colors.white38,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 48),
-          Text(
-            content.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            content.description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 16,
-              height: 1.5,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -177,20 +257,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildIndicator(bool isActive) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       height: 8,
-      width: isActive ? 24 : 8,
+      width: isActive ? 28 : 8,
       decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white38,
+        color: isActive
+            ? const Color(0xFF4A52FF)
+            : const Color(0xFF4A52FF).withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
       ),
     );
   }
 
-  /// Navigate to login page after onboarding is complete
-  /// Marks onboarding as seen to prevent showing it again after logout
   void _navigateToLogin() {
-    // Mark onboarding as seen before navigating
     context.read<OnboardingViewModel>().completeOnboarding();
     Navigator.pushReplacement(
       context,
@@ -206,13 +285,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
 }
 
 class OnboardingContent {
-  final String image;
+  final IconData icon;
   final String title;
   final String description;
+  final Color gradientStart;
+  final Color gradientEnd;
 
   OnboardingContent({
-    required this.image,
+    required this.icon,
     required this.title,
     required this.description,
+    required this.gradientStart,
+    required this.gradientEnd,
   });
 }

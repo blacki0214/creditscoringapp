@@ -234,19 +234,24 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
         },
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
           suffixIcon: readOnly
-              ? const Icon(Icons.lock_outline, color: Color(0xFF4C40F7))
+              ? const Icon(Icons.lock_outline, color: Color(0xFF4D4AF9))
               : null,
           filled: true,
-          fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          fillColor: readOnly
+              ? const Color(0xFFF1F5F9)
+              : const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -254,7 +259,7 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),
@@ -303,14 +308,19 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
         isExpanded: true,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -318,7 +328,7 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),
@@ -356,12 +366,14 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -369,7 +381,11 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
             'Step 3.2: Additional Information',
             'Bước 3.2: Thông tin bổ sung',
           ),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -383,32 +399,41 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                 ),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t(
-                          'Employment & Income',
-                          'Công việc & Thu nhập',
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t(
+                            'Employment & Income',
+                            'Công việc & Thu nhập',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
+                        const SizedBox(height: 8),
+                        Text(
+                          context.t(
+                            'Provide your employment details and income information',
+                            'Cung cấp thông tin công việc và thu nhập của bạn',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.45,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t(
-                          'Provide your employment details and income information',
-                          'Cung cấp thông tin công việc và thu nhập của bạn',
-                        ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
                       _buildDropdownField(
                         label: context.t('Job Type(*)', 'Loại công việc(*)'),
                         fieldKey: 'jobType',
@@ -518,8 +543,9 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -532,11 +558,13 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade300,
-                        foregroundColor: const Color(0xFF1A1F3F),
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        foregroundColor: const Color(0xFF334155),
+                        elevation: 0,
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: Text(
@@ -593,15 +621,19 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
+                        backgroundColor: const Color(0xFF4D4AF9),
                         foregroundColor: Colors.white,
+                        elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: Text(
-                        context.t('Next: References', 'Tiếp: Người tham chiếu'),
+                        context.t(
+                          'Next: Contact References',
+                          'Tiếp: Liên hệ tham chiếu',
+                        ),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

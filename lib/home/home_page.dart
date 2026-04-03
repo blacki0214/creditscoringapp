@@ -19,13 +19,12 @@ import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'application_contract_status_page.dart';
 import '../utils/app_localization.dart';
-import 'offer_page.dart';
-import 'installment_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, this.onOpenSettings});
+  const HomePage({super.key, this.onOpenSettings, this.onOpenStudent});
 
   final VoidCallback? onOpenSettings;
+  final VoidCallback? onOpenStudent;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -34,6 +33,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   ApplicationStatus? _lastKnownStatus;
   final InstallmentService _installmentService = InstallmentService();
+  int _selectedHomeTab = 0;
 
   void _openSettingsFromMenu() {
     if (widget.onOpenSettings != null) {
@@ -787,304 +787,16 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
-                        // Period selector (Offer and Installment in single row)
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            const spacing = 10.0;
-                            final itemWidth =
-                                (constraints.maxWidth - spacing) / 2;
-
-                            return Wrap(
-                              spacing: spacing,
-                              runSpacing: spacing,
-                              children: [
-                                SizedBox(
-                                  width: itemWidth,
-                                  child: _buildNavChip(
-                                    context,
-                                    'Offer',
-                                    Icons.hourglass_top_rounded,
-                                    () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const OfferPage(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: itemWidth,
-                                  child: _buildNavChip(
-                                    context,
-                                    'Installment',
-                                    Icons.calendar_month_rounded,
-                                    () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const InstallmentPage(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 32),
-                        // Content: Always show Overall/Welcome page
-                        if (true) ...[
-                          // Credit score gauge
-                          if (viewModel.creditScore != null) ...[
-                            Center(
-                              child: SizedBox(
-                                width: 250,
-                                height: 200,
-                                child: CustomPaint(
-                                  painter: CreditScoreGaugePainter(
-                                    score: viewModel.creditScore!,
-                                    hasData: true,
-                                  ),
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 60),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            '${viewModel.creditScore}',
-                                            style: const TextStyle(
-                                              fontSize: 48,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1A1F3F),
-                                            ),
-                                          ),
-                                          Text(
-                                            context.t(
-                                              'Your credit score',
-                                              'Điểm tín dụng của bạn',
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ] else ...[
-                            // No credit score state
-                            Center(
-                              child: SizedBox(
-                                width: 250,
-                                height: 200,
-                                child: CustomPaint(
-                                  painter: CreditScoreGaugePainter(
-                                    score: 0,
-                                    hasData: false,
-                                  ),
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 60),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.credit_score_outlined,
-                                            size: 48,
-                                            color: Colors.grey.shade400,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            context.t(
-                                              'No data yet',
-                                              'Chua co du lieu',
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            context.t(
-                                              'credit score',
-                                              'điểm tín dụng',
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey.shade500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          // Score info
-                          if (viewModel.creditScore != null) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Column(
-                                  children: [
-                                    Text(
-                                      context.t(
-                                        'starting score',
-                                        'điểm ban đầu',
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${viewModel.startingScore ?? viewModel.creditScore}',
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1A1F3F),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Text(
-                                      context.t(
-                                        'change to date',
-                                        'thay đổi đến hiện tại',
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${viewModel.scoreChange >= 0 ? "+" : ""}${viewModel.scoreChange}',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: viewModel.scoreChange >= 0
-                                            ? const Color(0xFF4CAF50)
-                                            : const Color(0xFFEF5350),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          // Update button
-                          Center(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final userId =
-                                    FirebaseAuth.instance.currentUser?.uid;
-                                if (userId != null) {
-                                  if (viewModel.creditScore != null) {
-                                    // Refresh credit score
-                                    await viewModel.refreshCreditScore(userId);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            context.t(
-                                              'Credit score updated!',
-                                              'Đã cập nhật điểm tín dụng!',
-                                            ),
-                                          ),
-                                          backgroundColor: Color(0xFF4CAF50),
-                                          duration: Duration(seconds: 2),
-                                        ),
-                                      );
-                                    }
-                                  } else {
-                                    // Navigate to loan application (but prevent if already active)
-                                    final loanViewModel = context
-                                        .read<LoanViewModel>();
-                                    if (loanViewModel.hasActiveApplication) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            context.t(
-                                              'You already have an active application. Please complete it first.',
-                                              'Bạn đã có một hồ sơ đang xử lý. Vui lòng hoàn thành nó trước.',
-                                            ),
-                                          ),
-                                          backgroundColor: Colors.orange,
-                                        ),
-                                      );
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const LoanApplicationPage(),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: viewModel.creditScore != null
-                                    ? const Color(0xFFE8F5E9)
-                                    : const Color(0xFF4C40F7),
-                                foregroundColor: viewModel.creditScore != null
-                                    ? const Color(0xFF4CAF50)
-                                    : Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: Text(
-                                viewModel.creditScore != null
-                                    ? context.t(
-                                        'Update your credit score',
-                                        'Cập nhật điểm tín dụng',
-                                      )
-                                    : context.t(
-                                        'Apply for loan now',
-                                        'Chưa có dữ liệu',
-                                      ),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Credit Score Tips Section
-                          const SizedBox(height: 32),
-                          _buildCreditScoreTips(
-                            context,
-                            creditScore: viewModel.creditScore,
-                          ),
+                        _buildDashboardTopTabs(context),
+                        const SizedBox(height: 20),
+                        _buildCreditStandingCard(context, viewModel),
+                        const SizedBox(height: 20),
+                        if (_selectedHomeTab == 0) ...[
+                          _buildLoanDisplay(context),
+                        ] else if (_selectedHomeTab == 1) ...[
+                          _buildInstallmentDisplay(context),
+                        ] else ...[
+                          _buildStudentTabContent(context),
                         ],
                       ],
                     ),
@@ -1094,6 +806,232 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardTopTabs(BuildContext context) {
+    final tabs = [
+      context.t('Offer', 'Đề nghị'),
+      context.t('Installment', 'Lịch trả góp'),
+      context.t('Student', 'Sinh viên'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: List.generate(tabs.length, (index) {
+          final isSelected = _selectedHomeTab == index;
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedHomeTab = index;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  tabs[index],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected
+                        ? const Color(0xFF4D4AF9)
+                        : const Color(0xFF475569),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCreditStandingCard(BuildContext context, HomeViewModel viewModel) {
+    final score = viewModel.creditScore;
+    final scoreText = score?.toString() ?? '--';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            context.t('Your Credit Standing', 'Tình trạng tín dụng của bạn'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.t('UPDATED 2 HOURS AGO', 'CẬP NHẬT 2 GIỜ TRƯỚC'),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF94A3B8),
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 250,
+            height: 180,
+            child: CustomPaint(
+              painter: CreditScoreGaugePainter(
+                score: score ?? 0,
+                hasData: score != null,
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 48),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        scoreText,
+                        style: const TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF86EFAC),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          context.t('Good', 'Tốt'),
+                          style: const TextStyle(
+                            color: Color(0xFF065F46),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Low\n300',
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'High\n850',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentTabContent(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8ECFF),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.t('Get a Student Loan', 'Nhận khoản vay sinh viên'),
+            style: const TextStyle(
+              fontSize: 36,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF2D2B8F),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            context.t(
+              'Tailored rates for academic success and flexible repayment with Swin Credit.',
+              'Lãi suất phù hợp cho hành trình học tập và lịch trả linh hoạt cùng Swin Credit.',
+            ),
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF3F3BA0),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              if (widget.onOpenStudent != null) {
+                widget.onOpenStudent!();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4D4AF9),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              context.t('Apply Now', 'Đăng ký ngay'),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
       ),
     );
   }
