@@ -44,7 +44,6 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId != null && mounted) {
-        print('HomePage: Loading user data for $userId');
         context.read<HomeViewModel>().loadAllUserData(userId);
 
         // Also check if loan was just scored and refresh credit score
@@ -145,7 +144,6 @@ class _HomePageState extends State<HomePage> {
       if (loanViewModel.isApplicationScored &&
           _lastKnownStatus != ApplicationStatus.scored &&
           userId != null) {
-        print('HomePage: Loan scored! Refreshing credit score...');
         homeViewModel.refreshCreditScore(userId);
         _lastKnownStatus = ApplicationStatus.scored;
       } else if (loanViewModel.isApplicationProcessing) {
@@ -185,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4D4AF9).withOpacity(0.25),
+                      color: const Color(0xFF4D4AF9).withValues(alpha: 0.25),
                       blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),
@@ -205,7 +203,7 @@ class _HomePageState extends State<HomePage> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             width: 2,
                           ),
                         ),
@@ -326,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                           Text(
                             FirebaseAuth.instance.currentUser?.email ?? '',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.78),
+                              color: Colors.white.withValues(alpha: 0.78),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -563,7 +561,7 @@ class _HomePageState extends State<HomePage> {
                                                           color: Color(
                                                             notification
                                                                 .colorValue,
-                                                          ).withOpacity(0.1),
+                                                          ).withValues(alpha: 0.1),
                                                           borderRadius:
                                                               BorderRadius.circular(
                                                                 8,
@@ -576,7 +574,7 @@ class _HomePageState extends State<HomePage> {
                                                                   color: Color(
                                                                     notification
                                                                         .colorValue,
-                                                                  ).withOpacity(0.35),
+                                                                  ).withValues(alpha: 0.35),
                                                                   width: 1.2,
                                                                 ),
                                                         ),
@@ -1636,7 +1634,7 @@ class _HomePageState extends State<HomePage> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF1A1F3F).withOpacity(0.15),
+                    color: const Color(0xFF1A1F3F).withValues(alpha: 0.15),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -1713,7 +1711,7 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   'This metric affects your credit score. Keep monitoring it regularly for the best results.',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 13,
                   ),
                 ),
@@ -1965,7 +1963,7 @@ Widget _buildCreditScoreTips(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               // Light background for the icon
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(headerIcon, color: accentColor, size: 24),
@@ -2206,7 +2204,7 @@ class _TipCardState extends State<TipCard> {
         border: Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

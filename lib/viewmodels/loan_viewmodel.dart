@@ -706,8 +706,9 @@ class LoanViewModel extends ChangeNotifier {
         if (response.fullName != null) fullName = response.fullName!;
         if (response.idNumber != null) idNumber = response.idNumber!;
         if (response.dateOfBirth != null) dob = response.dateOfBirth;
-        if (response.placeOfResidence != null)
+        if (response.placeOfResidence != null) {
           address = response.placeOfResidence!;
+        }
 
         _saveDraft();
         print('[ViewModel] OCR successful, data auto-filled');

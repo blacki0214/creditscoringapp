@@ -35,7 +35,6 @@ ThemeData buildLuminaTheme() {
       primary: LuminaColors.primary,
       secondary: LuminaColors.primarySoft,
       surface: LuminaColors.surface,
-      background: LuminaColors.background,
       onSurface: LuminaColors.onSurface,
     ),
     scaffoldBackgroundColor: LuminaColors.background,
