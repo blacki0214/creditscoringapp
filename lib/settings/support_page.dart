@@ -10,7 +10,8 @@ class SupportPage extends StatefulWidget {
   State<SupportPage> createState() => _SupportPageState();
 }
 
-class _SupportPageState extends State<SupportPage> with SingleTickerProviderStateMixin {
+class _SupportPageState extends State<SupportPage>
+    with SingleTickerProviderStateMixin {
   bool _isChatOpen = false;
   final TextEditingController _chatController = TextEditingController();
   late AnimationController _animationController;
@@ -19,35 +20,43 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
   final List<FAQItem> _faqs = [
     FAQItem(
       question: 'How do I check my credit score?',
-      answer: 'You can view your credit score on the home page immediately after logging in. It displays your current score with a visual gauge and detailed breakdown.',
+      answer:
+          'You can view your credit score on the home page immediately after logging in. It displays your current score with a visual gauge and detailed breakdown.',
     ),
     FAQItem(
       question: 'How long does loan approval take?',
-      answer: 'Loan approval typically takes 24-48 hours. You will receive a notification once your application has been processed and approved.',
+      answer:
+          'Loan approval typically takes 24-48 hours. You will receive a notification once your application has been processed and approved.',
     ),
     FAQItem(
       question: 'What documents do I need for loan application?',
-      answer: 'You need: 1) Valid ID card (CCCD), 2) Selfie photo for verification, 3) Personal information including address and employment details.',
+      answer:
+          'You need: 1) Valid ID card (CCCD), 2) Selfie photo for verification, 3) Personal information including address and employment details.',
     ),
     FAQItem(
       question: 'How can I update my personal information?',
-      answer: 'Go to Settings > Profile and tap the "Edit" button. Update your information and tap "Save" to confirm changes.',
+      answer:
+          'Go to Settings > Profile and tap the "Edit" button. Update your information and tap "Save" to confirm changes.',
     ),
     FAQItem(
       question: 'What affects my credit score?',
-      answer: 'Your credit score is affected by: payment history, credit card usage, derogatory marks, credit age, total accounts, and hard inquiries.',
+      answer:
+          'Your credit score is affected by: payment history, credit card usage, derogatory marks, credit age, total accounts, and hard inquiries.',
     ),
     FAQItem(
       question: 'How do I make loan payments?',
-      answer: 'You can make payments through the app by going to your active loan details and selecting "Make Payment". Multiple payment methods are supported.',
+      answer:
+          'You can make payments through the app by going to your active loan details and selecting "Make Payment". Multiple payment methods are supported.',
     ),
     FAQItem(
       question: 'Is my personal data secure?',
-      answer: 'Yes, we use bank-level encryption to protect your data. All information is stored securely and we never share your data without consent.',
+      answer:
+          'Yes, we use bank-level encryption to protect your data. All information is stored securely and we never share your data without consent.',
     ),
     FAQItem(
       question: 'How can I contact customer support?',
-      answer: 'You can contact us through: 1) Live chat (tap the chat button), 2) Email: support@vietcredit.com, 3) Phone: +84 123 456 789.',
+      answer:
+          'You can contact us through: 1) Live chat (tap the chat button), 2) Email: support@vietcredit.com, 3) Phone: +84 123 456 789.',
     ),
   ];
 
@@ -62,7 +71,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    
+
     // Initialize chat when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SupportViewModel>().initializeChat();
@@ -72,9 +81,10 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -96,7 +106,10 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                 children: [
                   // Header
                   Text(
-                    context.t('How can we help you?', 'Chúng tôi có thể hỗ trợ gì cho bạn?'),
+                    context.t(
+                      'How can we help you?',
+                      'Chúng tôi có thể hỗ trợ gì cho bạn?',
+                    ),
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -105,14 +118,14 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    context.t('Find answers to frequently asked questions', 'Tìm câu trả lời cho các câu hỏi thường gặp'),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
+                    context.t(
+                      'Find answers to frequently asked questions',
+                      'Tìm câu trả lời cho các câu hỏi thường gặp',
                     ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Contact cards
                   Row(
                     children: [
@@ -121,7 +134,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                           icon: Icons.email_outlined,
                           title: context.t('Email', 'Email'),
                           subtitle: 'support@vietcredit.com',
-                          color: const Color(0xFF4C40F7),
+                          color: const Color(0xFF4D4AF9),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -136,10 +149,13 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                     ],
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // FAQ Section
                   Text(
-                    context.t('Frequently Asked Questions', 'Câu hỏi thường gặp'),
+                    context.t(
+                      'Frequently Asked Questions',
+                      'Câu hỏi thường gặp',
+                    ),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -147,13 +163,14 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // FAQ List
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _faqs.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       return _buildFAQItem(_faqs[index]);
                     },
@@ -163,24 +180,17 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
               ),
             ),
           ),
-          
+
           // Chat box
           if (_isChatOpen)
             Positioned(
               bottom: 100,
               right: 20,
-              child: ScaleTransition(
-                scale: _animation,
-                child: _buildChatBox(),
-              ),
+              child: ScaleTransition(scale: _animation, child: _buildChatBox()),
             ),
-          
+
           // Floating chat button
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: _buildChatButton(),
-          ),
+          Positioned(bottom: 20, right: 20, child: _buildChatButton()),
         ],
       ),
     );
@@ -215,10 +225,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -248,12 +255,12 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF4C40F7).withOpacity(0.1),
+              color: const Color(0xFF4D4AF9).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
               Icons.help_outline,
-              color: Color(0xFF4C40F7),
+              color: Color(0xFF4D4AF9),
               size: 20,
             ),
           ),
@@ -289,14 +296,14 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
         height: 60,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF4C40F7), Color(0xFF6C5CE7)],
+            colors: [Color(0xFF4D4AF9), Color(0xFF6C5CE7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4C40F7).withOpacity(0.4),
+              color: const Color(0xFF4D4AF9).withOpacity(0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -333,7 +340,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF4C40F7), Color(0xFF6C5CE7)],
+                colors: [Color(0xFF4D4AF9), Color(0xFF6C5CE7)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -347,10 +354,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                 CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 20,
-                  child: Icon(
-                    Icons.support_agent,
-                    color: Color(0xFF4C40F7),
-                  ),
+                  child: Icon(Icons.support_agent, color: Color(0xFF4D4AF9)),
                 ),
                 SizedBox(width: 12),
                 Expanded(
@@ -367,10 +371,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                       ),
                       Text(
                         'Online',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ],
                   ),
@@ -378,7 +379,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
               ],
             ),
           ),
-          
+
           // Chat messages
           Expanded(
             child: Container(
@@ -391,7 +392,9 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF4D4AF9),
+                            ),
                           ),
                         );
                       }
@@ -436,7 +439,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                           final isUser = message['senderType'] == 'user';
                           final text = message['message'] ?? '';
                           final timestamp = message['timestamp'];
-                          
+
                           return _buildMessageBubble(
                             isUser: isUser,
                             message: text,
@@ -450,15 +453,13 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
               ),
             ),
           ),
-          
+
           // Chat input
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade200),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
             ),
             child: Row(
               children: [
@@ -478,7 +479,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
-                        borderSide: const BorderSide(color: Color(0xFF4C40F7)),
+                        borderSide: const BorderSide(color: Color(0xFF4D4AF9)),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -492,7 +493,7 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
                 Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF4C40F7), Color(0xFF6C5CE7)],
+                      colors: [Color(0xFF4D4AF9), Color(0xFF6C5CE7)],
                     ),
                     shape: BoxShape.circle,
                   ),
@@ -520,13 +521,10 @@ class _SupportPageState extends State<SupportPage> with SingleTickerProviderStat
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isUser ? const Color(0xFF4C40F7) : Colors.white,
+          color: isUser ? const Color(0xFF4D4AF9) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4),
           ],
         ),
         constraints: BoxConstraints(

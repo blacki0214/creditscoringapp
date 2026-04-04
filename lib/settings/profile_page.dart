@@ -13,7 +13,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
-  
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -24,12 +24,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Load user profile data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = context.read<SettingsViewModel>();
       vm.loadUserProfile();
-      
+
       // Initialize controllers with loaded data
       _nameController.text = vm.name;
       _emailController.text = vm.email;
@@ -45,9 +45,10 @@ class _ProfilePageState extends State<ProfilePage> {
     final settingsViewModel = context.watch<SettingsViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -76,7 +77,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          context.t('Profile updated successfully', 'Cập nhật hồ sơ thành công'),
+                          context.t(
+                            'Profile updated successfully',
+                            'Cập nhật hồ sơ thành công',
+                          ),
                         ),
                         backgroundColor: Color(0xFF4CAF50),
                       ),
@@ -91,7 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Text(
               _isEditing ? context.t('Save', 'Lưu') : context.t('Edit', 'Sửa'),
               style: const TextStyle(
-                color: Color(0xFF4C40F7),
+                color: Color(0xFF4D4AF9),
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
@@ -122,7 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: const Icon(
                               Icons.person,
                               size: 60,
-                              color: Color(0xFF4C40F7),
+                              color: Color(0xFF4D4AF9),
                             ),
                           ),
                     if (_isEditing)
@@ -132,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: const BoxDecoration(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -145,11 +149,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Personal Information Section
-                _buildSectionTitle(context.t('Personal Information', 'Thông tin cá nhân')),
+                _buildSectionTitle(
+                  context.t('Personal Information', 'Thông tin cá nhân'),
+                ),
                 const SizedBox(height: 16),
-                
+
                 _buildInfoField(
                   label: context.t('Full Name', 'Họ và tên'),
                   controller: _nameController,
@@ -157,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   enabled: _isEditing,
                 ),
                 const SizedBox(height: 16),
-                
+
                 _buildInfoField(
                   label: context.t('Email', 'Email'),
                   controller: _emailController,
@@ -166,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
-                
+
                 _buildInfoField(
                   label: context.t('Phone Number', 'Số điện thoại'),
                   controller: _phoneController,
@@ -175,7 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 16),
-                
+
                 _buildInfoField(
                   label: context.t('Date of Birth', 'Ngày sinh'),
                   controller: _dobController,
@@ -183,11 +189,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   enabled: _isEditing,
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Address Section
                 _buildSectionTitle(context.t('Address', 'Địa chỉ')),
                 const SizedBox(height: 16),
-                
+
                 _buildInfoField(
                   label: context.t('Address', 'Địa chỉ'),
                   controller: _addressController,
@@ -196,11 +202,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   maxLines: 2,
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Document Section
                 _buildSectionTitle(context.t('Documents', 'Giấy tờ')),
                 const SizedBox(height: 16),
-                
+
                 _buildInfoField(
                   label: context.t('ID Number (CCCD)', 'Số CCCD'),
                   controller: _idController,
@@ -208,13 +214,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   enabled: _isEditing,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Account Status Card
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF4C40F7), Color(0xFF6C5CE7)],
+                      colors: [Color(0xFF4D4AF9), Color(0xFF6C5CE7)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -229,7 +235,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                context.t('Account Status', 'Trạng thái tài khoản'),
+                                context.t(
+                                  'Account Status',
+                                  'Trạng thái tài khoản',
+                                ),
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
@@ -268,11 +277,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           _buildAccountStat(
                             context.t('Member Since', 'Thành viên từ'),
-                            settingsViewModel.memberSince?.year.toString() ?? 'N/A',
+                            settingsViewModel.memberSince?.year.toString() ??
+                                'N/A',
                           ),
                           _buildAccountStat(
                             context.t('Credit Score', 'Điểm tín dụng'),
-                            settingsViewModel.latestCreditScore?.toString() ?? 'N/A',
+                            settingsViewModel.latestCreditScore?.toString() ??
+                                'N/A',
                           ),
                           _buildAccountStat(
                             context.t('Applications', 'Hồ sơ vay'),
@@ -284,9 +295,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Credit Score Section
-                _buildSectionTitle(context.t('Credit Status', 'Tình trạng tín dụng')),
+                _buildSectionTitle(
+                  context.t('Credit Status', 'Tình trạng tín dụng'),
+                ),
                 const SizedBox(height: 16),
                 _buildCreditScoreCard(settingsViewModel),
               ],
@@ -321,27 +334,31 @@ class _ProfilePageState extends State<ProfilePage> {
   }) {
     // Show placeholder text when field is empty and not editing
     final bool isEmpty = controller.text.isEmpty;
-    
+
     return TextFormField(
       controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
       maxLines: maxLines,
       style: TextStyle(
-        color: enabled ? Colors.black : (isEmpty ? Colors.grey.shade500 : Colors.grey.shade700),
+        color: enabled
+            ? Colors.black
+            : (isEmpty ? Colors.grey.shade500 : Colors.grey.shade700),
         fontSize: 16,
         fontStyle: isEmpty && !enabled ? FontStyle.italic : FontStyle.normal,
       ),
       decoration: InputDecoration(
         labelText: label,
-        hintText: !enabled && isEmpty ? context.t('Not available', 'Không có') : null,
+        hintText: !enabled && isEmpty
+            ? context.t('Not available', 'Không có')
+            : null,
         hintStyle: TextStyle(
           color: Colors.grey.shade400,
           fontStyle: FontStyle.italic,
         ),
         prefixIcon: Icon(
           icon,
-          color: enabled ? const Color(0xFF4C40F7) : Colors.grey.shade500,
+          color: enabled ? const Color(0xFF4D4AF9) : Colors.grey.shade500,
         ),
         filled: true,
         fillColor: enabled ? Colors.white : Colors.grey.shade50,
@@ -359,18 +376,20 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Color(0xFF4C40F7),
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
-      validator: enabled ? (value) {
-        if (value == null || value.isEmpty) {
-          return context.t('This field is required', 'Trường này là bắt buộc');
-        }
-        return null;
-      } : null,
+      validator: enabled
+          ? (value) {
+              if (value == null || value.isEmpty) {
+                return context.t(
+                  'This field is required',
+                  'Trường này là bắt buộc',
+                );
+              }
+              return null;
+            }
+          : null,
     );
   }
 
@@ -388,10 +407,7 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
         ),
       ],
     );
@@ -425,10 +441,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 'Hoàn tất hồ sơ vay để nhận điểm tín dụng của bạn',
               ),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -467,10 +480,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 Text(
                   context.t('Credit Score', 'Điểm tín dụng'),
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -493,11 +503,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (vm.riskLevel != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    context.t('Risk Level: ${vm.riskLevel}', 'Mức rủi ro: ${vm.riskLevel}'),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
+                    context.t(
+                      'Risk Level: ${vm.riskLevel}',
+                      'Mức rủi ro: ${vm.riskLevel}',
                     ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ],
@@ -509,11 +519,7 @@ class _ProfilePageState extends State<ProfilePage> {
               color: Colors.white.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.stars,
-              color: Colors.white,
-              size: 40,
-            ),
+            child: const Icon(Icons.stars, color: Colors.white, size: 40),
           ),
         ],
       ),

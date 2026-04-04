@@ -48,11 +48,13 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
   /// Validate bank account with the service
   Future<void> _validateBankAccount() async {
     final viewModel = context.read<LoanViewModel>();
-    
+
     if (viewModel.selectedBankCode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.t('Please select a bank', 'Vui lòng chọn ngân hàng')),
+          content: Text(
+            context.t('Please select a bank', 'Vui lòng chọn ngân hàng'),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -62,7 +64,12 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     if (_accountHolderController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.t('Please enter account holder name', 'Vui lòng nhập tên chủ tài khoản')),
+          content: Text(
+            context.t(
+              'Please enter account holder name',
+              'Vui lòng nhập tên chủ tài khoản',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -72,7 +79,12 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     if (_bankAccountController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.t('Please enter account number', 'Vui lòng nhập số tài khoản')),
+          content: Text(
+            context.t(
+              'Please enter account number',
+              'Vui lòng nhập số tài khoản',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -94,10 +106,12 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.t(
-              'Bank account verified successfully!',
-              'Tài khoản ngân hàng đã được xác nhận thành công!',
-            )),
+            content: Text(
+              context.t(
+                'Bank account verified successfully!',
+                'Tài khoản ngân hàng đã được xác nhận thành công!',
+              ),
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -106,13 +120,14 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
         setState(() {
           _bankAccountValidated = false;
         });
-        final errorMessage = viewModel.bankAccountValidationError ?? 
-            context.t('Account validation failed', 'Xác nhận tài khoản thất bại');
+        final errorMessage =
+            viewModel.bankAccountValidationError ??
+            context.t(
+              'Account validation failed',
+              'Xác nhận tài khoản thất bại',
+            );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
     }
@@ -120,17 +135,19 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
 
   Future<void> _submitDisbursement() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final viewModel = context.read<LoanViewModel>();
-    
+
     // Check if bank account is validated
     if (!_bankAccountValidated) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.t(
-            'Please validate your bank account first',
-            'Vui lòng xác nhận tài khoản ngân hàng trước',
-          )),
+          content: Text(
+            context.t(
+              'Please validate your bank account first',
+              'Vui lòng xác nhận tài khoản ngân hàng trước',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -140,10 +157,12 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     if (!_agreeToDisbursement) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.t(
-            'Please agree to the disbursement terms',
-            'Vui lòng đồng ý điều khoản giải ngân',
-          )),
+          content: Text(
+            context.t(
+              'Please agree to the disbursement terms',
+              'Vui lòng đồng ý điều khoản giải ngân',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -180,10 +199,12 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.t(
-              'Disbursement details submitted successfully!',
-              'Thông tin giải ngân đã được gửi thành công!',
-            )),
+            content: Text(
+              context.t(
+                'Disbursement details submitted successfully!',
+                'Thông tin giải ngân đã được gửi thành công!',
+              ),
+            ),
             backgroundColor: Color(0xFF4CAF50),
             duration: Duration(seconds: 2),
           ),
@@ -214,17 +235,23 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     return DropdownButtonFormField<String>(
       initialValue: viewModel.selectedBankCode,
       isExpanded: true,
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: context.t('Bank*', 'Ngân hàng*'),
-        prefixIcon: const Icon(Icons.account_balance, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        prefixIcon: const Icon(Icons.account_balance, color: Color(0xFF4D4AF9)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
       items: viewModel.banks.map((bank) {
@@ -263,21 +290,27 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     return DropdownButtonFormField<String>(
       initialValue: viewModel.selectedBranchCode,
       isExpanded: true,
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: context.t('Branch (Optional)', 'Chi nhánh (Tùy chọn)'),
-        prefixIcon: const Icon(Icons.location_on, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        prefixIcon: const Icon(Icons.location_on, color: Color(0xFF4D4AF9)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
       ),
       items: branches.map((branch) {
@@ -300,7 +333,9 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
               }
             },
       hint: Text(context.t('Select a branch...', 'Chọn chi nhánh...')),
-      disabledHint: Text(context.t('Select bank first', 'Chọn ngân hàng trước')),
+      disabledHint: Text(
+        context.t('Select bank first', 'Chọn ngân hàng trước'),
+      ),
     );
   }
 
@@ -314,15 +349,20 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
           'Enter full name as per bank account',
           'Nhập họ tên đầy đủ theo tài khoản ngân hàng',
         ),
-        prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF4D4AF9)),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
       validator: (value) {
@@ -358,15 +398,20 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
           'Enter your bank account number',
           'Nhập số tài khoản ngân hàng của bạn',
         ),
-        prefixIcon: const Icon(Icons.credit_card, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        prefixIcon: const Icon(Icons.credit_card, color: Color(0xFF4D4AF9)),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
       keyboardType: TextInputType.number,
@@ -475,7 +520,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
       );
     }
 
-    if (viewModel.bankAccountValidationError != null && viewModel.bankAccountValidationError!.isNotEmpty) {
+    if (viewModel.bankAccountValidationError != null &&
+        viewModel.bankAccountValidationError!.isNotEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -512,9 +558,10 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     final loanAmount = offer?['loanAmountVnd'] ?? 0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -586,7 +633,10 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
 
                       // Bank selection section
                       Text(
-                        context.t('Bank Account Details', 'Thông tin tài khoản ngân hàng'),
+                        context.t(
+                          'Bank Account Details',
+                          'Thông tin tài khoản ngân hàng',
+                        ),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -636,7 +686,7 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                               backgroundColor: Colors.blue,
                               disabledBackgroundColor: Colors.grey.shade300,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: Text(
@@ -723,10 +773,10 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                       ? null
                       : _submitDisbursement,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     disabledBackgroundColor: Colors.grey.shade300,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: _isProcessing

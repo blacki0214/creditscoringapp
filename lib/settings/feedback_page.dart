@@ -45,9 +45,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7FB),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -58,9 +59,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
             style: const TextStyle(color: Colors.black),
           ),
           bottom: TabBar(
-            labelColor: const Color(0xFF4C40F7),
+            labelColor: const Color(0xFF4D4AF9),
             unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF4C40F7),
+            indicatorColor: const Color(0xFF4D4AF9),
             tabs: [
               Tab(text: context.t('Submit Feedback', 'Gửi phản hồi')),
               Tab(text: context.t('My Feedback', 'Phản hồi của tôi')),
@@ -120,7 +121,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
@@ -153,7 +154,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
@@ -173,9 +174,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
               // Category dropdown
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
+                dropdownColor: Colors.white,
                 decoration: InputDecoration(
                   labelText: context.t('Category', 'Danh mục'),
                   prefixIcon: const Icon(Icons.category_outlined),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -186,7 +190,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
@@ -221,7 +225,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
@@ -259,7 +263,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
@@ -283,7 +287,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 child: ElevatedButton(
                   onPressed: _submitFeedback,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -314,7 +318,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4C40F7)),
+              child: CircularProgressIndicator(color: Color(0xFF4D4AF9)),
             );
           }
 
@@ -462,14 +466,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4C40F7).withOpacity(0.1),
+                  color: const Color(0xFF4D4AF9).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   category,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF4C40F7),
+                    color: Color(0xFF4D4AF9),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -521,7 +525,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 child: const Text(
                   'View Details',
                   style: TextStyle(
-                    color: Color(0xFF4C40F7),
+                    color: Color(0xFF4D4AF9),
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -546,7 +550,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         icon = Icons.pending_outlined;
         break;
       case FeedbackStatus.inProgress:
-        color = const Color(0xFF4C40F7);
+        color = const Color(0xFF4D4AF9);
         text = 'In Progress';
         icon = Icons.hourglass_empty;
         break;
@@ -652,7 +656,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       _messageController.clear();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4C40F7),
+                      backgroundColor: const Color(0xFF4D4AF9),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -757,7 +761,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               child: const Text(
                 'Close',
                 style: TextStyle(
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                   fontWeight: FontWeight.w600,
                 ),
               ),

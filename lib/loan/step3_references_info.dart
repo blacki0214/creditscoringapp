@@ -239,11 +239,12 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
       child: DropdownButtonFormField<String>(
         initialValue: value,
         isExpanded: true,
+        dropdownColor: Colors.white,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
           filled: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -355,10 +356,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.t(
-                            'Contact References',
-                            'Liên hệ tham chiếu',
-                          ),
+                          context.t('Contact References', 'Liên hệ tham chiếu'),
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w800,
@@ -379,200 +377,207 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                      Text(
-                        context.t(
-                          'Reference Contact 1',
-                          'Người liên hệ tham chiếu 1',
+                        Text(
+                          context.t(
+                            'Reference Contact 1',
+                            'Người liên hệ tham chiếu 1',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF334155),
+                          ),
                         ),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF334155),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference1NameController,
+                          label: context.t('Name(*)', 'Tên(*)'),
+                          fieldKey: 'reference1Name',
+                          icon: Icons.person,
+                          validator: _validateRequiredName,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference1NameController,
-                        label: context.t('Name(*)', 'Tên(*)'),
-                        fieldKey: 'reference1Name',
-                        icon: Icons.person,
-                        validator: _validateRequiredName,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference1PhoneController,
-                        label: context.t('Phone Number(*)', 'Số điện thoại(*)'),
-                        fieldKey: 'reference1Phone',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        validator: _validateRequiredPhone,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDropdownField(
-                        label: context.t(
-                          'Relationship with Applicant(*)',
-                          'Mối quan hệ với người vay(*)',
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference1PhoneController,
+                          label: context.t(
+                            'Phone Number(*)',
+                            'Số điện thoại(*)',
+                          ),
+                          fieldKey: 'reference1Phone',
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          validator: _validateRequiredPhone,
                         ),
-                        fieldKey: 'reference1Relationship',
-                        icon: Icons.people,
-                        value: _selectedReference1Relationship,
-                        items: _relationshipOptions,
-                        display: _displayRelationship,
-                        onChanged: (value) => setState(
-                          () => _selectedReference1Relationship = value,
+                        const SizedBox(height: 12),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Relationship with Applicant(*)',
+                            'Mối quan hệ với người vay(*)',
+                          ),
+                          fieldKey: 'reference1Relationship',
+                          icon: Icons.people,
+                          value: _selectedReference1Relationship,
+                          items: _relationshipOptions,
+                          display: _displayRelationship,
+                          onChanged: (value) => setState(
+                            () => _selectedReference1Relationship = value,
+                          ),
+                          validatorMessage: context.t(
+                            'Please select relationship for reference contact 1',
+                            'Vui lòng chọn mối quan hệ cho người liên hệ tham chiếu 1',
+                          ),
                         ),
-                        validatorMessage: context.t(
-                          'Please select relationship for reference contact 1',
-                          'Vui lòng chọn mối quan hệ cho người liên hệ tham chiếu 1',
+                        const SizedBox(height: 24),
+                        Text(
+                          context.t(
+                            'Reference Contact 2',
+                            'Người liên hệ tham chiếu 2',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF334155),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.t(
-                          'Reference Contact 2',
-                          'Người liên hệ tham chiếu 2',
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference2NameController,
+                          label: context.t('Name(*)', 'Tên(*)'),
+                          fieldKey: 'reference2Name',
+                          icon: Icons.person,
+                          validator: _validateRequiredName,
                         ),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF334155),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference2PhoneController,
+                          label: context.t(
+                            'Phone Number(*)',
+                            'Số điện thoại(*)',
+                          ),
+                          fieldKey: 'reference2Phone',
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          validator: _validateRequiredPhone,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference2NameController,
-                        label: context.t('Name(*)', 'Tên(*)'),
-                        fieldKey: 'reference2Name',
-                        icon: Icons.person,
-                        validator: _validateRequiredName,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference2PhoneController,
-                        label: context.t('Phone Number(*)', 'Số điện thoại(*)'),
-                        fieldKey: 'reference2Phone',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        validator: _validateRequiredPhone,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDropdownField(
-                        label: context.t(
-                          'Relationship with Applicant(*)',
-                          'Mối quan hệ với người vay(*)',
+                        const SizedBox(height: 12),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Relationship with Applicant(*)',
+                            'Mối quan hệ với người vay(*)',
+                          ),
+                          fieldKey: 'reference2Relationship',
+                          icon: Icons.people,
+                          value: _selectedReference2Relationship,
+                          items: _relationshipOptions,
+                          display: _displayRelationship,
+                          onChanged: (value) => setState(
+                            () => _selectedReference2Relationship = value,
+                          ),
+                          validatorMessage: context.t(
+                            'Please select relationship for reference contact 2',
+                            'Vui lòng chọn mối quan hệ cho người liên hệ tham chiếu 2',
+                          ),
                         ),
-                        fieldKey: 'reference2Relationship',
-                        icon: Icons.people,
-                        value: _selectedReference2Relationship,
-                        items: _relationshipOptions,
-                        display: _displayRelationship,
-                        onChanged: (value) => setState(
-                          () => _selectedReference2Relationship = value,
+                        const SizedBox(height: 24),
+                        Text(
+                          context.t('Additional Documents', 'Tài liệu bổ sung'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F3F),
+                          ),
                         ),
-                        validatorMessage: context.t(
-                          'Please select relationship for reference contact 2',
-                          'Vui lòng chọn mối quan hệ cho người liên hệ tham chiếu 2',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.t('Additional Documents', 'Tài liệu bổ sung'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          color: const Color(0xFFF8FAFC),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _pickAdditionalDocuments,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF4D4AF9),
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.upload_file),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      context.t(
-                                        'Upload Additional Documents',
-                                        'Tải lên tài liệu bổ sung',
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            color: const Color(0xFFF8FAFC),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _pickAdditionalDocuments,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4D4AF9),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
                                     ),
-                                  ],
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.upload_file),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        context.t(
+                                          'Upload Additional Documents',
+                                          'Tải lên tài liệu bổ sung',
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (_additionalDocuments.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: _additionalDocuments.map((doc) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.attachment,
-                                            size: 16,
-                                            color: Color(0xFF4D4AF9),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              doc.name,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xFF1A1F3F),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                              if (_additionalDocuments.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: _additionalDocuments.map((doc) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.attachment,
+                                              size: 16,
+                                              color: Color(0xFF4D4AF9),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                doc.name,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xFF1A1F3F),
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
                         const SizedBox(height: 32),
                       ],
                     ),

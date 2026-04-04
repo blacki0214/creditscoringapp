@@ -18,7 +18,7 @@ class StudentVerificationGatePage extends StatefulWidget {
 class _StudentVerificationGatePageState extends State<StudentVerificationGatePage> {
   final TextEditingController _emailController = TextEditingController();
 
-  StudentVerificationPhase _phase = StudentVerificationPhase.demo;
+  final StudentVerificationPhase _phase = StudentVerificationPhase.demo;
   bool _emailSent = false;
   bool _emailVerified = false;
   bool _legalConfirmed = false;

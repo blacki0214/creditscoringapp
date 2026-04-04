@@ -306,11 +306,12 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
       child: DropdownButtonFormField<String>(
         initialValue: value,
         isExpanded: true,
+        dropdownColor: Colors.white,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
           filled: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -434,115 +435,115 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                      _buildDropdownField(
-                        label: context.t('Job Type(*)', 'Loại công việc(*)'),
-                        fieldKey: 'jobType',
-                        icon: Icons.work,
-                        value: _selectedJobType,
-                        items: _jobTypeOptions,
-                        display: _displayJobType,
-                        onChanged: (value) =>
-                            setState(() => _selectedJobType = value),
-                        validator: (selected) =>
-                            (selected == null || selected.isEmpty)
-                            ? context.t(
-                                'Please select job type',
-                                'Vui lòng chọn loại công việc',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _monthlyIncomeController,
-                        label: context.t(
-                          'Monthly Income(*)',
-                          'Thu nhập hàng tháng(*)',
+                        _buildDropdownField(
+                          label: context.t('Job Type(*)', 'Loại công việc(*)'),
+                          fieldKey: 'jobType',
+                          icon: Icons.work,
+                          value: _selectedJobType,
+                          items: _jobTypeOptions,
+                          display: _displayJobType,
+                          onChanged: (value) =>
+                              setState(() => _selectedJobType = value),
+                          validator: (selected) =>
+                              (selected == null || selected.isEmpty)
+                              ? context.t(
+                                  'Please select job type',
+                                  'Vui lòng chọn loại công việc',
+                                )
+                              : null,
                         ),
-                        fieldKey: 'monthlyIncome',
-                        icon: Icons.money,
-                        keyboardType: TextInputType.number,
-                        readOnly: _lockMonthlyIncome,
-                        validator: _validateRequiredCurrency,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _companyNameController,
-                        label: context.t('Company Name(*)', 'Tên công ty(*)'),
-                        fieldKey: 'companyName',
-                        icon: Icons.business,
-                        validator: _requiredValidator(
-                          context.t(
-                            'Please enter company name',
-                            'Vui lòng nhập tên công ty',
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _monthlyIncomeController,
+                          label: context.t(
+                            'Monthly Income(*)',
+                            'Thu nhập hàng tháng(*)',
+                          ),
+                          fieldKey: 'monthlyIncome',
+                          icon: Icons.money,
+                          keyboardType: TextInputType.number,
+                          readOnly: _lockMonthlyIncome,
+                          validator: _validateRequiredCurrency,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _companyNameController,
+                          label: context.t('Company Name(*)', 'Tên công ty(*)'),
+                          fieldKey: 'companyName',
+                          icon: Icons.business,
+                          validator: _requiredValidator(
+                            context.t(
+                              'Please enter company name',
+                              'Vui lòng nhập tên công ty',
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _companyPhoneController,
-                        label: context.t(
-                          'Company Phone(*)',
-                          'Số điện thoại công ty(*)',
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _companyPhoneController,
+                          label: context.t(
+                            'Company Phone(*)',
+                            'Số điện thoại công ty(*)',
+                          ),
+                          fieldKey: 'companyPhone',
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          validator: _validateRequiredPhone,
                         ),
-                        fieldKey: 'companyPhone',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        validator: _validateRequiredPhone,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _companyAddressController,
-                        label: context.t(
-                          'Company Address(*)',
-                          'Địa chỉ công ty(*)',
-                        ),
-                        fieldKey: 'companyAddress',
-                        icon: Icons.location_on,
-                        maxLines: 3,
-                        validator: _requiredValidator(
-                          context.t(
-                            'Please enter company address',
-                            'Vui lòng nhập địa chỉ công ty',
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _companyAddressController,
+                          label: context.t(
+                            'Company Address(*)',
+                            'Địa chỉ công ty(*)',
+                          ),
+                          fieldKey: 'companyAddress',
+                          icon: Icons.location_on,
+                          maxLines: 3,
+                          validator: _requiredValidator(
+                            context.t(
+                              'Please enter company address',
+                              'Vui lòng nhập địa chỉ công ty',
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdownField(
-                        label: context.t(
-                          'Contract Type(*)',
-                          'Loại hợp đồng(*)',
+                        const SizedBox(height: 16),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Contract Type(*)',
+                            'Loại hợp đồng(*)',
+                          ),
+                          fieldKey: 'contractType',
+                          icon: Icons.description,
+                          value: _selectedContractType,
+                          items: _contractTypeOptions,
+                          display: _displayContractType,
+                          onChanged: (value) =>
+                              setState(() => _selectedContractType = value),
+                          validator: (selected) =>
+                              (selected == null || selected.isEmpty)
+                              ? context.t(
+                                  'Please select contract type',
+                                  'Vui lòng chọn loại hợp đồng',
+                                )
+                              : null,
                         ),
-                        fieldKey: 'contractType',
-                        icon: Icons.description,
-                        value: _selectedContractType,
-                        items: _contractTypeOptions,
-                        display: _displayContractType,
-                        onChanged: (value) =>
-                            setState(() => _selectedContractType = value),
-                        validator: (selected) =>
-                            (selected == null || selected.isEmpty)
-                            ? context.t(
-                                'Please select contract type',
-                                'Vui lòng chọn loại hợp đồng',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _occupationTitleController,
-                        label: context.t(
-                          'Occupation Title(*)',
-                          'Chức danh công việc(*)',
-                        ),
-                        fieldKey: 'occupationTitle',
-                        icon: Icons.badge,
-                        validator: _requiredValidator(
-                          context.t(
-                            'Please enter occupation title',
-                            'Vui lòng nhập chức danh công việc',
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _occupationTitleController,
+                          label: context.t(
+                            'Occupation Title(*)',
+                            'Chức danh công việc(*)',
+                          ),
+                          fieldKey: 'occupationTitle',
+                          icon: Icons.badge,
+                          validator: _requiredValidator(
+                            context.t(
+                              'Please enter occupation title',
+                              'Vui lòng nhập chức danh công việc',
+                            ),
                           ),
                         ),
-                      ),
                         const SizedBox(height: 32),
                       ],
                     ),

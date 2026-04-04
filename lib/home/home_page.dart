@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.lock_outline, color: Color(0xFF4C40F7)),
+            Icon(Icons.lock_outline, color: Color(0xFF4D4AF9)),
             SizedBox(width: 8),
             Text('Add a Password'),
           ],
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
               _showAddPasswordDialog();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C40F7),
+              backgroundColor: const Color(0xFF4D4AF9),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -870,7 +870,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCreditStandingCard(BuildContext context, HomeViewModel viewModel) {
+  Widget _buildCreditStandingCard(
+    BuildContext context,
+    HomeViewModel viewModel,
+  ) {
     final score = viewModel.creditScore;
     final scoreText = score?.toString() ?? '--';
 
@@ -1211,7 +1214,7 @@ class _HomePageState extends State<HomePage> {
                                 );
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4C40F7),
+                                backgroundColor: const Color(0xFF4D4AF9),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
@@ -1276,7 +1279,7 @@ class _HomePageState extends State<HomePage> {
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF4C40F7),
+                                    backgroundColor: const Color(0xFF4D4AF9),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 11,
@@ -1483,7 +1486,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
@@ -1681,7 +1684,7 @@ class _HomePageState extends State<HomePage> {
               label: Text(context.t('Previous', 'Trước')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: viewModel.currentApplicationPage > 1
-                    ? const Color(0xFF4C40F7)
+                    ? const Color(0xFF4D4AF9)
                     : Colors.grey.shade300,
                 foregroundColor: viewModel.currentApplicationPage > 1
                     ? Colors.white
@@ -1702,7 +1705,7 @@ class _HomePageState extends State<HomePage> {
               label: Text(context.t('Next', 'Tiếp')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: viewModel.currentApplicationPage < totalPages
-                    ? const Color(0xFF4C40F7)
+                    ? const Color(0xFF4D4AF9)
                     : Colors.grey.shade300,
                 foregroundColor: viewModel.currentApplicationPage < totalPages
                     ? Colors.white
@@ -1806,6 +1809,7 @@ class _HomePageState extends State<HomePage> {
             final app = paginatedInstallments[index];
             final monthlyPayment =
                 app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
+            final contractId = app['contractId'] ?? 'N/A';
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
@@ -1813,11 +1817,23 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Contract ID - display at top
+                  Center(
+                    child: Text(
+                      context.t('Contract ID: ', 'ID Hợp đồng: ') + contractId,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1879,11 +1895,11 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
+                    height: 40,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: const Color(0xFF4D4AF9),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                       ),
                       onPressed: () {
                         Navigator.push(
@@ -1898,7 +1914,7 @@ class _HomePageState extends State<HomePage> {
                       child: Text(
                         context.t('View Details', 'Xem chi tiết'),
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1921,7 +1937,7 @@ class _HomePageState extends State<HomePage> {
               label: Text(context.t('Previous', 'Trước')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: viewModel.currentInstallmentPage > 1
-                    ? const Color(0xFF4C40F7)
+                    ? const Color(0xFF4D4AF9)
                     : Colors.grey.shade300,
                 foregroundColor: viewModel.currentInstallmentPage > 1
                     ? Colors.white
@@ -1942,7 +1958,7 @@ class _HomePageState extends State<HomePage> {
               label: Text(context.t('Next', 'Tiếp')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: viewModel.currentInstallmentPage < totalPages
-                    ? const Color(0xFF4C40F7)
+                    ? const Color(0xFF4D4AF9)
                     : Colors.grey.shade300,
                 foregroundColor: viewModel.currentInstallmentPage < totalPages
                     ? Colors.white
@@ -2198,7 +2214,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'Close',
-                  style: TextStyle(color: Color(0xFF4C40F7)),
+                  style: TextStyle(color: Color(0xFF4D4AF9)),
                 ),
               ),
             ],
@@ -2420,7 +2436,8 @@ class _HomePageState extends State<HomePage> {
           _asNullableInt(data['installmentNo']) ??
           _asNullableInt(data['installment_no']);
 
-      if (firestoreInstallmentNumber == null || firestoreInstallmentNumber < 1) {
+      if (firestoreInstallmentNumber == null ||
+          firestoreInstallmentNumber < 1) {
         return normalizedFallback;
       }
 

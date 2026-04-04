@@ -54,7 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       body: SafeArea(
         child: Column(
           children: [
@@ -249,7 +249,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   );
                                 },
                                 child: Text(
-                                  isVietnamese ? 'Chính sách bảo mật' : 'Privacy Policy',
+                                  isVietnamese
+                                      ? 'Chính sách bảo mật'
+                                      : 'Privacy Policy',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: const Color(0xFF4D4AF9),
@@ -269,7 +271,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   // Navigate to terms
                                 },
                                 child: Text(
-                                  isVietnamese ? 'Điều khoản & Điều kiện' : 'Terms & Conditions',
+                                  isVietnamese
+                                      ? 'Điều khoản & Điều kiện'
+                                      : 'Terms & Conditions',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: const Color(0xFF4D4AF9),
