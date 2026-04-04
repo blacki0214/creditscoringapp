@@ -244,6 +244,16 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                                 // If there's an active application, use getCurrentStep
                                 if (viewModel.hasActiveApplication) {
                                   _routeToCurrentStep(viewModel);
+                                } else if (viewModel.hasCompletedOfferHistory) {
+                                  viewModel
+                                      .prepareReturningApplicantForNewLoan();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const Step3PersonalInfoPage(),
+                                    ),
+                                  );
                                 } else {
                                   // No active application, go to Step 2 (next logical step after eKYC)
                                   Navigator.push(

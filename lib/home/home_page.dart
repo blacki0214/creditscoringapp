@@ -1270,13 +1270,26 @@ class _HomePageState extends State<HomePage> {
                                     await loanViewModel
                                         .finalizeAndResetForNewApplication();
                                     if (!context.mounted) return;
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const LoanApplicationPage(),
-                                      ),
-                                    );
+                                    if (loanViewModel
+                                        .hasCompletedOfferHistory) {
+                                      loanViewModel
+                                          .prepareReturningApplicantForNewLoan();
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const Step3PersonalInfoPage(),
+                                        ),
+                                      );
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const LoanApplicationPage(),
+                                        ),
+                                      );
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF4D4AF9),
@@ -1809,7 +1822,8 @@ class _HomePageState extends State<HomePage> {
             final app = paginatedInstallments[index];
             final monthlyPayment =
                 app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
-            final contractId = app['contractId'] ?? 'N/A';
+            final contractId =
+                app['displayContractId'] ?? app['contractId'] ?? 'N/A';
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),

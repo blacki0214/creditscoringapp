@@ -14,7 +14,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -32,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (mounted) {
       // Check if user has already seen onboarding
       final hasSeenOnboarding = LocalStorageService.hasSeenOnboarding();
-      
+
       if (hasSeenOnboarding) {
         // User has completed onboarding before, go to login
         Navigator.pushReplacement(
@@ -51,6 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onboardingVm = context.watch<OnboardingViewModel>();
     return Scaffold(
       backgroundColor: const Color(0xFF0C0F11),
       body: Stack(
@@ -61,10 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0C0F11),
-                  Color(0xFF1a1f2e),
-                ],
+                colors: [Color(0xFF0C0F11), Color(0xFF1a1f2e)],
               ),
             ),
           ),
@@ -119,10 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF4A52FF),
-                        Color(0xFF7E85FF),
-                      ],
+                      colors: [Color(0xFF4A52FF), Color(0xFF7E85FF)],
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -185,6 +179,35 @@ class _SplashScreenState extends State<SplashScreen> {
             right: 0,
             child: Column(
               children: [
+                if (!onboardingVm.apiHealthy) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB45309).withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Text(
+                      onboardingVm.apiHealthMessage ??
+                          context.t(
+                            'Temporary connection issue. Please try again.',
+                            'Kết nối tạm thời gián đoạn. Vui lòng thử lại.',
+                          ),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
                 Text(
                   context.t('Initializing', 'Đang khởi tạo...'),
                   style: TextStyle(

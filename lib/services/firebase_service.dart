@@ -30,6 +30,8 @@ class FirebaseService {
       _firestore.collection('loan_offers');
   CollectionReference get applicationHistoryCollection =>
       _firestore.collection('application_history');
+  CollectionReference get contractIdCollection =>
+      _firestore.collection('contractID');
   CollectionReference get feedbackCollection =>
       _firestore.collection('feedback');
 

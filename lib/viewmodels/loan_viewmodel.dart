@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
@@ -122,6 +123,12 @@ class LoanViewModel extends ChangeNotifier {
   bool get isApplicationRejected =>
       _applicationStatus == ApplicationStatus.rejected;
   String? get pendingApplicationId => _pendingApplicationId;
+  bool get hasCompletedOfferHistory {
+    final history = LocalStorageService.getApplicationHistory(
+      userId: _firebase.currentUserId,
+    );
+    return history.isNotEmpty;
+  }
 
   // Legacy getter for backward compatibility
   LoanOfferResponse? get currentOfferLegacy {
@@ -178,8 +185,9 @@ class LoanViewModel extends ChangeNotifier {
     if (!_step2Completed) return 2;
     if (!_step3Completed) return 3;
     if (!_step4Completed) return 4;
-    if (!_step6Completed)
+    if (!_step6Completed) {
       return 6; // Note: Step 5 is contract review, Step 6 is disbursement
+    }
     return 7; // All steps completed
   }
 
@@ -508,6 +516,15 @@ class LoanViewModel extends ChangeNotifier {
   // Mark step 1 UI as completed without persisting eKYC verification.
   void markStep1CompletedLocalOnly() {
     _step1Completed = true;
+    notifyListeners();
+  }
+
+  /// Prepare a returning applicant to start a new loan directly from Step 3.
+  /// Keeps the saved eKYC prefill and marks Steps 1 and 2 as already completed.
+  void prepareReturningApplicantForNewLoan() {
+    applySavedEkycPrefill(notify: false);
+    _step1Completed = true;
+    _step2Completed = true;
     notifyListeners();
   }
 
@@ -1116,19 +1133,51 @@ class LoanViewModel extends ChangeNotifier {
       _lastCompletedOffer = Map<String, dynamic>.from(_currentOffer!);
       _lastCompletedStatus = _applicationStatus;
 
-      // Generate numeric-only contract ID for easy memorization
-      final timestamp = DateTime.now();
-      final contractId = '${timestamp.millisecondsSinceEpoch}'.substring(
-        3,
-        11,
-      ); // 8-digit numeric ID
+      // Generate a full numeric display contract ID.
+      final displayContractId = _generateDisplayContractId();
+      final contractDetail = <String, dynamic>{
+        'status': _currentOffer!['approved'] == true ? 'Active' : 'Rejected',
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'applicationStatus': _applicationStatus.name,
+        'creditScore': _currentOffer!['creditScore'],
+        'loanAmount': _currentOffer!['loanAmountVnd'],
+        'maxAmount': _currentOffer!['maxAmountVnd'],
+        'loanTermMonths': _currentOffer!['loanTermMonths'],
+        'monthlyPaymentVnd': _currentOffer!['monthlyPaymentVnd'],
+        'interestRate': _currentOffer!['interestRate'],
+        'approved': _currentOffer!['approved'],
+        'accepted': _currentOffer!['accepted'],
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      final contractRecord = _firebase.contractIdCollection.doc();
+      await contractRecord.set({
+        'userId': _firebase.currentUserId,
+        'contractId': displayContractId,
+        'displayContractId': displayContractId,
+        'contractDbId': contractRecord.id,
+        'detail': contractDetail,
+        'applicationId':
+            _currentApplicationId ?? _currentOffer!['applicationId'],
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
       await LocalStorageService.saveApplicationHistory({
         'offerId':
             _currentOfferId ??
             _currentOffer!['offerId'] ??
             _currentOffer!['id'],
-        'contractId': contractId,
+        'contractId': displayContractId,
+        'displayContractId': displayContractId,
+        'contractDbId': contractRecord.id,
         'approved': _currentOffer!['approved'],
         'creditScore': _currentOffer!['creditScore'],
         'loanAmount': _currentOffer!['loanAmountVnd'],
@@ -1144,6 +1193,13 @@ class LoanViewModel extends ChangeNotifier {
     }
 
     resetForNewApplication();
+  }
+
+  String _generateDisplayContractId() {
+    final now = DateTime.now();
+    final datePrefix = DateFormat('yyMMddHHmmss').format(now);
+    final randomSuffix = math.Random().nextInt(90) + 10;
+    return '$datePrefix$randomSuffix';
   }
 
   void resetForNewApplication() {

@@ -65,6 +65,20 @@ service cloud.firestore {
           get(/databases/$(database)/documents/loan_offers/$(offerId)).data.userId == request.auth.uid;
       }
     }
+
+    // Contract ID collection
+    match /contractID/{contractDocId} {
+      allow read: if isSupportStaff() ||
+                     (isAuthenticated() && resource.data.userId == request.auth.uid);
+
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid;
+
+      allow update: if isSupportStaff() ||
+                     (isAuthenticated() && resource.data.userId == request.auth.uid);
+
+      allow delete: if isSupportStaff();
+    }
     
     // Application history collection
     match /application_history/{historyId} {
