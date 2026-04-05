@@ -68,21 +68,29 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
 
     if (offer == null) {
       return Scaffold(
-        body: Center(child: Text(context.t('No offer available.', 'Không có đề nghị khoản vay.'))),
+        body: Center(
+          child: Text(
+            context.t('No offer available.', 'Không có đề nghị khoản vay.'),
+          ),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          context.t('Step 5: Review & Sign Contract', 'Bước 5: Xem và ký hợp đồng'),
+          context.t(
+            'Step 5: Review & Sign Contract',
+            'Bước 5: Xem và ký hợp đồng',
+          ),
           style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
@@ -99,7 +107,10 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.t('Loan Contract Agreement', 'Hợp đồng khoản vay'),
+                      context.t(
+                        'Loan Contract Agreement',
+                        'Hợp đồng khoản vay',
+                      ),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -108,7 +119,10 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      context.t('Please review the contract terms and sign to proceed.', 'Vui lòng xem điều khoản hợp đồng và ký để tiếp tục.'),
+                      context.t(
+                        'Please review the contract terms and sign to proceed.',
+                        'Vui lòng xem điều khoản hợp đồng và ký để tiếp tục.',
+                      ),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -119,7 +133,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     _buildContractSummaryCard(offer),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader(context.t('Loan Terms', 'Điều khoản khoản vay')),
+                    _buildSectionHeader(
+                      context.t('Loan Terms', 'Điều khoản khoản vay'),
+                    ),
                     _buildTermRow(
                       context.t('Loan Amount', 'Số tiền vay'),
                       _currencyFormat.format(widget.loanAmount),
@@ -135,7 +151,10 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     const SizedBox(height: 12),
                     _buildTermRow(
                       context.t('Loan Term', 'Kỳ hạn vay'),
-                      context.t('${widget.tenor} months', '${widget.tenor} tháng'),
+                      context.t(
+                        '${widget.tenor} months',
+                        '${widget.tenor} tháng',
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildTermRow(
@@ -144,10 +163,15 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     ),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader(context.t('Additional Charges', 'Phí bổ sung')),
+                    _buildSectionHeader(
+                      context.t('Additional Charges', 'Phí bổ sung'),
+                    ),
                     _buildTermRow(
                       context.t('Origination Fee', 'Phí khởi tạo'),
-                      context.t('Included in rate', 'Đã bao gồm trong lãi suất'),
+                      context.t(
+                        'Included in rate',
+                        'Đã bao gồm trong lãi suất',
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildTermRow(
@@ -160,11 +184,16 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     const SizedBox(height: 12),
                     _buildTermRow(
                       context.t('Late Payment Fee', 'Phí trả chậm'),
-                      context.t('2% per month after due date', '2% mỗi tháng sau ngày đến hạn'),
+                      context.t(
+                        '2% per month after due date',
+                        '2% mỗi tháng sau ngày đến hạn',
+                      ),
                     ),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader(context.t('Legal Agreements', 'Cam kết pháp lý')),
+                    _buildSectionHeader(
+                      context.t('Legal Agreements', 'Cam kết pháp lý'),
+                    ),
                     _buildAgreementCheckbox(
                       label: context.t(
                         'I agree to the Terms and Conditions of this Loan Agreement',
@@ -196,7 +225,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                     ),
 
                     const SizedBox(height: 24),
-                    _buildSectionHeader(context.t('Digital Signature', 'Chữ ký điện tử')),
+                    _buildSectionHeader(
+                      context.t('Digital Signature', 'Chữ ký điện tử'),
+                    ),
                     Text(
                       context.t(
                         'Type your full name as signature:',
@@ -222,18 +253,26 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                       ],
                       validator: _validateSignature,
                       decoration: InputDecoration(
-                        hintText: context.t('Enter your full name', 'Nhập họ và tên đầy đủ'),
+                        hintText: context.t(
+                          'Enter your full name',
+                          'Nhập họ và tên đầy đủ',
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             width: 2,
                           ),
                         ),
@@ -291,10 +330,10 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isSigningEnabled() && !_isSigning
-                        ? const Color(0xFF4C40F7)
+                        ? const Color(0xFF4D4AF9)
                         : Colors.grey.shade400,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: _isSigning
@@ -302,7 +341,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                           color: Colors.white,
                           strokeWidth: 2,
                         )
-                        : Text(
+                      : Text(
                           context.t('Sign & Continue', 'Ký và tiếp tục'),
                           style: TextStyle(
                             fontSize: 16,
@@ -353,9 +392,9 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF4C40F7).withOpacity(0.08),
+        color: const Color(0xFF4D4AF9).withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF4D4AF9).withOpacity(0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -401,7 +440,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                 ),
               ),
             ],
@@ -419,7 +458,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF4C40F7),
+          color: Color(0xFF4D4AF9),
         ),
       ),
     );
@@ -470,11 +509,11 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: value
-              ? const Color(0xFF4C40F7).withOpacity(0.05)
+              ? const Color(0xFF4D4AF9).withOpacity(0.05)
               : Colors.grey.withOpacity(0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: value ? const Color(0xFF4C40F7) : Colors.grey.shade300,
+            color: value ? const Color(0xFF4D4AF9) : Colors.grey.shade300,
           ),
         ),
         child: Row(
@@ -483,7 +522,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
             Checkbox(
               value: value,
               onChanged: onChanged,
-              activeColor: const Color(0xFF4C40F7),
+              activeColor: const Color(0xFF4D4AF9),
             ),
             Expanded(
               child: Padding(
@@ -512,7 +551,10 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
 
   String? _validateSignature(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter your signature', 'Vui lòng nhập chữ ký của bạn');
+      return context.t(
+        'Please enter your signature',
+        'Vui lòng nhập chữ ký của bạn',
+      );
     }
     if (value.trim().length < 2) {
       return context.t(

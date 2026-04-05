@@ -444,14 +444,17 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
           labelText: label,
           prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
           filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -549,13 +552,18 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             Icons.calendar_today,
             color: Color(0xFF4C40F7),
           ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -609,17 +617,23 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
       child: DropdownButtonFormField<String>(
         initialValue: value,
         isExpanded: true,
+        dropdownColor: Colors.white,
         icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -627,7 +641,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),
@@ -665,12 +679,14 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -678,7 +694,11 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             'Step 3.1: Additional Information',
             'Bước 3.1: Thông tin bổ sung',
           ),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -692,282 +712,295 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                 ),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('Personal Information', 'Thông tin cá nhân'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t(
-                          'Complete your personal details from your ID',
-                          'Hoàn thành thông tin cá nhân từ CCCD/Hộ chiếu của bạn',
-                        ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildTextField(
-                        controller: _fullNameController,
-                        label: context.t('Full Name(*)', 'Họ và tên(*)'),
-                        fieldKey: 'fullName',
-                        icon: Icons.person,
-                        validator: _validateRequiredName,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDateField(
-                        label: context.t('Date of Birth(*)', 'Ngày sinh(*)'),
-                        fieldKey: 'dob',
-                        icon: Icons.cake,
-                        initialValue: _dob,
-                        onChanged: (date) => setState(() => _dob = date),
-                        firstDate: DateTime(1950),
-                        lastDate: _latestEligibleDob(),
-                        validator: _validateDob,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdownField(
-                        label: context.t('Gender(*)', 'Giới tính(*)'),
-                        fieldKey: 'gender',
-                        icon: Icons.wc,
-                        value: _selectedGender,
-                        items: _genderOptions,
-                        display: _displayGender,
-                        onChanged: (value) =>
-                            setState(() => _selectedGender = value),
-                        validator: (selected) =>
-                            (selected == null || selected.isEmpty)
-                            ? context.t(
-                                'Please select gender',
-                                'Vui lòng chọn giới tính',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _nationalityController,
-                        label: context.t('Nationality(*)', 'Quốc tịch(*)'),
-                        fieldKey: 'nationality',
-                        icon: Icons.public,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdownField(
-                        label: context.t(
-                          'Marital Status(*)',
-                          'Tình trạng hôn nhân(*)',
-                        ),
-                        fieldKey: 'maritalStatus',
-                        icon: Icons.favorite,
-                        value: _selectedMaritalStatus,
-                        items: _maritalStatusOptions,
-                        display: _displayMaritalStatus,
-                        onChanged: (value) =>
-                            setState(() => _selectedMaritalStatus = value),
-                        validator: (selected) =>
-                            (selected == null || selected.isEmpty)
-                            ? context.t(
-                                'Please select marital status',
-                                'Vui lòng chọn tình trạng hôn nhân',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdownField(
-                        label: context.t(
-                          'Education Level(*)',
-                          'Trình độ học vấn(*)',
-                        ),
-                        fieldKey: 'educationLevel',
-                        icon: Icons.school,
-                        value: _selectedEducationLevel,
-                        items: _educationLevelOptions,
-                        display: _displayEducationLevel,
-                        onChanged: (value) =>
-                            setState(() => _selectedEducationLevel = value),
-                        validator: (selected) =>
-                            (selected == null || selected.isEmpty)
-                            ? context.t(
-                                'Please select education level',
-                                'Vui lòng chọn trình độ học vấn',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _cccdController,
-                        label: context.t(
-                          'CCCD / Passport ID(*)',
-                          'CCCD / Hộ chiếu(*)',
-                        ),
-                        fieldKey: 'cccd',
-                        icon: Icons.credit_card,
-                        validator: (value) {
-                          final raw = value?.trim() ?? '';
-                          if (raw.isEmpty) {
-                            return context.t(
-                              'Please enter CCCD',
-                              'Vui lòng nhập CCCD',
-                            );
-                          }
-                          if (!RegExp(r'^\d{12}$').hasMatch(raw)) {
-                            return context.t(
-                              'CCCD must be 12 digits',
-                              'CCCD phải gồm 12 chữ số',
-                            );
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _oldIdController,
-                        label: context.t(
-                          'Old ID Number (if any)',
-                          'Chứng minh nhân dân cũ (nếu có)',
-                        ),
-                        fieldKey: 'oldId',
-                        icon: Icons.receipt,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _issuePlaceController,
-                        label: context.t('Issue Place(*)', 'Nơi cấp(*)'),
-                        fieldKey: 'issuePlace',
-                        icon: Icons.location_on,
-                        validator: _requiredValidator(
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
                           context.t(
-                            'Please enter issue place',
-                            'Vui lòng nhập nơi cấp',
+                            'Personal Information',
+                            'Thông tin cá nhân',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDateField(
-                        label: context.t('Issue Date(*)', 'Ngày cấp(*)'),
-                        fieldKey: 'issueDate',
-                        icon: Icons.event,
-                        initialValue: _idIssueDate,
-                        onChanged: (date) =>
-                            setState(() => _idIssueDate = date),
-                        firstDate: DateTime(1950),
-                        lastDate: DateTime.now(),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDateField(
-                        label: context.t('Expiry Date(*)', 'Ngày hết hạn(*)'),
-                        fieldKey: 'expiryDate',
-                        icon: Icons.event,
-                        initialValue: _idExpiryDate,
-                        onChanged: (date) =>
-                            setState(() => _idExpiryDate = date),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2100),
-                        validator: (expiryDate) => expiryDate == null
-                            ? context.t(
-                                'Please select expiry date',
-                                'Vui lòng chọn ngày hết hạn',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _taxCodeController,
-                        label: context.t(
-                          'Tax Code (if any)',
-                          'Mã số thuế (nếu có)',
-                        ),
-                        fieldKey: 'taxCode',
-                        icon: Icons.receipt_long,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdownField(
-                        label: context.t(
-                          'Residency Status(*)',
-                          'Tình trạng cư trú(*)',
-                        ),
-                        fieldKey: 'residencyStatus',
-                        icon: Icons.home,
-                        value: _selectedResidencyStatus,
-                        items: _residencyStatusOptions,
-                        display: _displayResidencyStatus,
-                        onChanged: (value) =>
-                            setState(() => _selectedResidencyStatus = value),
-                        validator: (selected) =>
-                            (selected == null || selected.isEmpty)
-                            ? context.t(
-                                'Please select residency status',
-                                'Vui lòng chọn tình trạng cư trú',
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _permanentAddressController,
-                        label: context.t(
-                          'Permanent Address(*)',
-                          'Địa chỉ thường trú(*)',
-                        ),
-                        fieldKey: 'permanentAddress',
-                        icon: Icons.location_on,
-                        maxLines: 3,
-                        validator: _requiredValidator(
+                        const SizedBox(height: 8),
+                        Text(
                           context.t(
-                            'Please enter permanent address',
-                            'Vui lòng nhập địa chỉ thường trú',
+                            'Complete your personal details from your ID',
+                            'Hoàn thành thông tin cá nhân từ CCCD/Hộ chiếu của bạn',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.45,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _currentAddressController,
-                        label: context.t(
-                          'Current Address(*)',
-                          'Địa chỉ hiện tại(*)',
+                        const SizedBox(height: 24),
+                        _buildTextField(
+                          controller: _fullNameController,
+                          label: context.t('Full Name(*)', 'Họ và tên(*)'),
+                          fieldKey: 'fullName',
+                          icon: Icons.person,
+                          validator: _validateRequiredName,
                         ),
-                        fieldKey: 'currentAddress',
-                        icon: Icons.location_on,
-                        maxLines: 3,
-                        validator: _requiredValidator(
-                          context.t(
-                            'Please enter current address',
-                            'Vui lòng nhập địa chỉ hiện tại',
+                        const SizedBox(height: 16),
+                        _buildDateField(
+                          label: context.t('Date of Birth(*)', 'Ngày sinh(*)'),
+                          fieldKey: 'dob',
+                          icon: Icons.cake,
+                          initialValue: _dob,
+                          onChanged: (date) => setState(() => _dob = date),
+                          firstDate: DateTime(1950),
+                          lastDate: _latestEligibleDob(),
+                          validator: _validateDob,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDropdownField(
+                          label: context.t('Gender(*)', 'Giới tính(*)'),
+                          fieldKey: 'gender',
+                          icon: Icons.wc,
+                          value: _selectedGender,
+                          items: _genderOptions,
+                          display: _displayGender,
+                          onChanged: (value) =>
+                              setState(() => _selectedGender = value),
+                          validator: (selected) =>
+                              (selected == null || selected.isEmpty)
+                              ? context.t(
+                                  'Please select gender',
+                                  'Vui lòng chọn giới tính',
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _nationalityController,
+                          label: context.t('Nationality(*)', 'Quốc tịch(*)'),
+                          fieldKey: 'nationality',
+                          icon: Icons.public,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Marital Status(*)',
+                            'Tình trạng hôn nhân(*)',
+                          ),
+                          fieldKey: 'maritalStatus',
+                          icon: Icons.favorite,
+                          value: _selectedMaritalStatus,
+                          items: _maritalStatusOptions,
+                          display: _displayMaritalStatus,
+                          onChanged: (value) =>
+                              setState(() => _selectedMaritalStatus = value),
+                          validator: (selected) =>
+                              (selected == null || selected.isEmpty)
+                              ? context.t(
+                                  'Please select marital status',
+                                  'Vui lòng chọn tình trạng hôn nhân',
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Education Level(*)',
+                            'Trình độ học vấn(*)',
+                          ),
+                          fieldKey: 'educationLevel',
+                          icon: Icons.school,
+                          value: _selectedEducationLevel,
+                          items: _educationLevelOptions,
+                          display: _displayEducationLevel,
+                          onChanged: (value) =>
+                              setState(() => _selectedEducationLevel = value),
+                          validator: (selected) =>
+                              (selected == null || selected.isEmpty)
+                              ? context.t(
+                                  'Please select education level',
+                                  'Vui lòng chọn trình độ học vấn',
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _cccdController,
+                          label: context.t(
+                            'CCCD / Passport ID(*)',
+                            'CCCD / Hộ chiếu(*)',
+                          ),
+                          fieldKey: 'cccd',
+                          icon: Icons.credit_card,
+                          validator: (value) {
+                            final raw = value?.trim() ?? '';
+                            if (raw.isEmpty) {
+                              return context.t(
+                                'Please enter CCCD',
+                                'Vui lòng nhập CCCD',
+                              );
+                            }
+                            if (!RegExp(r'^\d{12}$').hasMatch(raw)) {
+                              return context.t(
+                                'CCCD must be 12 digits',
+                                'CCCD phải gồm 12 chữ số',
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _oldIdController,
+                          label: context.t(
+                            'Old ID Number (if any)',
+                            'Chứng minh nhân dân cũ (nếu có)',
+                          ),
+                          fieldKey: 'oldId',
+                          icon: Icons.receipt,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _issuePlaceController,
+                          label: context.t('Issue Place(*)', 'Nơi cấp(*)'),
+                          fieldKey: 'issuePlace',
+                          icon: Icons.location_on,
+                          validator: _requiredValidator(
+                            context.t(
+                              'Please enter issue place',
+                              'Vui lòng nhập nơi cấp',
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _mobilePhoneController,
-                        label: context.t(
-                          'Mobile Phone(*)',
-                          'Số điện thoại di động(*)',
+                        const SizedBox(height: 16),
+                        _buildDateField(
+                          label: context.t('Issue Date(*)', 'Ngày cấp(*)'),
+                          fieldKey: 'issueDate',
+                          icon: Icons.event,
+                          initialValue: _idIssueDate,
+                          onChanged: (date) =>
+                              setState(() => _idIssueDate = date),
+                          firstDate: DateTime(1950),
+                          lastDate: DateTime.now(),
                         ),
-                        fieldKey: 'mobilePhone',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        validator: _validateRequiredPhone,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _emailController,
-                        label: context.t(
-                          'Email (Gmail)(*)',
-                          'Email (Gmail)(*)',
+                        const SizedBox(height: 16),
+                        _buildDateField(
+                          label: context.t('Expiry Date(*)', 'Ngày hết hạn(*)'),
+                          fieldKey: 'expiryDate',
+                          icon: Icons.event,
+                          initialValue: _idExpiryDate,
+                          onChanged: (date) =>
+                              setState(() => _idExpiryDate = date),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2100),
+                          validator: (expiryDate) => expiryDate == null
+                              ? context.t(
+                                  'Please select expiry date',
+                                  'Vui lòng chọn ngày hết hạn',
+                                )
+                              : null,
                         ),
-                        fieldKey: 'email',
-                        icon: Icons.email,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateRequiredGmail,
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _taxCodeController,
+                          label: context.t(
+                            'Tax Code (if any)',
+                            'Mã số thuế (nếu có)',
+                          ),
+                          fieldKey: 'taxCode',
+                          icon: Icons.receipt_long,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Residency Status(*)',
+                            'Tình trạng cư trú(*)',
+                          ),
+                          fieldKey: 'residencyStatus',
+                          icon: Icons.home,
+                          value: _selectedResidencyStatus,
+                          items: _residencyStatusOptions,
+                          display: _displayResidencyStatus,
+                          onChanged: (value) =>
+                              setState(() => _selectedResidencyStatus = value),
+                          validator: (selected) =>
+                              (selected == null || selected.isEmpty)
+                              ? context.t(
+                                  'Please select residency status',
+                                  'Vui lòng chọn tình trạng cư trú',
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _permanentAddressController,
+                          label: context.t(
+                            'Permanent Address(*)',
+                            'Địa chỉ thường trú(*)',
+                          ),
+                          fieldKey: 'permanentAddress',
+                          icon: Icons.location_on,
+                          maxLines: 3,
+                          validator: _requiredValidator(
+                            context.t(
+                              'Please enter permanent address',
+                              'Vui lòng nhập địa chỉ thường trú',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _currentAddressController,
+                          label: context.t(
+                            'Current Address(*)',
+                            'Địa chỉ hiện tại(*)',
+                          ),
+                          fieldKey: 'currentAddress',
+                          icon: Icons.location_on,
+                          maxLines: 3,
+                          validator: _requiredValidator(
+                            context.t(
+                              'Please enter current address',
+                              'Vui lòng nhập địa chỉ hiện tại',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _mobilePhoneController,
+                          label: context.t(
+                            'Mobile Phone(*)',
+                            'Số điện thoại di động(*)',
+                          ),
+                          fieldKey: 'mobilePhone',
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          validator: _validateRequiredPhone,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _emailController,
+                          label: context.t(
+                            'Email (Gmail)(*)',
+                            'Email (Gmail)(*)',
+                          ),
+                          fieldKey: 'email',
+                          icon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: _validateRequiredGmail,
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1032,11 +1065,12 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     foregroundColor: Colors.white,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: Text(

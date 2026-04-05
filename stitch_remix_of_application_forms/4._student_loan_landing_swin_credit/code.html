@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script type="text/javascript" nonce="5e0ea84580c14ca5bb985cd2aa1" src="//local.adguard.org?ts=1775225733507&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY0ZThlNzViZGUyMGIwN2M0Y2QxMzZjMDI2YWNhEgsSBxDhhOfagxEYAZIBIwoKcHJvamVjdF9pZBIVQhM0ODI4OTI0OTI2NjU4NTA3NDM1%26filename%3D%26opi%3D89354086&amp;app=com.microsoft.edgemac&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-java&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="5e0ea84580c14ca5bb985cd2aa1" src="//local.adguard.org?ts=1775225733507&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#fff0e4",
+              "on-background": "#1e293b",
+              "primary-dim": "#4338ca",
+              "surface-dim": "#e2e8f0",
+              "secondary": "#059669",
+              "tertiary": "#d97706",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary": "#ecfdf5",
+              "on-tertiary-container": "#451a03",
+              "on-primary": "#ffffff",
+              "error-container": "#fee2e2",
+              "secondary-fixed": "#6ee7b7",
+              "primary-fixed-dim": "#818cf8",
+              "on-secondary-container": "#064e3b",
+              "secondary-fixed-dim": "#a7f3d0",
+              "tertiary-dim": "#f59e0b",
+              "on-surface-variant": "#64748b",
+              "background": "#f8fafc",
+              "on-primary-fixed-variant": "#312e81",
+              "on-primary-fixed": "#000000",
+              "on-primary-container": "#1e1b4b",
+              "primary-fixed": "#c7d2fe",
+              "error": "#ef4444",
+              "surface-bright": "#f8fafc",
+              "on-secondary-fixed-variant": "#047857",
+              "on-error-container": "#7f1d1d",
+              "error-dim": "#f87171",
+              "on-secondary-fixed": "#065f46",
+              "surface-container-low": "#f1f5f9",
+              "tertiary-fixed-dim": "#fbbf24",
+              "surface-tint": "#4f46e5",
+              "on-tertiary-fixed": "#78350f",
+              "tertiary-fixed": "#fcd34d",
+              "surface-variant": "#f1f5f9",
+              "on-error": "#ffffff",
+              "primary": "#4f46e5",
+              "surface-container-highest": "#e2e8f0",
+              "secondary-dim": "#10b981",
+              "outline": "#94a3b8",
+              "on-surface": "#0f172a",
+              "inverse-on-surface": "#f1f5f9",
+              "secondary-container": "#d1fae5",
+              "on-tertiary-fixed-variant": "#92400e",
+              "primary-container": "#e0e7ff",
+              "inverse-primary": "#818cf8",
+              "outline-variant": "#cbd5e1",
+              "surface-container": "#f8fafc",
+              "surface-container-high": "#f1f5f9",
+              "surface": "#f8fafc",
+              "tertiary-container": "#fef3c7",
+              "inverse-surface": "#1e293b"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .signature-gradient {
+        background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+      }
+      .glass-header {
+        background: rgba(248, 250, 252, 0.8);
+        backdrop-filter: blur(20px);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopAppBar component based on COMPONENTS_37 -->
+<nav class="fixed top-0 w-full z-50 bg-slate-50/80 backdrop-blur-xl flex items-center justify-between px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Swin Credit Logo" class="h-10 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0uiI0CVSuiveAjGo7eQe1G7116q6__Gvex8R10mHbAOWzGpiob2MuhY4zXo-gdkUgL2lVT5RyBsC4e0TZbgW2ES3rIBCVXjSV0syztyp2-phgCgHmc1jgBty0bintHQfbNYOq537GF-YRsMFyimnUFdpd1_QrkTdyEI41gfxSvkGjZF6acNrTx1sZKbYqLaiLN6wI1Nna-PFBYOwKZdPB0-Q4KQI2gUVehMjKRkxXxY8f1xY-k7PNsbXpeZXYMuAxYVNlssdt1e1Pg"/>
+<span class="text-2xl font-extrabold tracking-tighter text-indigo-700 font-headline">Swin Credit</span>
+</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-indigo-700 font-bold font-label text-sm" href="#">Home</a>
+<a class="text-slate-500 font-medium font-label text-sm hover:text-indigo-600 transition-colors" href="#">Loans</a>
+<a class="text-slate-500 font-medium font-label text-sm hover:text-indigo-600 transition-colors" href="#">Insights</a>
+<a class="text-slate-500 font-medium font-label text-sm hover:text-indigo-600 transition-colors" href="#">Verify</a>
+<div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden active:scale-95 duration-200 transition-transform">
+<img alt="User profile photo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbESoZwuUohBIlkUV5sDgFgkRxI14maU7idCh3ttL173FWPEKMPO03g5IvwWREl1rmsQ5SL6PJzhQw6aR-I4eY-35OGM8XEl8SvbLDQNLdhNXr0QUJAPvj-Xlqg5CiI2nyR-aJ-lJKV-2Zx-2__PeFxprtEWQjqlCz61iLV9kR4HdL6XV_BR-AH9veq_TYORHEkLi78BhqCJ24E0TR-yVpGiPvybvmw_acEye0MCxgUZ8ON1faRfGCPDJ9LR0bltmF6uYAOsVYsuE"/>
+</div>
+</div>
+<button class="md:hidden text-on-surface hover:bg-slate-200/50 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</nav>
+<main class="pt-24 pb-32 px-6 lg:px-12 max-w-7xl mx-auto">
+<!-- Hero Section -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-24">
+<div class="space-y-8">
+<div class="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 font-label text-sm font-semibold">
+<span class="material-symbols-outlined text-sm mr-2" data-icon="school">school</span>
+                Swin Education Credit
+            </div>
+<h1 class="font-headline text-5xl lg:text-7xl font-extrabold text-on-background tracking-tight leading-[1.1]">
+                Empowering your <span class="text-primary italic">academic journey.</span>
+</h1>
+<p class="text-lg text-on-surface-variant max-w-lg leading-relaxed">
+                As part of the Swin Credit suite, our student loans are engineered for the modern scholar. Low rates, flexible terms, and total transparency.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="signature-gradient text-white font-headline font-bold py-4 px-12 rounded-lg shadow-lg shadow-primary/20 active:scale-95 transition-transform">
+                    Apply Now
+                </button>
+<button class="bg-surface-container-highest text-on-surface font-headline font-bold py-4 px-12 rounded-lg active:scale-95 transition-transform">
+                    Explore Suite
+                </button>
+</div>
+</div>
+<div class="relative">
+<div class="rounded-lg overflow-hidden aspect-[4/5] shadow-2xl">
+<img alt="diverse group of college students laughing and walking across a sunny modern campus with brick buildings" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp77MJH9EX2nsCLqPSEqbo0ObhcjS2JqOJdqG5Vfy-ZVd4u1xJJaM9YsCgiK1X4JCPXiJb29Wf5ApRXo7uHznZPLAhaL8s08sX-K1j3EFOpMr6DoO57XvJacgTse1M8LOccrszZRbspr1Gq20UHOn62pByrRXhtexSxpy9lAgX2quMmTqbQFCOGr-x0rNKwcFqqWKkmXQPAYU2CczQllfQ6Y3I5oczcpSCXJxr9RggXo7GNY0T7VLhMD7ZikXUoY0atKGqqH0ugMU"/>
+</div>
+<!-- Floating Card: Credit Score Preview -->
+<div class="absolute -bottom-8 -left-8 md:-left-12 bg-surface-container-lowest p-8 rounded-lg shadow-[0_20px_40px_rgba(12,15,17,0.06)] w-72 border border-outline-variant/10">
+<div class="flex justify-between items-center mb-6">
+<span class="text-xs font-label font-bold uppercase tracking-widest text-on-surface-variant">Swin Score</span>
+<span class="material-symbols-outlined text-primary" data-icon="speed">speed</span>
+</div>
+<div class="relative flex flex-col items-center">
+<svg class="w-40 h-24" viewbox="0 0 100 50">
+<path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-linecap="round" stroke-width="8"></path>
+<path d="M 10 50 A 40 40 0 0 1 75 15" fill="none" stroke="url(#grad1)" stroke-linecap="round" stroke-width="10"></path>
+<defs>
+<lineargradient id="grad1" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#818cf8;stop-opacity:1"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="absolute bottom-0 text-center">
+<span class="text-3xl font-headline font-extrabold text-on-background">742</span>
+<p class="text-[10px] font-label font-medium uppercase text-secondary font-bold">Elite Status</p>
+</div>
+</div>
+<button class="w-full mt-6 py-3 rounded-lg bg-indigo-50 text-indigo-700 font-label text-xs font-bold hover:bg-indigo-100 transition-colors">
+                    Check My Rate
+                </button>
+</div>
+</div>
+</section>
+<!-- Key Benefits: Bento Grid -->
+<section class="mb-24">
+<div class="text-center mb-16 space-y-4">
+<h2 class="font-headline text-3xl font-bold text-on-background">The Swin Credit Advantage</h2>
+<p class="text-on-surface-variant">Sophisticated financial tools tailored for student success.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Benefit 1 -->
+<div class="bg-surface-container-low p-10 rounded-lg space-y-6 flex flex-col justify-between hover:bg-slate-200/50 transition-colors group">
+<div class="w-14 h-14 rounded-lg signature-gradient flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+<span class="material-symbols-outlined text-3xl" data-icon="payments">payments</span>
+</div>
+<div class="space-y-3">
+<h3 class="font-headline text-xl font-bold text-on-background">Swin SmartPay</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                        Intelligent repayment structures that adjust to your early-career income.
+                    </p>
+</div>
+</div>
+<!-- Benefit 2 -->
+<div class="bg-surface-container-lowest p-10 rounded-lg space-y-6 flex flex-col justify-between shadow-[0_20px_40px_rgba(12,15,17,0.04)] border border-outline-variant/10">
+<div class="w-14 h-14 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+<span class="material-symbols-outlined text-3xl" data-icon="lock_open">lock_open</span>
+</div>
+<div class="space-y-3">
+<h3 class="font-headline text-xl font-bold text-on-background">Zero-Fee Ethics</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                        No origination fees, no late penalties. We succeed when you succeed.
+                    </p>
+</div>
+</div>
+<!-- Benefit 3 -->
+<div class="bg-surface-container-low p-10 rounded-lg space-y-6 flex flex-col justify-between hover:bg-slate-200/50 transition-colors group">
+<div class="w-14 h-14 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
+<span class="material-symbols-outlined text-3xl" data-icon="support_agent">support_agent</span>
+</div>
+<div class="space-y-3">
+<h3 class="font-headline text-xl font-bold text-on-background">Atelier Mentorship</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                        1-on-1 financial design sessions to help build your post-grad wealth strategy.
+                    </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Section -->
+<section class="bg-slate-900 rounded-lg p-12 text-center relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 signature-gradient blur-[120px] opacity-20"></div>
+<div class="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-8">
+<div class="space-y-2">
+<p class="text-4xl font-headline font-extrabold text-white">$2.4B</p>
+<p class="text-xs font-label uppercase tracking-widest text-slate-400">Total Funding</p>
+</div>
+<div class="space-y-2">
+<p class="text-4xl font-headline font-extrabold text-white">4.9/5</p>
+<p class="text-xs font-label uppercase tracking-widest text-slate-400">Trust Score</p>
+</div>
+<div class="space-y-2">
+<p class="text-4xl font-headline font-extrabold text-white">120k+</p>
+<p class="text-xs font-label uppercase tracking-widest text-slate-400">Scholars Supported</p>
+</div>
+<div class="space-y-2">
+<p class="text-4xl font-headline font-extrabold text-white">0%</p>
+<p class="text-xs font-label uppercase tracking-widest text-slate-400">Hidden Costs</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar component based on COMPONENTS_37 -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-slate-50/80 backdrop-blur-xl flex justify-around items-center px-4 pb-8 pt-4 z-50 rounded-t-[2rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+<a class="flex flex-col items-center justify-center bg-indigo-600 text-white rounded-2xl px-5 py-2 scale-110 shadow-lg shadow-indigo-500/20 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 px-5 py-2 hover:text-indigo-500 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Loans</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 px-5 py-2 hover:text-indigo-500 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Insights</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 px-5 py-2 hover:text-indigo-500 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

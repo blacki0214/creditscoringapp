@@ -131,17 +131,26 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     final vm = context.watch<LoanViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          context.t('Step 2: Personal Information', 'Bước 2: Thông tin cá nhân'),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
+          context.t(
+            'Step 2: Personal Information',
+            'Bước 2: Thông tin cá nhân',
+          ),
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -155,301 +164,348 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                 ),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('Complete your profile', 'Hoàn thiện hồ sơ của bạn'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t('Please provide accurate information for credit scoring.', 'Vui lòng cung cấp thông tin chính xác để chấm điểm tín dụng.'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Credit History Selection (Radio)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4C40F7).withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4C40F7).withOpacity(0.2),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t(
+                            'Complete your profile',
+                            'Hoàn thiện hồ sơ của bạn',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.t('Do you have credit history?', 'Bạn có lịch sử tín dụng không?'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1F3F),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile<bool>(
-                                    title: Text(context.t('Yes, I have credit history', 'Có, tôi có lịch sử tín dụng')),
-                                    value: true,
-                                    groupValue: _hasCreditHistory,
-                                    onChanged: (val) =>
-                                        setState(() => _hasCreditHistory = val),
-                                    activeColor: const Color(0xFF4C40F7),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
+                        const SizedBox(height: 8),
+                        Text(
+                          context.t(
+                            'Please provide accurate information for credit scoring.',
+                            'Vui lòng cung cấp thông tin chính xác để chấm điểm tín dụng.',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Credit History Selection (Radio)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF0FF),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFCED4FF)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.t(
+                                  'Do you have credit history?',
+                                  'Bạn có lịch sử tín dụng không?',
                                 ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile<bool>(
-                                    title: Text(context.t('No, I\'m new to credit', 'Không, tôi mới bắt đầu tín dụng')),
-                                    value: false,
-                                    groupValue: _hasCreditHistory,
-                                    onChanged: (val) =>
-                                        setState(() => _hasCreditHistory = val),
-                                    activeColor: const Color(0xFF4C40F7),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      if (_hasCreditHistory != null) ...[
-                        const SizedBox(height: 24),
-
-                        _buildSectionHeader(
-                          context.t('Personal Details', 'Thông tin cá nhân'),
-                        ),
-                        _buildTextField(
-                          fieldKey: _fullNameFieldKey,
-                          controller: _fullNameController,
-                          focusNode: _fullNameFocusNode,
-                          label: context.t('Full Name', 'Họ và tên'),
-                          maxLength: 30,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(30),
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r"[\p{L}\p{M}\s]", unicode: true),
-                            ),
-                          ],
-                          validator: _validateFullName,
-                          onChanged: (val) => vm.updatePersonalInfo(name: val),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildDateField(),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          fieldKey: _idFieldKey,
-                          controller: _idController,
-                          focusNode: _idFocusNode,
-                          label: context.t(
-                            'ID Number (CCCD)',
-                            'Số CCCD',
-                          ),
-                          keyboardType: TextInputType.number,
-                          maxLength: 12,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(12),
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: _validateIdNumber,
-                          onChanged: (val) => vm.updatePersonalInfo(id: val),
-                        ),
-
-                        const SizedBox(height: 16),
-                        _buildSectionHeader(
-                          context.t('Employment & Income', 'Nghề nghiệp & Thu nhập'),
-                        ),
-                        _buildDropdown(
-                          label: context.t('Employment Status', 'Tình trạng việc làm'),
-                          value: vm.employmentStatus,
-                          items: employmentOptions,
-                          onChanged: (val) =>
-                              vm.updatePersonalInfo(employment: val!),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          fieldKey: _yearsEmployedFieldKey,
-                          controller: _yearsEmployedController,
-                          focusNode: _yearsEmployedFocusNode,
-                          label: context.t('Years Employed', 'Số năm làm việc'),
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          maxLength: 5,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(5),
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[0-9\.]'),
-                            ),
-                          ],
-                          validator: _validateYearsEmployed,
-                          onChanged: (val) => vm.updatePersonalInfo(
-                            yearsEmp: double.tryParse(val),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          fieldKey: _monthlyIncomeFieldKey,
-                          controller: _monthlyIncomeController,
-                          focusNode: _monthlyIncomeFocusNode,
-                          label: context.t('Monthly Income (VND)', 'Thu nhập hàng tháng (VND)'),
-                          keyboardType: TextInputType.number,
-                          maxLength: 15,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(15),
-                            FilteringTextInputFormatter.digitsOnly,
-                            _CurrencyInputFormatter(_currencyFormatter),
-                          ],
-                          validator: _validateMonthlyIncome,
-                          onChanged: (val) {
-                            // Remove formatting characters (dots) and parse to double
-                            final cleaned = val
-                                .replaceAll('.', '')
-                                .replaceAll(',', '');
-                            final parsedIncome = double.tryParse(cleaned);
-                            if (parsedIncome != null) {
-                              vm.updatePersonalInfo(income: parsedIncome);
-                            }
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-                        _buildSectionHeader(
-                          context.t('Residence & Assets', 'Nơi ở & Tài sản'),
-                        ),
-                        _buildDropdown(
-                          label: context.t('Home Ownership', 'Tình trạng nhà ở'),
-                          value: vm.homeOwnership,
-                          items: homeOwnershipOptions,
-                          onChanged: (val) => vm.updatePersonalInfo(home: val!),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          fieldKey: _addressFieldKey,
-                          controller: _addressController,
-                          focusNode: _addressFocusNode,
-                          label: context.t('Current Address', 'Địa chỉ hiện tại'),
-                          maxLines: 2,
-                          maxLength: 100,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(100),
-                            FilteringTextInputFormatter.allow(
-                              RegExp(
-                                r"[\p{L}\p{M}0-9\s,\.\-/#]",
-                                unicode: true,
                               ),
-                            ),
-                          ],
-                          validator: _validateAddress,
-                          onChanged: (val) => vm.updatePersonalInfo(addr: val),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<bool>(
+                                      title: Text(
+                                        context.t(
+                                          'Yes, I have credit history',
+                                          'Có, tôi có lịch sử tín dụng',
+                                        ),
+                                      ),
+                                      value: true,
+                                      groupValue: _hasCreditHistory,
+                                      onChanged: (val) => setState(
+                                        () => _hasCreditHistory = val,
+                                      ),
+                                      activeColor: const Color(0xFF4D4AF9),
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<bool>(
+                                      title: Text(
+                                        context.t(
+                                          'No, I\'m new to credit',
+                                          'Không, tôi mới bắt đầu tín dụng',
+                                        ),
+                                      ),
+                                      value: false,
+                                      groupValue: _hasCreditHistory,
+                                      onChanged: (val) => setState(
+                                        () => _hasCreditHistory = val,
+                                      ),
+                                      activeColor: const Color(0xFF4D4AF9),
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
 
-                        const SizedBox(height: 16),
-                        _buildSectionHeader(
-                          context.t('Credit History', 'Lịch sử tín dụng'),
-                        ),
+                        if (_hasCreditHistory != null) ...[
+                          const SizedBox(height: 24),
 
-                        // Show credit history fields only if user has credit history
-                        if (_hasCreditHistory == true) ...[
+                          _buildSectionHeader(
+                            context.t('Personal Details', 'Thông tin cá nhân'),
+                          ),
                           _buildTextField(
-                            fieldKey: _yearsCreditHistoryFieldKey,
-                            controller: _yearsCreditHistoryController,
-                            focusNode: _yearsCreditHistoryFocusNode,
-                            label: context.t(
-                              'Years Credit History',
-                              'Số năm lịch sử tín dụng',
-                            ),
-                            keyboardType: TextInputType.number,
-                            maxLength: 2,
+                            fieldKey: _fullNameFieldKey,
+                            controller: _fullNameController,
+                            focusNode: _fullNameFocusNode,
+                            label: context.t('Full Name', 'Họ và tên'),
+                            maxLength: 30,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(2),
+                              LengthLimitingTextInputFormatter(30),
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r"[\p{L}\p{M}\s]", unicode: true),
+                              ),
+                            ],
+                            validator: _validateFullName,
+                            onChanged: (val) =>
+                                vm.updatePersonalInfo(name: val),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDateField(),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            fieldKey: _idFieldKey,
+                            controller: _idController,
+                            focusNode: _idFocusNode,
+                            label: context.t('ID Number (CCCD)', 'Số CCCD'),
+                            keyboardType: TextInputType.number,
+                            maxLength: 12,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(12),
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            validator: _validateYearsCreditHistory,
+                            validator: _validateIdNumber,
+                            onChanged: (val) => vm.updatePersonalInfo(id: val),
+                          ),
+
+                          const SizedBox(height: 16),
+                          _buildSectionHeader(
+                            context.t(
+                              'Employment & Income',
+                              'Nghề nghiệp & Thu nhập',
+                            ),
+                          ),
+                          _buildDropdown(
+                            label: context.t(
+                              'Employment Status',
+                              'Tình trạng việc làm',
+                            ),
+                            value: vm.employmentStatus,
+                            items: employmentOptions,
+                            onChanged: (val) =>
+                                vm.updatePersonalInfo(employment: val!),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildTextField(
+                            fieldKey: _yearsEmployedFieldKey,
+                            controller: _yearsEmployedController,
+                            focusNode: _yearsEmployedFocusNode,
+                            label: context.t(
+                              'Years Employed',
+                              'Số năm làm việc',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            maxLength: 5,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(5),
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9\.]'),
+                              ),
+                            ],
+                            validator: _validateYearsEmployed,
                             onChanged: (val) => vm.updatePersonalInfo(
-                              history: double.tryParse(val),
+                              yearsEmp: double.tryParse(val),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          SwitchListTile(
-                            title: Text(
-                              context.t(
-                                'Have you ever defaulted?',
-                                'Bạn đã từng trễ hạn/thất hẹn trả nợ chưa?',
-                              ),
+                          _buildTextField(
+                            fieldKey: _monthlyIncomeFieldKey,
+                            controller: _monthlyIncomeController,
+                            focusNode: _monthlyIncomeFocusNode,
+                            label: context.t(
+                              'Monthly Income (VND)',
+                              'Thu nhập hàng tháng (VND)',
                             ),
-                            value: vm.hasPreviousDefaults,
-                            onChanged: (val) =>
-                                vm.updatePersonalInfo(defaults: val),
-                            activeThumbColor: const Color(0xFF4C40F7),
+                            keyboardType: TextInputType.number,
+                            maxLength: 15,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(15),
+                              FilteringTextInputFormatter.digitsOnly,
+                              _CurrencyInputFormatter(_currencyFormatter),
+                            ],
+                            validator: _validateMonthlyIncome,
+                            onChanged: (val) {
+                              // Remove formatting characters (dots) and parse to double
+                              final cleaned = val
+                                  .replaceAll('.', '')
+                                  .replaceAll(',', '');
+                              final parsedIncome = double.tryParse(cleaned);
+                              if (parsedIncome != null) {
+                                vm.updatePersonalInfo(income: parsedIncome);
+                              }
+                            },
                           ),
-                          SwitchListTile(
-                            title: Text(
-                              context.t(
-                                'Currently defaulting?',
-                                'Hiện tại bạn có đang chậm trả nợ không?',
-                              ),
-                            ),
-                            value: vm.currentlyDefaulting,
-                            onChanged: (val) =>
-                                vm.updatePersonalInfo(currentDefault: val),
-                            activeThumbColor: const Color(0xFF4C40F7),
+
+                          const SizedBox(height: 16),
+                          _buildSectionHeader(
+                            context.t('Residence & Assets', 'Nơi ở & Tài sản'),
                           ),
-                        ] else if (_hasCreditHistory == false) ...[
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.blue.withOpacity(0.2),
-                              ),
+                          _buildDropdown(
+                            label: context.t(
+                              'Home Ownership',
+                              'Tình trạng nhà ở',
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.info_outline,
-                                  color: Colors.blue,
-                                  size: 20,
+                            value: vm.homeOwnership,
+                            items: homeOwnershipOptions,
+                            onChanged: (val) =>
+                                vm.updatePersonalInfo(home: val!),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            fieldKey: _addressFieldKey,
+                            controller: _addressController,
+                            focusNode: _addressFocusNode,
+                            label: context.t(
+                              'Current Address',
+                              'Địa chỉ hiện tại',
+                            ),
+                            maxLines: 2,
+                            maxLength: 100,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(100),
+                              FilteringTextInputFormatter.allow(
+                                RegExp(
+                                  r"[\p{L}\p{M}0-9\s,\.\-/#]",
+                                  unicode: true,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    context.t(
-                                      'No problem! We\'ll evaluate your application based on your income and employment.',
-                                      'Không sao! Chúng tôi sẽ đánh giá hồ sơ dựa trên thu nhập và công việc của bạn.',
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade700,
+                              ),
+                            ],
+                            validator: _validateAddress,
+                            onChanged: (val) =>
+                                vm.updatePersonalInfo(addr: val),
+                          ),
+
+                          const SizedBox(height: 16),
+                          _buildSectionHeader(
+                            context.t('Credit History', 'Lịch sử tín dụng'),
+                          ),
+
+                          // Show credit history fields only if user has credit history
+                          if (_hasCreditHistory == true) ...[
+                            _buildTextField(
+                              fieldKey: _yearsCreditHistoryFieldKey,
+                              controller: _yearsCreditHistoryController,
+                              focusNode: _yearsCreditHistoryFocusNode,
+                              label: context.t(
+                                'Years Credit History',
+                                'Số năm lịch sử tín dụng',
+                              ),
+                              keyboardType: TextInputType.number,
+                              maxLength: 2,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(2),
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: _validateYearsCreditHistory,
+                              onChanged: (val) => vm.updatePersonalInfo(
+                                history: double.tryParse(val),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SwitchListTile(
+                              title: Text(
+                                context.t(
+                                  'Have you ever defaulted?',
+                                  'Bạn đã từng trễ hạn/thất hẹn trả nợ chưa?',
+                                ),
+                              ),
+                              value: vm.hasPreviousDefaults,
+                              onChanged: (val) =>
+                                  vm.updatePersonalInfo(defaults: val),
+                              activeThumbColor: const Color(0xFF4C40F7),
+                            ),
+                            SwitchListTile(
+                              title: Text(
+                                context.t(
+                                  'Currently defaulting?',
+                                  'Hiện tại bạn có đang chậm trả nợ không?',
+                                ),
+                              ),
+                              value: vm.currentlyDefaulting,
+                              onChanged: (val) =>
+                                  vm.updatePersonalInfo(currentDefault: val),
+                              activeThumbColor: const Color(0xFF4C40F7),
+                            ),
+                          ] else if (_hasCreditHistory == false) ...[
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.blue.withOpacity(0.2),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blue,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      context.t(
+                                        'No problem! We\'ll evaluate your application based on your income and employment.',
+                                        'Không sao! Chúng tôi sẽ đánh giá hồ sơ dựa trên thu nhập và công việc của bạn.',
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade700,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -467,10 +523,11 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                       ? null
                       : _submitApplication,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     disabledBackgroundColor: Colors.grey.shade400,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: vm.isProcessing
@@ -478,7 +535,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                           color: Colors.white,
                           strokeWidth: 2,
                         )
-                        : Text(
+                      : Text(
                           context.t('Submit Application', 'Nộp hồ sơ'),
                           style: TextStyle(
                             fontSize: 16,
@@ -502,8 +559,8 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         title,
         style: const TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF4C40F7),
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF334155),
         ),
       ),
     );
@@ -553,11 +610,16 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
       },
       decoration: InputDecoration(
         labelText: context.t('Date of Birth', 'Ngày sinh'),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
         suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -598,10 +660,15 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           },
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -646,7 +713,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
 
   String? _validateYearsEmployed(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Years Employed', 'Vui lòng nhập số năm làm việc');
+      return context.t(
+        'Please enter Years Employed',
+        'Vui lòng nhập số năm làm việc',
+      );
     }
     if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
       return context.t(
@@ -666,7 +736,10 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
 
   String? _validateMonthlyIncome(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Monthly Income', 'Vui lòng nhập thu nhập hàng tháng');
+      return context.t(
+        'Please enter Monthly Income',
+        'Vui lòng nhập thu nhập hàng tháng',
+      );
     }
     final cleaned = value.replaceAll('.', '');
     final income = double.tryParse(cleaned);
@@ -730,16 +803,22 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
     return DropdownButtonFormField<String>(
       initialValue: value,
       isExpanded: true,
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
       items: items
@@ -839,10 +918,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
           title: Text(context.t('Error', 'Lỗi')),
           content: Text(
             vm.errorMessage ??
-                context.t(
-                  'Failed to submit application',
-                  'Nộp hồ sơ thất bại',
-                ),
+                context.t('Failed to submit application', 'Nộp hồ sơ thất bại'),
           ),
           actions: [
             TextButton(

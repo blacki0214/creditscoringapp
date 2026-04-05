@@ -7,18 +7,19 @@ class PrivacyPolicyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1F3F),
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           context.t('Privacy Policy', 'Chính sách bảo mật'),
           style: const TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -31,19 +32,22 @@ class PrivacyPolicyPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF4C40F7).withOpacity(0.1),
+              color: const Color(0xFF4D4AF9).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF4C40F7).withOpacity(0.3),
+                color: const Color(0xFF4D4AF9).withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.update, color: Color(0xFF4C40F7), size: 20),
+                const Icon(Icons.update, color: Color(0xFF4D4AF9), size: 20),
                 const SizedBox(width: 12),
                 Text(
-                  context.t('Last updated: November 24, 2025', 'Cập nhật lần cuối: 24/11/2025'),
+                  context.t(
+                    'Last updated: November 24, 2025',
+                    'Cập nhật lần cuối: 24/11/2025',
+                  ),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 14,
@@ -66,33 +70,33 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildSection(
             'Information We Collect',
             'We collect information that you provide directly to us, including:\n\n'
-            '• Personal identification information (name, email, phone number)\n'
-            '• Financial information (credit history, loan applications)\n'
-            '• Government-issued ID documents\n'
-            '• Device information and usage data\n'
-            '• Location data (with your permission)',
+                '• Personal identification information (name, email, phone number)\n'
+                '• Financial information (credit history, loan applications)\n'
+                '• Government-issued ID documents\n'
+                '• Device information and usage data\n'
+                '• Location data (with your permission)',
           ),
 
           // How We Use Your Information
           _buildSection(
             'How We Use Your Information',
             'We use the information we collect to:\n\n'
-            '• Provide and maintain our services\n'
-            '• Process your credit score assessments\n'
-            '• Verify your identity\n'
-            '• Communicate with you about our services\n'
-            '• Improve our application and user experience\n'
-            '• Comply with legal obligations',
+                '• Provide and maintain our services\n'
+                '• Process your credit score assessments\n'
+                '• Verify your identity\n'
+                '• Communicate with you about our services\n'
+                '• Improve our application and user experience\n'
+                '• Comply with legal obligations',
           ),
 
           // Information Sharing
           _buildSection(
             'Information Sharing',
             'We do not sell your personal information. We may share your information with:\n\n'
-            '• Credit bureaus and financial institutions\n'
-            '• Service providers who assist our operations\n'
-            '• Law enforcement when required by law\n'
-            '• Third parties with your explicit consent',
+                '• Credit bureaus and financial institutions\n'
+                '• Service providers who assist our operations\n'
+                '• Law enforcement when required by law\n'
+                '• Third parties with your explicit consent',
           ),
 
           // Data Security
@@ -105,12 +109,12 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildSection(
             'Your Rights',
             'You have the right to:\n\n'
-            '• Access your personal information\n'
-            '• Correct inaccurate data\n'
-            '• Request deletion of your data\n'
-            '• Opt-out of certain data processing\n'
-            '• Withdraw consent at any time\n'
-            '• Download your data',
+                '• Access your personal information\n'
+                '• Correct inaccurate data\n'
+                '• Request deletion of your data\n'
+                '• Opt-out of certain data processing\n'
+                '• Withdraw consent at any time\n'
+                '• Download your data',
           ),
 
           // Data Retention
@@ -135,9 +139,9 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildSection(
             'Contact Us',
             'If you have questions about this Privacy Policy, please contact us:\n\n'
-            '• Email: privacy@vietcreditscore.com\n'
-            '• Phone: 1800-VIET-CREDIT\n'
-            '• Address: 123 Privacy Street, Hanoi, Vietnam',
+                '• Email: privacy@vietcreditscore.com\n'
+                '• Phone: 1800-VIET-CREDIT\n'
+                '• Address: 123 Privacy Street, Hanoi, Vietnam',
           ),
 
           const SizedBox(height: 40),
@@ -150,7 +154,12 @@ class PrivacyPolicyPage extends StatelessWidget {
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(context.t('Privacy policy downloaded', 'Đã tải chính sách bảo mật')),
+                        content: Text(
+                          context.t(
+                            'Privacy policy downloaded',
+                            'Đã tải chính sách bảo mật',
+                          ),
+                        ),
                         backgroundColor: Color(0xFF4CAF50),
                       ),
                     );
@@ -158,8 +167,8 @@ class PrivacyPolicyPage extends StatelessWidget {
                   icon: const Icon(Icons.download_outlined, size: 20),
                   label: Text(context.t('Download PDF', 'Tải PDF')),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF4C40F7),
-                    side: const BorderSide(color: Color(0xFF4C40F7)),
+                    foregroundColor: const Color(0xFF4D4AF9),
+                    side: const BorderSide(color: Color(0xFF4D4AF9)),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -176,7 +185,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                   icon: const Icon(Icons.check, size: 20),
                   label: Text(context.t('Accept', 'Đồng ý')),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(

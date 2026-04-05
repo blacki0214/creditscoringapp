@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
@@ -90,11 +91,11 @@ class LoanViewModel extends ChangeNotifier {
   // Bank Account & Disbursement (Step 6)
   final BankService _bankService = BankService();
   final ApiService _apiService = ApiService();
-  
+
   List<Bank> _banks = [];
   String? _selectedBankCode;
   String? _selectedBranchCode;
-  
+
   bool _isLoadingBanks = false;
   bool _isValidatingAccount = false;
   String? _bankAccountValidationError;
@@ -122,6 +123,12 @@ class LoanViewModel extends ChangeNotifier {
   bool get isApplicationRejected =>
       _applicationStatus == ApplicationStatus.rejected;
   String? get pendingApplicationId => _pendingApplicationId;
+  bool get hasCompletedOfferHistory {
+    final history = LocalStorageService.getApplicationHistory(
+      userId: _firebase.currentUserId,
+    );
+    return history.isNotEmpty;
+  }
 
   // Legacy getter for backward compatibility
   LoanOfferResponse? get currentOfferLegacy {
@@ -148,17 +155,21 @@ class LoanViewModel extends ChangeNotifier {
   bool get isLoadingBanks => _isLoadingBanks;
   bool get isValidatingAccount => _isValidatingAccount;
   String? get bankAccountValidationError => _bankAccountValidationError;
-  BankAccountValidationResponse? get bankValidationResult => _bankValidationResult;
-  
+  BankAccountValidationResponse? get bankValidationResult =>
+      _bankValidationResult;
+
   // Get selected bank details
-  Bank? get selectedBank => _selectedBankCode != null 
-      ? _bankService.getBankByCode(_selectedBankCode!) 
+  Bank? get selectedBank => _selectedBankCode != null
+      ? _bankService.getBankByCode(_selectedBankCode!)
       : null;
-  
+
   // Get selected branch details
   BankBranch? get selectedBranch {
     if (_selectedBankCode == null || _selectedBranchCode == null) return null;
-    return _bankService.getBranchDetails(_selectedBankCode!, _selectedBranchCode!);
+    return _bankService.getBranchDetails(
+      _selectedBankCode!,
+      _selectedBranchCode!,
+    );
   }
 
   /// Determines if there is an active application currently in progress
@@ -174,7 +185,9 @@ class LoanViewModel extends ChangeNotifier {
     if (!_step2Completed) return 2;
     if (!_step3Completed) return 3;
     if (!_step4Completed) return 4;
-    if (!_step6Completed) return 6; // Note: Step 5 is contract review, Step 6 is disbursement
+    if (!_step6Completed) {
+      return 6; // Note: Step 5 is contract review, Step 6 is disbursement
+    }
     return 7; // All steps completed
   }
 
@@ -194,7 +207,8 @@ class LoanViewModel extends ChangeNotifier {
   }
 
   String? get _currentOfferId {
-    return _currentOffer?['offerId'] as String? ?? _currentOffer?['id'] as String?;
+    return _currentOffer?['offerId'] as String? ??
+        _currentOffer?['id'] as String?;
   }
 
   double _asDouble(dynamic value, [double fallback = 0.0]) {
@@ -263,7 +277,8 @@ class LoanViewModel extends ChangeNotifier {
       if (latestApplication == null) return;
 
       final applicationId = latestApplication['id'] as String?;
-      final status = (latestApplication['status'] as String? ?? 'none').toLowerCase();
+      final status = (latestApplication['status'] as String? ?? 'none')
+          .toLowerCase();
 
       // Default to a fresh post-eKYC flow. We only hydrate steps 2-6
       // for active/in-progress applications.
@@ -299,10 +314,10 @@ class LoanViewModel extends ChangeNotifier {
         }
 
         _step2Completed = latestApplication['step2Completed'] as bool? ?? false;
-        final rawStep3Completed = latestApplication['step3Completed'] as bool? ?? false;
+        final rawStep3Completed =
+            latestApplication['step3Completed'] as bool? ?? false;
         final step3Data = latestApplication['step3Data'];
-        final hasStep3Data =
-            step3Data is Map && (step3Data).isNotEmpty;
+        final hasStep3Data = step3Data is Map && (step3Data).isNotEmpty;
         // Backward-compat: old records may mark step3Completed=true right after scoring.
         _step3Completed = rawStep3Completed && hasStep3Data;
         _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
@@ -348,7 +363,9 @@ class LoanViewModel extends ChangeNotifier {
   }
 
   void _loadDraft() {
-    final draft = LocalStorageService.loadDraft(userId: _firebase.currentUserId);
+    final draft = LocalStorageService.loadDraft(
+      userId: _firebase.currentUserId,
+    );
     if (draft != null) {
       fullName = draft['fullName'] ?? fullName;
       if (draft['dob'] != null) {
@@ -502,6 +519,15 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Prepare a returning applicant to start a new loan directly from Step 3.
+  /// Keeps the saved eKYC prefill and marks Steps 1 and 2 as already completed.
+  void prepareReturningApplicantForNewLoan() {
+    applySavedEkycPrefill(notify: false);
+    _step1Completed = true;
+    _step2Completed = true;
+    notifyListeners();
+  }
+
   // Save eKYC extracted data to user profile
   Future<void> _saveEkycDataToProfile() async {
     final userId = _firebase.currentUserId;
@@ -624,7 +650,8 @@ class LoanViewModel extends ChangeNotifier {
         await _notifyFlowMilestone(
           type: 'step4_completed',
           title: 'Step 4 Completed',
-          body: 'Loan offer details are confirmed. Please review your contract.',
+          body:
+              'Loan offer details are confirmed. Please review your contract.',
           applicationId: applicationId,
         );
       }
@@ -653,7 +680,7 @@ class LoanViewModel extends ChangeNotifier {
         print('[LoanViewModel] Failed to save Step 6 data: $e');
       }
     }
-    
+
     // Generate installments if loan was accepted
     if (_currentOffer != null && _currentOffer!['accepted'] == true) {
       try {
@@ -662,8 +689,12 @@ class LoanViewModel extends ChangeNotifier {
           final loanAmountVnd = _asDouble(_currentOffer!['loanAmountVnd']);
           final interestRate = _asDouble(_currentOffer!['interestRate']);
           final loanTermMonths = _asInt(_currentOffer!['loanTermMonths'], 12);
-          final monthlyPaymentVnd = _asDouble(_currentOffer!['monthlyPaymentVnd']);
-          final totalInterestVnd = _asDouble(_currentOffer!['totalInterestVnd']);
+          final monthlyPaymentVnd = _asDouble(
+            _currentOffer!['monthlyPaymentVnd'],
+          );
+          final totalInterestVnd = _asDouble(
+            _currentOffer!['totalInterestVnd'],
+          );
 
           final anchorDate = _resolveRepaymentAnchorDate() ?? DateTime.now();
           final normalizedAnchorDate = DateTime(
@@ -672,7 +703,7 @@ class LoanViewModel extends ChangeNotifier {
             anchorDate.day,
           );
           final firstDueDate = _addMonthsSafe(normalizedAnchorDate, 1);
-          
+
           await _installmentService.generateInstallmentsForLoan(
             userId: userId,
             loanOfferId: offerId,
@@ -683,7 +714,7 @@ class LoanViewModel extends ChangeNotifier {
             totalInterestVnd: totalInterestVnd,
             firstDueDate: firstDueDate,
           );
-          
+
           print('[LoanViewModel] Installments generated for loan $offerId');
         }
       } catch (e) {
@@ -691,7 +722,7 @@ class LoanViewModel extends ChangeNotifier {
         // Don't throw - installment generation failure shouldn't block the flow
       }
     }
-    
+
     await finalizeAndResetForNewApplication();
   }
 
@@ -804,10 +835,7 @@ class LoanViewModel extends ChangeNotifier {
         type: type,
         title: title,
         body: body,
-        data: {
-          'flowType': 'loan_application',
-          'milestone': type,
-        },
+        data: {'flowType': 'loan_application', 'milestone': type},
       );
       await _pushNotificationService.showFlowMilestoneNotification(
         type: type,
@@ -1105,10 +1133,51 @@ class LoanViewModel extends ChangeNotifier {
       _lastCompletedOffer = Map<String, dynamic>.from(_currentOffer!);
       _lastCompletedStatus = _applicationStatus;
 
+      // Generate a full numeric display contract ID.
+      final displayContractId = _generateDisplayContractId();
+      final contractDetail = <String, dynamic>{
+        'status': _currentOffer!['approved'] == true ? 'Active' : 'Rejected',
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'applicationStatus': _applicationStatus.name,
+        'creditScore': _currentOffer!['creditScore'],
+        'loanAmount': _currentOffer!['loanAmountVnd'],
+        'maxAmount': _currentOffer!['maxAmountVnd'],
+        'loanTermMonths': _currentOffer!['loanTermMonths'],
+        'monthlyPaymentVnd': _currentOffer!['monthlyPaymentVnd'],
+        'interestRate': _currentOffer!['interestRate'],
+        'approved': _currentOffer!['approved'],
+        'accepted': _currentOffer!['accepted'],
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      final contractRecord = _firebase.contractIdCollection.doc();
+      await contractRecord.set({
+        'userId': _firebase.currentUserId,
+        'contractId': displayContractId,
+        'displayContractId': displayContractId,
+        'contractDbId': contractRecord.id,
+        'detail': contractDetail,
+        'applicationId':
+            _currentApplicationId ?? _currentOffer!['applicationId'],
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
       await LocalStorageService.saveApplicationHistory({
-        'offerId': _currentOfferId ?? _currentOffer!['offerId'] ?? _currentOffer!['id'],
-        'contractId':
-            _currentOfferId ?? _currentOffer!['offerId'] ?? _currentOffer!['id'],
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'contractId': displayContractId,
+        'displayContractId': displayContractId,
+        'contractDbId': contractRecord.id,
         'approved': _currentOffer!['approved'],
         'creditScore': _currentOffer!['creditScore'],
         'loanAmount': _currentOffer!['loanAmountVnd'],
@@ -1124,6 +1193,13 @@ class LoanViewModel extends ChangeNotifier {
     }
 
     resetForNewApplication();
+  }
+
+  String _generateDisplayContractId() {
+    final now = DateTime.now();
+    final datePrefix = DateFormat('yyMMddHHmmss').format(now);
+    final randomSuffix = math.Random().nextInt(90) + 10;
+    return '$datePrefix$randomSuffix';
   }
 
   void resetForNewApplication() {
@@ -1462,7 +1538,7 @@ class LoanViewModel extends ChangeNotifier {
         if (isTestAccount) {
           print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
           print('[LoanViewModel] Account holder: $accountHolder');
-          
+
           // Create a mock success response for test account
           _bankValidationResult = BankAccountValidationResponse(
             valid: true,
@@ -1474,12 +1550,14 @@ class LoanViewModel extends ChangeNotifier {
             accountType: 'savings',
             validatedAt: DateTime.now(),
           );
-          
+
           _isValidatingAccount = false;
           notifyListeners();
           return true;
         }
-        print('[LoanViewModel] Test mode enabled but account not in test list, calling API...');
+        print(
+          '[LoanViewModel] Test mode enabled but account not in test list, calling API...',
+        );
       }
 
       // If not a test account or test mode disabled, call the real API
@@ -1494,14 +1572,18 @@ class LoanViewModel extends ChangeNotifier {
 
       if (!_bankValidationResult!.valid) {
         _bankAccountValidationError = _bankValidationResult!.message;
-        print('[LoanViewModel] Validation failed: $_bankAccountValidationError');
+        print(
+          '[LoanViewModel] Validation failed: $_bankAccountValidationError',
+        );
         _isValidatingAccount = false;
         notifyListeners();
         return false;
       }
 
       print('[LoanViewModel] Bank account validated successfully');
-      print('[LoanViewModel] Account holder: ${_bankValidationResult!.accountHolderName}');
+      print(
+        '[LoanViewModel] Account holder: ${_bankValidationResult!.accountHolderName}',
+      );
       _isValidatingAccount = false;
       notifyListeners();
       return true;

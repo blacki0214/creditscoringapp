@@ -164,14 +164,19 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
         },
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -179,7 +184,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),
@@ -234,16 +239,22 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
       child: DropdownButtonFormField<String>(
         initialValue: value,
         isExpanded: true,
+        dropdownColor: Colors.white,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : Colors.grey.shade300,
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -251,7 +262,7 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),
@@ -301,20 +312,26 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           context.t(
-            'Step 3.3: Additional Information',
-            'Bước 3.3: Thông tin bổ sung',
+            'Step 3.3: Contact References',
+            'Bước 3.3: Liên hệ tham chiếu',
           ),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(
@@ -328,211 +345,242 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                 ),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('References', 'Người tham chiếu'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t('Contact References', 'Liên hệ tham chiếu'),
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t(
-                          'Provide contact information for personal references',
-                          'Cung cấp thông tin liên hệ cho những người tham chiếu',
+                        const SizedBox(height: 8),
+                        Text(
+                          context.t(
+                            'Provide contact details of two reference contacts for verification.',
+                            'Vui lòng cung cấp thông tin liên hệ của 2 người liên hệ tham chiếu để xác minh.',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF64748B),
+                            height: 1.45,
+                          ),
                         ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                        const SizedBox(height: 24),
+                        Text(
+                          context.t(
+                            'Reference Contact 1',
+                            'Người liên hệ tham chiếu 1',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF334155),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.t('Reference 1', 'Người tham chiếu 1'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4C40F7),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference1NameController,
+                          label: context.t('Name(*)', 'Tên(*)'),
+                          fieldKey: 'reference1Name',
+                          icon: Icons.person,
+                          validator: _validateRequiredName,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference1NameController,
-                        label: context.t('Name(*)', 'Tên(*)'),
-                        fieldKey: 'reference1Name',
-                        icon: Icons.person,
-                        validator: _validateRequiredName,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference1PhoneController,
-                        label: context.t('Phone Number(*)', 'Số điện thoại(*)'),
-                        fieldKey: 'reference1Phone',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        validator: _validateRequiredPhone,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDropdownField(
-                        label: context.t('Relationship(*)', 'Mối quan hệ(*)'),
-                        fieldKey: 'reference1Relationship',
-                        icon: Icons.people,
-                        value: _selectedReference1Relationship,
-                        items: _relationshipOptions,
-                        display: _displayRelationship,
-                        onChanged: (value) => setState(
-                          () => _selectedReference1Relationship = value,
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference1PhoneController,
+                          label: context.t(
+                            'Phone Number(*)',
+                            'Số điện thoại(*)',
+                          ),
+                          fieldKey: 'reference1Phone',
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          validator: _validateRequiredPhone,
                         ),
-                        validatorMessage: context.t(
-                          'Please select relationship for reference 1',
-                          'Vui lòng chọn quan hệ người tham chiếu 1',
+                        const SizedBox(height: 12),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Relationship with Applicant(*)',
+                            'Mối quan hệ với người vay(*)',
+                          ),
+                          fieldKey: 'reference1Relationship',
+                          icon: Icons.people,
+                          value: _selectedReference1Relationship,
+                          items: _relationshipOptions,
+                          display: _displayRelationship,
+                          onChanged: (value) => setState(
+                            () => _selectedReference1Relationship = value,
+                          ),
+                          validatorMessage: context.t(
+                            'Please select relationship for reference contact 1',
+                            'Vui lòng chọn mối quan hệ cho người liên hệ tham chiếu 1',
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.t('Reference 2', 'Người tham chiếu 2'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4C40F7),
+                        const SizedBox(height: 24),
+                        Text(
+                          context.t(
+                            'Reference Contact 2',
+                            'Người liên hệ tham chiếu 2',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF334155),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference2NameController,
-                        label: context.t('Name(*)', 'Tên(*)'),
-                        fieldKey: 'reference2Name',
-                        icon: Icons.person,
-                        validator: _validateRequiredName,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _reference2PhoneController,
-                        label: context.t('Phone Number(*)', 'Số điện thoại(*)'),
-                        fieldKey: 'reference2Phone',
-                        icon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        validator: _validateRequiredPhone,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDropdownField(
-                        label: context.t('Relationship(*)', 'Mối quan hệ(*)'),
-                        fieldKey: 'reference2Relationship',
-                        icon: Icons.people,
-                        value: _selectedReference2Relationship,
-                        items: _relationshipOptions,
-                        display: _displayRelationship,
-                        onChanged: (value) => setState(
-                          () => _selectedReference2Relationship = value,
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference2NameController,
+                          label: context.t('Name(*)', 'Tên(*)'),
+                          fieldKey: 'reference2Name',
+                          icon: Icons.person,
+                          validator: _validateRequiredName,
                         ),
-                        validatorMessage: context.t(
-                          'Please select relationship for reference 2',
-                          'Vui lòng chọn quan hệ người tham chiếu 2',
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _reference2PhoneController,
+                          label: context.t(
+                            'Phone Number(*)',
+                            'Số điện thoại(*)',
+                          ),
+                          fieldKey: 'reference2Phone',
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          validator: _validateRequiredPhone,
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.t('Additional Documents', 'Tài liệu bổ sung'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1F3F),
+                        const SizedBox(height: 12),
+                        _buildDropdownField(
+                          label: context.t(
+                            'Relationship with Applicant(*)',
+                            'Mối quan hệ với người vay(*)',
+                          ),
+                          fieldKey: 'reference2Relationship',
+                          icon: Icons.people,
+                          value: _selectedReference2Relationship,
+                          items: _relationshipOptions,
+                          display: _displayRelationship,
+                          onChanged: (value) => setState(
+                            () => _selectedReference2Relationship = value,
+                          ),
+                          validatorMessage: context.t(
+                            'Please select relationship for reference contact 2',
+                            'Vui lòng chọn mối quan hệ cho người liên hệ tham chiếu 2',
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
+                        const SizedBox(height: 24),
+                        Text(
+                          context.t('Additional Documents', 'Tài liệu bổ sung'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F3F),
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _pickAdditionalDocuments,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF4C40F7),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            color: const Color(0xFFF8FAFC),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _pickAdditionalDocuments,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4D4AF9),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  shape: RoundedRectangleBorder(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.upload_file),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        context.t(
+                                          'Upload Additional Documents',
+                                          'Tải lên tài liệu bổ sung',
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (_additionalDocuments.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.upload_file),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      context.t(
-                                        'Upload Additional Documents',
-                                        'Tải lên tài liệu bổ sung',
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (_additionalDocuments.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: _additionalDocuments.map((doc) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.attachment,
-                                            size: 16,
-                                            color: Color(0xFF4C40F7),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              doc.name,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xFF1A1F3F),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: _additionalDocuments.map((doc) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.attachment,
+                                              size: 16,
+                                              color: Color(0xFF4D4AF9),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                doc.name,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xFF1A1F3F),
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -545,11 +593,13 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade300,
-                        foregroundColor: const Color(0xFF1A1F3F),
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        foregroundColor: const Color(0xFF334155),
+                        elevation: 0,
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: Text(
@@ -565,8 +615,11 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final navigator = Navigator.of(context);
+
                         if (!_formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(
                                 context.t(
@@ -583,12 +636,12 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                         if (_selectedReference1Relationship != null &&
                             _selectedReference1Relationship ==
                                 _selectedReference2Relationship) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(
                                 context.t(
-                                  'Reference relationships must be different',
-                                  'Hai người tham chiếu phải có quan hệ khác nhau',
+                                  'Reference contact relationships must be different',
+                                  'Mối quan hệ của 2 người liên hệ tham chiếu phải khác nhau',
                                 ),
                               ),
                               backgroundColor: Colors.red,
@@ -601,22 +654,21 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                         final isRejected =
                             loanViewModel.isApplicationRejected ||
                             (loanViewModel.currentOffer?['approved'] == false);
+                        final rejectedMessage = context.t(
+                          'Your previous application was rejected. Data has been cleared. Please submit a new application.',
+                          'Hồ sơ trước của bạn đã bị từ chối. Dữ liệu đã được xóa. Vui lòng nộp hồ sơ mới.',
+                        );
 
                         if (isRejected) {
                           await loanViewModel.resetLoanApplicationState();
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
-                              content: Text(
-                                context.t(
-                                  'Your previous application was rejected. Data has been cleared. Please submit a new application.',
-                                  'Hồ sơ trước của bạn đã bị từ chối. Dữ liệu đã được xóa. Vui lòng nộp hồ sơ mới.',
-                                ),
-                              ),
+                              content: Text(rejectedMessage),
                               backgroundColor: Colors.orange,
                             ),
                           );
-                          Navigator.pop(context);
+                          navigator.pop();
                           return;
                         }
 
@@ -644,20 +696,21 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                         await loanViewModel.completeStep3(
                           step3Data: step3Payload,
                         );
+                        if (!mounted) return;
 
-                        Navigator.push(
-                          context,
+                        navigator.push(
                           MaterialPageRoute(
                             builder: (_) => const Step4OfferCalculatorPage(),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
+                        backgroundColor: const Color(0xFF4D4AF9),
                         foregroundColor: Colors.white,
+                        elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: Text(

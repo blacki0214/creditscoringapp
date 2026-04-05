@@ -26,9 +26,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget build(BuildContext context) {
     final settingsVM = context.watch<SettingsViewModel>();
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -60,10 +61,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   'Manage how you receive notifications',
                   'Quản lý cách bạn nhận thông báo',
                 ),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 32),
 
@@ -71,7 +69,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               _buildSwitchCard(
                 icon: Icons.notifications_active,
                 title: context.t('Push Notifications', 'Thông báo đẩy'),
-                subtitle: settingsVM.pushEnabled 
+                subtitle: settingsVM.pushEnabled
                     ? context.t(
                         'Notifications are enabled',
                         'Thông báo đang bật',
@@ -84,7 +82,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 onChanged: (value) {
                   settingsVM.updateNotificationSetting('pushEnabled', value);
                 },
-                iconColor: const Color(0xFF4C40F7),
+                iconColor: const Color(0xFF4D4AF9),
               ),
               const SizedBox(height: 16),
 
@@ -92,13 +90,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
               _buildSwitchCard(
                 icon: Icons.volume_up,
                 title: context.t('Notification Sound', 'Âm thanh thông báo'),
-                subtitle: settingsVM.soundEnabled 
-                  ? context.t('Sound is on', 'Âm thanh đang bật')
-                  : context.t('Sound is off', 'Âm thanh đang tắt'),
+                subtitle: settingsVM.soundEnabled
+                    ? context.t('Sound is on', 'Âm thanh đang bật')
+                    : context.t('Sound is off', 'Âm thanh đang tắt'),
                 value: settingsVM.soundEnabled,
-                onChanged: settingsVM.pushEnabled ? (value) {
-                  settingsVM.updateNotificationSetting('soundEnabled', value);
-                } : null,
+                onChanged: settingsVM.pushEnabled
+                    ? (value) {
+                        settingsVM.updateNotificationSetting(
+                          'soundEnabled',
+                          value,
+                        );
+                      }
+                    : null,
                 iconColor: const Color(0xFF4CAF50),
               ),
               const SizedBox(height: 16),
@@ -107,13 +110,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
               _buildSwitchCard(
                 icon: Icons.vibration,
                 title: context.t('Vibration', 'Chế độ rung'),
-                subtitle: settingsVM.vibrationEnabled 
-                  ? context.t('Vibration is on', 'Rung đang bật')
-                  : context.t('Vibration is off', 'Rung đang tắt'),
+                subtitle: settingsVM.vibrationEnabled
+                    ? context.t('Vibration is on', 'Rung đang bật')
+                    : context.t('Vibration is off', 'Rung đang tắt'),
                 value: settingsVM.vibrationEnabled,
-                onChanged: settingsVM.pushEnabled ? (value) {
-                  settingsVM.updateNotificationSetting('vibrationEnabled', value);
-                } : null,
+                onChanged: settingsVM.pushEnabled
+                    ? (value) {
+                        settingsVM.updateNotificationSetting(
+                          'vibrationEnabled',
+                          value,
+                        );
+                      }
+                    : null,
                 iconColor: const Color(0xFFFFA726),
               ),
               const SizedBox(height: 32),
@@ -133,10 +141,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   'Temporarily turn off notifications',
                   'Tạm thời tắt thông báo',
                 ),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 16),
 
@@ -224,7 +229,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 value: settingsVM.emailNotifications,
                 onChanged: (value) {
-                  settingsVM.updateNotificationSetting('emailNotifications', value);
+                  settingsVM.updateNotificationSetting(
+                    'emailNotifications',
+                    value,
+                  );
                 },
                 iconColor: const Color(0xFF2196F3),
               ),
@@ -239,7 +247,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 value: settingsVM.smsNotifications,
                 onChanged: (value) {
-                  settingsVM.updateNotificationSetting('smsNotifications', value);
+                  settingsVM.updateNotificationSetting(
+                    'smsNotifications',
+                    value,
+                  );
                 },
                 iconColor: const Color(0xFF9C27B0),
               ),
@@ -264,10 +275,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   'Trạng thái hồ sơ và phê duyệt khoản vay',
                 ),
                 value: settingsVM.loanUpdates,
-                onChanged: settingsVM.pushEnabled ? (value) {
-                  settingsVM.updateNotificationSetting('loanUpdates', value);
-                } : null,
-                iconColor: const Color(0xFF4C40F7),
+                onChanged: settingsVM.pushEnabled
+                    ? (value) {
+                        settingsVM.updateNotificationSetting(
+                          'loanUpdates',
+                          value,
+                        );
+                      }
+                    : null,
+                iconColor: const Color(0xFF4D4AF9),
               ),
               const SizedBox(height: 16),
 
@@ -282,9 +298,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   'Thay đổi điểm tín dụng của bạn',
                 ),
                 value: settingsVM.creditScoreUpdates,
-                onChanged: settingsVM.pushEnabled ? (value) {
-                  settingsVM.updateNotificationSetting('creditScoreUpdates', value);
-                } : null,
+                onChanged: settingsVM.pushEnabled
+                    ? (value) {
+                        settingsVM.updateNotificationSetting(
+                          'creditScoreUpdates',
+                          value,
+                        );
+                      }
+                    : null,
                 iconColor: const Color(0xFF4CAF50),
               ),
               const SizedBox(height: 16),
@@ -297,9 +318,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   'Ngày đến hạn thanh toán sắp tới',
                 ),
                 value: settingsVM.paymentReminders,
-                onChanged: settingsVM.pushEnabled ? (value) {
-                  settingsVM.updateNotificationSetting('paymentReminders', value);
-                } : null,
+                onChanged: settingsVM.pushEnabled
+                    ? (value) {
+                        settingsVM.updateNotificationSetting(
+                          'paymentReminders',
+                          value,
+                        );
+                      }
+                    : null,
                 iconColor: const Color(0xFFFFA726),
               ),
               const SizedBox(height: 16),
@@ -312,9 +338,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   'Ưu đãi và khuyến mãi đặc biệt',
                 ),
                 value: settingsVM.promotionalOffers,
-                onChanged: settingsVM.pushEnabled ? (value) {
-                  settingsVM.updateNotificationSetting('promotionalOffers', value);
-                } : null,
+                onChanged: settingsVM.pushEnabled
+                    ? (value) {
+                        settingsVM.updateNotificationSetting(
+                          'promotionalOffers',
+                          value,
+                        );
+                      }
+                    : null,
                 iconColor: const Color(0xFFFF5252),
               ),
               const SizedBox(height: 32),
@@ -323,17 +354,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4C40F7).withOpacity(0.1),
+                  color: const Color(0xFF4D4AF9).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF4C40F7).withOpacity(0.3),
+                    color: const Color(0xFF4D4AF9).withOpacity(0.3),
                   ),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.info_outline,
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -369,7 +400,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     required Color iconColor,
   }) {
     final isEnabled = onChanged != null;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -401,16 +432,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: isEnabled ? const Color(0xFF1A1F3F) : Colors.grey.shade500,
+                    color: isEnabled
+                        ? const Color(0xFF1A1F3F)
+                        : Colors.grey.shade500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -418,7 +448,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: const Color(0xFF4C40F7),
+            activeThumbColor: const Color(0xFF4D4AF9),
           ),
         ],
       ),
@@ -427,13 +457,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Widget _buildSnoozeOption(String value, String description) {
     final isSelected = _selectedSnoozeOption == value;
-    
+
     return InkWell(
       onTap: () {
         setState(() {
           _selectedSnoozeOption = value;
         });
-        
+
         // Calculate snooze time
         DateTime? snoozeUntil;
         if (value != 'None' && value != 'Không') {
@@ -473,19 +503,25 @@ class _NotificationsPageState extends State<NotificationsPage> {
               break;
           }
         }
-        
+
         // Update snooze in ViewModel
         context.read<SettingsViewModel>().updateSnooze(snoozeUntil);
-        
+
         // Show confirmation
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               (value == 'None' || value == 'Không')
-                  ? context.t('Notifications are active', 'Thông báo đang hoạt động')
-                  : context.t('Notifications snoozed for $value', 'Đã tạm dừng thông báo trong $value'),
+                  ? context.t(
+                      'Notifications are active',
+                      'Thông báo đang hoạt động',
+                    )
+                  : context.t(
+                      'Notifications snoozed for $value',
+                      'Đã tạm dừng thông báo trong $value',
+                    ),
             ),
-            backgroundColor: const Color(0xFF4C40F7),
+            backgroundColor: const Color(0xFF4D4AF9),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -498,7 +534,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? const Color(0xFF4C40F7) : Colors.grey.shade400,
+                color: isSelected
+                    ? const Color(0xFF4D4AF9)
+                    : Colors.grey.shade400,
                 width: 2,
               ),
             ),
@@ -508,7 +546,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       width: 10,
                       height: 10,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF4C40F7),
+                        color: Color(0xFF4D4AF9),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -525,26 +563,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? const Color(0xFF1A1F3F) : Colors.grey.shade700,
+                    color: isSelected
+                        ? const Color(0xFF1A1F3F)
+                        : Colors.grey.shade700,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ),
           if (isSelected)
-            const Icon(
-              Icons.check_circle,
-              color: Color(0xFF4C40F7),
-              size: 20,
-            ),
+            const Icon(Icons.check_circle, color: Color(0xFF4D4AF9), size: 20),
         ],
       ),
     );

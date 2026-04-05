@@ -223,10 +223,10 @@ class LoanOfferResponse {
 }
 
 class ApiService {
-  /// Reads the production API base URL from .env at runtime.
-  /// Falls back to the stable production domain if env var is missing.
+  /// Reads the GCP Cloud Run base URL from .env at runtime.
+  /// Falls back to the old Render URL if env var is missing.
   static String get baseUrl =>
-      dotenv.env['GCP_API_URL'] ?? 'https://swincredit.duckdns.org/api';
+      dotenv.env['GCP_API_URL'] ?? 'https://credit-scoring-h7mv.onrender.com/api';
   
   // Singleton HTTP client to prevent memory leaks
   static final http.Client _sharedClient = http.Client();
@@ -246,66 +246,46 @@ class ApiService {
   /// forceRefresh:true ensures stale tokens (> 1h) are renewed automatically.
   static Future<String> _getAuthToken() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('User not authenticated — please sign in first');
+    if (user == null)
+      throw Exception('User not authenticated — please sign in first');
     final token = await user.getIdToken(true); // forceRefresh
     return 'Bearer $token';
-  }
-
-  Map<String, String> _buildJsonHeaders(String authToken) {
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      'Authorization': authToken,
-    };
-
-    final apiKey = dotenv.env['API_KEY']?.trim() ?? '';
-    if (apiKey.isNotEmpty) {
-      headers['X-API-Key'] = apiKey;
-    }
-
-    return headers;
-  }
-
-  Duration _retryBackoff(int attempt) {
-    if (attempt <= 0) {
-      return baseRetryDelay;
-    }
-
-    return Duration(milliseconds: baseRetryDelay.inMilliseconds * 3);
-  }
-
-  Future<bool> checkHealth() async {
-    final healthUrl = Uri.parse('${baseUrl.replaceFirst('/api', '')}/api/health');
-    final response = await _activeClient.get(healthUrl).timeout(requestTimeout);
-    return response.statusCode == 200;
   }
 
   // ===== Two-Step API Flow (API v2.0) =====
 
   /// Step 1: Calculate credit score and loan limit
-  Future<CalculateLimitResponse> calculateLimit(CalculateLimitRequest request) async {
+  Future<CalculateLimitResponse> calculateLimit(
+    CalculateLimitRequest request,
+  ) async {
     final url = Uri.parse('$baseUrl/calculate-limit');
     print('[ApiService] POST $url');
     print('[ApiService] Request: ${jsonEncode(request.toJson())}');
-    
+
     for (int attempt = 0; attempt < maxRetries; attempt++) {
       try {
         if (attempt > 0) {
           print('[ApiService] Retry attempt $attempt/$maxRetries');
         }
-        
+
         final authToken = await _getAuthToken();
         final startTime = DateTime.now();
-        
+
         final response = await _activeClient
             .post(
               url,
-              headers: _buildJsonHeaders(authToken),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authToken,
+              },
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
 
         final duration = DateTime.now().difference(startTime);
-        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+        print(
+          '[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}',
+        );
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -337,35 +317,42 @@ class ApiService {
         throw Exception('Error calculating limit: $e');
       }
     }
-    
+
     throw Exception('Failed to calculate limit after $maxRetries attempts');
   }
 
   /// Step 2: Calculate loan terms (interest rate, monthly payment, etc.)
-  Future<CalculateTermsResponse> calculateTerms(CalculateTermsRequest request) async {
+  Future<CalculateTermsResponse> calculateTerms(
+    CalculateTermsRequest request,
+  ) async {
     final url = Uri.parse('$baseUrl/calculate-terms');
     print('[ApiService] POST $url');
     print('[ApiService] Request: ${jsonEncode(request.toJson())}');
-    
+
     for (int attempt = 0; attempt < maxRetries; attempt++) {
       try {
         if (attempt > 0) {
           print('[ApiService] Retry attempt $attempt/$maxRetries');
         }
-        
+
         final authToken = await _getAuthToken();
         final startTime = DateTime.now();
-        
+
         final response = await _activeClient
             .post(
               url,
-              headers: _buildJsonHeaders(authToken),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authToken,
+              },
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
 
         final duration = DateTime.now().difference(startTime);
-        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+        print(
+          '[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}',
+        );
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -397,7 +384,7 @@ class ApiService {
         throw Exception('Error calculating terms: $e');
       }
     }
-    
+
     throw Exception('Failed to calculate terms after $maxRetries attempts');
   }
 
@@ -406,14 +393,17 @@ class ApiService {
   /// Legacy one-step loan application (still works but deprecated)
   Future<LoanOfferResponse> applyForLoan(SimpleLoanRequest request) async {
     final url = Uri.parse('$baseUrl/apply');
-    
+
     for (int attempt = 0; attempt < maxRetries; attempt++) {
       try {
         final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
         final response = await _activeClient
             .post(
               url,
-              headers: _buildJsonHeaders(accessToken),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': accessToken,
+              },
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
@@ -443,14 +433,14 @@ class ApiService {
         throw Exception('Error applying for loan: $e');
       }
     }
-    
+
     throw Exception('Failed to apply for loan after $maxRetries attempts');
   }
 
   // ===== Bank Account Validation (Step 6) =====
 
   /// Validate bank account through external service
-  /// 
+  ///
   /// This endpoint verifies that the provided bank account details are valid
   /// and that the account holder name matches.
   Future<BankAccountValidationResponse> validateBankAccount(
@@ -473,13 +463,18 @@ class ApiService {
         final response = await _activeClient
             .post(
               url,
-              headers: _buildJsonHeaders(authToken),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authToken,
+              },
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
 
         final duration = DateTime.now().difference(startTime);
-        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+        print(
+          '[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}',
+        );
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -540,6 +535,8 @@ class ApiService {
       }
     }
 
-    throw Exception('Failed to validate bank account after $maxRetries attempts');
+    throw Exception(
+      'Failed to validate bank account after $maxRetries attempts',
+    );
   }
 }

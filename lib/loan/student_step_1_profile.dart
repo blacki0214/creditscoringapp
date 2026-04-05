@@ -10,7 +10,8 @@ class StudentStepAProfilePage extends StatefulWidget {
   const StudentStepAProfilePage({super.key});
 
   @override
-  State<StudentStepAProfilePage> createState() => _StudentStepAProfilePageState();
+  State<StudentStepAProfilePage> createState() =>
+      _StudentStepAProfilePageState();
 }
 
 class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
@@ -21,8 +22,12 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
   void initState() {
     super.initState();
     final vm = context.read<StudentLoanViewModel>();
-    _loanAmountController = TextEditingController(text: vm.loanAmount.toString());
-    _gpaController = TextEditingController(text: vm.gpaLatest.toStringAsFixed(2));
+    _loanAmountController = TextEditingController(
+      text: vm.loanAmount.toString(),
+    );
+    _gpaController = TextEditingController(
+      text: vm.gpaLatest.toStringAsFixed(2),
+    );
   }
 
   @override
@@ -58,7 +63,9 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FF),
       appBar: AppBar(
-        title: Text(context.t('Student Path - Step 1', 'Vay dành cho sinh viên - Bước 1')),
+        title: Text(
+          context.t('Student Path - Step 1', 'Vay dành cho sinh viên - Bước 1'),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1A1F3F),
         elevation: 0,
@@ -80,7 +87,8 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                 child: Text(
                   context.t(
                     'Please note that this feature is still under development. If you encounter any unexpected errors, please contact the support section in the settings. Thank you.',
-                    'Vui lòng lưu ý rằng tính năng này vẫn đang trong quá trình phát triển. Nếu bạn gặp phải bất kỳ lỗi nào không mong muốn, vui lòng liên hệ với bộ phận hỗ trợ trong phần cài đặt. Xin cảm ơn.',),
+                    'Vui lòng lưu ý rằng tính năng này vẫn đang trong quá trình phát triển. Nếu bạn gặp phải bất kỳ lỗi nào không mong muốn, vui lòng liên hệ với bộ phận hỗ trợ trong phần cài đặt. Xin cảm ơn.',
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF694D00),
@@ -116,7 +124,10 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                         'Allowed: 5,000,000-10,000,000 ',
                         'Cho phép: 5,000,000-10,000,000',
                       ),
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -126,7 +137,12 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                 title: context.t('Academic year', 'Năm học'),
                 child: DropdownButtonFormField<int>(
                   initialValue: vm.academicYear,
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                  dropdownColor: Colors.white,
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(),
+                  ),
                   items: List.generate(
                     5,
                     (index) => DropdownMenuItem(
@@ -157,9 +173,13 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                   children: [
                     TextFormField(
                       controller: _gpaController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
+                        ),
                       ],
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
@@ -185,8 +205,9 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                   borderRadius: BorderRadius.circular(12),
                   onPressed: (index) {
                     vm.updateProfile(
-                      selectedProgramLevel:
-                          index == 0 ? 'undergraduate' : 'graduate',
+                      selectedProgramLevel: index == 0
+                          ? 'undergraduate'
+                          : 'graduate',
                     );
                   },
                   children: const [
@@ -247,7 +268,9 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(52),
                   ),
-                  child: Text(context.t('Continue to Step 2', 'Tiếp tục sang Bước 2')),
+                  child: Text(
+                    context.t('Continue to Step 2', 'Tiếp tục sang Bước 2'),
+                  ),
                 ),
               ),
             ],
@@ -348,14 +371,18 @@ class _LivingChip extends StatelessWidget {
           color: isSelected ? const Color(0xFFE8EBFF) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF4D4AF9) : const Color(0xFFDDE3FF),
+            color: isSelected
+                ? const Color(0xFF4D4AF9)
+                : const Color(0xFFDDE3FF),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: isSelected ? const Color(0xFF2D2AA8) : const Color(0xFF1A1F3F),
+            color: isSelected
+                ? const Color(0xFF2D2AA8)
+                : const Color(0xFF1A1F3F),
           ),
         ),
       ),
@@ -423,9 +450,7 @@ class _MajorBottomSheetState extends State<_MajorBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-              ),
+              decoration: InputDecoration(prefixIcon: const Icon(Icons.search)),
               onChanged: (value) => setState(() => query = value),
             ),
             const SizedBox(height: 12),

@@ -15,7 +15,7 @@ class _SupportStaffPageState extends State<SupportStaffPage>
     with SingleTickerProviderStateMixin {
   static const Color _primary = Color(0xFF4D4AF9);
   static const Color _title = Color(0xFF1A1F3F);
-  static const Color _surface = Color(0xFFF7F8FF);
+  static const Color _surface = Color(0xFFF5F7FB);
 
   final FirebaseService _firebase = FirebaseService();
   final FirebaseSupportChatService _chatService = FirebaseSupportChatService();
@@ -59,10 +59,7 @@ class _SupportStaffPageState extends State<SupportStaffPage>
         ),
         title: const Text(
           'Support Console',
-          style: TextStyle(
-            color: _title,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(color: _title, fontWeight: FontWeight.w700),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -90,33 +87,33 @@ class _SupportStaffPageState extends State<SupportStaffPage>
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       child: LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 900;
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 900;
 
-        if (!isWide) {
-          if (_selectedChatId == null) {
-            return _buildChatList();
+          if (!isWide) {
+            if (_selectedChatId == null) {
+              return _buildChatList();
+            }
+            return _buildChatThread(showBackButton: true);
           }
-          return _buildChatThread(showBackButton: true);
-        }
 
-        return Row(
-          children: [
-            SizedBox(width: 340, child: _buildChatList()),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _selectedChatId == null
-                  ? _buildEmptyState(
-                      icon: Icons.mark_chat_unread_outlined,
-                      title: 'Choose a conversation',
-                      subtitle:
-                          'Select a customer chat from the left panel to start assisting.',
-                    )
-                  : _buildChatThread(showBackButton: false),
-            ),
-          ],
-        );
-      },
+          return Row(
+            children: [
+              SizedBox(width: 340, child: _buildChatList()),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _selectedChatId == null
+                    ? _buildEmptyState(
+                        icon: Icons.mark_chat_unread_outlined,
+                        title: 'Choose a conversation',
+                        subtitle:
+                            'Select a customer chat from the left panel to start assisting.',
+                      )
+                    : _buildChatThread(showBackButton: false),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -415,10 +412,7 @@ class _SupportStaffPageState extends State<SupportStaffPage>
                               ],
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              message,
-                              style: const TextStyle(height: 1.35),
-                            ),
+                            Text(message, style: const TextStyle(height: 1.35)),
                           ],
                         ),
                       ),
@@ -882,7 +876,9 @@ class _SupportStaffPageState extends State<SupportStaffPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: FilledButton(
-                        style: FilledButton.styleFrom(backgroundColor: _primary),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _primary,
+                        ),
                         onPressed: () async {
                           await _resolveFeedback(feedbackId);
                         },

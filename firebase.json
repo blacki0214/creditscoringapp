@@ -9,14 +9,14 @@
     "platforms": {
       "android": {
         "default": {
-          "projectId": "credit-scoring-22b28",
+          "projectId": "creditscore-c560f",
           "appId": "1:625478574980:android:1b1e2bd6d61ce48f4eb3d1",
           "fileOutput": "android/app/google-services.json"
         }
       },
       "dart": {
         "lib/firebase_options.dart": {
-          "projectId": "credit-scoring-22b28",
+          "projectId": "creditscore-c560f",
           "configurations": {
             "android": "1:625478574980:android:1b1e2bd6d61ce48f4eb3d1",
             "ios": "1:625478574980:ios:eaf6d9375e7a861a4eb3d1",

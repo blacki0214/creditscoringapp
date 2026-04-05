@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../loan/demo_calculator_page.dart';
-import '../loan/student_verification_gate_page.dart';
+import '../loan/student_hub_page.dart';
 import 'home_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -23,10 +23,13 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _pages = [
-      HomePage(onOpenSettings: () => _onNavItemTap(4)),
+      HomePage(
+        onOpenSettings: () => _onNavItemTap(4),
+        onOpenStudent: () => _onNavItemTap(3),
+      ),
       const LoanApplicationPage(),
       const DemoCalculatorPage(),
-      const StudentVerificationGatePage(),
+      const StudentHubPage(),
       const SettingsPage(),
     ];
     _animationController = AnimationController(
@@ -76,21 +79,49 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: _buildNavItem(Icons.home, 0, iconSize)),
                     Expanded(
-                      child: _buildNavItem(Icons.upload_file, 1, iconSize),
+                      child: _buildNavItem(
+                        Icons.home,
+                        context,
+                        0,
+                        iconSize,
+                        'Home',
+                      ),
                     ),
                     Expanded(
-                      child: _buildNavItem(Icons.calculate, 2, iconSize),
+                      child: _buildNavItem(
+                        Icons.upload_file,
+                        context,
+                        1,
+                        iconSize,
+                        'Application',
+                      ),
                     ),
                     Expanded(
-                      child: _buildNavItem(Icons.school_outlined, 3, iconSize),
+                      child: _buildNavItem(
+                        Icons.calculate,
+                        context,
+                        2,
+                        iconSize,
+                        'Demo',
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.school_outlined,
+                        context,
+                        3,
+                        iconSize,
+                        'Student',
+                      ),
                     ),
                     Expanded(
                       child: _buildNavItem(
                         Icons.settings_outlined,
+                        context,
                         4,
                         iconSize,
+                        'Settings',
                       ),
                     ),
                   ],
@@ -112,7 +143,13 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     _animationController.forward(from: 0.0);
   }
 
-  Widget _buildNavItem(IconData icon, int index, double iconSize) {
+  Widget _buildNavItem(
+    IconData icon,
+    BuildContext context,
+    int index,
+    double iconSize,
+    String label,
+  ) {
     final isCurrentlySelected = _selectedIndex == index;
     final wasPreviouslySelected = _previousIndex == index;
     final inactiveColor = Colors.grey.shade600;
@@ -125,30 +162,55 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
       },
       child: SizedBox(
         height: 52,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              double animationValue;
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            double animationValue;
 
-              if (isCurrentlySelected) {
-                // Item becoming selected: animate from grey to blue
-                animationValue = _animationController.value;
-              } else if (wasPreviouslySelected) {
-                // Item being deselected: animate from blue to grey
-                animationValue = 1.0 - _animationController.value;
-              } else {
-                // Item not involved in animation: stay grey
-                animationValue = 0.0;
-              }
+            if (isCurrentlySelected) {
+              animationValue = _animationController.value;
+            } else if (wasPreviouslySelected) {
+              animationValue = 1.0 - _animationController.value;
+            } else {
+              animationValue = 0.0;
+            }
 
-              return Icon(
-                icon,
-                color: Color.lerp(inactiveColor, activeColor, animationValue),
-                size: iconSize,
+            final iconColor = Color.lerp(
+              inactiveColor,
+              activeColor,
+              animationValue,
+            )!;
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: isCurrentlySelected
+                    ? const Color(0xFFEEF0FF)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: iconColor, size: iconSize),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: iconColor,
+                    ),
+                  ),
+                ],
+              ),
               );
-            },
-          ),
+          },
         ),
       ),
     );
