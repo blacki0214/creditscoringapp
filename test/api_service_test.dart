@@ -8,6 +8,7 @@ import 'package:creditscoring/services/api_service.dart'; // Adjust path if need
 void main() {
   setUpAll(() {
     dotenv.testLoad(fileInput: '''
+API_BASE_URL=https://swincredit.duckdns.org/api
 GCP_API_URL=https://swincredit.duckdns.org/api
 API_KEY=test-api-key
 VNPT_ACCESS_TOKEN=test-token
