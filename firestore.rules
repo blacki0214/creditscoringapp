@@ -75,6 +75,12 @@ service cloud.firestore {
     match /users/{userId}/settings/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Student email verification status (written by Cloud Functions only)
+    match /studentEmailVerification/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
     
     // Notifications collection
     match /notifications/{notificationId} {

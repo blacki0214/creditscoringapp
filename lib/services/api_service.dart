@@ -223,19 +223,19 @@ class LoanOfferResponse {
 }
 
 class ApiService {
-  /// Reads the GCP Cloud Run base URL from .env at runtime.
-  /// Falls back to the old Render URL if env var is missing.
+  /// Reads the production API base URL from .env at runtime.
+  /// Falls back to the stable production domain if env var is missing.
   static String get baseUrl =>
-      dotenv.env['GCP_API_URL'] ?? 'https://credit-scoring-h7mv.onrender.com/api';
+      dotenv.env['GCP_API_URL'] ?? 'https://swincredit.duckdns.org/api';
   
   // Singleton HTTP client to prevent memory leaks
   static final http.Client _sharedClient = http.Client();
   final http.Client? _client;
 
-  // Timeout configuration (matching Python demo's timeout=5)
-  static const Duration requestTimeout = Duration(seconds: 30);
-  static const int maxRetries = 3;
-  static const Duration retryDelay = Duration(seconds: 2);
+  // Network behavior based on APP_INTEGRATION_GUIDE_VI.
+  static const Duration requestTimeout = Duration(seconds: 20);
+  static const int maxRetries = 2;
+  static const Duration baseRetryDelay = Duration(milliseconds: 300);
 
   ApiService({http.Client? client}) : _client = client;
 
@@ -249,6 +249,34 @@ class ApiService {
     if (user == null) throw Exception('User not authenticated — please sign in first');
     final token = await user.getIdToken(true); // forceRefresh
     return 'Bearer $token';
+  }
+
+  Map<String, String> _buildJsonHeaders(String authToken) {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Authorization': authToken,
+    };
+
+    final apiKey = dotenv.env['API_KEY']?.trim() ?? '';
+    if (apiKey.isNotEmpty) {
+      headers['X-API-Key'] = apiKey;
+    }
+
+    return headers;
+  }
+
+  Duration _retryBackoff(int attempt) {
+    if (attempt <= 0) {
+      return baseRetryDelay;
+    }
+
+    return Duration(milliseconds: baseRetryDelay.inMilliseconds * 3);
+  }
+
+  Future<bool> checkHealth() async {
+    final healthUrl = Uri.parse('${baseUrl.replaceFirst('/api', '')}/api/health');
+    final response = await _activeClient.get(healthUrl).timeout(requestTimeout);
+    return response.statusCode == 200;
   }
 
   // ===== Two-Step API Flow (API v2.0) =====
@@ -271,10 +299,7 @@ class ApiService {
         final response = await _activeClient
             .post(
               url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authToken,
-              },
+              headers: _buildJsonHeaders(authToken),
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
@@ -294,7 +319,7 @@ class ApiService {
         print('[ApiService] Network error: $e');
         // Network error - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Network error after $maxRetries attempts: $e');
@@ -302,7 +327,7 @@ class ApiService {
         print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
         // Timeout - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Request timeout after $maxRetries attempts: $e');
@@ -334,10 +359,7 @@ class ApiService {
         final response = await _activeClient
             .post(
               url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authToken,
-              },
+              headers: _buildJsonHeaders(authToken),
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
@@ -357,7 +379,7 @@ class ApiService {
         print('[ApiService] Network error: $e');
         // Network error - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Network error after $maxRetries attempts: $e');
@@ -365,7 +387,7 @@ class ApiService {
         print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
         // Timeout - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Request timeout after $maxRetries attempts: $e');
@@ -391,10 +413,7 @@ class ApiService {
         final response = await _activeClient
             .post(
               url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': accessToken,
-              },
+              headers: _buildJsonHeaders(accessToken),
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
@@ -408,14 +427,14 @@ class ApiService {
       } on http.ClientException catch (e) {
         // Network error - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Network error after $maxRetries attempts: $e');
       } on TimeoutException catch (e) {
         // Timeout - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Request timeout after $maxRetries attempts: $e');
@@ -454,10 +473,7 @@ class ApiService {
         final response = await _activeClient
             .post(
               url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authToken,
-              },
+              headers: _buildJsonHeaders(authToken),
               body: jsonEncode(request.toJson()),
             )
             .timeout(requestTimeout);
@@ -493,7 +509,7 @@ class ApiService {
           print('[ApiService] Error response: ${response.body}');
           // Server error - retry
           if (attempt < maxRetries - 1) {
-            await Future.delayed(retryDelay);
+            await Future.delayed(_retryBackoff(attempt));
             continue;
           }
           throw Exception('Failed to validate bank account: ${response.body}');
@@ -502,7 +518,7 @@ class ApiService {
         print('[ApiService] Network error: $e');
         // Network error - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Network error after $maxRetries attempts: $e');
@@ -510,7 +526,7 @@ class ApiService {
         print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
         // Timeout - retry
         if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
+          await Future.delayed(_retryBackoff(attempt));
           continue;
         }
         throw Exception('Request timeout after $maxRetries attempts: $e');

@@ -8,7 +8,8 @@ import 'package:creditscoring/services/api_service.dart'; // Adjust path if need
 void main() {
   setUpAll(() {
     dotenv.testLoad(fileInput: '''
-GCP_API_URL=https://credit-scoring-h7mv.onrender.com/api
+GCP_API_URL=https://swincredit.duckdns.org/api
+API_KEY=test-api-key
 VNPT_ACCESS_TOKEN=test-token
 ''');
   });
@@ -90,7 +91,7 @@ VNPT_ACCESS_TOKEN=test-token
       };
 
       final client = MockClient((request) async {
-        if (request.url.toString() == 'https://credit-scoring-h7mv.onrender.com/api/apply' && 
+        if (request.url.toString() == 'https://swincredit.duckdns.org/api/apply' && 
             request.method == 'POST') {
           return http.Response(jsonEncode(mockResponse), 200);
         }

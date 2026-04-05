@@ -391,7 +391,8 @@ flutter pub get
 Copy `.env_sample` to `.env` and fill in your values:
 
 ```env
-GCP_API_URL=https://<your-cloud-run-url>/api
+GCP_API_URL=https://swincredit.duckdns.org/api
+API_KEY=<your-backend-api-key-if-required>
 VNPT_ACCESS_TOKEN=<legacy-token-if-needed>
 ```
 
@@ -410,6 +411,7 @@ flutter run
 ### Credit Scoring API v2.0 (Two-Step Flow)
 
 All endpoints require **Firebase ID token** in the `Authorization: Bearer <token>` header.
+Some endpoints also require `X-API-Key`.
 
 #### Step 1 — Calculate Credit Limit
 

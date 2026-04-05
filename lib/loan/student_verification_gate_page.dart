@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../config/domain_map.dart';
+import '../services/student_email_verification_service.dart';
 import '../utils/app_localization.dart';
 import 'student_step_1_profile.dart';
 
@@ -15,10 +17,13 @@ class StudentVerificationGatePage extends StatefulWidget {
       _StudentVerificationGatePageState();
 }
 
-class _StudentVerificationGatePageState extends State<StudentVerificationGatePage> {
+class _StudentVerificationGatePageState
+    extends State<StudentVerificationGatePage> {
   final TextEditingController _emailController = TextEditingController();
+  final StudentEmailVerificationService _verificationService =
+      StudentEmailVerificationService();
 
-  StudentVerificationPhase _phase = StudentVerificationPhase.demo;
+  final StudentVerificationPhase _phase = StudentVerificationPhase.demo;
   bool _emailSent = false;
   bool _emailVerified = false;
   bool _legalConfirmed = false;
@@ -51,9 +56,11 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
     return normalized.substring(at + 1);
   }
 
-  void _sendEmail() {
-    final domain = _extractDomain(_emailController.text);
-    if (domain == null || !domain.endsWith('edu.vn') && !domain.endsWith('student.swin.edu.au')) {
+  Future<void> _sendEmail() async {
+    final normalizedEmail = _emailController.text.trim().toLowerCase();
+    final domain = _extractDomain(normalizedEmail);
+    if (domain == null ||
+        !domain.endsWith('edu.vn') && !domain.endsWith('student.swin.edu.au')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -68,27 +75,110 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
       return;
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.t(
+              'Please log in with your main account before verifying student email.',
+              'Vui lòng đăng nhập bằng tài khoản chính trước khi xác minh email sinh viên.',
+            ),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final mapped = universityDomains[domain];
+    try {
+      await _verificationService.sendVerificationEmail(
+        studentEmail: normalizedEmail,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _emailSent = true;
+        _mappedUniversity = mapped;
+        _emailVerified = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            mapped == null
+                ? context.t(
+                    'Verification email sent to $normalizedEmail. Please check your inbox and click the link.',
+                    'Email xác minh đã được gửi đến $normalizedEmail. Vui lòng kiểm tra hộp thư và bấm vào liên kết.',
+                  )
+                : context.t(
+                    'Verification email sent to $normalizedEmail. Please open the link in your mail.',
+                    'Email xác minh đã được gửi đến $normalizedEmail. Vui lòng mở liên kết trong email.',
+                  ),
+          ),
+          backgroundColor: const Color(0xFF2E7D32),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.t(
+              'Failed to send verification email: $e',
+              'Không gửi được email xác minh: $e',
+            ),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _checkEmailVerified() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.t(
+              'No verification session found. Tap Send Email first.',
+              'Không tìm thấy phiên xác minh. Hãy bấm Gửi Email trước.',
+            ),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final state = await _verificationService.getVerificationState();
+    if (!mounted) return;
+
+    final expectedEmail = _emailController.text.trim().toLowerCase();
+    final currentEmail = (state.studentEmail ?? '').trim().toLowerCase();
+    final verified = state.isVerified && currentEmail == expectedEmail;
+
     setState(() {
-      _emailSent = true;
-      _mappedUniversity = mapped;
-      _emailVerified = false;
+      _emailVerified = verified;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          mapped == null
+          verified
               ? context.t(
-                  'Email sent. Please check your inbox.',
-                  'Email đã được gửi. Vui lòng kiểm tra hộp thư.',
+                  'Email verified successfully.',
+                  'Email đã được xác minh thành công.',
                 )
               : context.t(
-                  'Verification email sent to your university address.',
-                  'Email xác minh đã được gửi đến địa chỉ email trường của bạn.',
+                  'Email is not verified yet. Open the verification link in your inbox, then tap Email Verified again.',
+                  'Email chưa được xác minh. Hãy mở link xác minh trong hộp thư, sau đó bấm Email đã được xác minh lần nữa.',
                 ),
         ),
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: verified ? const Color(0xFF2E7D32) : Colors.orange,
       ),
     );
   }
@@ -129,10 +219,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
       backgroundColor: const Color(0xFFF6F8FF),
       appBar: AppBar(
         title: Text(
-          context.t(
-            'Student Verification',
-            'Xác minh thông tin sinh viên',
-          ),
+          context.t('Student Verification', 'Xác minh thông tin sinh viên'),
         ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1A1F3F),
@@ -157,7 +244,10 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
-                        labelText: context.t('University email', 'Email trường'),
+                        labelText: context.t(
+                          'University email',
+                          'Email trường',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -173,15 +263,12 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                           child: Text(context.t('Send Email', 'Gửi Email')),
                         ),
                         OutlinedButton(
-                          onPressed: _emailSent
-                              ? () {
-                                  setState(() {
-                                    _emailVerified = true;
-                                  });
-                                }
-                              : null,
+                          onPressed: _emailSent ? _checkEmailVerified : null,
                           child: Text(
-                            context.t('Email Verified', 'Email đã được xác minh'),
+                            context.t(
+                              'Email Verified',
+                              'Email đã được xác minh',
+                            ),
                           ),
                         ),
                       ],
@@ -205,10 +292,7 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
               ),
               const SizedBox(height: 10),
               _SectionCard(
-                title: context.t(
-                  'Document Upload',
-                  'Tài liệu xác minh',
-                ),
+                title: context.t('Document Upload', 'Tài liệu xác minh'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -218,15 +302,24 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                         onPressed: () => _pickDocument(isStudentId: true),
                         icon: const Icon(Icons.badge_outlined),
                         label: Text(
-                          context.t('Upload Student ID', 'Tải lên thẻ sinh viên'),
+                          context.t(
+                            'Upload Student ID',
+                            'Tải lên thẻ sinh viên',
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       _studentCardUploaded
-                          ? context.t('Status: Uploaded', 'Trạng thái: Đã tải lên')
-                          : context.t('Status: Not uploaded', 'Trạng thái: Chưa tải lên'),
+                          ? context.t(
+                              'Status: Uploaded',
+                              'Trạng thái: Đã tải lên',
+                            )
+                          : context.t(
+                              'Status: Not uploaded',
+                              'Trạng thái: Chưa tải lên',
+                            ),
                       style: const TextStyle(fontSize: 12),
                     ),
                     const SizedBox(height: 10),
@@ -243,8 +336,14 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                     const SizedBox(height: 6),
                     Text(
                       _transcriptUploaded
-                          ? context.t('Status: Uploaded', 'Trạng thái: Đã tải lên')
-                          : context.t('Status: Not uploaded', 'Trạng thái: Chưa tải lên'),
+                          ? context.t(
+                              'Status: Uploaded',
+                              'Trạng thái: Đã tải lên',
+                            )
+                          : context.t(
+                              'Status: Not uploaded',
+                              'Trạng thái: Chưa tải lên',
+                            ),
                       style: const TextStyle(fontSize: 12),
                     ),
                     const SizedBox(height: 8),
@@ -253,7 +352,10 @@ class _StudentVerificationGatePageState extends State<StudentVerificationGatePag
                         'Upload is optional at Step 1 but required before disbursement (Step 5).',
                         'Tài liệu là tùy chọn ở Bước 1 nhưng bắt buộc trước giải ngân (Bước 5).',
                       ),
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
