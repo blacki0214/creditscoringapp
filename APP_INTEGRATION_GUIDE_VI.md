@@ -16,10 +16,6 @@ Khuyến nghị:
 - App client luôn gọi qua domain ở trên (không hardcode Cloud Run URL nội bộ).
 - Nếu triển khai fallback, chỉ dùng để giám sát nội bộ, không expose cho người dùng cuối.
 
-Biến môi trường khuyến nghị:
-- `API_BASE_URL=https://swincredit.duckdns.org/api`
-- `API_KEY=` nếu backend bật `X-API-Key`
-
 ## 3) Cơ chế xác thực
 Hiện có 2 lớp phổ biến trong backend:
 1. Firebase ID Token (Authorization Bearer)
@@ -115,10 +111,6 @@ Trước khi vào luồng apply/recalculate:
 1. Gọi GET /api/health
 2. Nếu không 200 -> bật maintenance banner nhẹ
 3. Cho phép user retry thủ công
-
-Gợi ý triển khai phía app:
-- Kiểm tra health ngay lúc splash/init app.
-- Nếu API down, vẫn cho app vào chế độ xem thông tin nhưng chặn các hành động submit mới.
 
 ## 9) Checklist QA trước release app
 1. /api/health trả 200 từ app thật

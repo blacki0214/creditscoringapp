@@ -26,11 +26,21 @@ class _StudentVerificationGatePageState
   final StudentVerificationPhase _phase = StudentVerificationPhase.demo;
   bool _emailSent = false;
   bool _emailVerified = false;
+  bool _isCheckingEmailVerification = false;
   bool _legalConfirmed = false;
   bool _studentCardUploaded = false;
   bool _transcriptUploaded = false;
 
   String? _mappedUniversity;
+
+  String _extractErrorMessage(Object error) {
+    final raw = error.toString();
+    const prefix = 'Exception: ';
+    if (raw.startsWith(prefix)) {
+      return raw.substring(prefix.length);
+    }
+    return raw;
+  }
 
   @override
   void dispose() {
@@ -138,6 +148,21 @@ class _StudentVerificationGatePageState
   }
 
   Future<void> _checkEmailVerified() async {
+    if (!_emailSent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.t(
+              'Please tap Send Email first.',
+              'Vui lòng bấm Gửi Email trước.',
+            ),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -154,33 +179,63 @@ class _StudentVerificationGatePageState
       return;
     }
 
-    final state = await _verificationService.getVerificationState();
-    if (!mounted) return;
-
-    final expectedEmail = _emailController.text.trim().toLowerCase();
-    final currentEmail = (state.studentEmail ?? '').trim().toLowerCase();
-    final verified = state.isVerified && currentEmail == expectedEmail;
+    if (_isCheckingEmailVerification) {
+      return;
+    }
 
     setState(() {
-      _emailVerified = verified;
+      _isCheckingEmailVerification = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          verified
-              ? context.t(
-                  'Email verified successfully.',
-                  'Email đã được xác minh thành công.',
-                )
-              : context.t(
-                  'Email is not verified yet. Open the verification link in your inbox, then tap Email Verified again.',
-                  'Email chưa được xác minh. Hãy mở link xác minh trong hộp thư, sau đó bấm Email đã được xác minh lần nữa.',
-                ),
+    try {
+      final state = await _verificationService.getVerificationState();
+      if (!mounted) return;
+
+      final expectedEmail = _emailController.text.trim().toLowerCase();
+      final currentEmail = (state.studentEmail ?? '').trim().toLowerCase();
+      final verified = state.isVerified && currentEmail == expectedEmail;
+
+      setState(() {
+        _emailVerified = verified;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            verified
+                ? context.t(
+                    'Email verified successfully.',
+                    'Email đã được xác minh thành công.',
+                  )
+                : context.t(
+                    'Email is not verified yet. Open the verification link in your inbox, then tap Email Verified again.',
+                    'Email chưa được xác minh. Hãy mở link xác minh trong hộp thư, sau đó bấm Email đã được xác minh lần nữa.',
+                  ),
+          ),
+          backgroundColor: verified ? const Color(0xFF2E7D32) : Colors.orange,
         ),
-        backgroundColor: verified ? const Color(0xFF2E7D32) : Colors.orange,
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final message = _extractErrorMessage(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.t(
+              message,
+              'Không thể kiểm tra trạng thái xác minh. Vui lòng thử lại.',
+            ),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingEmailVerification = false;
+        });
+      }
+    }
   }
 
   Future<void> _pickDocument({required bool isStudentId}) async {
@@ -253,26 +308,83 @@ class _StudentVerificationGatePageState
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        ElevatedButton(
-                          onPressed: _sendEmail,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4D4AF9),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(context.t('Send Email', 'Gửi Email')),
-                        ),
-                        OutlinedButton(
-                          onPressed: _emailSent ? _checkEmailVerified : null,
-                          child: Text(
-                            context.t(
-                              'Email Verified',
-                              'Email đã được xác minh',
+                        SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: _sendEmail,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4D4AF9),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                             ),
+                            child: Text(context.t('Send Email', 'Gửi Email')),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 40,
+                          child: OutlinedButton(
+                            onPressed:
+                                _emailVerified ? null : _checkEmailVerified,
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade400),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                            ),
+                            child: _isCheckingEmailVerification
+                                ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  )
+                                : Text(
+                                    context.t(
+                                      _emailVerified
+                                          ? 'Verified Successfully'
+                                          : 'Verify Email',
+                                      _emailVerified
+                                          ? 'Đã xác minh thành công'
+                                          : 'Xác minh Email',
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
                     ),
+                    if (_emailSent) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _emailVerified
+                            ? context.t(
+                                'Verification status: Verified successfully.',
+                                'Trạng thái xác minh: Đã xác minh thành công.',
+                              )
+                            : context.t(
+                                'Verification status: Waiting for email link click.',
+                                'Trạng thái xác minh: Đang chờ bấm liên kết trong email.',
+                              ),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _emailVerified
+                              ? const Color(0xFF2E7D32)
+                              : Colors.grey.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                     if (_mappedUniversity != null) ...[
                       const SizedBox(height: 8),
                       Text(

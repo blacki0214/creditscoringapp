@@ -119,22 +119,39 @@ class StudentEmailVerificationService {
       return const StudentEmailVerificationState(isVerified: false);
     }
 
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
+    try {
+      final verificationDoc = await FirebaseFirestore.instance
+          .collection('studentEmailVerification')
+          .doc(user.uid)
+          .get(const GetOptions(source: Source.server));
 
-    if (!doc.exists) {
-      return const StudentEmailVerificationState(isVerified: false);
+      if (!verificationDoc.exists) {
+        return const StudentEmailVerificationState(isVerified: false);
+      }
+
+      final data = verificationDoc.data() ?? {};
+      final status = data['status']?.toString().toLowerCase();
+      final email = data['studentEmail']?.toString();
+
+      return StudentEmailVerificationState(
+        isVerified: status == 'verified',
+        studentEmail: email,
+      );
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        throw Exception(
+          'Permission denied when reading verification status. Please check Firestore rules for studentEmailVerification/{uid}.',
+        );
+      }
+      if (e.code == 'unauthenticated') {
+        throw Exception('Session expired. Please sign in again.');
+      }
+      if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        throw Exception(
+          'Cannot reach verification server right now. Please check your network and try again.',
+        );
+      }
+      throw Exception('Verification check failed: ${e.code}');
     }
-
-    final data = doc.data() ?? {};
-    final isVerified = data['studentEmailVerified'] == true;
-    final email = data['studentEmail']?.toString();
-
-    return StudentEmailVerificationState(
-      isVerified: isVerified,
-      studentEmail: email,
-    );
   }
 }
