@@ -51,7 +51,7 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   Widget build(BuildContext context) {
     final title = context.t('Payment Page', 'Trang thanh toán');
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: ' VND');
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -88,7 +88,7 @@ class StudentHubPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.t('Empowering your', 'Nang tam hanh trinh'),
+                      context.t('Empowering your', 'Nang tầm hành trình'),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -96,7 +96,7 @@ class StudentHubPage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      context.t('academic journey.', 'hoc tap.'),
+                      context.t('academic journey.', 'học tập.'),
                       style: const TextStyle(
                         fontSize: 44,
                         height: 0.95,
@@ -109,7 +109,7 @@ class StudentHubPage extends StatelessWidget {
                     Text(
                       context.t(
                         'As part of the Swin Credit suite, our student loans are engineered for the modern scholar with transparent terms.',
-                        'Thuoc bo san pham Swin Credit, goi vay sinh vien duoc toi uu cho hanh trinh hoc tap hien dai.',
+                        'Thuộc bộ sản phẩm Swin Credit, gói vay sinh viên được tối ưu cho hành trình học tập hiện đại với điều khoản minh bạch.',
                       ),
                       style: const TextStyle(
                         fontSize: 14,
@@ -119,7 +119,7 @@ class StudentHubPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     _PrimaryActionButton(
-                      label: context.t('Apply Now', 'Dang ky ngay'),
+                      label: context.t('Apply Now', 'Đăng ký ngay'),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -131,7 +131,7 @@ class StudentHubPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     _SecondaryActionButton(
-                      label: context.t('Explore Suite', 'Kham pha them'),
+                      label: context.t('Explore Suite', 'Khám phá bộ giải pháp'),
                       onTap: () {},
                     ),
                   ],
@@ -150,7 +150,7 @@ class StudentHubPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.t('The Swin Credit Advantage', 'Loi the Swin Credit'),
+                      context.t('The Swin Credit Advantage', 'Lợi thế Swin Credit'),
                       style: const TextStyle(
                         fontSize: 22,
                         height: 1.1,
@@ -159,9 +159,12 @@ class StudentHubPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Sophisticated financial tools tailored for student success.',
-                      style: TextStyle(
+                    Text(
+                      context.t(
+                        'Sophisticated financial tools tailored for student success.',
+                        'Công cụ tài chính hiện đại được thiết kế riêng để hỗ trợ thành công học tập.',
+                      ),
+                      style: const TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 13,
                         height: 1.4,

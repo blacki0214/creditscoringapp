@@ -36,10 +36,6 @@ void main() async {
   // Initialize local storage
   await LocalStorageService.init();
 
-  if (kDebugMode) {
-    await LocalStorageService.clearTosAccepted();
-  }
-
   // Load environment variables
   await dotenv.load(fileName: ".env");
 

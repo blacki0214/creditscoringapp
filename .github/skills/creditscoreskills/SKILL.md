@@ -1,4 +1,3 @@
-
 Thông tin tổng quan do AI tạo
 Tài liệu tập trung vào chi tiết kỹ thuật API eKYC VNPT, bao gồm các endpoint upload ảnh và bóc tách thông tin giấy tờ.
 

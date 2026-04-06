@@ -10,6 +10,7 @@ import 'signup_page.dart';
 import 'forgot_password.dart';
 import 'phone_login_page.dart';
 import 'termOfService.dart';
+import '../settings/privacy_policy_page.dart';
 import '../home/main_shell.dart';
 import '../utils/app_localization.dart';
 
@@ -253,7 +254,7 @@ class _LoginPageState extends State<LoginPage> {
             ],
             decoration: InputDecoration(
               labelText: context.t('Email Address', 'Địa chỉ email'),
-              hintText: context.t('name@company.com', 'name@company.com'),
+              hintText: context.t('name@company.com', 'ten@congty.com'),
               prefixIcon: const Icon(Icons.mail_outline, size: 20),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -685,28 +686,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: GestureDetector(
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFF1F5F9),
-                  ),
-                  child: const Icon(
-                    Icons.person_outline,
-                    color: Color(0xFF475569),
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        actions: const [],
       ),
       body: Stack(
         children: [
@@ -801,7 +781,7 @@ class _LoginPageState extends State<LoginPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const TermOfServicePage(),
+                                  builder: (_) => const PrivacyPolicyPage(),
                                 ),
                               );
                             },
@@ -836,21 +816,6 @@ class _LoginPageState extends State<LoginPage> {
                                 'Terms of Service',
                                 'Điều khoản dịch vụ',
                               ),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 14,
-                            color: const Color(0xFFE2E8F0),
-                          ),
-                          GestureDetector(
-                            child: Text(
-                              context.t('Help Center', 'Trung tâm trợ giúp'),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF94A3B8),

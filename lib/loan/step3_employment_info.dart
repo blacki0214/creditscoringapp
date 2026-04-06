@@ -624,21 +624,32 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4D4AF9),
                         foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 4,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 16,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        context.t(
-                          'Next: Contact References',
-                          'Tiếp: Liên hệ tham chiếu',
-                        ),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            context.t(
+                              'Next: Contact References',
+                              'Tiếp: Liên hệ tham chiếu',
+                            ),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 18),
+                        ],
                       ),
                     ),
                   ),

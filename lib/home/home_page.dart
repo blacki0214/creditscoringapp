@@ -895,16 +895,6 @@ class _HomePageState extends State<HomePage> {
               color: Color(0xFF1F2937),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            context.t('UPDATED 2 HOURS AGO', 'CẬP NHẬT 2 GIỜ TRƯỚC'),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF94A3B8),
-              letterSpacing: 0.8,
-            ),
-          ),
           const SizedBox(height: 16),
           SizedBox(
             width: 250,
@@ -916,7 +906,7 @@ class _HomePageState extends State<HomePage> {
               ),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 48),
+                  padding: const EdgeInsets.only(top: 52),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -928,7 +918,7 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -1043,7 +1033,7 @@ class _HomePageState extends State<HomePage> {
     final loanViewModel = context.watch<LoanViewModel>();
     final currencyFormat = NumberFormat.currency(
       locale: 'vi_VN',
-      symbol: ' VND',
+      symbol: 'đ',
     );
     final activeOffer = loanViewModel.currentOffer;
     final activeStatus = loanViewModel.applicationStatus;
@@ -1527,7 +1517,7 @@ class _HomePageState extends State<HomePage> {
     );
     final currencyFormat = NumberFormat.currency(
       locale: 'vi_VN',
-      symbol: ' VND',
+      symbol: 'đ',
     );
 
     if (applicationHistory.isEmpty) {
@@ -1740,7 +1730,7 @@ class _HomePageState extends State<HomePage> {
     final viewModel = context.watch<HomeViewModel>();
     final currencyFormat = NumberFormat.currency(
       locale: 'vi_VN',
-      symbol: ' VND',
+      symbol: 'đ',
     );
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -3092,7 +3082,7 @@ String _getLocalizedNotificationTitle(
     case 'step3_completed':
       return context.t('Step 3 Completed', 'Hoàn tất Bước 3');
     case 'step4_completed':
-      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');
+      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');                                      
     case 'step5_completed':
       return context.t('Step 5 Completed', 'Hoàn tất Bước 5');
     case 'loan_approved':
@@ -3130,7 +3120,7 @@ String _getLocalizedNotificationBody(
     final amount = rawAmount is num ? rawAmount.toDouble() : null;
     final format = NumberFormat.currency(
       locale: isVietnamese ? 'vi_VN' : 'en_US',
-      symbol: ' VND',
+      symbol: 'đ',
       decimalDigits: 0,
     );
     if (amount != null) {
@@ -3208,7 +3198,7 @@ String _getLocalizedNotificationBody(
     final amount = rawAmount is num ? rawAmount.toDouble() : null;
     final format = NumberFormat.currency(
       locale: isVietnamese ? 'vi_VN' : 'en_US',
-      symbol: ' VND',
+      symbol: 'đ',
       decimalDigits: 0,
     );
     if (amount != null) {
@@ -3236,9 +3226,9 @@ String _getLocalizedNotificationBody(
 
   return normalizeMojibakeText(
     notification.body
-        .replaceAll('â‚«', ' VND')
-        .replaceAll('₫', ' VND')
-        .replaceAll('�,�', ' VND')
+        .replaceAll('â‚«', 'đ')
+        .replaceAll('₫', 'đ')
+        .replaceAll('�,�', 'đ')
         .replaceAll('�?', ''),
   );
 }

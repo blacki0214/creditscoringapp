@@ -108,7 +108,7 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
-                        suffixText: 'VND',
+                        suffixText: 'đ',
                       ),
                       onChanged: (value) {
                         final parsed = int.tryParse(value);
