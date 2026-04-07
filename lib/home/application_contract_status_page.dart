@@ -76,7 +76,6 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
 
     final dateTimePattern = isVietnamese ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy HH:mm';
     final datePattern = isVietnamese ? 'dd/MM/yyyy' : 'dd/MM/yyyy';
-    final monthYearPattern = isVietnamese ? 'MM/yyyy' : 'MMM yyyy';
     final naText = context.t('N/A', 'Không có');
 
     return Scaffold(
@@ -89,7 +88,7 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          context.t('Contract Status', 'Trạng thái hợp đồng'),
+          context.t('Payment', 'Thanh toán'),
           style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
@@ -199,55 +198,7 @@ class _ApplicationContractStatusPageState extends State<ApplicationContractStatu
               if (isApproved && tenorMonths != null && monthlyPayment != null) ...[
                 const SizedBox(height: 12),
                 _buildCard(
-                  title: context.t('Installment Schedule', 'Lịch trả góp'),
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F7FA),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                context.t(
-                                  'Total Installments: $tenorMonths',
-                                  'Tổng số kỳ: $tenorMonths',
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1A1F3F),
-                                ),
-                              ),
-                              Text(
-                                currencyFormat.format(monthlyPayment),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF4CAF50),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            context.t(
-                              'Monthly payment of ${currencyFormat.format(monthlyPayment)} starts from ${firstDueDate != null ? DateFormat('MMM yyyy').format(firstDueDate) : ""}',
-                              'Khoản trả hàng tháng ${currencyFormat.format(monthlyPayment)} bắt đầu từ ${firstDueDate != null ? DateFormat(monthYearPattern).format(firstDueDate) : ""}',
-                            ),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF667085),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
                     if (!_paymentSuccessThisMonth)
                       SizedBox(
                         width: double.infinity,

@@ -830,13 +830,12 @@ class _HomePageState extends State<HomePage> {
           return Expanded(
             child: GestureDetector(
               onTap: () {
+                if (_selectedHomeTab == index) return;
                 setState(() {
                   _selectedHomeTab = index;
                 });
               },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
+              child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.white : Colors.transparent,

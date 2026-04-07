@@ -12,10 +12,8 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
+class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
-  int _previousIndex = 0;
-  late AnimationController _animationController;
 
   late final List<Widget> _pages;
 
@@ -32,18 +30,6 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
       const StudentHubPage(),
       const SettingsPage(),
     ];
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    // Keep Home highlighted on first load before any tap animation runs.
-    _animationController.value = 1.0;
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   @override
@@ -136,11 +122,10 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
 
   void _onNavItemTap(int index) {
     if (!mounted) return;
+    if (_selectedIndex == index) return;
     setState(() {
-      _previousIndex = _selectedIndex;
       _selectedIndex = index;
     });
-    _animationController.forward(from: 0.0);
   }
 
   Widget _buildNavItem(
@@ -151,66 +136,50 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
     String label,
   ) {
     final isCurrentlySelected = _selectedIndex == index;
-    final wasPreviouslySelected = _previousIndex == index;
-    final inactiveColor = Colors.grey.shade600;
+    final inactiveColor = Colors.grey.shade500;
     const activeColor = Color(0xFF4D4AF9);
+    final iconColor = isCurrentlySelected ? activeColor : inactiveColor;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        _onNavItemTap(index);
-      },
-      child: SizedBox(
-        height: 52,
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            double animationValue;
-
-            if (isCurrentlySelected) {
-              animationValue = _animationController.value;
-            } else if (wasPreviouslySelected) {
-              animationValue = 1.0 - _animationController.value;
-            } else {
-              animationValue = 0.0;
-            }
-
-            final iconColor = Color.lerp(
-              inactiveColor,
-              activeColor,
-              animationValue,
-            )!;
-
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: isCurrentlySelected
-                    ? const Color(0xFFEEF0FF)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: iconColor, size: iconSize),
-                  const SizedBox(height: 2),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: iconColor,
+    return SizedBox(
+      height: 52,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          color: isCurrentlySelected
+              ? const Color(0xFFEEF0FF)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _onNavItemTap(index),
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, color: iconColor, size: iconSize),
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: iconColor,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              );
-          },
+            ),
+          ),
         ),
       ),
     );
