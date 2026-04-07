@@ -129,11 +129,6 @@ class StudentHubPage extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(height: 10),
-                    _SecondaryActionButton(
-                      label: context.t('Explore Suite', 'Khám phá bộ giải pháp'),
-                      onTap: () {},
-                    ),
                   ],
                 ),
               ),
@@ -171,25 +166,34 @@ class StudentHubPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const _AdvantageTile(
+                    _AdvantageTile(
                       icon: Icons.wallet_outlined,
-                      title: 'Swin SmartPay',
-                      description:
+                      enTitle: 'Swin SmartPay',
+                      viTitle: 'Swin SmartPay',
+                      enDescription:
                           'Intelligent repayment structures that adapt to your early-career income.',
+                      viDescription:
+                        'Cấu trúc trả nợ linh hoạt, thích ứng với mức thu nhập giai đoạn đầu sự nghiệp của bạn.',
                     ),
                     const SizedBox(height: 12),
-                    const _AdvantageTile(
+                    _AdvantageTile(
                       icon: Icons.lock_outline,
-                      title: 'Zero-Fee Ethics',
-                      description:
+                      enTitle: 'Zero-Fee Ethics',
+                      viTitle: 'Nguyên tắc không phí',
+                      enDescription:
                           'No origination fees, no late penalties. We succeed when you succeed.',
+                      viDescription:
+                        'Không phí khởi tạo, không phí phạt trễ hạn. Chúng tôi thành công khi bạn thành công.',
                     ),
                     const SizedBox(height: 12),
-                    const _AdvantageTile(
+                    _AdvantageTile(
                       icon: Icons.insights_outlined,
-                      title: 'Atelier Mentorship',
-                      description:
+                      enTitle: 'Atelier Mentorship',
+                      viTitle: 'Cố vấn Atelier',
+                      enDescription:
                           '1-on-1 financial design sessions to help build your post-grad wealth strategy.',
+                      viDescription:
+                        'Các buổi tư vấn tài chính 1-1 giúp xây dựng chiến lược tài sản sau tốt nghiệp.',
                     ),
                   ],
                 ),
@@ -204,21 +208,37 @@ class StudentHubPage extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _StatItem(value: '\$2.4B', label: 'TOTAL FUNDING'),
-                        _StatItem(value: '4.9/5', label: 'TRUST SCORE'),
+                        _StatItem(
+                          value: '\$2.4B',
+                          enLabel: 'TOTAL FUNDING',
+                          viLabel: 'TỔNG VỐN TÀI TRỢ',
+                        ),
+                        _StatItem(
+                          value: '4.9/5',
+                          enLabel: 'TRUST SCORE',
+                          viLabel: 'ĐIỂM TÍN NHIỆM',
+                        ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _StatItem(value: '120K+', label: 'SCHOLARS SUPPORTED'),
-                        _StatItem(value: '0%', label: 'HIDDEN COSTS'),
+                        _StatItem(
+                          value: '120K+',
+                          enLabel: 'SCHOLARS SUPPORTED',
+                          viLabel: 'SINH VIÊN ĐƯỢC HỖ TRỢ',
+                        ),
+                        _StatItem(
+                          value: '0%',
+                          enLabel: 'HIDDEN COSTS',
+                          viLabel: 'CHI PHÍ ẨN',
+                        ),
                       ],
                     ),
                   ],
@@ -290,13 +310,17 @@ class _SecondaryActionButton extends StatelessWidget {
 class _AdvantageTile extends StatelessWidget {
   const _AdvantageTile({
     required this.icon,
-    required this.title,
-    required this.description,
+    required this.enTitle,
+    required this.viTitle,
+    required this.enDescription,
+    required this.viDescription,
   });
 
   final IconData icon;
-  final String title;
-  final String description;
+  final String enTitle;
+  final String viTitle;
+  final String enDescription;
+  final String viDescription;
 
   @override
   Widget build(BuildContext context) {
@@ -325,7 +349,7 @@ class _AdvantageTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  context.t(enTitle, viTitle),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -334,7 +358,7 @@ class _AdvantageTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  description,
+                  context.t(enDescription, viDescription),
                   style: const TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 12,
@@ -351,10 +375,15 @@ class _AdvantageTile extends StatelessWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({required this.value, required this.label});
+  const _StatItem({
+    required this.value,
+    required this.enLabel,
+    required this.viLabel,
+  });
 
   final String value;
-  final String label;
+  final String enLabel;
+  final String viLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -372,7 +401,7 @@ class _StatItem extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          label,
+          context.t(enLabel, viLabel),
           style: const TextStyle(
             color: Color(0xFFB7C1E9),
             fontSize: 10,

@@ -367,28 +367,19 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildLanguageToggle(LanguageViewModel languageViewModel) {
-    return ToggleButtons(
-      borderRadius: BorderRadius.circular(10),
-      constraints: const BoxConstraints(minHeight: 32, minWidth: 50),
-      isSelected: [
-        !languageViewModel.isVietnamese,
-        languageViewModel.isVietnamese,
-      ],
-      onPressed: (index) {
-        if (index == 0) {
-          languageViewModel.setLanguage('en');
-          return;
-        }
-        languageViewModel.setLanguage('vi');
-      },
-      children: const [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text('ENG'),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LanguageChip(
+          label: 'ENG',
+          selected: !languageViewModel.isVietnamese,
+          onTap: () => languageViewModel.setLanguage('en'),
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text('VN'),
+        const SizedBox(width: 6),
+        _LanguageChip(
+          label: 'VN',
+          selected: languageViewModel.isVietnamese,
+          onTap: () => languageViewModel.setLanguage('vi'),
         ),
       ],
     );
@@ -459,6 +450,49 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         );
       },
+    );
+  }
+}
+
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 32, minWidth: 50),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8EBFF) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFF4D4AF9)
+                : const Color(0xFFDDE3FF),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: selected
+                ? const Color(0xFF2D2AA8)
+                : const Color(0xFF1A1F3F),
+          ),
+        ),
+      ),
     );
   }
 }

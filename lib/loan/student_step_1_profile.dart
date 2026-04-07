@@ -197,27 +197,26 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
               const SizedBox(height: 10),
               _SectionCard(
                 title: context.t('Program level', 'Bậc học'),
-                child: ToggleButtons(
-                  isSelected: [
-                    vm.programLevel == 'undergraduate',
-                    vm.programLevel == 'graduate',
-                  ],
-                  borderRadius: BorderRadius.circular(12),
-                  onPressed: (index) {
-                    vm.updateProfile(
-                      selectedProgramLevel: index == 0
-                          ? 'undergraduate'
-                          : 'graduate',
-                    );
-                  },
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14),
-                      child: Text('University'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _ProgramLevelChip(
+                        label: context.t('University', 'Đại học'),
+                        selected: vm.programLevel == 'undergraduate',
+                        onTap: () => vm.updateProfile(
+                          selectedProgramLevel: 'undergraduate',
+                        ),
+                      ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14),
-                      child: Text('Graduate'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ProgramLevelChip(
+                        label: context.t('Graduate', 'Sau đại học'),
+                        selected: vm.programLevel == 'graduate',
+                        onTap: () => vm.updateProfile(
+                          selectedProgramLevel: 'graduate',
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -274,6 +273,48 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgramLevelChip extends StatelessWidget {
+  const _ProgramLevelChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8EBFF) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFF4D4AF9)
+                : const Color(0xFFDDE3FF),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: selected
+                ? const Color(0xFF2D2AA8)
+                : const Color(0xFF1A1F3F),
           ),
         ),
       ),
