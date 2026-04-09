@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../config/app_environment.dart';
 import '../services/local_storage_service.dart';
@@ -7,6 +8,11 @@ import '../utils/app_localization.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step1_id_capture.dart';
 import 'step2_personal_info.dart';
+import 'step3_personal_info.dart';
+import 'step4_offer_calculator.dart';
+import 'step5_contractreview.dart';
+import 'step6_disbursement.dart';
+import 'processing_page.dart';
 
 class LoanApplicationPage extends StatefulWidget {
   const LoanApplicationPage({super.key});
@@ -47,6 +53,53 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
     );
   }
 
+  /// Routes to the appropriate step based on the application progress
+  void _routeToCurrentStep(LoanViewModel viewModel) {
+    final currentStep = viewModel.getCurrentStep;
+
+    // Determine which page to navigate to based on current step
+    final Widget targetPage = _getPageForStep(currentStep, viewModel);
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => targetPage));
+  }
+
+  /// Returns the appropriate page widget for a given step number
+  Widget _getPageForStep(int step, LoanViewModel viewModel) {
+    switch (step) {
+      case 1:
+        return const Step1IDCapturePage();
+      case 2:
+        return const Step2PersonalInfoPage();
+      case 3:
+        return const Step3PersonalInfoPage();
+      case 4:
+        // For step 4, if offer doesn't exist yet, go to processing
+        // Otherwise go to offer calculator
+        if (viewModel.currentOffer != null) {
+          return const Step4OfferCalculatorPage();
+        } else {
+          return const ProcessingPage();
+        }
+      case 5:
+        // Get loan details from current offer
+        final offer = viewModel.currentOffer;
+        if (offer != null) {
+          return Step5ContractReviewPage(
+            loanAmount: offer['loanAmountVnd'] as double? ?? 0.0,
+            tenor: offer['loanTermMonths'] as int? ?? 12,
+            downPayment: offer['downPayment'] as double? ?? 0.0,
+            loanPurpose: offer['loanPurpose'] as String? ?? 'PERSONAL',
+          );
+        }
+        return const ProcessingPage();
+      case 6:
+        return const Step6DisbursementPage();
+      default:
+        // All steps completed, show the overview again
+        return const LoanApplicationPage();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,14 +128,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.t(
-                      'Complete the following steps to apply for your loan',
-                      'Hoàn tất các bước sau để nộp đơn vay',
-                    ),
-                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: ListView(
                       children: [
@@ -180,21 +226,44 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                             onPressed: () async {
                               if (AppEnvironment.shouldSkipEkyc(
                                 hasCompletedEkyc:
-                                    LocalStorageService.hasCompletedEkyc(),
+                                    LocalStorageService.hasCompletedEkyc(
+                                      userId: FirebaseAuth
+                                          .instance
+                                          .currentUser
+                                          ?.uid,
+                                    ),
                                 isTestAccountMode:
                                     LocalStorageService.isTestAccountMode(),
                               )) {
                                 viewModel.applySavedEkycPrefill();
                                 if (!viewModel.step1Completed) {
-                                  viewModel.completeStep1();
+                                  viewModel.markStep1CompletedLocalOnly();
                                 }
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const Step2PersonalInfoPage(),
-                                  ),
-                                );
+
+                                // Route to the appropriate step based on progress
+                                // If there's an active application, use getCurrentStep
+                                if (viewModel.hasActiveApplication) {
+                                  _routeToCurrentStep(viewModel);
+                                } else if (viewModel.hasCompletedOfferHistory) {
+                                  viewModel
+                                      .prepareReturningApplicantForNewLoan();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const Step3PersonalInfoPage(),
+                                    ),
+                                  );
+                                } else {
+                                  // No active application, go to Step 2 (next logical step after eKYC)
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const Step2PersonalInfoPage(),
+                                    ),
+                                  );
+                                }
                                 return;
                               }
 
@@ -220,22 +289,8 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                                 return;
                               }
 
-                              if (!viewModel.step1Completed) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const Step1IDCapturePage(),
-                                  ),
-                                );
-                              } else if (!viewModel.step2Completed) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const Step2PersonalInfoPage(),
-                                  ),
-                                );
-                              }
+                              // Route to the appropriate step based on application progress
+                              _routeToCurrentStep(viewModel);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF4D4AF9),

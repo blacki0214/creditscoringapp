@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'local_storage_service.dart';
 
@@ -33,16 +34,17 @@ class TestAccountService {
 
   static Future<void> applyLoginMode(String? email) async {
     final shouldEnableTestMode = isTestAccountEmail(email);
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (shouldEnableTestMode) {
       await LocalStorageService.setTestAccountMode(true);
-      await LocalStorageService.markEkycCompleted();
+      await LocalStorageService.markEkycCompleted(userId: userId);
       await LocalStorageService.saveEkycPrefill({
         'fullName': _defaultPrefillName,
         'phoneNumber': _defaultPrefillPhone,
         'idNumber': _defaultPrefillIdNumber,
         'address': _defaultPrefillAddress,
-      });
+      }, userId: userId);
       return;
     }
 
@@ -51,18 +53,19 @@ class TestAccountService {
 
     // Ensure test bypass does not leak to normal users on shared devices.
     if (wasTestMode) {
-      await LocalStorageService.clearEkycCompletion();
-      await LocalStorageService.clearEkycPrefill();
+      await LocalStorageService.clearEkycCompletion(userId: userId);
+      await LocalStorageService.clearEkycPrefill(userId: userId);
     }
   }
 
   static Future<void> clearOnSignOut() async {
     final wasTestMode = LocalStorageService.isTestAccountMode();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
     await LocalStorageService.clearTestAccountMode();
 
     if (wasTestMode) {
-      await LocalStorageService.clearEkycCompletion();
-      await LocalStorageService.clearEkycPrefill();
+      await LocalStorageService.clearEkycCompletion(userId: userId);
+      await LocalStorageService.clearEkycPrefill(userId: userId);
     }
   }
 }

@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import '../models/bank_account_validation_model.dart';
 
 // ===== Two-Step API Flow Models (API v2.0) =====
 
@@ -221,161 +223,387 @@ class LoanOfferResponse {
   }
 }
 
+class ApiServiceException implements Exception {
+  final String message;
+  final int? statusCode;
+  final bool retryable;
+
+  ApiServiceException(
+    this.message, {
+    this.statusCode,
+    this.retryable = false,
+  });
+
+  @override
+  String toString() {
+    final code = statusCode == null ? '' : ' (status: $statusCode)';
+    return 'ApiServiceException$code: $message';
+  }
+}
+
 class ApiService {
-  /// Reads the GCP Cloud Run base URL from .env at runtime.
-  /// Falls back to the old Render URL if env var is missing.
-  static String get baseUrl =>
-      dotenv.env['GCP_API_URL'] ?? 'https://credit-scoring-h7mv.onrender.com/api';
-  
+  static const String _apiKeyStorageKey = 'api_key';
+
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
+  /// Reads the production API base URL from .env at runtime.
+  /// Prefers the guide's `API_BASE_URL`, then falls back to `GCP_API_URL`.
+  static String get baseUrl {
+    final configuredUrl = dotenv.env['API_BASE_URL'] ?? dotenv.env['GCP_API_URL'];
+    return _normalizeBaseUrl(
+      configuredUrl ?? 'https://swincredit.duckdns.org/api',
+    );
+  }
+
   // Singleton HTTP client to prevent memory leaks
   static final http.Client _sharedClient = http.Client();
   final http.Client? _client;
 
-  // Timeout configuration (matching Python demo's timeout=5)
-  static const Duration requestTimeout = Duration(seconds: 30);
-  static const int maxRetries = 3;
-  static const Duration retryDelay = Duration(seconds: 2);
+  // Network behavior based on APP_INTEGRATION_GUIDE_VI.
+  static const Duration connectTimeout = Duration(seconds: 5);
+  static const Duration requestTimeout = Duration(seconds: 20);
+  static const int maxRetries = 2;
+  static const Duration baseRetryDelay = Duration(milliseconds: 300);
+  static const Set<int> _retryableStatusCodes = {429, 500, 502, 503, 504};
+  static const Set<int> _nonRetryableStatusCodes = {400, 401, 403, 404, 422};
 
   ApiService({http.Client? client}) : _client = client;
 
   // Get the client to use (shared singleton or injected for testing)
   http.Client get _activeClient => _client ?? _sharedClient;
 
+  static String _normalizeBaseUrl(String url) {
+    return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+  }
+
   /// Gets a fresh Firebase ID token for the current signed-in user.
   /// forceRefresh:true ensures stale tokens (> 1h) are renewed automatically.
   static Future<String> _getAuthToken() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('User not authenticated — please sign in first');
+    if (user == null)
+      throw Exception('User not authenticated — please sign in first');
     final token = await user.getIdToken(true); // forceRefresh
     return 'Bearer $token';
+  }
+
+  static Future<String?> _getApiKey() async {
+    final secureKey = await _secureStorage.read(key: _apiKeyStorageKey);
+    if (secureKey != null && secureKey.isNotEmpty) {
+      return secureKey;
+    }
+
+    final envKey = dotenv.env['API_KEY'];
+    if (envKey != null && envKey.isNotEmpty) {
+      return envKey;
+    }
+
+    return null;
+  }
+
+  static Future<void> saveApiKey(String apiKey) async {
+    if (apiKey.trim().isEmpty) {
+      throw ApiServiceException('API key cannot be empty');
+    }
+
+    await _secureStorage.write(key: _apiKeyStorageKey, value: apiKey.trim());
+  }
+
+  static Future<void> clearApiKey() async {
+    await _secureStorage.delete(key: _apiKeyStorageKey);
+  }
+
+  Future<Map<String, String>> _buildHeaders({
+    bool includeAuthToken = true,
+    bool includeApiKey = true,
+  }) async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    if (includeAuthToken) {
+      headers['Authorization'] = await _getAuthToken();
+    }
+
+    if (includeApiKey) {
+      final apiKey = await _getApiKey();
+      if (apiKey != null && apiKey.isNotEmpty) {
+        headers['X-API-Key'] = apiKey;
+      }
+    }
+
+    return headers;
+  }
+
+  static Duration _retryBackoff(int attempt) {
+    return attempt == 0
+        ? baseRetryDelay
+        : Duration(milliseconds: baseRetryDelay.inMilliseconds * 3);
+  }
+
+  static bool _isRetryableStatusCode(int statusCode) {
+    return _retryableStatusCodes.contains(statusCode) ||
+        (statusCode >= 500 && statusCode < 600);
+  }
+
+  Future<http.Response> _postJsonWithRetry(
+    Uri url,
+    Map<String, dynamic> body, {
+    required bool includeAuthToken,
+    required bool includeApiKey,
+    required String operationName,
+    Map<String, String>? extraHeaders,
+  }) async {
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          print('[ApiService] Retry attempt $attempt/$maxRetries for $operationName');
+        }
+
+        final startTime = DateTime.now();
+        final response = await _activeClient
+            .post(
+              url,
+              headers: {
+                ...await _buildHeaders(
+                includeAuthToken: includeAuthToken,
+                includeApiKey: includeApiKey,
+              ),
+                ...?extraHeaders,
+              },
+              body: jsonEncode(body),
+            )
+            .timeout(requestTimeout);
+
+        final duration = DateTime.now().difference(startTime);
+        print(
+          '[ApiService] $operationName completed in ${duration.inMilliseconds}ms, status: ${response.statusCode}',
+        );
+
+        if (response.statusCode == 200) {
+          return response;
+        }
+
+        if (_nonRetryableStatusCodes.contains(response.statusCode)) {
+          throw ApiServiceException(
+            response.body.isNotEmpty
+                ? response.body
+                : 'Request failed with status ${response.statusCode}',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (attempt < maxRetries - 1 && _isRetryableStatusCode(response.statusCode)) {
+          print('[ApiService] Retryable status ${response.statusCode} from $operationName');
+          await Future.delayed(_retryBackoff(attempt));
+          continue;
+        }
+
+        throw ApiServiceException(
+          response.body.isNotEmpty
+              ? response.body
+              : 'Request failed with status ${response.statusCode}',
+          statusCode: response.statusCode,
+          retryable: _isRetryableStatusCode(response.statusCode),
+        );
+      } on http.ClientException catch (e) {
+        print('[ApiService] Network error during $operationName: $e');
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(_retryBackoff(attempt));
+          continue;
+        }
+        throw ApiServiceException(
+          'Network error after $maxRetries attempts: $e',
+          retryable: true,
+        );
+      } on TimeoutException catch (e) {
+        print('[ApiService] Timeout during $operationName after ${requestTimeout.inSeconds}s');
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(_retryBackoff(attempt));
+          continue;
+        }
+        throw ApiServiceException(
+          'Request timeout after $maxRetries attempts: $e',
+          retryable: true,
+        );
+      }
+    }
+
+    throw ApiServiceException('Failed to complete $operationName after $maxRetries attempts');
+  }
+
+  Future<http.Response> _getWithRetry(
+    Uri url, {
+    required bool includeAuthToken,
+    required bool includeApiKey,
+    required String operationName,
+    Duration? timeout,
+  }) async {
+    final effectiveTimeout = timeout ?? requestTimeout;
+
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          print('[ApiService] Retry attempt $attempt/$maxRetries for $operationName');
+        }
+
+        final startTime = DateTime.now();
+        final response = await _activeClient
+            .get(
+              url,
+              headers: await _buildHeaders(
+                includeAuthToken: includeAuthToken,
+                includeApiKey: includeApiKey,
+              ),
+            )
+            .timeout(effectiveTimeout);
+
+        final duration = DateTime.now().difference(startTime);
+        print(
+          '[ApiService] $operationName completed in ${duration.inMilliseconds}ms, status: ${response.statusCode}',
+        );
+
+        if (response.statusCode == 200) {
+          return response;
+        }
+
+        if (_nonRetryableStatusCodes.contains(response.statusCode)) {
+          throw ApiServiceException(
+            response.body.isNotEmpty
+                ? response.body
+                : 'Request failed with status ${response.statusCode}',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (attempt < maxRetries - 1 && _isRetryableStatusCode(response.statusCode)) {
+          print('[ApiService] Retryable status ${response.statusCode} from $operationName');
+          await Future.delayed(_retryBackoff(attempt));
+          continue;
+        }
+
+        throw ApiServiceException(
+          response.body.isNotEmpty
+              ? response.body
+              : 'Request failed with status ${response.statusCode}',
+          statusCode: response.statusCode,
+          retryable: _isRetryableStatusCode(response.statusCode),
+        );
+      } on http.ClientException catch (e) {
+        print('[ApiService] Network error during $operationName: $e');
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(_retryBackoff(attempt));
+          continue;
+        }
+        throw ApiServiceException(
+          'Network error after $maxRetries attempts: $e',
+          retryable: true,
+        );
+      } on TimeoutException catch (e) {
+        print('[ApiService] Timeout during $operationName after ${effectiveTimeout.inSeconds}s');
+        if (attempt < maxRetries - 1) {
+          await Future.delayed(_retryBackoff(attempt));
+          continue;
+        }
+        throw ApiServiceException(
+          'Request timeout after $maxRetries attempts: $e',
+          retryable: true,
+        );
+      }
+    }
+
+    throw ApiServiceException('Failed to complete $operationName after $maxRetries attempts');
+  }
+
+  /// Performs a lightweight health check before app flows that submit data.
+  Future<bool> checkHealth() async {
+    final url = Uri.parse('$baseUrl/health');
+    print('[ApiService] GET $url');
+
+    try {
+      final response = await _getWithRetry(
+        url,
+        includeAuthToken: false,
+        includeApiKey: true,
+        operationName: 'health-check',
+        timeout: connectTimeout,
+      );
+
+      return response.statusCode == 200;
+    } on ApiServiceException catch (e) {
+      print('[ApiService] Health check failed: $e');
+      return false;
+    } catch (e) {
+      print('[ApiService] Health check unexpected error: $e');
+      return false;
+    }
   }
 
   // ===== Two-Step API Flow (API v2.0) =====
 
   /// Step 1: Calculate credit score and loan limit
-  Future<CalculateLimitResponse> calculateLimit(CalculateLimitRequest request) async {
+  Future<CalculateLimitResponse> calculateLimit(
+    CalculateLimitRequest request,
+  ) async {
     final url = Uri.parse('$baseUrl/calculate-limit');
     print('[ApiService] POST $url');
     print('[ApiService] Request: ${jsonEncode(request.toJson())}');
-    
-    for (int attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        if (attempt > 0) {
-          print('[ApiService] Retry attempt $attempt/$maxRetries');
-        }
-        
-        final authToken = await _getAuthToken();
-        final startTime = DateTime.now();
-        
-        final response = await _activeClient
-            .post(
-              url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authToken,
-              },
-              body: jsonEncode(request.toJson()),
-            )
-            .timeout(requestTimeout);
 
-        final duration = DateTime.now().difference(startTime);
-        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+    try {
+      final response = await _postJsonWithRetry(
+        url,
+        request.toJson(),
+        includeAuthToken: true,
+        includeApiKey: true,
+        operationName: 'calculate-limit',
+      );
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          print('[ApiService] Success: ${jsonEncode(data)}');
-          return CalculateLimitResponse.fromJson(data);
-        } else {
-          print('[ApiService] Error response: ${response.body}');
-          throw Exception('Failed to calculate limit: ${response.body}');
-        }
-      } on http.ClientException catch (e) {
-        print('[ApiService] Network error: $e');
-        // Network error - retry
-        if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
-          continue;
-        }
-        throw Exception('Network error after $maxRetries attempts: $e');
-      } on TimeoutException catch (e) {
-        print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
-        // Timeout - retry
-        if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
-          continue;
-        }
-        throw Exception('Request timeout after $maxRetries attempts: $e');
-      } catch (e) {
-        print('[ApiService] Unexpected error: $e');
-        // Other errors - don't retry
-        throw Exception('Error calculating limit: $e');
-      }
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      print('[ApiService] Success: ${jsonEncode(data)}');
+      return CalculateLimitResponse.fromJson(data);
+    } on ApiServiceException catch (e) {
+      throw ApiServiceException(
+        'Error calculating limit: ${e.message}',
+        statusCode: e.statusCode,
+        retryable: e.retryable,
+      );
+    } catch (e) {
+      print('[ApiService] Unexpected error: $e');
+      throw ApiServiceException('Error calculating limit: $e');
     }
-    
-    throw Exception('Failed to calculate limit after $maxRetries attempts');
   }
 
   /// Step 2: Calculate loan terms (interest rate, monthly payment, etc.)
-  Future<CalculateTermsResponse> calculateTerms(CalculateTermsRequest request) async {
+  Future<CalculateTermsResponse> calculateTerms(
+    CalculateTermsRequest request,
+  ) async {
     final url = Uri.parse('$baseUrl/calculate-terms');
     print('[ApiService] POST $url');
     print('[ApiService] Request: ${jsonEncode(request.toJson())}');
-    
-    for (int attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        if (attempt > 0) {
-          print('[ApiService] Retry attempt $attempt/$maxRetries');
-        }
-        
-        final authToken = await _getAuthToken();
-        final startTime = DateTime.now();
-        
-        final response = await _activeClient
-            .post(
-              url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authToken,
-              },
-              body: jsonEncode(request.toJson()),
-            )
-            .timeout(requestTimeout);
 
-        final duration = DateTime.now().difference(startTime);
-        print('[ApiService] Response received in ${duration.inMilliseconds}ms, Status: ${response.statusCode}');
+    try {
+      final response = await _postJsonWithRetry(
+        url,
+        request.toJson(),
+        includeAuthToken: true,
+        includeApiKey: true,
+        operationName: 'calculate-terms',
+      );
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          print('[ApiService] Success: ${jsonEncode(data)}');
-          return CalculateTermsResponse.fromJson(data);
-        } else {
-          print('[ApiService] Error response: ${response.body}');
-          throw Exception('Failed to calculate terms: ${response.body}');
-        }
-      } on http.ClientException catch (e) {
-        print('[ApiService] Network error: $e');
-        // Network error - retry
-        if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
-          continue;
-        }
-        throw Exception('Network error after $maxRetries attempts: $e');
-      } on TimeoutException catch (e) {
-        print('[ApiService] Timeout after ${requestTimeout.inSeconds}s');
-        // Timeout - retry
-        if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
-          continue;
-        }
-        throw Exception('Request timeout after $maxRetries attempts: $e');
-      } catch (e) {
-        print('[ApiService] Unexpected error: $e');
-        // Other errors - don't retry
-        throw Exception('Error calculating terms: $e');
-      }
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      print('[ApiService] Success: ${jsonEncode(data)}');
+      return CalculateTermsResponse.fromJson(data);
+    } on ApiServiceException catch (e) {
+      throw ApiServiceException(
+        'Error calculating terms: ${e.message}',
+        statusCode: e.statusCode,
+        retryable: e.retryable,
+      );
+    } catch (e) {
+      print('[ApiService] Unexpected error: $e');
+      throw ApiServiceException('Error calculating terms: $e');
     }
-    
-    throw Exception('Failed to calculate terms after $maxRetries attempts');
   }
 
   // ===== Legacy API (for backward compatibility) =====
@@ -383,47 +611,100 @@ class ApiService {
   /// Legacy one-step loan application (still works but deprecated)
   Future<LoanOfferResponse> applyForLoan(SimpleLoanRequest request) async {
     final url = Uri.parse('$baseUrl/apply');
-    
-    for (int attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
-        final response = await _activeClient
-            .post(
-              url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': accessToken,
-              },
-              body: jsonEncode(request.toJson()),
-            )
-            .timeout(requestTimeout);
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          return LoanOfferResponse.fromJson(data);
-        } else {
-          throw Exception('Failed to apply for loan: ${response.body}');
-        }
-      } on http.ClientException catch (e) {
-        // Network error - retry
-        if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
-          continue;
-        }
-        throw Exception('Network error after $maxRetries attempts: $e');
-      } on TimeoutException catch (e) {
-        // Timeout - retry
-        if (attempt < maxRetries - 1) {
-          await Future.delayed(retryDelay);
-          continue;
-        }
-        throw Exception('Request timeout after $maxRetries attempts: $e');
-      } catch (e) {
-        // Other errors - don't retry
-        throw Exception('Error applying for loan: $e');
+    try {
+      final accessToken = dotenv.env['VNPT_ACCESS_TOKEN'] ?? '';
+      final extraHeaders = accessToken.isNotEmpty
+          ? {'Authorization': accessToken}
+          : null;
+      final response = await _postJsonWithRetry(
+        url,
+        request.toJson(),
+        includeAuthToken: false,
+        includeApiKey: false,
+        operationName: 'apply-for-loan',
+        extraHeaders: extraHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return LoanOfferResponse.fromJson(data);
       }
+
+      throw ApiServiceException(
+        'Failed to apply for loan: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      throw Exception('Error applying for loan: $e');
     }
-    
-    throw Exception('Failed to apply for loan after $maxRetries attempts');
+  }
+
+  // ===== Bank Account Validation (Step 6) =====
+
+  /// Validate bank account through external service
+  ///
+  /// This endpoint verifies that the provided bank account details are valid
+  /// and that the account holder name matches.
+  Future<BankAccountValidationResponse> validateBankAccount(
+    BankAccountValidationRequest request,
+  ) async {
+    const endpoint = '/validate-bank-account';
+    final url = Uri.parse('$baseUrl$endpoint');
+    print('[ApiService] POST $url');
+    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+
+    try {
+      final response = await _postJsonWithRetry(
+        url,
+        request.toJson(),
+        includeAuthToken: true,
+        includeApiKey: true,
+        operationName: 'validate-bank-account',
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      print('[ApiService] Success: ${jsonEncode(data)}');
+      return BankAccountValidationResponse.fromJson(data);
+    } on ApiServiceException catch (e) {
+      if (e.statusCode == 400) {
+        final data = e.message.isNotEmpty ? _tryDecodeJsonMap(e.message) : null;
+        final message = data?['message'] as String? ?? 'Invalid bank account information';
+        print('[ApiService] Validation failed: $message');
+        throw BankAccountValidationException(
+          message,
+          code: 'INVALID_ACCOUNT',
+          originalError: e.message,
+        );
+      }
+
+      if (e.statusCode == 404) {
+        final data = e.message.isNotEmpty ? _tryDecodeJsonMap(e.message) : null;
+        final message = data?['message'] as String? ?? 'Bank account not found';
+        print('[ApiService] Account not found: $message');
+        throw BankAccountValidationException(
+          message,
+          code: 'ACCOUNT_NOT_FOUND',
+          originalError: e.message,
+        );
+      }
+
+      throw Exception('Failed to validate bank account: ${e.message}');
+    } catch (e) {
+      print('[ApiService] Unexpected error: $e');
+      throw Exception('Error validating bank account: $e');
+    }
+  }
+
+  static Map<String, dynamic>? _tryDecodeJsonMap(String responseBody) {
+    try {
+      final decoded = jsonDecode(responseBody);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 }

@@ -14,11 +14,13 @@ import 'viewmodels/settings_viewmodel.dart';
 import 'viewmodels/feedback_viewmodel.dart';
 import 'viewmodels/support_viewmodel.dart';
 import 'viewmodels/language_viewmodel.dart';
+import 'viewmodels/student_loan_viewmodel.dart';
 import 'services/local_storage_service.dart';
+import 'services/push_notification_service.dart';
 import 'services/vnpt_ekyc_service.dart';
 import 'services/vnpt_credentials_manager.dart';
 import 'onboarding/splash_screen.dart';
-import 'loan/step3_additional_info.dart';
+import 'loan/step3_personal_info.dart';
 import 'loan/step4_offer_calculator.dart';
 
 void main() async {
@@ -30,17 +32,13 @@ void main() async {
     // Log the error but DO NOT rethrow — keep the app alive
     print('[FlutterError] ${details.exceptionAsString()}');
   };
-  
+
   // Initialize local storage
   await LocalStorageService.init();
 
-  if (kDebugMode) {
-    await LocalStorageService.clearTosAccepted();
-  }
-  
   // Load environment variables
   await dotenv.load(fileName: ".env");
-  
+
   // Initialize VNPT eKYC service — non-fatal: if this fails, eKYC features
   // will show an error when used, but the rest of the app still loads.
   try {
@@ -57,24 +55,27 @@ void main() async {
       }
     } else {
       // Any other error (missing credentials, parse error, etc.) — warn and continue
-      print('[VNPT] Initialization failed: $e. eKYC features will be unavailable.');
+      print(
+        '[VNPT] Initialization failed: $e. eKYC features will be unavailable.',
+      );
     }
   }
-  
+
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Enable offline persistence for Firestore
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
-  
+
   // Initialize local storage (called again after Firebase in case of dependency)
   await LocalStorageService.init();
-  
+
+  // Initialize FCM and local notification handling
+  await PushNotificationService().initialize();
+
   runApp(const VietCreditApp());
 }
 
@@ -95,6 +96,7 @@ class VietCreditApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FeedbackViewModel()),
         ChangeNotifierProvider(create: (_) => SupportViewModel()),
         ChangeNotifierProvider(create: (_) => LanguageViewModel()),
+        ChangeNotifierProvider(create: (_) => StudentLoanViewModel()),
       ],
       child: Consumer<LanguageViewModel>(
         builder: (context, languageVm, _) => MaterialApp(
@@ -133,8 +135,10 @@ class VietCreditApp extends StatelessWidget {
                 borderSide: const BorderSide(color: primaryGreen, width: 1.4),
               ),
               labelStyle: const TextStyle(color: Color(0xFF9E9E9E)),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
@@ -150,8 +154,10 @@ class VietCreditApp extends StatelessWidget {
           ),
           home: const SplashScreen(),
           routes: {
+            '/step3_personal_info': (context) =>
+              const Step3PersonalInfoPage(),
             '/step3_additional_info': (context) =>
-                const Step3AdditionalInfoPage(),
+                const Step3PersonalInfoPage(),
             '/step4_offer_calculator': (context) =>
                 const Step4OfferCalculatorPage(),
           },

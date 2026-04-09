@@ -6,6 +6,10 @@ class HomeViewModel extends ChangeNotifier {
 
   int _selectedIndex = 0;
   String _selectedPeriod = 'Overall';
+  int _currentApplicationPage = 1;
+  static const int _applicationsPerPage = 5;
+  int _currentInstallmentPage = 1;
+  static const int _installmentsPerPage = 3;
   
   // User profile data
   String? _userName;
@@ -26,6 +30,10 @@ class HomeViewModel extends ChangeNotifier {
   DateTime? get lastCreditCheckDate => _lastCreditCheckDate;
   int? get startingScore => _startingScore;
   bool get isLoadingUserData => _isLoadingUserData;
+  int get currentApplicationPage => _currentApplicationPage;
+  int get applicationsPerPage => _applicationsPerPage;
+  int get currentInstallmentPage => _currentInstallmentPage;
+  int get installmentsPerPage => _installmentsPerPage;
   int get scoreChange => _creditScore != null && _startingScore != null 
       ? _creditScore! - _startingScore! 
       : 0;
@@ -37,7 +45,43 @@ class HomeViewModel extends ChangeNotifier {
 
   void setPeriod(String period) {
     _selectedPeriod = period;
+    // Reset pagination when changing period
+    if (period == 'Application History') {
+      _currentApplicationPage = 1;
+    } else if (period == 'Installment') {
+      _currentInstallmentPage = 1;
+    }
     notifyListeners();
+  }
+
+  void nextApplicationPage(int totalApplications) {
+    final totalPages = (totalApplications / _applicationsPerPage).ceil();
+    if (_currentApplicationPage < totalPages) {
+      _currentApplicationPage++;
+      notifyListeners();
+    }
+  }
+
+  void previousApplicationPage() {
+    if (_currentApplicationPage > 1) {
+      _currentApplicationPage--;
+      notifyListeners();
+    }
+  }
+
+  void nextInstallmentPage(int totalInstallments) {
+    final totalPages = (totalInstallments / _installmentsPerPage).ceil();
+    if (_currentInstallmentPage < totalPages) {
+      _currentInstallmentPage++;
+      notifyListeners();
+    }
+  }
+
+  void previousInstallmentPage() {
+    if (_currentInstallmentPage > 1) {
+      _currentInstallmentPage--;
+      notifyListeners();
+    }
   }
 
   // Load user profile data

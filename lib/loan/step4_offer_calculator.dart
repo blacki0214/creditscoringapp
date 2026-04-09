@@ -33,6 +33,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   final double _calculatedLoanAmount = 0;
   final double _downPayment = 0;
   bool _isProceeding = false;
+  bool _isRecalculatingTerms = false;
 
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
   final NumberFormat _currencyFormat = NumberFormat.currency(
@@ -99,7 +100,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
       return Scaffold(
         body: Center(
           child: Text(
-            context.t('No offer available. Please go back.', 'Không có đề nghị khoản vay. Vui lòng quay lại.'),
+            context.t(
+              'No offer available. Please go back.',
+              'Không có đề nghị khoản vay. Vui lòng quay lại.',
+            ),
           ),
         ),
       );
@@ -126,492 +130,602 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
     return Stack(
       children: [
-      Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          context.t('Step 4: Loan Calculator', 'Bước 4: Tính khoản vay'),
-          style: const TextStyle(color: Colors.black, fontSize: 16),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
-                  vertical: 20,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('Calculate Your Loan', 'Tính khoản vay của bạn'),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F3F),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        context.t('Select your loan purpose and financing options.', 'Chọn mục đích vay và phương án tài chính.'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Loan Purpose
-                      _buildSectionHeader(
-                        context.t('Loan Purpose', 'Mục đích vay'),
-                      ),
-                      _buildDropdown(
-                        label: context.t(
-                          'What are you financing?',
-                          'Bạn cần tài trợ cho mục đích gì?',
-                        ),
-                        value: _selectedPurpose,
-                        items: loanPurposeOptions,
-                        onChanged: (val) =>
-                            setState(() => _selectedPurpose = val!),
-                      ),
-
-                      const SizedBox(height: 24),
-                      // Total Price
-                      _buildSectionHeader(
-                        context.t('Financing Details', 'Chi tiết tài chính'),
-                      ),
-                      _buildTextField(
-                        fieldKey: _totalPriceFieldKey,
-                        controller: _totalPriceController,
-                        focusNode: _totalPriceFocusNode,
-                        label: context.t('Total Price (VND)', 'Tổng giá trị (VND)'),
-                        hint: '100,000,000',
-                        keyboardType: TextInputType.number,
-                        maxLength: 15,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(15),
-                          FilteringTextInputFormatter.digitsOnly,
-                          _CurrencyInputFormatter(_currencyFormatter),
-                        ],
-                        validator: _validateAmount,
-                        onChanged: (val) => setState(() {}),
-                      ),
-
-                      const SizedBox(height: 16),
-                      // Down Payment
-                      _buildTextField(
-                        fieldKey: _downPaymentFieldKey,
-                        controller: _downPaymentController,
-                        focusNode: _downPaymentFocusNode,
-                        label: context.t('Down Payment (VND)', 'Trả trước (VND)'),
-                        hint: '20,000,000',
-                        keyboardType: TextInputType.number,
-                        maxLength: 15,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(15),
-                          FilteringTextInputFormatter.digitsOnly,
-                          _CurrencyInputFormatter(_currencyFormatter),
-                        ],
-                        validator: _validateDownPayment,
-                        onChanged: (val) => setState(() {}),
-                      ),
-
-                      const SizedBox(height: 16),
-                      // Down Payment Percentage
-                      if (totalPrice > 0)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
+        Scaffold(
+          backgroundColor: const Color(0xFFF5F7FB),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              context.t('Step 4: Loan Calculator', 'Bước 4: Tính khoản vay'),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
+            ),
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width > 600
+                          ? 24
+                          : 16,
+                      vertical: 20,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             context.t(
-                              'Down Payment: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% of total price',
-                              'Trả trước: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% tổng giá trị',
+                              'Calculate Your Loan',
+                              'Tính khoản vay của bạn',
+                            ),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1F3F),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.t(
+                              'Select your loan purpose and financing options.',
+                              'Chọn mục đích vay và phương án tài chính.',
                             ),
                             style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade700,
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 24),
 
-                      const SizedBox(height: 24),
-                      // Tenor Slider
-                      _buildSectionHeader(
-                        context.t('Loan Term (Tenor)', 'Kỳ hạn vay'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                          // Loan Purpose
+                          _buildSectionHeader(
+                            context.t('Loan Purpose', 'Mục đích vay'),
+                          ),
+                          _buildDropdown(
+                            label: context.t(
+                              'What are you financing?',
+                              'Bạn cần tài trợ cho mục đích gì?',
+                            ),
+                            value: _selectedPurpose,
+                            items: loanPurposeOptions,
+                            onChanged: _isRecalculatingTerms
+                                ? null
+                                : (val) async {
+                                    if (val == null ||
+                                        val == _selectedPurpose) {
+                                      return;
+                                    }
+
+                                    final nextPurpose = val;
+                                    setState(() {
+                                      _selectedPurpose = nextPurpose;
+                                      _isRecalculatingTerms = true;
+                                    });
+
+                                    final requestedAmount =
+                                        calculatedLoanAmount > 0
+                                        ? calculatedLoanAmount
+                                        : ((offer['loanAmountVnd'] as num?)
+                                                  ?.toDouble() ??
+                                              0.0);
+
+                                    final success = requestedAmount > 0
+                                        ? await context
+                                              .read<LoanViewModel>()
+                                              .refreshOfferTerms(
+                                                loanAmount: requestedAmount,
+                                                loanPurpose: nextPurpose,
+                                              )
+                                        : false;
+
+                                    if (!mounted) return;
+
+                                    setState(
+                                      () => _isRecalculatingTerms = false,
+                                    );
+
+                                    if (!success) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            context.t(
+                                              'Could not refresh loan terms. Please try again.',
+                                              'Không thể cập nhật điều khoản vay. Vui lòng thử lại.',
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                          ),
+
+                          if (_isRecalculatingTerms) ...[
+                            const SizedBox(height: 8),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  context.t(
-                                    'Tenor: ${_tenor.toInt()} months',
-                                    'Kỳ hạn: ${_tenor.toInt()} tháng',
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF1A1F3F),
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
-                                  '(${(_tenor / 12).toStringAsFixed(1)} years)',
+                                  context.t(
+                                    'Updating interest rate...',
+                                    'Đang cập nhật lãi suất...',
+                                  ),
                                   style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade600,
+                                    fontSize: 12,
+                                    color: Colors.grey.shade700,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            Slider(
-                              value: _tenor,
-                              min: 6,
-                              max: 60,
-                              divisions: 54,
-                              label: '${_tenor.toInt()} months',
-                              onChanged: (val) => setState(() => _tenor = val),
-                              activeColor: const Color(0xFF4C40F7),
-                              inactiveColor: Colors.grey.shade300,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '6m',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    '60m',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
-                        ),
-                      ),
 
-                      const SizedBox(height: 24),
-                      // Offer Summary
-                      _buildSectionHeader(
-                        context.t('Offer Summary', 'Tóm tắt đề nghị'),
-                      ),
-                      _buildOfferCard(
-                        offer: offer,
-                        calculatedLoanAmount: calculatedLoanAmount,
-                        monthlyPayment: monthlyPayment,
-                        tenor: _tenor.toInt(),
-                      ),
-
-                      const SizedBox(height: 16),
-                      // Loan Amount vs Limit Check
-                      if (calculatedLoanAmount > 0) ...[
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isWithinLimit
-                                ? const Color(0xFF4CAF50).withOpacity(0.1)
-                                : Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isWithinLimit
-                                  ? const Color(0xFF4CAF50)
-                                  : Colors.red,
+                          const SizedBox(height: 24),
+                          // Total Price
+                          _buildSectionHeader(
+                            context.t(
+                              'Financing Details',
+                              'Chi tiết tài chính',
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    isWithinLimit
-                                        ? Icons.check_circle
-                                        : Icons.error,
-                                    color: isWithinLimit
-                                        ? const Color(0xFF4CAF50)
-                                        : Colors.red,
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      isWithinLimit
-                                          ? context.t(
-                                              'Within Your Loan Limit ✓',
-                                              'Trong hạn mức vay của bạn ✓',
-                                            )
-                                          : context.t(
-                                              'Exceeds Your Loan Limit',
-                                              'Vượt hạn mức vay của bạn',
-                                            ),
-                                      style: TextStyle(
+                          _buildTextField(
+                            fieldKey: _totalPriceFieldKey,
+                            controller: _totalPriceController,
+                            focusNode: _totalPriceFocusNode,
+                            label: context.t(
+                              'Total Price (VND)',
+                              'Tổng giá trị (VND)',
+                            ),
+                            hint: '100,000,000',
+                            keyboardType: TextInputType.number,
+                            maxLength: 15,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(15),
+                              FilteringTextInputFormatter.digitsOnly,
+                              _CurrencyInputFormatter(_currencyFormatter),
+                            ],
+                            validator: _validateAmount,
+                            onChanged: (val) => setState(() {}),
+                          ),
+
+                          const SizedBox(height: 16),
+                          // Down Payment
+                          _buildTextField(
+                            fieldKey: _downPaymentFieldKey,
+                            controller: _downPaymentController,
+                            focusNode: _downPaymentFocusNode,
+                            label: context.t(
+                              'Down Payment (VND)',
+                              'Trả trước (VND)',
+                            ),
+                            hint: '20,000,000',
+                            keyboardType: TextInputType.number,
+                            maxLength: 15,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(15),
+                              FilteringTextInputFormatter.digitsOnly,
+                              _CurrencyInputFormatter(_currencyFormatter),
+                            ],
+                            validator: _validateDownPayment,
+                            onChanged: (val) => setState(() {}),
+                          ),
+
+                          const SizedBox(height: 16),
+                          // Down Payment Percentage
+                          if (totalPrice > 0)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                context.t(
+                                  'Down Payment: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% of total price',
+                                  'Trả trước: ${((downPayment / totalPrice) * 100).toStringAsFixed(1)}% tổng giá trị',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 24),
+                          // Tenor Slider
+                          _buildSectionHeader(
+                            context.t('Loan Term (Tenor)', 'Kỳ hạn vay'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      context.t(
+                                        'Tenor: ${_tenor.toInt()} months',
+                                        'Kỳ hạn: ${_tenor.toInt()} tháng',
+                                      ),
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1A1F3F),
+                                      ),
+                                    ),
+                                    Text(
+                                      '(${(_tenor / 12).toStringAsFixed(1)} years)',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Slider(
+                                  value: _tenor,
+                                  min: 6,
+                                  max: 60,
+                                  divisions: 54,
+                                  label: '${_tenor.toInt()} months',
+                                  onChanged: (val) =>
+                                      setState(() => _tenor = val),
+                                  activeColor: const Color(0xFF4D4AF9),
+                                  inactiveColor: Colors.grey.shade300,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '6m',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      Text(
+                                        '60m',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+                          // Offer Summary
+                          _buildSectionHeader(
+                            context.t('Offer Summary', 'Tóm tắt đề nghị'),
+                          ),
+                          _buildOfferCard(
+                            offer: offer,
+                            calculatedLoanAmount: calculatedLoanAmount,
+                            monthlyPayment: monthlyPayment,
+                            tenor: _tenor.toInt(),
+                          ),
+
+                          const SizedBox(height: 16),
+                          // Loan Amount vs Limit Check
+                          if (calculatedLoanAmount > 0) ...[
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isWithinLimit
+                                    ? const Color(0xFF4CAF50).withOpacity(0.1)
+                                    : Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isWithinLimit
+                                      ? const Color(0xFF4CAF50)
+                                      : Colors.red,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        isWithinLimit
+                                            ? Icons.check_circle
+                                            : Icons.error,
                                         color: isWithinLimit
                                             ? const Color(0xFF4CAF50)
                                             : Colors.red,
+                                        size: 24,
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          context.t(
-                                            'Your Loan Limit:',
-                                            'Hạn mức vay của bạn:',
-                                          ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          isWithinLimit
+                                              ? context.t(
+                                                  'Within Your Loan Limit ✓',
+                                                  'Trong hạn mức vay của bạn ✓',
+                                                )
+                                              : context.t(
+                                                  'Exceeds Your Loan Limit',
+                                                  'Vượt hạn mức vay của bạn',
+                                                ),
                                           style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                        Text(
-                                          _currencyFormat.format(loanLimit),
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1F3F),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          context.t(
-                                            'Requested Amount:',
-                                            'Số tiền yêu cầu:',
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                        Text(
-                                          _currencyFormat.format(
-                                            calculatedLoanAmount,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
                                             color: isWithinLimit
                                                 ? const Color(0xFF4CAF50)
                                                 : Colors.red,
                                           ),
                                         ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              context.t(
+                                                'Your Loan Limit:',
+                                                'Hạn mức vay của bạn:',
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey.shade700,
+                                              ),
+                                            ),
+                                            Text(
+                                              _currencyFormat.format(loanLimit),
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF1A1F3F),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              context.t(
+                                                'Requested Amount:',
+                                                'Số tiền yêu cầu:',
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey.shade700,
+                                              ),
+                                            ),
+                                            Text(
+                                              _currencyFormat.format(
+                                                calculatedLoanAmount,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: isWithinLimit
+                                                    ? const Color(0xFF4CAF50)
+                                                    : Colors.red,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!isWithinLimit) ...[
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(
+                                          Icons.info_outline,
+                                          color: Colors.orange,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            context.t(
+                                              'Please reduce your loan amount or increase your down payment to proceed.',
+                                              'Vui lòng giảm số tiền vay hoặc tăng khoản trả trước để tiếp tục.',
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade700,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ],
-                                ),
+                                ],
                               ),
-                              if (!isWithinLimit) ...[
-                                const SizedBox(height: 12),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.info_outline,
-                                      color: Colors.orange,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        context.t(
-                                          'Please reduce your loan amount or increase your down payment to proceed.',
-                                          'Vui lòng giảm số tiền vay hoặc tăng khoản trả trước để tiếp tục.',
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.of(context).size.width > 600
+                        ? 24
+                        : 16,
+                    vertical: 16,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed:
+                          (calculatedLoanAmount <= 0 ||
+                              !isWithinLimit ||
+                              _isProceeding)
+                          ? null
+                          : () async {
+                              setState(() => _isProceeding = true);
+
+                              // 10-second processing delay
+                              await Future.delayed(const Duration(seconds: 10));
+                              if (!mounted) return;
+
+                              // Get the loan view model
+                              final loanViewModel = context
+                                  .read<LoanViewModel>();
+
+                              // Calculate monthly payment
+                              final interestRate =
+                                  (offer['interestRate'] as num?) ?? 15.0;
+                              final monthlyPayment =
+                                  (calculatedLoanAmount / _tenor.toInt()) *
+                                  (1 + (interestRate / 100));
+
+                              // Update the loan offer with user's chosen parameters
+                              loanViewModel.updateLoanOffer(
+                                loanAmount: calculatedLoanAmount,
+                                tenor: _tenor.toInt(),
+                                monthlyPayment: monthlyPayment,
+                                loanPurpose: _selectedPurpose,
+                              );
+
+                              // Mark Step 4 as completed
+                              await loanViewModel.completeStep4();
+
+                              if (!mounted) return;
+                              setState(() => _isProceeding = false);
+
+                              // Navigate to Step 5 - Contract Review
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => Step5ContractReviewPage(
+                                    loanAmount: calculatedLoanAmount,
+                                    tenor: _tenor.toInt(),
+                                    downPayment: downPayment,
+                                    loanPurpose: _selectedPurpose,
+                                  ),
                                 ),
-                              ],
-                            ],
-                          ),
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            (calculatedLoanAmount <= 0 || !isWithinLimit)
+                            ? Colors.grey.shade400
+                            : const Color(0xFF4D4AF9),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                      ],
+                      ),
+                      child: Text(
+                        isWithinLimit
+                            ? context.t(
+                                'Accept Offer & Continue',
+                                'Chấp nhận đề nghị và tiếp tục',
+                              )
+                            : context.t(
+                                'Reduce Loan Amount',
+                                'Giảm số tiền vay',
+                              ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Full-screen loading overlay
+        if (_isProceeding)
+          Container(
+            color: Colors.black54,
+            child: Center(
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Color(0xFF4D4AF9),
+                        strokeWidth: 3,
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        context.t(
+                          'Processing your offer…',
+                          'Đang xử lý đề nghị của bạn…',
+                        ),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1F3F),
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        context.t(
+                          'Please wait a moment.',
+                          'Vui lòng chờ trong giây lát.',
+                        ),
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 16,
-                vertical: 16,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: (calculatedLoanAmount <= 0 || !isWithinLimit || _isProceeding)
-                      ? null
-                      : () async {
-                          setState(() => _isProceeding = true);
-
-                          // 10-second processing delay
-                          await Future.delayed(const Duration(seconds: 10));
-                          if (!mounted) return;
-
-                          // Get the loan view model
-                          final loanViewModel = context
-                              .read<LoanViewModel>();
-
-                          // Calculate monthly payment
-                          final interestRate =
-                              (offer['interestRate'] as num?) ?? 15.0;
-                          final monthlyPayment =
-                              (calculatedLoanAmount / _tenor.toInt()) *
-                              (1 + (interestRate / 100));
-
-                          // Update the loan offer with user's chosen parameters
-                          loanViewModel.updateLoanOffer(
-                            loanAmount: calculatedLoanAmount,
-                            tenor: _tenor.toInt(),
-                            monthlyPayment: monthlyPayment,
-                            loanPurpose: _selectedPurpose,
-                          );
-
-                          // Mark Step 4 as completed
-                          loanViewModel.completeStep4();
-
-                          if (!mounted) return;
-                          setState(() => _isProceeding = false);
-
-                          // Navigate to Step 5 - Contract Review
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => Step5ContractReviewPage(
-                                loanAmount: calculatedLoanAmount,
-                                tenor: _tenor.toInt(),
-                                downPayment: downPayment,
-                                loanPurpose: _selectedPurpose,
-                              ),
-                            ),
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        (calculatedLoanAmount <= 0 || !isWithinLimit)
-                        ? Colors.grey.shade400
-                        : const Color(0xFF4C40F7),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    isWithinLimit
-                        ? context.t(
-                            'Accept Offer & Continue',
-                            'Chấp nhận đề nghị và tiếp tục',
-                          )
-                        : context.t('Reduce Loan Amount', 'Giảm số tiền vay'),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-
-      // Full-screen loading overlay
-      if (_isProceeding)
-        Container(
-          color: Colors.black54,
-          child: Center(
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      color: Color(0xFF4C40F7),
-                      strokeWidth: 3,
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      context.t('Processing your offer…', 'Đang xử lý đề nghị của bạn…'),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1F3F),
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      context.t('Please wait a moment.', 'Vui lòng chờ trong giây lát.'),
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
-        ),
       ],
     );
   }
@@ -624,7 +738,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF4C40F7),
+          color: Color(0xFF4D4AF9),
         ),
       ),
     );
@@ -668,7 +782,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
         counterText: '',
       ),
@@ -677,7 +791,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Total Price', 'Vui lòng nhập tổng giá trị');
+      return context.t(
+        'Please enter Total Price',
+        'Vui lòng nhập tổng giá trị',
+      );
     }
     final amount = _parseAmount(value);
     if (amount <= 0) {
@@ -691,11 +808,17 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
 
   String? _validateDownPayment(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Down Payment', 'Vui lòng nhập khoản trả trước');
+      return context.t(
+        'Please enter Down Payment',
+        'Vui lòng nhập khoản trả trước',
+      );
     }
     final amount = _parseAmount(value);
     if (amount < 0) {
-      return context.t('Down Payment cannot be negative', 'Khoản trả trước không được âm');
+      return context.t(
+        'Down Payment cannot be negative',
+        'Khoản trả trước không được âm',
+      );
     }
     return null;
   }
@@ -704,20 +827,26 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     required String label,
     required String value,
     required List<String> items,
-    required Function(String?) onChanged,
+    required void Function(String?)? onChanged,
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
       items: items
@@ -770,9 +899,9 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF4C40F7).withOpacity(0.08),
+        color: const Color(0xFF4D4AF9).withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF4C40F7).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF4D4AF9).withOpacity(0.3)),
       ),
       child: Column(
         children: [
@@ -794,7 +923,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                 ),
               ),
             ],

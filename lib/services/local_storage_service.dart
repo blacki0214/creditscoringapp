@@ -15,6 +15,31 @@ class LocalStorageService {
 
   static SharedPreferences? _prefs;
 
+  static String _draftKey({String? userId}) {
+    if (userId == null || userId.isEmpty) return _keyPersonalInfo;
+    return '${_keyPersonalInfo}_$userId';
+  }
+
+  static String _lastSavedKey({String? userId}) {
+    if (userId == null || userId.isEmpty) return _keyLastSaved;
+    return '${_keyLastSaved}_$userId';
+  }
+
+  static String _applicationHistoryKey({String? userId}) {
+    if (userId == null || userId.isEmpty) return _keyApplicationHistory;
+    return '${_keyApplicationHistory}_$userId';
+  }
+
+  static String _ekycCompletedKey({String? userId}) {
+    if (userId == null || userId.isEmpty) return _keyHasCompletedEkyc;
+    return '${_keyHasCompletedEkyc}_$userId';
+  }
+
+  static String _ekycPrefillKey({String? userId}) {
+    if (userId == null || userId.isEmpty) return _keyEkycPrefill;
+    return '${_keyEkycPrefill}_$userId';
+  }
+
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
@@ -29,11 +54,17 @@ class LocalStorageService {
   }
 
   // Save personal info draft
-  static Future<bool> saveDraft(Map<String, dynamic> data) async {
+  static Future<bool> saveDraft(
+    Map<String, dynamic> data, {
+    String? userId,
+  }) async {
     try {
       final json = jsonEncode(data);
-      await prefs.setString(_keyPersonalInfo, json);
-      await prefs.setString(_keyLastSaved, DateTime.now().toIso8601String());
+      await prefs.setString(_draftKey(userId: userId), json);
+      await prefs.setString(
+        _lastSavedKey(userId: userId),
+        DateTime.now().toIso8601String(),
+      );
       return true;
     } catch (e) {
       print('Error saving draft: $e');
@@ -42,9 +73,9 @@ class LocalStorageService {
   }
 
   // Load personal info draft
-  static Map<String, dynamic>? loadDraft() {
+  static Map<String, dynamic>? loadDraft({String? userId}) {
     try {
-      final json = prefs.getString(_keyPersonalInfo);
+      final json = prefs.getString(_draftKey(userId: userId));
       if (json == null) return null;
       return jsonDecode(json) as Map<String, dynamic>;
     } catch (e) {
@@ -54,10 +85,10 @@ class LocalStorageService {
   }
 
   // Clear draft
-  static Future<bool> clearDraft() async {
+  static Future<bool> clearDraft({String? userId}) async {
     try {
-      await prefs.remove(_keyPersonalInfo);
-      await prefs.remove(_keyLastSaved);
+      await prefs.remove(_draftKey(userId: userId));
+      await prefs.remove(_lastSavedKey(userId: userId));
       return true;
     } catch (e) {
       print('Error clearing draft: $e');
@@ -66,8 +97,8 @@ class LocalStorageService {
   }
 
   // Get last saved timestamp
-  static DateTime? getLastSavedTime() {
-    final timestamp = prefs.getString(_keyLastSaved);
+  static DateTime? getLastSavedTime({String? userId}) {
+    final timestamp = prefs.getString(_lastSavedKey(userId: userId));
     if (timestamp == null) return null;
     return DateTime.tryParse(timestamp);
   }
@@ -75,9 +106,10 @@ class LocalStorageService {
   // Save application to history
   static Future<bool> saveApplicationHistory(
     Map<String, dynamic> application,
+    {String? userId}
   ) async {
     try {
-      final history = getApplicationHistory();
+      final history = getApplicationHistory(userId: userId);
       history.insert(0, {
         ...application,
         'submitted_at': DateTime.now().toIso8601String(),
@@ -89,7 +121,7 @@ class LocalStorageService {
       }
 
       final json = jsonEncode(history);
-      await prefs.setString(_keyApplicationHistory, json);
+      await prefs.setString(_applicationHistoryKey(userId: userId), json);
       return true;
     } catch (e) {
       print('Error saving application history: $e');
@@ -98,9 +130,9 @@ class LocalStorageService {
   }
 
   // Get application history
-  static List<Map<String, dynamic>> getApplicationHistory() {
+  static List<Map<String, dynamic>> getApplicationHistory({String? userId}) {
     try {
-      final json = prefs.getString(_keyApplicationHistory);
+      final json = prefs.getString(_applicationHistoryKey(userId: userId));
       if (json == null) return [];
       final list = jsonDecode(json) as List;
       return list.cast<Map<String, dynamic>>();
@@ -221,22 +253,40 @@ class LocalStorageService {
   }
 
   // eKYC completion tracking for skipping Step 2 on future applications
-  static Future<bool> markEkycCompleted() async {
-    return await prefs.setBool(_keyHasCompletedEkyc, true);
+  static Future<bool> markEkycCompleted({String? userId}) async {
+    final scoped = await prefs.setBool(_ekycCompletedKey(userId: userId), true);
+    if (userId != null && userId.isNotEmpty) {
+      // Keep legacy key for backward compatibility with older call sites.
+      await prefs.setBool(_keyHasCompletedEkyc, true);
+    }
+    return scoped;
   }
 
-  static bool hasCompletedEkyc() {
+  static bool hasCompletedEkyc({String? userId}) {
+    if (userId != null && userId.isNotEmpty) {
+      return prefs.getBool(_ekycCompletedKey(userId: userId)) ?? false;
+    }
     return prefs.getBool(_keyHasCompletedEkyc) ?? false;
   }
 
-  static Future<bool> clearEkycCompletion() async {
+  static Future<bool> clearEkycCompletion({String? userId}) async {
+    if (userId != null && userId.isNotEmpty) {
+      return await prefs.remove(_ekycCompletedKey(userId: userId));
+    }
     return await prefs.remove(_keyHasCompletedEkyc);
   }
 
   // Persist minimal eKYC profile data for Step 2 prefill when Step 1 is skipped.
-  static Future<bool> saveEkycPrefill(Map<String, dynamic> data) async {
+  static Future<bool> saveEkycPrefill(
+    Map<String, dynamic> data, {
+    String? userId,
+  }) async {
     try {
-      await prefs.setString(_keyEkycPrefill, jsonEncode(data));
+      await prefs.setString(_ekycPrefillKey(userId: userId), jsonEncode(data));
+      if (userId != null && userId.isNotEmpty) {
+        // Keep legacy key for backward compatibility with older call sites.
+        await prefs.setString(_keyEkycPrefill, jsonEncode(data));
+      }
       return true;
     } catch (e) {
       print('Error saving eKYC prefill: $e');
@@ -244,9 +294,9 @@ class LocalStorageService {
     }
   }
 
-  static Map<String, dynamic>? loadEkycPrefill() {
+  static Map<String, dynamic>? loadEkycPrefill({String? userId}) {
     try {
-      final raw = prefs.getString(_keyEkycPrefill);
+      final raw = prefs.getString(_ekycPrefillKey(userId: userId));
       if (raw == null || raw.isEmpty) return null;
       return jsonDecode(raw) as Map<String, dynamic>;
     } catch (e) {
@@ -255,8 +305,11 @@ class LocalStorageService {
     }
   }
 
-  static Future<bool> clearEkycPrefill() async {
+  static Future<bool> clearEkycPrefill({String? userId}) async {
     try {
+      if (userId != null && userId.isNotEmpty) {
+        return await prefs.remove(_ekycPrefillKey(userId: userId));
+      }
       return await prefs.remove(_keyEkycPrefill);
     } catch (e) {
       print('Error clearing eKYC prefill: $e');

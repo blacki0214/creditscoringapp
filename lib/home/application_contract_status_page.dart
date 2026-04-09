@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/app_localization.dart';
+import 'payment_page.dart';
+import '../services/installment_service.dart';
+import '../services/local_storage_service.dart';
+import '../models/installment_model.dart';
 
-class ApplicationContractStatusPage extends StatelessWidget {
+class ApplicationContractStatusPage extends StatefulWidget {
   final Map<String, dynamic> application;
 
   const ApplicationContractStatusPage({
@@ -10,8 +18,38 @@ class ApplicationContractStatusPage extends StatelessWidget {
   });
 
   @override
+  State<ApplicationContractStatusPage> createState() =>
+      _ApplicationContractStatusPageState();
+}
+
+class _ApplicationContractStatusPageState extends State<ApplicationContractStatusPage> {
+  bool _paymentSuccessThisMonth = false;
+  DateTime? _nextDueDateSynced;
+  final InstallmentService _installmentService = InstallmentService();
+  StreamSubscription<List<Installment>>? _installmentsSubscription;
+  late final bool _isTestAccountMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _isTestAccountMode = LocalStorageService.isTestAccountMode();
+    if (!_isTestAccountMode) {
+      _syncNextDueDateWithPaymentPage();
+      _startRealtimeDueDateSync();
+    }
+  }
+
+  @override
+  void dispose() {
+    _installmentsSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isVietnamese = context.isVietnamese;
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final application = widget.application;
     final isApproved = application['approved'] == true;
     final submittedAtRaw = application['timestamp'] ?? application['submitted_at'];
     final submittedAt = submittedAtRaw != null
@@ -26,22 +64,32 @@ class ApplicationContractStatusPage extends StatelessWidget {
     final firstDueDate = (submittedAt != null && tenorMonths != null)
         ? _addMonthsSafe(submittedAt, 1)
         : null;
+    final nextDueDate = _nextDueDateSynced ?? firstDueDate;
     final finalDueDate = (submittedAt != null && tenorMonths != null)
         ? _addMonthsSafe(submittedAt, tenorMonths)
         : null;
+    final canPayNow = _isTestAccountMode ? true : _canPayOnDate(nextDueDate);
 
     final statusText = isApproved
-        ? (application['contractStatus']?.toString() ?? 'Active')
-        : 'Rejected';
+      ? context.t('Active', 'Đang hiệu lực')
+      : context.t('Rejected', 'Từ chối');
+
+    final dateTimePattern = isVietnamese ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy HH:mm';
+    final datePattern = isVietnamese ? 'dd/MM/yyyy' : 'dd/MM/yyyy';
+    final naText = context.t('N/A', 'Không có');
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Contract Status',
-          style: TextStyle(color: Colors.black, fontSize: 16),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          context.t('Payment', 'Thanh toán'),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
       ),
       body: SafeArea(
@@ -91,51 +139,141 @@ class ApplicationContractStatusPage extends StatelessWidget {
               _buildCard(
                 children: [
                   _buildRow(
-                    'Submitted At',
+                    context.t('Submitted At', 'Ngày nộp'),
                     submittedAt != null
-                        ? DateFormat('dd/MM/yyyy HH:mm').format(submittedAt)
-                        : 'N/A',
+                        ? DateFormat(dateTimePattern).format(submittedAt)
+                        : naText,
                   ),
                   _buildRow(
-                    'Loan Amount',
-                    loanAmount != null ? currencyFormat.format(loanAmount) : 'N/A',
+                    context.t('Loan Amount', 'Số tiền vay'),
+                    loanAmount != null ? currencyFormat.format(loanAmount) : naText,
                   ),
                   _buildRow(
-                    'Tenor',
-                    tenorMonths != null ? '$tenorMonths months' : 'N/A',
+                    context.t('Tenor', 'Kỳ hạn'),
+                    tenorMonths != null
+                        ? context.t('$tenorMonths months', '$tenorMonths tháng')
+                        : naText,
                   ),
                   _buildRow(
-                    'Monthly Payment',
+                    context.t('Monthly Payment', 'Thanh toán hàng tháng'),
                     monthlyPayment != null
                         ? currencyFormat.format(monthlyPayment)
-                        : 'N/A',
+                        : naText,
                   ),
                   _buildRow(
-                    'Interest Rate',
+                    context.t('Interest Rate', 'Lãi suất'),
                     interestRate != null
-                        ? '${interestRate.toStringAsFixed(2)}% / year'
-                        : 'N/A',
+                        ? context.t(
+                            '${interestRate.toStringAsFixed(2)}% / year',
+                            '${interestRate.toStringAsFixed(2)}% / năm',
+                          )
+                        : naText,
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               _buildCard(
-                title: 'Repayment Timeline',
+                title: context.t('Repayment Timeline', 'Lịch trả nợ'),
                 children: [
                   _buildRow(
-                    'First Due Date',
+                    context.t('First Due Date', 'Kỳ trả đầu tiên'),
                     firstDueDate != null
-                        ? DateFormat('dd/MM/yyyy').format(firstDueDate)
-                        : 'N/A',
+                        ? DateFormat(datePattern).format(firstDueDate)
+                        : naText,
                   ),
                   _buildRow(
-                    'Final Due Date',
+                    context.t('Next Due Date', 'Kỳ trả tiếp theo'),
+                    nextDueDate != null
+                        ? DateFormat(datePattern).format(nextDueDate)
+                        : naText,
+                  ),
+                  _buildRow(
+                    context.t('Final Due Date', 'Kỳ trả cuối cùng'),
                     finalDueDate != null
-                        ? DateFormat('dd/MM/yyyy').format(finalDueDate)
-                        : 'N/A',
+                        ? DateFormat(datePattern).format(finalDueDate)
+                        : naText,
                   ),
                 ],
               ),
+              if (isApproved && tenorMonths != null && monthlyPayment != null) ...[
+                const SizedBox(height: 12),
+                _buildCard(
+                  children: [
+                    if (!_paymentSuccessThisMonth)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4C40F7),
+                          ),
+                          onPressed: canPayNow
+                              ? () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PaymentPage(
+                                        application: widget.application,
+                                      ),
+                                    ),
+                                  );
+
+                                  if (result is Map && result['paymentSuccess'] == true && mounted) {
+                                    setState(() {
+                                      _paymentSuccessThisMonth = true;
+                                    });
+                                    if (!_isTestAccountMode) {
+                                      await _syncNextDueDateWithPaymentPage();
+                                    }
+                                  }
+                                }
+                              : null,
+                          child: Text(
+                            context.t('Pay now', 'Thanh toán ngay'),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (!_isTestAccountMode && !canPayNow && nextDueDate != null) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          context.t(
+                            'Payment opens on ${DateFormat(datePattern).format(nextDueDate)}',
+                            'Thanh toán mở từ ${DateFormat(datePattern).format(nextDueDate)}',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE65100),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (_paymentSuccessThisMonth) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          context.t(
+                            'Payment successful for this month',
+                            'Thanh toán tháng này thành công',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -232,5 +370,208 @@ class ApplicationContractStatusPage extends StatelessWidget {
       base.millisecond,
       base.microsecond,
     );
+  }
+
+  DateTime? _getSubmissionDate(Map<String, dynamic> application) {
+    final candidates = [
+      application['acceptedAt'],
+      application['timestamp'],
+      application['submitted_at'],
+      application['submittedAt'],
+      application['createdAt'],
+    ];
+
+    for (final candidate in candidates) {
+      final parsed = _parseDate(candidate);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    return DateTime.tryParse(value.toString());
+  }
+
+  bool _canPayOnDate(DateTime? dueDate) {
+    if (dueDate == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    return !dueDateOnly.isAfter(today);
+  }
+
+  Future<void> _startRealtimeDueDateSync() async {
+    final submittedAt = _getSubmissionDate(widget.application);
+    if (submittedAt == null) return;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final offerId = await _resolveOfferId(userId);
+    if (offerId == null || offerId.isEmpty || userId == null || userId.isEmpty) {
+      return;
+    }
+
+    await _installmentsSubscription?.cancel();
+    _installmentsSubscription = _installmentService
+        .getInstallmentsStream(userId: userId, loanOfferId: offerId)
+        .listen((installments) {
+      _updateDueDateFromInstallments(installments, submittedAt);
+    });
+  }
+
+  void _updateDueDateFromInstallments(
+    List<Installment> installments,
+    DateTime submittedAt,
+  ) {
+    if (!mounted) return;
+
+    final unpaid = installments.where((item) => !item.isPaid).toList();
+    if (unpaid.isEmpty) {
+      setState(() {
+        _nextDueDateSynced = null;
+        _paymentSuccessThisMonth = true;
+      });
+      return;
+    }
+
+    final paidCount = installments.where((item) => item.isPaid).length;
+    final dueDate = _addMonthsSafe(
+      DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+      paidCount + 1,
+    );
+
+    setState(() {
+      _nextDueDateSynced = dueDate;
+      _paymentSuccessThisMonth = false;
+    });
+  }
+
+  int? _asNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
+  }
+
+  double? _asNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  Future<void> _syncNextDueDateWithPaymentPage() async {
+    final submittedAt = _getSubmissionDate(widget.application);
+    if (submittedAt == null) return;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final offerId = await _resolveOfferId(userId);
+
+    if (offerId == null || offerId.isEmpty || userId == null || userId.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _nextDueDateSynced = _addMonthsSafe(submittedAt, 1);
+      });
+      return;
+    }
+
+    try {
+      final installments = await _installmentService.getInstallmentsForLoan(
+        userId: userId,
+        loanOfferId: offerId,
+      );
+
+      final unpaid = installments.where((item) => !item.isPaid).toList();
+      if (unpaid.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _nextDueDateSynced = null;
+        });
+        return;
+      }
+
+      final paidCount = installments.where((item) => item.isPaid).length;
+      final dueDate = _addMonthsSafe(
+        DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+        paidCount + 1,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _nextDueDateSynced = dueDate;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _nextDueDateSynced = _addMonthsSafe(submittedAt, 1);
+      });
+    }
+  }
+
+  Future<String?> _resolveOfferId(String? userId) async {
+    final offerIdRaw = widget.application['offerId'] ?? widget.application['loanOfferId'];
+    final directOfferId = offerIdRaw?.toString();
+    if (directOfferId != null && directOfferId.isNotEmpty) {
+      return directOfferId;
+    }
+
+    if (userId == null || userId.isEmpty) return null;
+
+    try {
+      final query = await FirebaseFirestore.instance
+          .collection('loan_offers')
+          .where('userId', isEqualTo: userId)
+          .where('accepted', isEqualTo: true)
+          .get();
+
+      if (query.docs.isEmpty) return null;
+
+      final appLoanAmount = _asNullableDouble(
+        widget.application['loanAmount'] ?? widget.application['loanAmountVnd'],
+      );
+      final appTenorMonths = _asNullableInt(widget.application['loanTermMonths']);
+      final appMonthlyPayment = _asNullableDouble(
+        widget.application['monthlyPayment'] ?? widget.application['monthlyPaymentVnd'],
+      );
+
+      QueryDocumentSnapshot<Map<String, dynamic>>? bestDoc;
+      int bestScore = -1;
+
+      for (final doc in query.docs) {
+        final data = doc.data();
+        int score = 0;
+
+        final offerLoanAmount = _asNullableDouble(data['loanAmountVnd']);
+        final offerTenorMonths = _asNullableInt(data['loanTermMonths']);
+        final offerMonthlyPayment = _asNullableDouble(data['monthlyPaymentVnd']);
+
+        if (appLoanAmount != null && offerLoanAmount != null) {
+          if ((appLoanAmount - offerLoanAmount).abs() < 1) score += 2;
+        }
+        if (appTenorMonths != null && offerTenorMonths != null && appTenorMonths == offerTenorMonths) {
+          score += 2;
+        }
+        if (appMonthlyPayment != null && offerMonthlyPayment != null) {
+          if ((appMonthlyPayment - offerMonthlyPayment).abs() < 1) score += 2;
+        }
+
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        if (createdAt != null) score += 1;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestDoc = doc;
+        }
+      }
+
+      return bestDoc?.id;
+    } catch (_) {
+      return null;
+    }
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth/login_page.dart';
-import '../viewmodels/settings_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
 import 'profile_page.dart';
@@ -10,6 +9,8 @@ import 'feedback_page.dart';
 import 'notifications_page.dart';
 import 'security_page.dart';
 import 'privacy_policy_page.dart';
+import 'support_staff_page.dart';
+import '../services/firebase_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -19,103 +20,49 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _isSupportStaff = false;
+
   @override
   void initState() {
     super.initState();
-    // Load user profile when page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<SettingsViewModel>().loadUserProfile();
+        _loadSupportRole();
       }
     });
   }
 
+  Future<void> _loadSupportRole() async {
+    try {
+      final isSupport = await FirebaseService().isCurrentUserSupportStaff();
+      if (!mounted) return;
+      setState(() {
+        _isSupportStaff = isSupport;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSupportStaff = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final settingsViewModel = context.watch<SettingsViewModel>();
     final languageViewModel = context.watch<LanguageViewModel>();
     final isVietnamese = languageViewModel.isVietnamese;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          isVietnamese ? 'Cài đặt' : 'Settings',
-          style: const TextStyle(color: Colors.black),
-        ),
-      ),
+      backgroundColor: const Color(0xFFF5F7FB),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.fromLTRB(24, 16, 24, 120 + bottomInset),
                 child: Column(
                   children: [
-                    // Profile header
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4D4AF9), Color(0xFF6D7CFF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 35,
-                            backgroundColor: Colors.white,
-                            child: settingsViewModel.avatarUrl != null
-                                ? CircleAvatar(
-                                    radius: 32,
-                                    backgroundImage: NetworkImage(
-                                      settingsViewModel.avatarUrl!,
-                                    ),
-                                  )
-                                : CircleAvatar(
-                                    radius: 32,
-                                    backgroundColor: Colors.grey.shade200,
-                                    child: const Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Color(0xFF4D4AF9),
-                                    ),
-                                  ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  settingsViewModel.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  settingsViewModel.email,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
                     // Settings options
                     _buildSettingItem(
                       context,
@@ -178,6 +125,27 @@ class _SettingsPageState extends State<SettingsPage> {
                         );
                       },
                     ),
+                    if (_isSupportStaff) ...[
+                      const SizedBox(height: 12),
+                      _buildSettingItem(
+                        context,
+                        icon: Icons.headset_mic_outlined,
+                        title: isVietnamese
+                            ? 'Bảng điều khiển hỗ trợ'
+                            : 'Support Console',
+                        subtitle: isVietnamese
+                            ? 'Trả lời chat và xử lý phản hồi'
+                            : 'Reply to support chats and resolve feedback',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SupportStaffPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     _buildSettingItem(
                       context,
@@ -210,39 +178,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             builder: (_) => const SecurityPage(),
                           ),
                         );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSettingItem(
-                      context,
-                      icon: Icons.privacy_tip_outlined,
-                      title: isVietnamese
-                        ? 'Chính sách bảo mật'
-                        : 'Privacy Policy',
-                      subtitle: isVietnamese
-                        ? 'Cách chúng tôi xử lý dữ liệu'
-                        : 'How we handle your data',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const PrivacyPolicyPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSettingItem(
-                      context,
-                      icon: Icons.description_outlined,
-                      title: isVietnamese
-                        ? 'Điều khoản & Điều kiện'
-                        : 'Terms & Conditions',
-                      subtitle: isVietnamese
-                        ? 'Đọc điều khoản và điều kiện'
-                        : 'Read our terms and conditions',
-                      onTap: () {
-                        // Navigate to terms
                       },
                     ),
                     const SizedBox(height: 24),
@@ -280,19 +215,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        border: Border(
-                          top: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
                         children: [
                           Text(
-                            'VietCredit Score',
+                            'SwinCredit',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -301,15 +229,63 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Version 1.0.0',
+                            'Version 0.0.10',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade500,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const PrivacyPolicyPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  isVietnamese
+                                      ? 'Chính sách bảo mật'
+                                      : 'Privacy Policy',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: const Color(0xFF4D4AF9),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                ' | ',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  // Navigate to terms
+                                },
+                                child: Text(
+                                  isVietnamese
+                                      ? 'Điều khoản & Điều kiện'
+                                      : 'Terms & Conditions',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: const Color(0xFF4D4AF9),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           Text(
-                            '© 2025 VietCredit. All rights reserved.',
+                            '© 2025 SwinCredit. All rights reserved.',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade400,
@@ -391,28 +367,19 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildLanguageToggle(LanguageViewModel languageViewModel) {
-    return ToggleButtons(
-      borderRadius: BorderRadius.circular(10),
-      constraints: const BoxConstraints(minHeight: 32, minWidth: 50),
-      isSelected: [
-        !languageViewModel.isVietnamese,
-        languageViewModel.isVietnamese,
-      ],
-      onPressed: (index) {
-        if (index == 0) {
-          languageViewModel.setLanguage('en');
-          return;
-        }
-        languageViewModel.setLanguage('vi');
-      },
-      children: const [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text('ENG'),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LanguageChip(
+          label: 'ENG',
+          selected: !languageViewModel.isVietnamese,
+          onTap: () => languageViewModel.setLanguage('en'),
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text('VN'),
+        const SizedBox(width: 6),
+        _LanguageChip(
+          label: 'VN',
+          selected: languageViewModel.isVietnamese,
+          onTap: () => languageViewModel.setLanguage('vi'),
         ),
       ],
     );
@@ -483,6 +450,49 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         );
       },
+    );
+  }
+}
+
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 32, minWidth: 50),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8EBFF) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFF4D4AF9)
+                : const Color(0xFFDDE3FF),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: selected
+                ? const Color(0xFF2D2AA8)
+                : const Color(0xFF1A1F3F),
+          ),
+        ),
+      ),
     );
   }
 }

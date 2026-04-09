@@ -47,8 +47,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
   String? _errorMessage;
 
   final NumberFormat _currencyFormatter = NumberFormat('#,###', 'vi_VN');
-  final NumberFormat _currencyFormat =
-      NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'vi_VN',
+    symbol: '₫',
+  );
 
   final List<String> employmentOptions = [
     'EMPLOYED',
@@ -64,7 +66,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     'LIVING_WITH_PARENTS',
     'OTHER',
   ];
-
 
   @override
   void initState() {
@@ -111,12 +112,22 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            scrolledUnderElevation: 0,
             elevation: 0,
             automaticallyImplyLeading: false,
             title: Text(
-              context.t('Demo: Financial Calculator', 'Demo: Máy tính tài chính'),
-              style: const TextStyle(color: Colors.black, fontSize: 16),
+              context.t(
+                'Demo: Financial Calculator',
+                'Demo: Máy tính tài chính',
+              ),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1F3F),
+              ),
             ),
           ),
           body: SafeArea(
@@ -125,8 +136,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(
-                      horizontal:
-                          MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                      horizontal: MediaQuery.of(context).size.width > 600
+                          ? 24
+                          : 16,
                       vertical: 20,
                     ),
                     child: Form(
@@ -134,23 +146,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            context.t('Calculate Your Financial Profile', 'Tính hồ sơ tài chính của bạn'),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1F3F),
-                            ),
-                          ),
                           const SizedBox(height: 8),
-                          Text(
-                            context.t('Enter your information to see your credit score and loan eligibility (no ID verification required).', 'Nhập thông tin để xem điểm tín dụng và khả năng vay (không cần xác thực CCCD).'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
 
                           // Credit History Selection
                           Container(
@@ -159,8 +155,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               color: const Color(0xFF4C40F7).withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color:
-                                    const Color(0xFF4C40F7).withOpacity(0.2),
+                                color: const Color(0xFF4C40F7).withOpacity(0.2),
                               ),
                             ),
                             child: Column(
@@ -191,7 +186,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                         value: true,
                                         groupValue: _hasCreditHistory,
                                         onChanged: (val) => setState(
-                                            () => _hasCreditHistory = val),
+                                          () => _hasCreditHistory = val,
+                                        ),
                                         activeColor: const Color(0xFF4C40F7),
                                         contentPadding: EdgeInsets.zero,
                                       ),
@@ -211,7 +207,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                         value: false,
                                         groupValue: _hasCreditHistory,
                                         onChanged: (val) => setState(
-                                            () => _hasCreditHistory = val),
+                                          () => _hasCreditHistory = val,
+                                        ),
                                         activeColor: const Color(0xFF4C40F7),
                                         contentPadding: EdgeInsets.zero,
                                       ),
@@ -227,7 +224,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
 
                             // Personal Details
                             _buildSectionHeader(
-                              context.t('Personal Details', 'Thông tin cá nhân'),
+                              context.t(
+                                'Personal Details',
+                                'Thông tin cá nhân',
+                              ),
                             ),
                             _buildDateField(),
 
@@ -235,10 +235,16 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
 
                             // Employment & Income
                             _buildSectionHeader(
-                              context.t('Employment & Income', 'Nghề nghiệp & Thu nhập'),
+                              context.t(
+                                'Employment & Income',
+                                'Nghề nghiệp & Thu nhập',
+                              ),
                             ),
                             _buildDropdown(
-                              label: context.t('Employment Status', 'Tình trạng việc làm'),
+                              label: context.t(
+                                'Employment Status',
+                                'Tình trạng việc làm',
+                              ),
                               value: _employmentStatus,
                               items: employmentOptions,
                               onChanged: (val) =>
@@ -249,15 +255,20 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               fieldKey: _yearsEmployedFieldKey,
                               controller: _yearsEmployedController,
                               focusNode: _yearsEmployedFocusNode,
-                              label: context.t('Years Employed', 'Số năm làm việc'),
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
+                              label: context.t(
+                                'Years Employed',
+                                'Số năm làm việc',
                               ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               maxLength: 5,
                               inputFormatters: [
                                 LengthLimitingTextInputFormatter(5),
                                 FilteringTextInputFormatter.allow(
-                                    RegExp(r'[0-9\.]')),
+                                  RegExp(r'[0-9\.]'),
+                                ),
                               ],
                               validator: _validateYearsEmployed,
                             ),
@@ -266,7 +277,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               fieldKey: _monthlyIncomeFieldKey,
                               controller: _monthlyIncomeController,
                               focusNode: _monthlyIncomeFocusNode,
-                              label: context.t('Monthly Income (VND)', 'Thu nhập hàng tháng (VND)'),
+                              label: context.t(
+                                'Monthly Income (VND)',
+                                'Thu nhập hàng tháng (VND)',
+                              ),
                               keyboardType: TextInputType.number,
                               maxLength: 15,
                               inputFormatters: [
@@ -281,10 +295,16 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
 
                             // Residence & Assets
                             _buildSectionHeader(
-                              context.t('Residence & Assets', 'Nơi ở & Tài sản'),
+                              context.t(
+                                'Residence & Assets',
+                                'Nơi ở & Tài sản',
+                              ),
                             ),
                             _buildDropdown(
-                              label: context.t('Home Ownership', 'Tình trạng nhà ở'),
+                              label: context.t(
+                                'Home Ownership',
+                                'Tình trạng nhà ở',
+                              ),
                               value: _homeOwnership,
                               items: homeOwnershipOptions,
                               onChanged: (val) =>
@@ -295,14 +315,19 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                               fieldKey: _addressFieldKey,
                               controller: _addressController,
                               focusNode: _addressFocusNode,
-                              label: context.t('Current Address', 'Địa chỉ hiện tại'),
+                              label: context.t(
+                                'Current Address',
+                                'Địa chỉ hiện tại',
+                              ),
                               maxLines: 2,
                               maxLength: 100,
                               inputFormatters: [
                                 LengthLimitingTextInputFormatter(100),
                                 FilteringTextInputFormatter.allow(
-                                  RegExp(r'[\p{L}\p{M}0-9\s,\.\-/#]',
-                                      unicode: true),
+                                  RegExp(
+                                    r'[\p{L}\p{M}0-9\s,\.\-/#]',
+                                    unicode: true,
+                                  ),
                                 ),
                               ],
                               validator: _validateAddress,
@@ -319,7 +344,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                 fieldKey: _yearsCreditHistoryFieldKey,
                                 controller: _yearsCreditHistoryController,
                                 focusNode: _yearsCreditHistoryFocusNode,
-                                label: context.t('Years Credit History', 'Số năm lịch sử tín dụng'),
+                                label: context.t(
+                                  'Years Credit History',
+                                  'Số năm lịch sử tín dụng',
+                                ),
                                 keyboardType: TextInputType.number,
                                 maxLength: 2,
                                 inputFormatters: [
@@ -360,12 +388,16 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                   color: Colors.blue.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                      color: Colors.blue.withOpacity(0.2)),
+                                    color: Colors.blue.withOpacity(0.2),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.info_outline,
-                                        color: Colors.blue, size: 20),
+                                    const Icon(
+                                      Icons.info_outline,
+                                      color: Colors.blue,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
@@ -393,12 +425,16 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                   color: Colors.red.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                      color: Colors.red.withOpacity(0.3)),
+                                    color: Colors.red.withOpacity(0.3),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.error_outline,
-                                        color: Colors.red, size: 20),
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
@@ -418,7 +454,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                             if (_limitResult != null) ...[
                               const SizedBox(height: 20),
                               _buildSectionHeader(
-                                context.t('Your Financial Profile', 'Hồ sơ tài chính của bạn'),
+                                context.t(
+                                  'Your Financial Profile',
+                                  'Hồ sơ tài chính của bạn',
+                                ),
                               ),
                               _buildResultCard(),
                             ],
@@ -432,23 +471,22 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                 // Calculate Button
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal:
-                        MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                    horizontal: MediaQuery.of(context).size.width > 600
+                        ? 24
+                        : 16,
                     vertical: 16,
                   ),
                   child: SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed:
-                          (_isCalculating || !_isFormComplete())
-                              ? null
-                              : _calculateProfile,
+                      onPressed: (_isCalculating || !_isFormComplete())
+                          ? null
+                          : _calculateProfile,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            (_isCalculating || !_isFormComplete())
-                                ? Colors.grey.shade400
-                                : const Color(0xFF4C40F7),
+                        backgroundColor: (_isCalculating || !_isFormComplete())
+                            ? Colors.grey.shade400
+                            : const Color(0xFF4C40F7),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -490,7 +528,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        context.t('Analyzing your profile…', 'Đang phân tích hồ sơ của bạn…'),
+                        context.t(
+                          'Analyzing your profile…',
+                          'Đang phân tích hồ sơ của bạn…',
+                        ),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -499,7 +540,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        context.t('This may take up to 30 seconds.', 'Quá trình này có thể mất đến 30 giây.'),
+                        context.t(
+                          'This may take up to 30 seconds.',
+                          'Quá trình này có thể mất đến 30 giây.',
+                        ),
                         style: TextStyle(fontSize: 13, color: Colors.grey),
                       ),
                     ],
@@ -556,8 +600,9 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     if (!mounted) return;
 
     try {
-      final incomeText =
-          _monthlyIncomeController.text.replaceAll('.', '').replaceAll(',', '');
+      final incomeText = _monthlyIncomeController.text
+          .replaceAll('.', '')
+          .replaceAll(',', '');
       final income = double.parse(incomeText);
       final yearsEmp = double.parse(_yearsEmployedController.text);
 
@@ -664,8 +709,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       },
       decoration: InputDecoration(
         labelText: context.t('Date of Birth', 'Ngày sinh'),
-        suffixIcon:
-            const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
+        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -698,7 +742,8 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       focusNode: focusNode,
       maxLines: maxLines,
       maxLength: maxLength,
-      validator: validator ??
+      validator:
+          validator ??
           (value) {
             if (value == null || value.isEmpty) {
               return context.t('Please enter $label', 'Vui lòng nhập $label');
@@ -730,26 +775,34 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     return DropdownButtonFormField<String>(
       initialValue: value,
       isExpanded: true,
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
       items: items
-          .map((item) => DropdownMenuItem(
-                value: item,
-                child: Text(
-                  _getDropdownDisplayText(item),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ))
+          .map(
+            (item) => DropdownMenuItem(
+              value: item,
+              child: Text(
+                _getDropdownDisplayText(item),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
     );
@@ -853,8 +906,11 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.account_balance_wallet_outlined,
-                        size: 18, color: riskColor),
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 18,
+                      color: riskColor,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       context.t('Max Loan Limit', 'Hạn mức vay tối đa'),
@@ -870,8 +926,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                   NumberFormat.currency(
                     locale: context.isVietnamese ? 'vi_VN' : 'en_US',
                     symbol: '₫',
-                  )
-                      .format(limit.loanLimitVnd),
+                  ).format(limit.loanLimitVnd),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -885,8 +940,6 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       ),
     );
   }
-
-
 
   Color _getRiskColor(String level) {
     switch (level.toUpperCase()) {
@@ -921,7 +974,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
 
   String? _validateYearsEmployed(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Years Employed', 'Vui lòng nhập số năm làm việc');
+      return context.t(
+        'Please enter Years Employed',
+        'Vui lòng nhập số năm làm việc',
+      );
     }
     if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
       return context.t(
@@ -941,7 +997,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
 
   String? _validateMonthlyIncome(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Monthly Income', 'Vui lòng nhập thu nhập hàng tháng');
+      return context.t(
+        'Please enter Monthly Income',
+        'Vui lòng nhập thu nhập hàng tháng',
+      );
     }
     final cleaned = value.replaceAll('.', '').replaceAll(',', '');
     final income = double.tryParse(cleaned);
@@ -954,10 +1013,12 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
     return null;
   }
 
-
   String? _validateAddress(String? value) {
     if (value == null || value.isEmpty) {
-      return context.t('Please enter Current Address', 'Vui lòng nhập địa chỉ hiện tại');
+      return context.t(
+        'Please enter Current Address',
+        'Vui lòng nhập địa chỉ hiện tại',
+      );
     }
     if (value.trim().length < 5) {
       return context.t(
@@ -965,8 +1026,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         'Địa chỉ phải có ít nhất 5 ký tự',
       );
     }
-    if (!RegExp(r'^[\p{L}\p{M}0-9\s,\.\-/#]+$', unicode: true)
-        .hasMatch(value)) {
+    if (!RegExp(
+      r'^[\p{L}\p{M}0-9\s,\.\-/#]+$',
+      unicode: true,
+    ).hasMatch(value)) {
       return context.t(
         'Address can only contain letters, numbers, spaces, commas, dots, hyphens, slashes, and #',
         'Địa chỉ chỉ được chứa chữ, số, khoảng trắng, dấu phẩy, dấu chấm, dấu gạch nối, dấu gạch chéo và #',
@@ -1027,7 +1090,9 @@ class _CurrencyInputFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
     final number = int.tryParse(newValue.text);
     if (number == null) return oldValue;

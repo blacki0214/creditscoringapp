@@ -43,6 +43,7 @@ class FirebaseLoanService {
   Future<Map<String, dynamic>> submitLoanApplication({
     required String userId,
     required SimpleLoanRequest loanRequest,
+    String? pendingApplicationId,
   }) async {
     try {
       // Step 1: Calculate credit score and loan limit
@@ -65,13 +66,14 @@ class FirebaseLoanService {
 
       // If not approved, return early
       if (!limitResponse.approved) {
-        // Create application document for rejected application
-        final applicationRef = await _firebase.creditApplicationsCollection.add({
+        final applicationId = pendingApplicationId ??
+            await createPendingApplication(userId: userId, loanRequest: loanRequest);
+
+        await _firebase.creditApplicationsCollection.doc(applicationId).set({
           'userId': userId,
           'status': 'rejected',
-          'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
-          
+
           // Application data
           'fullName': loanRequest.fullName,
           'age': loanRequest.age,
@@ -83,18 +85,25 @@ class FirebaseLoanService {
           'yearsCreditHistory': loanRequest.yearsCreditHistory,
           'hasPreviousDefaults': loanRequest.hasPreviousDefaults,
           'currentlyDefaulting': loanRequest.currentlyDefaulting,
-          
+
           // Result data
           'creditScore': limitResponse.creditScore,
           'riskLevel': limitResponse.riskLevel,
           'approved': false,
           'loanLimitVnd': limitResponse.loanLimitVnd,
-        });
+
+          // Flow state
+          'step2Completed': true,
+          'step3Completed': false,
+          'step4Completed': false,
+          'step5Completed': false,
+          'step6Completed': false,
+        }, SetOptions(merge: true));
 
         // Create rejected offer document
         final offerRef = await _firebase.loanOffersCollection.add({
           'userId': userId,
-          'applicationId': applicationRef.id,
+          'applicationId': applicationId,
           'createdAt': FieldValue.serverTimestamp(),
           'expiresAt': Timestamp.fromDate(
             DateTime.now().add(const Duration(days: 30)),
@@ -107,19 +116,31 @@ class FirebaseLoanService {
           'riskLevel': limitResponse.riskLevel,
           'approvalMessage': limitResponse.message,
           'accepted': false,
+          'step4Completed': false,
+          'step5Completed': false,
+          'step6Completed': false,
         });
+
+        await _firebase.loanOffersCollection.doc(offerRef.id).set({
+          'contractId': offerRef.id,
+        }, SetOptions(merge: true));
+
+        await _firebase.creditApplicationsCollection.doc(applicationId).set({
+          'offerId': offerRef.id,
+          'contractId': offerRef.id,
+        }, SetOptions(merge: true));
 
         // Create notification for rejected loan
         await _notificationService.createLoanNotification(
           userId: userId,
-          applicationId: applicationRef.id,
+          applicationId: applicationId,
           approved: false,
           creditScore: limitResponse.creditScore,
           loanAmount: limitResponse.loanLimitVnd,
         );
 
         return {
-          'applicationId': applicationRef.id,
+          'applicationId': applicationId,
           'offerId': offerRef.id,
           'limitResponse': limitResponse,
           'termsResponse': null,
@@ -138,14 +159,15 @@ class FirebaseLoanService {
       final termsResponse = await _apiService.calculateTerms(termsRequest);
       print('[FirebaseLoanService] Step 2 completed. Interest rate: ${termsResponse.interestRate}%, Term: ${termsResponse.loanTermMonths} months');
 
-      // Create application document
-      print('[FirebaseLoanService] Creating application document...');
-      final applicationRef = await _firebase.creditApplicationsCollection.add({
+      final applicationId = pendingApplicationId ??
+          await createPendingApplication(userId: userId, loanRequest: loanRequest);
+
+      print('[FirebaseLoanService] Updating application document: $applicationId');
+      await _firebase.creditApplicationsCollection.doc(applicationId).set({
         'userId': userId,
         'status': 'approved',
-        'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        
+
         // Application data
         'fullName': loanRequest.fullName,
         'age': loanRequest.age,
@@ -157,20 +179,27 @@ class FirebaseLoanService {
         'yearsCreditHistory': loanRequest.yearsCreditHistory,
         'hasPreviousDefaults': loanRequest.hasPreviousDefaults,
         'currentlyDefaulting': loanRequest.currentlyDefaulting,
-        
+
         // Result data
         'creditScore': limitResponse.creditScore,
         'riskLevel': limitResponse.riskLevel,
         'approved': true,
         'loanLimitVnd': limitResponse.loanLimitVnd,
-      });
-      print('[FirebaseLoanService] Application document created: ${applicationRef.id}');
+
+        // Flow state
+        'step2Completed': true,
+        'step3Completed': false,
+        'step4Completed': false,
+        'step5Completed': false,
+        'step6Completed': false,
+      }, SetOptions(merge: true));
+      print('[FirebaseLoanService] Application document updated: $applicationId');
 
       // Create loan offer document
       print('[FirebaseLoanService] Creating loan offer document...');
       final offerRef = await _firebase.loanOffersCollection.add({
         'userId': userId,
-        'applicationId': applicationRef.id,
+        'applicationId': applicationId,
         'createdAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(
           DateTime.now().add(const Duration(days: 30)),
@@ -191,14 +220,26 @@ class FirebaseLoanService {
         
         // Acceptance status
         'accepted': false,
+        'step4Completed': false,
+        'step5Completed': false,
+        'step6Completed': false,
       });
       print('[FirebaseLoanService] Loan offer document created: ${offerRef.id}');
+
+      await _firebase.loanOffersCollection.doc(offerRef.id).set({
+        'contractId': offerRef.id,
+      }, SetOptions(merge: true));
+
+      await _firebase.creditApplicationsCollection.doc(applicationId).set({
+        'offerId': offerRef.id,
+        'contractId': offerRef.id,
+      }, SetOptions(merge: true));
 
       // Add to application history
       print('[FirebaseLoanService] Creating application history...');
       await _firebase.applicationHistoryCollection.add({
         'userId': userId,
-        'applicationId': applicationRef.id,
+        'applicationId': applicationId,
         'action': 'created',
         'timestamp': FieldValue.serverTimestamp(),
         'details': {
@@ -214,14 +255,14 @@ class FirebaseLoanService {
       // Create notification for approved loan
       await _notificationService.createLoanNotification(
         userId: userId,
-        applicationId: applicationRef.id,
+        applicationId: applicationId,
         approved: true,
         creditScore: limitResponse.creditScore,
         loanAmount: limitResponse.loanLimitVnd,
       );
 
       return {
-        'applicationId': applicationRef.id,
+        'applicationId': applicationId,
         'offerId': offerRef.id,
         'limitResponse': limitResponse,
         'termsResponse': termsResponse,
@@ -282,6 +323,7 @@ class FirebaseLoanService {
   Future<void> acceptLoanOffer(String offerId) async {
     try {
       await _firebase.loanOffersCollection.doc(offerId).update({
+        'contractId': offerId,
         'accepted': true,
         'acceptedAt': FieldValue.serverTimestamp(),
       });
@@ -308,5 +350,161 @@ class FirebaseLoanService {
     } catch (e) {
       throw Exception('Failed to get application history: $e');
     }
+  }
+
+  Future<void> saveStep3AdditionalInfo({
+    required String applicationId,
+    required String userId,
+    required Map<String, dynamic> step3Data,
+  }) async {
+    await _firebase.creditApplicationsCollection.doc(applicationId).set({
+      'userId': userId,
+      'step3Completed': true,
+      'step3Data': step3Data,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> saveStep4OfferSelection({
+    required String applicationId,
+    required String offerId,
+    required String userId,
+    required Map<String, dynamic> selection,
+  }) async {
+    await _firebase.loanOffersCollection.doc(offerId).set({
+      'userId': userId,
+      'applicationId': applicationId,
+      ...selection,
+      'step4Completed': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await _firebase.creditApplicationsCollection.doc(applicationId).set({
+      'step4Completed': true,
+      'loanPurpose': selection['loanPurpose'],
+      'requestedLoanAmountVnd': selection['loanAmountVnd'],
+      'requestedLoanTermMonths': selection['loanTermMonths'],
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> saveStep5ContractSignature({
+    required String applicationId,
+    required String offerId,
+    required String userId,
+    required Map<String, dynamic> contractData,
+  }) async {
+    await _firebase.loanOffersCollection.doc(offerId).set({
+      'userId': userId,
+      'applicationId': applicationId,
+      'accepted': true,
+      'acceptedAt': FieldValue.serverTimestamp(),
+      'step5Completed': true,
+      'contract': contractData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await _firebase.creditApplicationsCollection.doc(applicationId).set({
+      'step5Completed': true,
+      'contractSigned': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> saveStep6DisbursementInfo({
+    required String applicationId,
+    required String offerId,
+    required String userId,
+    required Map<String, dynamic> disbursementData,
+  }) async {
+    await _firebase.loanOffersCollection.doc(offerId).set({
+      'userId': userId,
+      'applicationId': applicationId,
+      'step6Completed': true,
+      'disbursement': disbursementData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await _firebase.creditApplicationsCollection.doc(applicationId).set({
+      'step6Completed': true,
+      'status': 'completed',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<Map<String, dynamic>?> getLatestApplication(String userId) async {
+    try {
+      final querySnapshot = await _firebase.creditApplicationsCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('updatedAt', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }
+    } catch (_) {
+      // Fallback below.
+    }
+
+    try {
+      final fallbackByCreatedAt = await _firebase.creditApplicationsCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get();
+
+      if (fallbackByCreatedAt.docs.isNotEmpty) {
+        final doc = fallbackByCreatedAt.docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }
+    } catch (_) {
+      // Final fallback below.
+    }
+
+    final noOrderFallback = await _firebase.creditApplicationsCollection
+        .where('userId', isEqualTo: userId)
+        .limit(20)
+        .get();
+
+    if (noOrderFallback.docs.isEmpty) return null;
+
+    final docs = noOrderFallback.docs.toList();
+    docs.sort((a, b) {
+      final aMap = a.data() as Map<String, dynamic>;
+      final bMap = b.data() as Map<String, dynamic>;
+
+      final aUpdated = aMap['updatedAt'];
+      final bUpdated = bMap['updatedAt'];
+      if (aUpdated is Timestamp && bUpdated is Timestamp) {
+        return bUpdated.compareTo(aUpdated);
+      }
+
+      final aCreated = aMap['createdAt'];
+      final bCreated = bMap['createdAt'];
+      if (aCreated is Timestamp && bCreated is Timestamp) {
+        return bCreated.compareTo(aCreated);
+      }
+
+      return b.id.compareTo(a.id);
+    });
+
+    final latest = docs.first;
+    final latestData = latest.data() as Map<String, dynamic>;
+    latestData['id'] = latest.id;
+    return latestData;
+  }
+
+  Future<Map<String, dynamic>?> getLoanOfferById(String offerId) async {
+    final doc = await _firebase.loanOffersCollection.doc(offerId).get();
+    if (!doc.exists || doc.data() == null) return null;
+    final data = doc.data() as Map<String, dynamic>;
+    data['id'] = doc.id;
+    return data;
   }
 }

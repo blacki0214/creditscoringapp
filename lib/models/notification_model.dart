@@ -5,7 +5,7 @@ class NotificationModel {
   final String id;
   final String userId;
   final String? applicationId;
-  final String type; // 'loan_approved', 'loan_rejected', 'credit_score_updated', 'payment_reminder'
+  final String type; // 'loan_approved', 'loan_rejected', 'credit_score_updated', 'payment_reminder', 'payment_success'
   final String title;
   final String body;
   final Map<String, dynamic>? data;
@@ -82,6 +82,14 @@ class NotificationModel {
   /// Get icon based on notification type (for reference, not used in UI)
   String get iconType {
     switch (type) {
+      case 'ekyc_completed':
+        return 'verified_user';
+      case 'step3_completed':
+        return 'assignment_turned_in';
+      case 'step4_completed':
+        return 'calculate';
+      case 'step5_completed':
+        return 'description';
       case 'loan_approved':
         return 'check_circle';
       case 'loan_rejected':
@@ -90,6 +98,8 @@ class NotificationModel {
         return 'trending_up';
       case 'payment_reminder':
         return 'payment';
+      case 'payment_success':
+        return 'task_alt';
       default:
         return 'notifications';
     }
@@ -98,6 +108,14 @@ class NotificationModel {
   /// Get color based on notification type
   int get colorValue {
     switch (type) {
+      case 'ekyc_completed':
+        return 0xFF26A69A; // Teal
+      case 'step3_completed':
+        return 0xFF42A5F5; // Blue
+      case 'step4_completed':
+        return 0xFF5C6BC0; // Indigo
+      case 'step5_completed':
+        return 0xFF8D6E63; // Brown
       case 'loan_approved':
         return 0xFF4CAF50; // Green
       case 'loan_rejected':
@@ -106,6 +124,8 @@ class NotificationModel {
         return 0xFF4C40F7; // Purple
       case 'payment_reminder':
         return 0xFFFFA726; // Orange
+      case 'payment_success':
+        return 0xFF2E7D32; // Green
       default:
         return 0xFF9E9E9E; // Grey
     }

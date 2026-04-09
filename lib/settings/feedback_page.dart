@@ -19,7 +19,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
   late TextEditingController _emailController;
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
-  
+
   String _selectedCategory = 'General Feedback';
   final List<String> _categories = [
     'General Feedback',
@@ -45,9 +45,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7FB),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -58,9 +59,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
             style: const TextStyle(color: Colors.black),
           ),
           bottom: TabBar(
-            labelColor: const Color(0xFF4C40F7),
+            labelColor: const Color(0xFF4D4AF9),
             unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF4C40F7),
+            indicatorColor: const Color(0xFF4D4AF9),
             tabs: [
               Tab(text: context.t('Submit Feedback', 'Gửi phản hồi')),
               Tab(text: context.t('My Feedback', 'Phản hồi của tôi')),
@@ -68,10 +69,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ),
         ),
         body: TabBarView(
-          children: [
-            _buildSubmitFeedbackTab(),
-            _buildMyFeedbackTab(),
-          ],
+          children: [_buildSubmitFeedbackTab(), _buildMyFeedbackTab()],
         ),
       ),
     );
@@ -87,7 +85,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.t('We value your feedback', 'Chúng tôi trân trọng phản hồi của bạn'),
+                context.t(
+                  'We value your feedback',
+                  'Chúng tôi trân trọng phản hồi của bạn',
+                ),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -96,14 +97,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                context.t('Help us improve by sharing your thoughts', 'Hãy chia sẻ ý kiến để giúp chúng tôi cải thiện'),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
+                context.t(
+                  'Help us improve by sharing your thoughts',
+                  'Hãy chia sẻ ý kiến để giúp chúng tôi cải thiện',
                 ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 32),
-              
+
               // Name field
               TextFormField(
                 controller: _nameController,
@@ -120,20 +121,23 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return context.t('Please enter your name', 'Vui lòng nhập họ tên');
+                    return context.t(
+                      'Please enter your name',
+                      'Vui lòng nhập họ tên',
+                    );
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Email field
               TextFormField(
                 controller: _emailController,
@@ -150,26 +154,32 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return context.t('Please enter your email', 'Vui lòng nhập email');
+                    return context.t(
+                      'Please enter your email',
+                      'Vui lòng nhập email',
+                    );
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Category dropdown
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
+                dropdownColor: Colors.white,
                 decoration: InputDecoration(
                   labelText: context.t('Category', 'Danh mục'),
                   prefixIcon: const Icon(Icons.category_outlined),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -180,7 +190,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
@@ -198,7 +208,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Subject field
               TextFormField(
                 controller: _subjectController,
@@ -215,20 +225,23 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return context.t('Please enter a subject', 'Vui lòng nhập chủ đề');
+                    return context.t(
+                      'Please enter a subject',
+                      'Vui lòng nhập chủ đề',
+                    );
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Message field
               TextFormField(
                 controller: _messageController,
@@ -250,20 +263,23 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF4C40F7),
+                      color: Color(0xFF4D4AF9),
                       width: 2,
                     ),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return context.t('Please enter your feedback', 'Vui lòng nhập phản hồi của bạn');
+                    return context.t(
+                      'Please enter your feedback',
+                      'Vui lòng nhập phản hồi của bạn',
+                    );
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 24),
-              
+
               // Submit button
               SizedBox(
                 width: double.infinity,
@@ -271,7 +287,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 child: ElevatedButton(
                   onPressed: _submitFeedback,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -302,9 +318,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF4C40F7),
-              ),
+              child: CircularProgressIndicator(color: Color(0xFF4D4AF9)),
             );
           }
 
@@ -331,10 +345,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   Text(
                     snapshot.error.toString(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -365,10 +376,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   const SizedBox(height: 8),
                   Text(
                     'Your submitted feedback will appear here',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -395,7 +403,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final category = feedbackData['category'] ?? 'General';
     final message = feedbackData['message'] ?? '';
     final statusStr = feedbackData['status'] ?? 'pending';
-    
+
     // Parse date
     String dateStr = 'N/A';
     if (feedbackData['createdAt'] != null) {
@@ -403,12 +411,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
       final date = timestamp.toDate();
       dateStr = DateFormat('dd/MM/yyyy').format(date);
     }
-    
+
     // Parse status
     FeedbackStatus status;
     switch (statusStr) {
       case 'inProgress':
         status = FeedbackStatus.inProgress;
+        break;
+      case 'completed':
+        status = FeedbackStatus.solved;
         break;
       case 'solved':
         status = FeedbackStatus.solved;
@@ -455,14 +466,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4C40F7).withOpacity(0.1),
+                  color: const Color(0xFF4D4AF9).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   category,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF4C40F7),
+                    color: Color(0xFF4D4AF9),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -503,10 +514,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   const SizedBox(width: 4),
                   Text(
                     dateStr,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -517,7 +525,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 child: const Text(
                   'View Details',
                   style: TextStyle(
-                    color: Color(0xFF4C40F7),
+                    color: Color(0xFF4D4AF9),
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -542,7 +550,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         icon = Icons.pending_outlined;
         break;
       case FeedbackStatus.inProgress:
-        color = const Color(0xFF4C40F7);
+        color = const Color(0xFF4D4AF9);
         text = 'In Progress';
         icon = Icons.hourglass_empty;
         break;
@@ -600,6 +608,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.white,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -646,7 +656,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       _messageController.clear();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4C40F7),
+                      backgroundColor: const Color(0xFF4D4AF9),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -676,7 +686,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
     }
   }
 
-  void _showFeedbackDetails(Map<String, dynamic> feedbackData, FeedbackStatus status, String dateStr) {
+  void _showFeedbackDetails(
+    Map<String, dynamic> feedbackData,
+    FeedbackStatus status,
+    String dateStr,
+  ) {
     final id = feedbackData['id'] ?? 'N/A';
     final subject = feedbackData['subject'] ?? 'No subject';
     final category = feedbackData['category'] ?? 'General';
@@ -688,8 +702,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
                 'Feedback Details',
@@ -698,7 +715,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   color: Color(0xFF1A1F3F),
                 ),
               ),
-              _buildStatusBadge(status),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: _buildStatusBadge(status),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -740,7 +761,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               child: const Text(
                 'Close',
                 style: TextStyle(
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -766,10 +787,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF1A1F3F),
-          ),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF1A1F3F)),
         ),
       ],
     );
@@ -785,11 +803,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 }
 
-enum FeedbackStatus {
-  pending,
-  inProgress,
-  solved,
-}
+enum FeedbackStatus { pending, inProgress, solved }
 
 class FeedbackItem {
   final String id;

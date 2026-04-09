@@ -1,25 +1,30 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../services/local_storage_service.dart';
+import '../services/installment_service.dart';
 import '../services/notification_service.dart';
 import '../models/notification_model.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../settings/profile_page.dart';
 import '../settings/support_page.dart';
-import '../loan/step3_additional_info.dart';
+import '../loan/step3_personal_info.dart';
 import '../widgets/add_password_dialog.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'application_contract_status_page.dart';
 import '../utils/app_localization.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.onOpenSettings, this.onOpenStudent});
+
+  final VoidCallback? onOpenSettings;
+  final VoidCallback? onOpenStudent;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -27,6 +32,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ApplicationStatus? _lastKnownStatus;
+  final InstallmentService _installmentService = InstallmentService();
+  int _selectedHomeTab = 0;
+
+  void _openSettingsFromMenu() {
+    if (widget.onOpenSettings != null) {
+      widget.onOpenSettings!();
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingsPage()),
+    );
+  }
 
   @override
   void initState() {
@@ -37,7 +56,7 @@ class _HomePageState extends State<HomePage> {
 
   // REMOVED didChangeDependencies - it was causing infinite loop!
   // Every time HomeViewModel called notifyListeners(), it triggered
-  // didChangeDependencies → _loadUserData → notifyListeners → repeat infinitely
+  // didChangeDependencies â†’ _loadUserData â†’ notifyListeners â†’ repeat infinitely
   // This caused hundreds of Firestore queries per second and memory leak
 
   void _loadUserData() {
@@ -77,7 +96,7 @@ class _HomePageState extends State<HomePage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.lock_outline, color: Color(0xFF4C40F7)),
+            Icon(Icons.lock_outline, color: Color(0xFF4D4AF9)),
             SizedBox(width: 8),
             Text('Add a Password'),
           ],
@@ -85,9 +104,9 @@ class _HomePageState extends State<HomePage> {
         content: const Text(
           'You\'re signed in with Google. Would you like to add a password for easier access?\n\n'
           'Benefits:\n'
-          '✓ Sign in without Google\n'
-          '✓ Use "Forgot Password"\n'
-          '✓ Backup sign-in method',
+          '�o" Sign in without Google\n'
+          '�o" Use "Forgot Password"\n'
+          '�o" Backup sign-in method',
           style: TextStyle(fontSize: 14),
         ),
         actions: [
@@ -106,7 +125,7 @@ class _HomePageState extends State<HomePage> {
               _showAddPasswordDialog();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C40F7),
+              backgroundColor: const Color(0xFF4D4AF9),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -131,6 +150,357 @@ class _HomePageState extends State<HomePage> {
       // Password was successfully added, mark prompt as seen
       await LocalStorageService.setAddPasswordPromptSeen();
     }
+  }
+
+  void _showNotificationsDialog(
+    BuildContext context,
+    String userId,
+    int unreadCount,
+  ) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.2),
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 90,
+          ),
+          backgroundColor: Colors.transparent,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
+                ),
+              ],
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 468),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 10, 9),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            context.t('Notifications', 'Thông báo'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 25,
+                              color: Color(0xFF1A1F3F),
+                            ),
+                          ),
+                        ),
+                        if (unreadCount > 0)
+                          TextButton(
+                            onPressed: () async {
+                              await NotificationService().markAllAsRead(userId);
+                            },
+                            child: Text(
+                              context.t('Mark all read', 'Đánh dấu đã đọc'),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF4D4AF9),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1, color: Colors.grey.shade200),
+                  Expanded(
+                    child: StreamBuilder<List<NotificationModel>>(
+                      stream: NotificationService().getNotificationsStream(
+                        userId,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              context.t(
+                                'Error loading notifications',
+                                'Lỗi tải thông báo',
+                              ),
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }
+
+                        final notifications = snapshot.data ?? [];
+
+                        if (notifications.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.notifications_none,
+                                  size: 48,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  context.t(
+                                    'No notifications yet',
+                                    'Chưa có thông báo',
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(10),
+                          itemCount: notifications.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 9),
+                          itemBuilder: (context, index) {
+                            final notification = notifications[index];
+                            final localizedTitle =
+                                _getLocalizedNotificationTitle(
+                                  context,
+                                  notification,
+                                );
+                            final localizedBody = _getLocalizedNotificationBody(
+                              context,
+                              notification,
+                            );
+                            final localizedTimeAgo = _formatNotificationTimeAgo(
+                              context,
+                              notification.createdAt,
+                            );
+
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () async {
+                                if (!notification.isRead) {
+                                  await NotificationService().markAsRead(
+                                    notification.id,
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: notification.isRead
+                                      ? const Color(0xFFF8FAFF)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: notification.isRead
+                                        ? const Color(0xFFE6ECFF)
+                                        : const Color(0xFFD8E2FF),
+                                  ),
+                                  boxShadow: notification.isRead
+                                      ? null
+                                      : [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFF4D4AF9,
+                                            ).withOpacity(0.06),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Color(
+                                          notification.colorValue,
+                                        ).withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        _getNotificationIcon(notification.type),
+                                        color: Color(notification.colorValue),
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 9),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              if (!notification.isRead)
+                                                Container(
+                                                  width: 7,
+                                                  height: 7,
+                                                  margin: const EdgeInsets.only(
+                                                    right: 6,
+                                                  ),
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        color: Color(
+                                                          0xFF4D4AF9,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                ),
+                                              Expanded(
+                                                child: Text(
+                                                  localizedTitle,
+                                                  style: TextStyle(
+                                                    fontWeight:
+                                                        notification.isRead
+                                                        ? FontWeight.w500
+                                                        : FontWeight.w700,
+                                                    fontSize: 15,
+                                                    color: const Color(
+                                                      0xFF1A1F3F,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            localizedBody,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade700,
+                                              height: 1.2,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            localizedTimeAgo,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey.shade500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        splashRadius: 16,
+                                        tooltip: context.t('Delete', 'Xóa'),
+                                        onPressed: () async {
+                                          await NotificationService()
+                                              .deleteNotification(
+                                                notification.id,
+                                              );
+                                        },
+                                        icon: Icon(
+                                          Icons.close,
+                                          size: 16,
+                                          color: Colors.red.shade400,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  Divider(height: 1, color: Colors.grey.shade200),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4D4AF9),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                            ),
+                            child: Text(
+                              context.t('Back', 'Quay lại'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await NotificationService()
+                                  .deleteAllReadNotifications(userId);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE53935),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                            ),
+                            child: Text(
+                              context.t(
+                                'Delete all read',
+                                'Xóa thông báo đã đọc',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _checkAndRefreshCreditScore() {
@@ -196,6 +566,9 @@ class _HomePageState extends State<HomePage> {
                     // Avatar with menu
                     PopupMenuButton(
                       offset: const Offset(0, 50),
+                      color: Colors.white,
+                      surfaceTintColor: Colors.white,
+                      shadowColor: Colors.black26,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -233,12 +606,7 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SettingsPage(),
-                              ),
-                            );
+                            _openSettingsFromMenu();
                           },
                         ),
                         PopupMenuItem(
@@ -354,10 +722,11 @@ class _HomePageState extends State<HomePage> {
                           builder: (context, countSnapshot) {
                             final unreadCount = countSnapshot.data ?? 0;
 
-                            return PopupMenuButton(
-                              offset: const Offset(0, 50),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                            return IconButton(
+                              onPressed: () => _showNotificationsDialog(
+                                context,
+                                userId,
+                                unreadCount,
                               ),
                               icon: Stack(
                                 children: [
@@ -392,311 +761,6 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                 ],
                               ),
-                              itemBuilder: (context) {
-                                return [
-                                  PopupMenuItem(
-                                    enabled: false,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          context.t(
-                                            'Notifications',
-                                            'Thông báo',
-                                          ),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Color(0xFF1A1F3F),
-                                          ),
-                                        ),
-                                        if (unreadCount > 0)
-                                          TextButton(
-                                            onPressed: () async {
-                                              await NotificationService()
-                                                  .markAllAsRead(userId);
-                                              // Don't close popup - let user see the updated state
-                                            },
-                                            style: TextButton.styleFrom(
-                                              padding: EdgeInsets.zero,
-                                              minimumSize: const Size(0, 0),
-                                              tapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                            ),
-                                            child: Text(
-                                              context.t(
-                                                'Mark all read',
-                                                'Đánh dấu đã đọc',
-                                              ),
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xFF4C40F7),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    enabled: false,
-                                    child: Divider(height: 1),
-                                  ),
-                                  PopupMenuItem(
-                                    enabled: false,
-                                    child: SizedBox(
-                                      width: 300,
-                                      height: 300,
-                                      child: StreamBuilder<List<NotificationModel>>(
-                                        stream: NotificationService()
-                                            .getNotificationsStream(userId),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            );
-                                          }
-
-                                          if (snapshot.hasError) {
-                                            return Center(
-                                              child: Text(
-                                                context.t(
-                                                  'Error loading notifications',
-                                                  'Lỗi khi tải thông báo',
-                                                ),
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            );
-                                          }
-
-                                          final notifications =
-                                              snapshot.data ?? [];
-
-                                          if (notifications.isEmpty) {
-                                            return Center(
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    Icons.notifications_none,
-                                                    size: 48,
-                                                    color: Colors.grey.shade400,
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Text(
-                                                    context.t(
-                                                      'No notifications yet',
-                                                      'Chưa có thông báo',
-                                                    ),
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }
-
-                                          return ListView.separated(
-                                            padding: EdgeInsets.zero,
-                                            itemCount: notifications.length,
-                                            separatorBuilder:
-                                                (context, index) =>
-                                                    const Divider(height: 1),
-                                            itemBuilder: (context, index) {
-                                              final notification =
-                                                  notifications[index];
-                                              final localizedTitle =
-                                                  _getLocalizedNotificationTitle(
-                                                    context,
-                                                    notification,
-                                                  );
-                                              final localizedBody =
-                                                  _getLocalizedNotificationBody(
-                                                    context,
-                                                    notification,
-                                                  );
-                                              final localizedTimeAgo =
-                                                  _formatNotificationTimeAgo(
-                                                    context,
-                                                    notification.createdAt,
-                                                  );
-                                              return InkWell(
-                                                onTap: () async {
-                                                  if (!notification.isRead) {
-                                                    await NotificationService()
-                                                        .markAsRead(
-                                                          notification.id,
-                                                        );
-                                                  }
-                                                  // Don't close popup - let user continue browsing notifications
-                                                },
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 12,
-                                                      ),
-                                                  color: notification.isRead
-                                                      ? const Color(0xFFF5F5F5)
-                                                      : Colors.white,
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets.all(
-                                                              8,
-                                                            ),
-                                                        decoration: BoxDecoration(
-                                                          color: Color(
-                                                            notification
-                                                                .colorValue,
-                                                          ).withOpacity(0.1),
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                8,
-                                                              ),
-                                                          border: notification
-                                                                  .isRead
-                                                              ? null
-                                                              : Border.all(
-                                                                  color: Color(
-                                                                    notification
-                                                                        .colorValue,
-                                                                  ).withOpacity(
-                                                                    0.35,
-                                                                  ),
-                                                                  width: 1.2,
-                                                                ),
-                                                        ),
-                                                        child: Icon(
-                                                          _getNotificationIcon(
-                                                            notification.type,
-                                                          ),
-                                                          color: Color(
-                                                            notification
-                                                                .colorValue,
-                                                          ),
-                                                          size: notification
-                                                                  .isRead
-                                                              ? 20
-                                                              : 22,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Row(
-                                                              children: [
-                                                                if (!notification
-                                                                    .isRead)
-                                                                  Container(
-                                                                    width: 8,
-                                                                    height: 8,
-                                                                    margin:
-                                                                        const EdgeInsets.only(
-                                                                          right:
-                                                                              6,
-                                                                        ),
-                                                                    decoration: const BoxDecoration(
-                                                                      color: Color(
-                                                                        0xFF4C40F7,
-                                                                      ),
-                                                                      shape: BoxShape
-                                                                          .circle,
-                                                                    ),
-                                                                  ),
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    localizedTitle,
-                                                                    style: TextStyle(
-                                                                      fontWeight:
-                                                                          notification
-                                                                              .isRead
-                                                                          ? FontWeight.w500
-                                                                        : FontWeight.w700,
-                                                                      fontSize:
-                                                                          14,
-                                                                      color: notification
-                                                                              .isRead
-                                                                          ? Colors.grey
-                                                                              .shade700
-                                                                          : const Color(
-                                                                              0xFF1A1F3F,
-                                                                            ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            const SizedBox(
-                                                              height: 2,
-                                                            ),
-                                                            Text(
-                                                              localizedBody,
-                                                              style: TextStyle(
-                                                              fontSize: 12,
-                                                              fontWeight: notification
-                                                                  .isRead
-                                                                ? FontWeight.w400
-                                                                : FontWeight.w600,
-                                                              color: notification
-                                                                  .isRead
-                                                                ? Colors
-                                                                  .grey
-                                                                  .shade600
-                                                                : Colors
-                                                                  .grey
-                                                                  .shade800,
-                                                              ),
-                                                              maxLines: 2,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                            const SizedBox(
-                                                              height: 4,
-                                                            ),
-                                                            Text(
-                                                              localizedTimeAgo,
-                                                              style: TextStyle(
-                                                                fontSize: 11,
-                                                                color: Colors
-                                                                    .grey
-                                                                    .shade500,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ];
-                              },
                             );
                           },
                         );
@@ -722,287 +786,17 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Greeting
-                        Text(
-                          context.t(
-                            'Hello, ${viewModel.userName ?? "User"}',
-                            'Xin chào, ${viewModel.userName ?? "Bạn"}',
-                          ),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A1F3F),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          context.t(
-                            'Here is your credit rate',
-                            'Đây là mức tín dụng của bạn',
-                          ),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Period selector
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildPeriodChip(context, viewModel, 'Overall'),
-                              const SizedBox(width: 8),
-                              _buildPeriodChip(
-                                context,
-                                viewModel,
-                                'Scoring Status',
-                              ),
-                              const SizedBox(width: 8),
-                              _buildPeriodChip(
-                                context,
-                                viewModel,
-                                'Loan History',
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // Content based on selected period
-                        if (viewModel.selectedPeriod == 'Overall') ...[
-                          // Credit score gauge
-                          if (viewModel.creditScore != null) ...[
-                            Center(
-                              child: SizedBox(
-                                width: 250,
-                                height: 200,
-                                child: CustomPaint(
-                                  painter: CreditScoreGaugePainter(
-                                    score: viewModel.creditScore!,
-                                    hasData: true,
-                                  ),
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 60),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            '${viewModel.creditScore}',
-                                            style: const TextStyle(
-                                              fontSize: 48,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1A1F3F),
-                                            ),
-                                          ),
-                                          Text(
-                                            context.t(
-                                              'Your credit score',
-                                              'Điểm tín dụng của bạn',
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ] else ...[
-                            // No credit score state
-                            Center(
-                              child: SizedBox(
-                                width: 250,
-                                height: 200,
-                                child: CustomPaint(
-                                  painter: CreditScoreGaugePainter(
-                                    score: 0,
-                                    hasData: false,
-                                  ),
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 60),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.credit_score_outlined,
-                                            size: 48,
-                                            color: Colors.grey.shade400,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            context.t(
-                                              'No data yet',
-                                              'Chưa có dữ liệu',
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            context.t(
-                                              'credit score',
-                                              'điểm tín dụng',
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey.shade500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          // Score info
-                          if (viewModel.creditScore != null) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Column(
-                                  children: [
-                                    Text(
-                                      context.t('starting score', 'điểm ban đầu'),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${viewModel.startingScore ?? viewModel.creditScore}',
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1A1F3F),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Text(
-                                      context.t(
-                                        'change to date',
-                                        'thay đổi đến hiện tại',
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${viewModel.scoreChange >= 0 ? "+" : ""}${viewModel.scoreChange}',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: viewModel.scoreChange >= 0
-                                            ? const Color(0xFF4CAF50)
-                                            : const Color(0xFFEF5350),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          // Update button
-                          Center(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final userId =
-                                    FirebaseAuth.instance.currentUser?.uid;
-                                if (userId != null) {
-                                  if (viewModel.creditScore != null) {
-                                    // Refresh credit score
-                                    await viewModel.refreshCreditScore(userId);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            context.t(
-                                              'Credit score updated!',
-                                              'Đã cập nhật điểm tín dụng!',
-                                            ),
-                                          ),
-                                          backgroundColor: Color(0xFF4CAF50),
-                                          duration: Duration(seconds: 2),
-                                        ),
-                                      );
-                                    }
-                                  } else {
-                                    // Navigate to loan application
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const LoanApplicationPage(),
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: viewModel.creditScore != null
-                                    ? const Color(0xFFE8F5E9)
-                                    : const Color(0xFF4C40F7),
-                                foregroundColor: viewModel.creditScore != null
-                                    ? const Color(0xFF4CAF50)
-                                    : Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: Text(
-                                viewModel.creditScore != null
-                                    ? context.t(
-                                        'Update your credit score',
-                                        'Cập nhật điểm tín dụng',
-                                      )
-                                    : context.t(
-                                        'Apply for loan now',
-                                        'Đăng ký vay ngay',
-                                      ),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Credit Score Tips Section
-                          const SizedBox(height: 32),
-                          _buildCreditScoreTips(
-                            context,
-                            creditScore: viewModel.creditScore,
-                          ),
-                        ] else if (viewModel.selectedPeriod ==
-                            'Scoring Status') ...[
-                          // Loan display section
+                        const SizedBox(height: 8),
+                        _buildDashboardTopTabs(context),
+                        const SizedBox(height: 20),
+                        _buildCreditStandingCard(context, viewModel),
+                        const SizedBox(height: 20),
+                        if (_selectedHomeTab == 0) ...[
                           _buildLoanDisplay(context),
-                        ] else if (viewModel.selectedPeriod ==
-                            'Loan History') ...[
-                          _buildLoanHistoryDisplay(context),
+                        ] else if (_selectedHomeTab == 1) ...[
+                          _buildInstallmentDisplay(context),
+                        ] else ...[
+                          _buildStudentTabContent(context),
                         ],
                       ],
                     ),
@@ -1016,17 +810,232 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildDashboardTopTabs(BuildContext context) {
+    final tabs = [
+      context.t('Offer', 'Đề nghị'),
+      context.t('Installment', 'Lịch trả góp'),
+      context.t('Student', 'Sinh viên'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: List.generate(tabs.length, (index) {
+          final isSelected = _selectedHomeTab == index;
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (_selectedHomeTab == index) return;
+                setState(() {
+                  _selectedHomeTab = index;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  tabs[index],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected
+                        ? const Color(0xFF4D4AF9)
+                        : const Color(0xFF475569),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCreditStandingCard(
+    BuildContext context,
+    HomeViewModel viewModel,
+  ) {
+    final score = viewModel.creditScore;
+    final scoreText = score?.toString() ?? '--';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            context.t('Your Credit Standing', 'Tình trạng tín dụng của bạn'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 250,
+            height: 180,
+            child: CustomPaint(
+              painter: CreditScoreGaugePainter(
+                score: score ?? 0,
+                hasData: score != null,
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 52),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        scoreText,
+                        style: const TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF86EFAC),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          context.t('Good', 'Tốt'),
+                          style: const TextStyle(
+                            color: Color(0xFF065F46),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Low\n300',
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'High\n850',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentTabContent(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8ECFF),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.t('Get a Student Loan', 'Nhận khoản vay sinh viên'),
+            style: const TextStyle(
+              fontSize: 36,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF2D2B8F),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            context.t(
+              'Tailored rates for academic success and flexible repayment with Swin Credit.',
+              'Lãi suất phù hợp cho hành trình học tập và lịch trả linh hoạt cùng Swin Credit.',
+            ),
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF3F3BA0),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              if (widget.onOpenStudent != null) {
+                widget.onOpenStudent!();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4D4AF9),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              context.t('Apply Now', 'Đăng ký ngay'),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    final activeOffer =
-        loanViewModel.currentOffer ?? loanViewModel.lastCompletedOffer;
-    final activeStatus =
-        loanViewModel.applicationStatus != ApplicationStatus.none
-        ? loanViewModel.applicationStatus
-        : loanViewModel.lastCompletedStatus;
-    final isActiveFromHistory =
-        activeOffer != null && loanViewModel.currentOffer == null;
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
+    final activeOffer = loanViewModel.currentOffer;
+    final activeStatus = loanViewModel.applicationStatus;
     final showScoreStatus =
         loanViewModel.currentOffer != null ||
         activeStatus == ApplicationStatus.processing;
@@ -1037,7 +1046,7 @@ class _HomePageState extends State<HomePage> {
         // Loan Status Box
         if (showScoreStatus) ...[
           Text(
-            context.t('Score Status', 'Trạng thái chấm điểm'),
+            context.t('Application Center', 'Trung tâm hồ sơ vay'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1085,12 +1094,15 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         activeStatus == ApplicationStatus.processing
                             ? context.t(
-                                'Scoring (In Progress)',
-                                'Đang chấm điểm',
+                                'Processing Application',
+                                'Đang xử lý hồ sơ',
                               )
                             : activeStatus == ApplicationStatus.scored
-                            ? context.t('Scored', 'Đã chấm điểm')
-                            : context.t('Rejected', 'Không được chấp thuận'),
+                            ? context.t('Offer Ready', 'Đã có đề nghị')
+                            : context.t(
+                                'Application Rejected',
+                                'Hồ sơ bị từ chối',
+                              ),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -1105,17 +1117,17 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         activeStatus == ApplicationStatus.processing
                             ? context.t(
-                                'We are calculating your credit score...',
-                                'Chúng tôi đang tính toán điểm tín dụng của bạn...',
+                                'Please wait while we complete scoring and prepare your offer.',
+                                'Vui lòng chờ trong khi chúng tôi hoàn tất chấm điểm và chuẩn bị đề nghị.',
                               )
                             : activeStatus == ApplicationStatus.scored
                             ? context.t(
-                                'Your score has been calculated successfully',
-                                'Điểm tín dụng của bạn đã được tính toán thành công',
+                                'Your result is ready. Review the offer details and continue.',
+                                'Kết quả đã sẵn sàng, Hãy xem chi tiết đề nghị và tiếp tục',
                               )
                             : context.t(
-                                'Your application was not approved',
-                                'Đơn của bạn không được chấp thuận',
+                                'Scoring is complete and this application was not approved.',
+                                'Quá trình chấm điểm đã hoàn tất và hồ sơ này không được duyệt.',
                               ),
                         style: TextStyle(
                           fontSize: 12,
@@ -1139,22 +1151,36 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                context.t('Limit Amount', 'Hạn mức'),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF1A1F3F),
-                                  fontWeight: FontWeight.w500,
+                              Expanded(
+                                child: Text(
+                                  context.t('Limit Amount', 'Hạn mức'),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF1A1F3F),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
-                                currencyFormat.format(
-                                  activeOffer['maxAmountVnd'] as num,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF4CAF50),
-                                  fontWeight: FontWeight.w700,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      currencyFormat.format(
+                                        activeOffer['maxAmountVnd'] as num,
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF4CAF50),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -1162,9 +1188,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 12),
                         // Continue button to Step 3 (only show for active flow)
-                        if (!isActiveFromHistory &&
-                            (!loanViewModel.step3Completed ||
-                                !loanViewModel.step4Completed))
+                        if (!loanViewModel.step3Completed ||
+                            !loanViewModel.step4Completed)
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -1173,12 +1198,12 @@ class _HomePageState extends State<HomePage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        const Step3AdditionalInfoPage(),
+                                        const Step3PersonalInfoPage(),
                                   ),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4C40F7),
+                                backgroundColor: const Color(0xFF4D4AF9),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
@@ -1189,7 +1214,10 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               child: Text(
-                                context.t('Continue', 'Tiếp tục'),
+                                context.t(
+                                  'Continue To Complete Profile',
+                                  'Tiếp tục để hoàn tất hồ sơ',
+                                ),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1197,6 +1225,84 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ),
+                      ],
+
+                      // Show re-apply guidance for rejected applications
+                      if (activeStatus == ApplicationStatus.rejected) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.t(
+                                  'You can submit a new application after updating your profile details.',
+                                  'Bạn có thể nộp hồ sơ mới sau khi cập nhật thông tin hồ sơ.',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                  height: 1.35,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    await loanViewModel
+                                        .finalizeAndResetForNewApplication();
+                                    if (!context.mounted) return;
+                                    if (loanViewModel
+                                        .hasCompletedOfferHistory) {
+                                      loanViewModel
+                                          .prepareReturningApplicantForNewLoan();
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const Step3PersonalInfoPage(),
+                                        ),
+                                      );
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const LoanApplicationPage(),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4D4AF9),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 11,
+                                    ),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    context.t('Apply Again', 'Nộp hồ sơ mới'),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -1210,11 +1316,9 @@ class _HomePageState extends State<HomePage> {
         // Current Loan Offer Section (only show full details after Step 3 & 4 completion)
         if (activeOffer != null &&
             activeStatus == ApplicationStatus.scored &&
-            (isActiveFromHistory ||
-                (loanViewModel.step3Completed &&
-                    loanViewModel.step4Completed))) ...[
+            (loanViewModel.step3Completed && loanViewModel.step4Completed)) ...[
           Text(
-            context.t('Current Loan Offer', 'Đề nghị khoản vay hiện tại'),
+            context.t('Current Offer', 'Đề nghị hiện tại'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1355,7 +1459,10 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.money_off, size: 64, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  context.t('No Active Loan', 'Không có khoản vay đang hoạt động'),
+                  context.t(
+                    'No Active Application',
+                    'Không có hồ sơ đang xử lý',
+                  ),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1364,7 +1471,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  context.t('Start a new loan application', 'Bắt đầu hồ sơ vay mới'),
+                  context.t(
+                    'Start a new loan application',
+                    'Bắt đầu hồ sơ vay mới',
+                  ),
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
@@ -1378,7 +1488,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
@@ -1399,8 +1509,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildLoanHistoryDisplay(BuildContext context) {
-    final applicationHistory = LocalStorageService.getApplicationHistory();
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final viewModel = context.watch<HomeViewModel>();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final applicationHistory = LocalStorageService.getApplicationHistory(
+      userId: userId,
+    );
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
 
     if (applicationHistory.isEmpty) {
       return Center(
@@ -1430,24 +1547,45 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
+    // Calculate pagination
+    final totalApplications = applicationHistory.length;
+    final totalPages = (totalApplications / viewModel.applicationsPerPage)
+        .ceil();
+    final startIndex =
+        (viewModel.currentApplicationPage - 1) * viewModel.applicationsPerPage;
+    final endIndex = (startIndex + viewModel.applicationsPerPage).clamp(
+      0,
+      totalApplications,
+    );
+    final paginatedHistory = applicationHistory.sublist(startIndex, endIndex);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          context.t('Application History', 'Lịch sử hồ sơ'),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1F3F),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.t('Application History', 'Lịch sử hồ sơ'),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1F3F),
+              ),
+            ),
+            Text(
+              '${viewModel.currentApplicationPage}/$totalPages',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: applicationHistory.length,
+          itemCount: paginatedHistory.length,
           itemBuilder: (context, index) {
-            final app = applicationHistory[index];
+            final app = paginatedHistory[index];
             final timestampRaw = app['timestamp'] ?? app['submitted_at'];
             final timestamp = timestampRaw != null
                 ? DateTime.parse(timestampRaw)
@@ -1455,121 +1593,387 @@ class _HomePageState extends State<HomePage> {
             final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
             final isApproved = app['approved'] == true;
 
-            return InkWell(
-              onTap: isApproved
-                  ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ApplicationContractStatusPage(
-                            application: Map<String, dynamic>.from(app),
-                          ),
-                        ),
-                      );
-                    }
-                  : null,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isApproved
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFEF5350),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isApproved ? Icons.check_circle : Icons.cancel,
                     color: isApproved
                         ? const Color(0xFF4CAF50)
                         : const Color(0xFFEF5350),
-                    width: 1.5,
+                    size: 24,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isApproved ? Icons.check_circle : Icons.cancel,
-                      color: isApproved
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFEF5350),
-                      size: 24,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isApproved
+                              ? context.t('Approved', 'Đã duyệt')
+                              : context.t('Rejected', 'Từ chối'),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isApproved
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFEF5350),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          dateStr,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (isApproved &&
+                          app['loanAmount'] != null &&
+                          (app['loanAmount'] as num) > 0)
+                        Text(
+                          currencyFormat.format(app['loanAmount']),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F3F),
+                          ),
+                        )
+                      else if (!isApproved)
+                        Text(
+                          context.t('Not approved', 'Không được duyệt'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        // Pagination controls
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: viewModel.currentApplicationPage > 1
+                  ? () => viewModel.previousApplicationPage()
+                  : null,
+              icon: const Icon(Icons.chevron_left, size: 20),
+              label: Text(context.t('Previous', 'Trước')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: viewModel.currentApplicationPage > 1
+                    ? const Color(0xFF4D4AF9)
+                    : Colors.grey.shade300,
+                foregroundColor: viewModel.currentApplicationPage > 1
+                    ? Colors.white
+                    : Colors.grey.shade600,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: viewModel.currentApplicationPage < totalPages
+                  ? () => viewModel.nextApplicationPage(totalApplications)
+                  : null,
+              icon: const Icon(Icons.chevron_right, size: 20),
+              label: Text(context.t('Next', 'Tiếp')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: viewModel.currentApplicationPage < totalPages
+                    ? const Color(0xFF4D4AF9)
+                    : Colors.grey.shade300,
+                foregroundColor: viewModel.currentApplicationPage < totalPages
+                    ? Colors.white
+                    : Colors.grey.shade600,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInstallmentDisplay(BuildContext context) {
+    final viewModel = context.watch<HomeViewModel>();
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    );
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final applicationHistory = LocalStorageService.getApplicationHistory(
+      userId: userId,
+    );
+    final approvedApplications = applicationHistory
+        .where((app) => app['approved'] == true)
+        .toList();
+
+    final totalInstallments = approvedApplications.length;
+    final totalPages = (totalInstallments / viewModel.installmentsPerPage)
+        .ceil();
+    final startIndex =
+        (viewModel.currentInstallmentPage - 1) * viewModel.installmentsPerPage;
+    final endIndex = (startIndex + viewModel.installmentsPerPage).clamp(
+      0,
+      totalInstallments,
+    );
+    final paginatedInstallments = approvedApplications.sublist(
+      startIndex,
+      endIndex,
+    );
+
+    if (approvedApplications.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.calendar_month, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              context.t('No Active Loans', 'Chưa có khoản vay đang hoạt động'),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.t(
+                'Accepted loans will show payment schedule',
+                'Khoản vay được chấp nhận sẽ hiển thị lịch thanh toán',
+              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.t('Payment Schedule', 'Lịch thanh toán'),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1F3F),
+              ),
+            ),
+            Text(
+              '${viewModel.currentInstallmentPage}/$totalPages',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: paginatedInstallments.length,
+          itemBuilder: (context, index) {
+            final app = paginatedInstallments[index];
+            final monthlyPayment =
+                app['monthlyPayment'] ?? app['monthlyPaymentVnd'] ?? 0;
+            final contractId =
+                app['displayContractId'] ?? app['contractId'] ?? 'N/A';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Contract ID - display at top
+                  Center(
+                    child: Text(
+                      context.t('Contract ID: ', 'ID Hợp đồng: ') + contractId,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isApproved
-                                ? context.t('Approved', 'Đã duyệt')
-                                : context.t('Rejected', 'Từ chối'),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isApproved
-                                  ? const Color(0xFF4CAF50)
-                                  : const Color(0xFFEF5350),
+                            context.t(
+                              'Monthly Repayment',
+                              'Khoản trả hàng tháng',
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            dateStr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
                             ),
                           ),
-                          if (isApproved) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              context.t(
-                                'Tap to view contract status',
-                                'Nhấn để xem trạng thái hợp đồng',
-                              ),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (isApproved &&
-                            app['loanAmount'] != null &&
-                            (app['loanAmount'] as num) > 0)
                           Text(
-                            currencyFormat.format(app['loanAmount']),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1F3F),
-                            ),
-                          )
-                        else if (!isApproved)
-                          Text(
-                            context.t('Not approved', 'Không được duyệt'),
+                            currencyFormat.format(monthlyPayment),
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade500,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF4CAF50),
                             ),
                           ),
-                      ],
-                    ),
-                    if (isApproved) ...[
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: Colors.grey.shade500,
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            context.t('Next Due', 'Đến hạn tiếp theo'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          FutureBuilder<DateTime?>(
+                            future: _getSyncedNextDueDateForApplication(app),
+                            builder: (context, snapshot) {
+                              final nextDueDate = snapshot.data;
+                              return Text(
+                                nextDueDate != null
+                                    ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(nextDueDate)
+                                    : '-',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1F3F),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4D4AF9),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ApplicationContractStatusPage(
+                              application: Map<String, dynamic>.from(app),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        context.t('View Details', 'Xem chi tiết'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: viewModel.currentInstallmentPage > 1
+                  ? () => viewModel.previousInstallmentPage()
+                  : null,
+              icon: const Icon(Icons.chevron_left, size: 20),
+              label: Text(context.t('Previous', 'Trước')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: viewModel.currentInstallmentPage > 1
+                    ? const Color(0xFF4D4AF9)
+                    : Colors.grey.shade300,
+                foregroundColor: viewModel.currentInstallmentPage > 1
+                    ? Colors.white
+                    : Colors.grey.shade600,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: viewModel.currentInstallmentPage < totalPages
+                  ? () => viewModel.nextInstallmentPage(totalInstallments)
+                  : null,
+              icon: const Icon(Icons.chevron_right, size: 20),
+              label: Text(context.t('Next', 'Tiếp')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: viewModel.currentInstallmentPage < totalPages
+                    ? const Color(0xFF4D4AF9)
+                    : Colors.grey.shade300,
+                foregroundColor: viewModel.currentInstallmentPage < totalPages
+                    ? Colors.white
+                    : Colors.grey.shade600,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1579,24 +1983,90 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey.shade700,
-            fontWeight: FontWeight.w500,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1F3F),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1F3F),
+                ),
+              ),
+            ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildNavChip(
+    BuildContext context,
+    String label,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF0FF),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFC8D3FF), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF3D477A)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.t(label, _getLabelVi(label)),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF3D477A),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getLabelVi(String label) {
+    switch (label) {
+      case 'Offer':
+        return 'Đề nghị';
+      case 'Installment':
+        return 'Lịch thanh toán';
+      default:
+        return label;
+    }
   }
 
   Widget _buildPeriodChip(
@@ -1605,51 +2075,88 @@ class _HomePageState extends State<HomePage> {
     String label,
   ) {
     final isSelected = viewModel.selectedPeriod == label;
+    final icon = _periodIcon(label);
+
     return GestureDetector(
       onTap: () {
         viewModel.setPeriod(label);
       },
       child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1A1F3F) : const Color(0xFFE6E9F2),
+          color: isSelected ? const Color(0xFF4D4AF9) : const Color(0xFFEAF0FF),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF1A1F3F)
-                : const Color(0xFFC9D1E6),
+                ? const Color(0xFF4D4AF9)
+                : const Color(0xFFC8D3FF),
             width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF1A1F3F).withOpacity(0.15),
-                    blurRadius: 8,
+                    color: const Color(0xFF4D4AF9).withOpacity(0.22),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ]
               : null,
         ),
-        child: Text(
-          context.t(label, _periodLabelVi(label)),
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF2B335A),
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : const Color(0xFF3D477A),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.t(label, _periodLabelVi(label)),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : const Color(0xFF3D477A),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  IconData _periodIcon(String label) {
+    switch (label) {
+      case 'Overall':
+        return Icons.dashboard_rounded;
+      case 'Application Center':
+        return Icons.hourglass_top_rounded;
+      case 'Application History':
+        return Icons.history_rounded;
+      case 'Installment':
+        return Icons.calendar_month_rounded;
+      default:
+        return Icons.circle;
+    }
   }
 
   String _periodLabelVi(String label) {
     switch (label) {
       case 'Overall':
         return 'Tổng quan';
-      case 'Scoring Status':
-        return 'Trạng thái chấm điểm';
-      case 'Loan History':
-        return 'Lịch sử khoản vay';
+      case 'Application Center':
+        return 'Trung tâm hồ sơ vay';
+      case 'Application History':
+        return 'Lịch sử hồ sơ';
+      case 'Installment':
+        return 'Lịch thanh toán';
       default:
         return label;
     }
@@ -1710,7 +2217,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'Close',
-                  style: TextStyle(color: Color(0xFF4C40F7)),
+                  style: TextStyle(color: Color(0xFF4D4AF9)),
                 ),
               ),
             ],
@@ -1774,6 +2281,259 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  DateTime? _getNextDueDateFromSubmission(Map<String, dynamic> application) {
+    final submittedAt = _getSubmissionDate(application);
+    if (submittedAt == null) return null;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    var nextDueDate = _addMonthsSafe(
+      DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+      1,
+    );
+
+    while (nextDueDate.isBefore(today)) {
+      nextDueDate = _addMonthsSafe(nextDueDate, 1);
+    }
+
+    return nextDueDate;
+  }
+
+  DateTime? _getSubmissionDate(Map<String, dynamic> application) {
+    final candidates = [
+      application['submitted_at'],
+      application['submittedAt'],
+      application['timestamp'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate == null) continue;
+      final parsed = DateTime.tryParse(candidate.toString());
+      if (parsed != null) return parsed;
+    }
+
+    return null;
+  }
+
+  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
+    final totalMonths = (date.month - 1) + monthsToAdd;
+    final year = date.year + (totalMonths ~/ 12);
+    final month = (totalMonths % 12) + 1;
+    final day = math.min(date.day, _daysInMonth(year, month));
+
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
+  }
+
+  int _daysInMonth(int year, int month) {
+    return DateTime(year, month + 1, 0).day;
+  }
+
+  int? _asNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
+  }
+
+  double? _asNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  Future<DateTime?> _getSyncedNextDueDateForApplication(
+    Map<String, dynamic> application,
+  ) async {
+    final submittedAt = _getSubmissionDate(application);
+    if (submittedAt == null) return null;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final offerId = await _resolveOfferIdForApplication(application, userId);
+
+    if (offerId == null ||
+        offerId.isEmpty ||
+        userId == null ||
+        userId.isEmpty) {
+      return _getNextDueDateFromSubmission(application);
+    }
+
+    try {
+      final installments = await _installmentService.getInstallmentsForLoan(
+        userId: userId,
+        loanOfferId: offerId,
+      );
+      final unpaid = installments.where((item) => !item.isPaid).toList();
+      if (unpaid.isEmpty) return null;
+
+      final paidCount = installments.where((item) => item.isPaid).length;
+      final currentInstallmentNumber =
+          await _getInstallmentNumberFromCreditApplication(
+            application: application,
+            userId: userId,
+            fallbackValue: paidCount + 1,
+          );
+      return _addMonthsSafe(
+        DateTime(submittedAt.year, submittedAt.month, submittedAt.day),
+        currentInstallmentNumber,
+      );
+    } catch (_) {
+      return _getNextDueDateFromSubmission(application);
+    }
+  }
+
+  Future<int> _getInstallmentNumberFromCreditApplication({
+    required Map<String, dynamic> application,
+    required String userId,
+    required int fallbackValue,
+  }) async {
+    final normalizedFallback = fallbackValue < 1 ? 1 : fallbackValue;
+    final applicationId = _extractApplicationId(application);
+    final offerId = _extractOfferId(application);
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>>? appDoc;
+
+      if (applicationId != null && applicationId.isNotEmpty) {
+        final byId = await FirebaseFirestore.instance
+            .collection('credit_applications')
+            .doc(applicationId)
+            .get();
+        if (byId.exists) {
+          appDoc = byId;
+        }
+      }
+
+      if (appDoc == null && offerId != null && offerId.isNotEmpty) {
+        final byOffer = await FirebaseFirestore.instance
+            .collection('credit_applications')
+            .where('userId', isEqualTo: userId)
+            .where('offerId', isEqualTo: offerId)
+            .limit(1)
+            .get();
+
+        if (byOffer.docs.isNotEmpty) {
+          appDoc = byOffer.docs.first;
+        }
+      }
+
+      final data = appDoc?.data();
+      if (data == null) return normalizedFallback;
+
+      final firestoreInstallmentNumber =
+          _asNullableInt(data['installmentNumber']) ??
+          _asNullableInt(data['currentInstallment']) ??
+          _asNullableInt(data['currentInstallmentNumber']) ??
+          _asNullableInt(data['installmentNo']) ??
+          _asNullableInt(data['installment_no']);
+
+      if (firestoreInstallmentNumber == null ||
+          firestoreInstallmentNumber < 1) {
+        return normalizedFallback;
+      }
+
+      return firestoreInstallmentNumber;
+    } catch (_) {
+      return normalizedFallback;
+    }
+  }
+
+  String? _extractApplicationId(Map<String, dynamic> application) {
+    final raw =
+        application['applicationId'] ??
+        application['creditApplicationId'] ??
+        application['id'];
+    final parsed = raw?.toString();
+    if (parsed == null || parsed.isEmpty) return null;
+    return parsed;
+  }
+
+  String? _extractOfferId(Map<String, dynamic> application) {
+    final raw = application['offerId'] ?? application['loanOfferId'];
+    final parsed = raw?.toString();
+    if (parsed == null || parsed.isEmpty) return null;
+    return parsed;
+  }
+
+  Future<String?> _resolveOfferIdForApplication(
+    Map<String, dynamic> application,
+    String? userId,
+  ) async {
+    final offerIdRaw = application['offerId'] ?? application['loanOfferId'];
+    final directOfferId = offerIdRaw?.toString();
+    if (directOfferId != null && directOfferId.isNotEmpty) {
+      return directOfferId;
+    }
+
+    if (userId == null || userId.isEmpty) return null;
+
+    try {
+      final query = await FirebaseFirestore.instance
+          .collection('loan_offers')
+          .where('userId', isEqualTo: userId)
+          .where('accepted', isEqualTo: true)
+          .get();
+
+      if (query.docs.isEmpty) return null;
+
+      final appLoanAmount = _asNullableDouble(
+        application['loanAmount'] ?? application['loanAmountVnd'],
+      );
+      final appTenorMonths = _asNullableInt(application['loanTermMonths']);
+      final appMonthlyPayment = _asNullableDouble(
+        application['monthlyPayment'] ?? application['monthlyPaymentVnd'],
+      );
+
+      QueryDocumentSnapshot<Map<String, dynamic>>? bestDoc;
+      int bestScore = -1;
+
+      for (final doc in query.docs) {
+        final data = doc.data();
+        int score = 0;
+
+        final offerLoanAmount = _asNullableDouble(data['loanAmountVnd']);
+        final offerTenorMonths = _asNullableInt(data['loanTermMonths']);
+        final offerMonthlyPayment = _asNullableDouble(
+          data['monthlyPaymentVnd'],
+        );
+
+        if (appLoanAmount != null && offerLoanAmount != null) {
+          if ((appLoanAmount - offerLoanAmount).abs() < 1) score += 2;
+        }
+        if (appTenorMonths != null &&
+            offerTenorMonths != null &&
+            appTenorMonths == offerTenorMonths) {
+          score += 2;
+        }
+        if (appMonthlyPayment != null && offerMonthlyPayment != null) {
+          if ((appMonthlyPayment - offerMonthlyPayment).abs() < 1) score += 2;
+        }
+
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        if (createdAt != null) score += 1;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestDoc = doc;
+        }
+      }
+
+      return bestDoc?.id;
+    } catch (_) {
+      return null;
+    }
   }
 }
 
@@ -2316,6 +3076,14 @@ String _getLocalizedNotificationTitle(
   NotificationModel notification,
 ) {
   switch (notification.type) {
+    case 'ekyc_completed':
+      return context.t('eKYC Completed', 'eKYC đã hoàn tất');
+    case 'step3_completed':
+      return context.t('Step 3 Completed', 'Hoàn tất Bước 3');
+    case 'step4_completed':
+      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');                                      
+    case 'step5_completed':
+      return context.t('Step 5 Completed', 'Hoàn tất Bước 5');
     case 'loan_approved':
       return context.t('Loan Approved', 'Khoản vay đã được duyệt');
     case 'loan_rejected':
@@ -2324,6 +3092,8 @@ String _getLocalizedNotificationTitle(
       return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
     case 'payment_reminder':
       return context.t('Payment Reminder', 'Nhắc nhở thanh toán');
+    case 'payment_success':
+      return context.t('Payment Successful', 'Thanh toán thành công');
     default:
       if (notification.title == 'Loan Approved') {
         return context.t('Loan Approved', 'Khoản vay đã được duyệt');
@@ -2334,7 +3104,7 @@ String _getLocalizedNotificationTitle(
       if (notification.title == 'Credit Score Updated') {
         return context.t('Credit Score Updated', 'Điểm tín dụng đã cập nhật');
       }
-      return notification.title;
+      return normalizeMojibakeText(notification.title);
   }
 }
 
@@ -2349,7 +3119,7 @@ String _getLocalizedNotificationBody(
     final amount = rawAmount is num ? rawAmount.toDouble() : null;
     final format = NumberFormat.currency(
       locale: isVietnamese ? 'vi_VN' : 'en_US',
-      symbol: '₫',
+      symbol: 'đ',
       decimalDigits: 0,
     );
     if (amount != null) {
@@ -2361,6 +3131,34 @@ String _getLocalizedNotificationBody(
     return context.t(
       'Your loan has been approved',
       'Khoản vay của bạn đã được duyệt',
+    );
+  }
+
+  if (notification.type == 'ekyc_completed') {
+    return context.t(
+      'Your identity verification is complete.',
+      'Xác minh danh tính của bạn đã hoàn tất.',
+    );
+  }
+
+  if (notification.type == 'step3_completed') {
+    return context.t(
+      'Additional information has been saved successfully.',
+      'Thông tin bổ sung đã được lưu thành công.',
+    );
+  }
+
+  if (notification.type == 'step4_completed') {
+    return context.t(
+      'Loan offer details are confirmed. Please review your contract.',
+      'Thông tin đề nghị vay đã được xác nhận. Vui lòng xem lại hợp đồng.',
+    );
+  }
+
+  if (notification.type == 'step5_completed') {
+    return context.t(
+      'Contract signed successfully. Continue to disbursement.',
+      'Ký hợp đồng thành công. Tiếp tục sang bước giải ngân.',
     );
   }
 
@@ -2394,8 +3192,27 @@ String _getLocalizedNotificationBody(
     );
   }
 
-  if (notification.body ==
-      'Your loan application needs review') {
+  if (notification.type == 'payment_success') {
+    final rawAmount = notification.data?['amountVnd'];
+    final amount = rawAmount is num ? rawAmount.toDouble() : null;
+    final format = NumberFormat.currency(
+      locale: isVietnamese ? 'vi_VN' : 'en_US',
+      symbol: 'đ',
+      decimalDigits: 0,
+    );
+    if (amount != null) {
+      return context.t(
+        'We received your payment of ${format.format(amount)}.',
+        'Chúng tôi đã nhận khoản thanh toán ${format.format(amount)} của bạn.',
+      );
+    }
+    return context.t(
+      'Your payment was completed successfully.',
+      'Bạn đã thanh toán thành công.',
+    );
+  }
+
+  if (notification.body == 'Your loan application needs review') {
     return context.t(
       'Your loan application needs review',
       'Hồ sơ vay của bạn cần được xem xét thêm',
@@ -2406,7 +3223,13 @@ String _getLocalizedNotificationBody(
     return context.t('Just now', 'Vừa xong');
   }
 
-  return notification.body;
+  return normalizeMojibakeText(
+    notification.body
+        .replaceAll('â‚«', 'đ')
+        .replaceAll('₫', 'đ')
+        .replaceAll('�,�', 'đ')
+        .replaceAll('�?', ''),
+  );
 }
 
 String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
@@ -2423,10 +3246,7 @@ String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
 
   if (difference.inDays > 0) {
     final days = difference.inDays;
-    return context.t(
-      '$days day${days > 1 ? 's' : ''} ago',
-      '$days ngày trước',
-    );
+    return context.t('$days day${days > 1 ? 's' : ''} ago', '$days ngày trước');
   }
 
   if (difference.inHours > 0) {
@@ -2451,6 +3271,14 @@ String _formatNotificationTimeAgo(BuildContext context, DateTime createdAt) {
 /// Helper function to get icon for notification type
 IconData _getNotificationIcon(String type) {
   switch (type) {
+    case 'ekyc_completed':
+      return Icons.verified_user;
+    case 'step3_completed':
+      return Icons.assignment_turned_in;
+    case 'step4_completed':
+      return Icons.calculate;
+    case 'step5_completed':
+      return Icons.description;
     case 'loan_approved':
       return Icons.check_circle;
     case 'loan_rejected':
@@ -2459,6 +3287,8 @@ IconData _getNotificationIcon(String type) {
       return Icons.trending_up;
     case 'payment_reminder':
       return Icons.payment;
+    case 'payment_success':
+      return Icons.task_alt;
     default:
       return Icons.notifications;
   }

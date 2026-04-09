@@ -1,7 +1,5 @@
 {
-  "projects": {
-    "default": "creditscore-c560f"
-  },
-  "targets": {},
-  "etags": {}
+    "projects": {
+        "default": "creditscore-c560f"
+    }
 }

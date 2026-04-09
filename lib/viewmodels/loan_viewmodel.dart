@@ -1,10 +1,20 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import '../services/firebase_loan_service.dart';
 import '../services/firebase_service.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/vnpt_ekyc_service.dart';
+import '../services/bank_service.dart';
+import '../services/installment_service.dart';
+import '../services/push_notification_service.dart';
+import '../services/notification_service.dart';
+import '../services/firebase_user_service.dart';
+import '../models/bank_model.dart';
+import '../models/bank_account_validation_model.dart';
 
 // Application status enum
 enum ApplicationStatus {
@@ -19,6 +29,12 @@ class LoanViewModel extends ChangeNotifier {
   final VnptEkycService _vnptService = VnptEkycService();
   final FirebaseLoanService _loanService = FirebaseLoanService();
   final FirebaseService _firebase = FirebaseService();
+  final InstallmentService _installmentService = InstallmentService();
+  final PushNotificationService _pushNotificationService =
+      PushNotificationService();
+  final NotificationService _notificationService = NotificationService();
+  final FirebaseUserService _userService = FirebaseUserService();
+  StreamSubscription<dynamic>? _authStateSubscription;
 
   // Step progress
   bool _step1Completed = false;
@@ -72,6 +88,19 @@ class LoanViewModel extends ChangeNotifier {
   String? _errorMessage;
   List<Map<String, dynamic>> _applications = [];
 
+  // Bank Account & Disbursement (Step 6)
+  final BankService _bankService = BankService();
+  final ApiService _apiService = ApiService();
+
+  List<Bank> _banks = [];
+  String? _selectedBankCode;
+  String? _selectedBranchCode;
+
+  bool _isLoadingBanks = false;
+  bool _isValidatingAccount = false;
+  String? _bankAccountValidationError;
+  BankAccountValidationResponse? _bankValidationResult;
+
   // Getters
   bool get step1Completed => _step1Completed;
   bool get step2Completed => _step2Completed;
@@ -94,6 +123,12 @@ class LoanViewModel extends ChangeNotifier {
   bool get isApplicationRejected =>
       _applicationStatus == ApplicationStatus.rejected;
   String? get pendingApplicationId => _pendingApplicationId;
+  bool get hasCompletedOfferHistory {
+    final history = LocalStorageService.getApplicationHistory(
+      userId: _firebase.currentUserId,
+    );
+    return history.isNotEmpty;
+  }
 
   // Legacy getter for backward compatibility
   LoanOfferResponse? get currentOfferLegacy {
@@ -113,13 +148,224 @@ class LoanViewModel extends ChangeNotifier {
   bool get isVerifyingSelfie => _isVerifyingSelfie;
   String? get vnptErrorMessage => _vnptErrorMessage;
 
+  // Bank Account & Disbursement getters (Step 6)
+  List<Bank> get banks => _banks;
+  String? get selectedBankCode => _selectedBankCode;
+  String? get selectedBranchCode => _selectedBranchCode;
+  bool get isLoadingBanks => _isLoadingBanks;
+  bool get isValidatingAccount => _isValidatingAccount;
+  String? get bankAccountValidationError => _bankAccountValidationError;
+  BankAccountValidationResponse? get bankValidationResult =>
+      _bankValidationResult;
+
+  // Get selected bank details
+  Bank? get selectedBank => _selectedBankCode != null
+      ? _bankService.getBankByCode(_selectedBankCode!)
+      : null;
+
+  // Get selected branch details
+  BankBranch? get selectedBranch {
+    if (_selectedBankCode == null || _selectedBranchCode == null) return null;
+    return _bankService.getBranchDetails(
+      _selectedBankCode!,
+      _selectedBranchCode!,
+    );
+  }
+
+  /// Determines if there is an active application currently in progress
+  bool get hasActiveApplication {
+    return _applicationStatus != ApplicationStatus.none;
+  }
+
+  /// Returns the current/next step that needs to be completed
+  /// Returns 1-6 indicating which step the user should proceed to
+  /// Returns 7 if all steps are completed
+  int get getCurrentStep {
+    if (!_step1Completed) return 1;
+    if (!_step2Completed) return 2;
+    if (!_step3Completed) return 3;
+    if (!_step4Completed) return 4;
+    if (!_step6Completed) {
+      return 6; // Note: Step 5 is contract review, Step 6 is disbursement
+    }
+    return 7; // All steps completed
+  }
+
   // Load saved draft on init
   LoanViewModel() {
     _loadDraft();
+    Future.microtask(_restoreFlowFromFirestore);
+    _authStateSubscription = _firebase.auth.authStateChanges().listen((user) {
+      if (user != null) {
+        _restoreFlowFromFirestore();
+      }
+    });
+  }
+
+  String? get _currentApplicationId {
+    return _currentOffer?['applicationId'] as String? ?? _pendingApplicationId;
+  }
+
+  String? get _currentOfferId {
+    return _currentOffer?['offerId'] as String? ??
+        _currentOffer?['id'] as String?;
+  }
+
+  double _asDouble(dynamic value, [double fallback = 0.0]) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  int _asInt(dynamic value, [int fallback = 0]) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  Future<void> _restoreFlowFromFirestore() async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) return;
+
+    try {
+      final profile = await _userService.getUserProfile(userId);
+      if (profile != null) {
+        final profileEkycDone = _isEkycCompletedInProfile(profile);
+        if (profileEkycDone) {
+          _step1Completed = true;
+          await LocalStorageService.markEkycCompleted(userId: userId);
+        } else {
+          await LocalStorageService.clearEkycCompletion(userId: userId);
+        }
+
+        final prefill = <String, dynamic>{};
+        final profileName = (profile['fullName'] as String?)?.trim();
+        final profilePhone = (profile['phoneNumber'] as String?)?.trim();
+        final profileNationalId = (profile['nationalId'] as String?)?.trim();
+        final profileAddress = (profile['address'] as String?)?.trim();
+
+        if (profileName != null && profileName.isNotEmpty) {
+          prefill['fullName'] = profileName;
+          fullName = profileName;
+        }
+        if (profilePhone != null && profilePhone.isNotEmpty) {
+          prefill['phoneNumber'] = profilePhone;
+          phoneNumber = profilePhone;
+        }
+        if (profileNationalId != null && profileNationalId.isNotEmpty) {
+          prefill['idNumber'] = profileNationalId;
+          idNumber = profileNationalId;
+        }
+        if (profileAddress != null && profileAddress.isNotEmpty) {
+          prefill['address'] = profileAddress;
+          address = profileAddress;
+        }
+
+        final dobValue = profile['dateOfBirth'];
+        if (dobValue is Timestamp) {
+          dob = dobValue.toDate();
+          prefill['dob'] = dob!.toIso8601String();
+        }
+
+        if (prefill.isNotEmpty) {
+          await LocalStorageService.saveEkycPrefill(prefill, userId: userId);
+        }
+      }
+
+      final latestApplication = await _loanService.getLatestApplication(userId);
+      if (latestApplication == null) return;
+
+      final applicationId = latestApplication['id'] as String?;
+      final status = (latestApplication['status'] as String? ?? 'none')
+          .toLowerCase();
+
+      // Default to a fresh post-eKYC flow. We only hydrate steps 2-6
+      // for active/in-progress applications.
+      _pendingApplicationId = null;
+      _step2Completed = false;
+      _step3Completed = false;
+      _step4Completed = false;
+      _step6Completed = false;
+      _currentOffer = null;
+
+      switch (status) {
+        case 'processing':
+          _applicationStatus = ApplicationStatus.processing;
+          break;
+        case 'approved':
+          _applicationStatus = ApplicationStatus.scored;
+          break;
+        case 'rejected':
+          _applicationStatus = ApplicationStatus.rejected;
+          break;
+        case 'completed':
+          // Completed applications belong to Installment/History, not active flow.
+          _applicationStatus = ApplicationStatus.none;
+          break;
+        default:
+          _applicationStatus = ApplicationStatus.none;
+      }
+
+      final isActiveFlow = _applicationStatus != ApplicationStatus.none;
+      if (isActiveFlow) {
+        if (applicationId != null) {
+          _pendingApplicationId = applicationId;
+        }
+
+        _step2Completed = latestApplication['step2Completed'] as bool? ?? false;
+        final rawStep3Completed =
+            latestApplication['step3Completed'] as bool? ?? false;
+        final step3Data = latestApplication['step3Data'];
+        final hasStep3Data = step3Data is Map && (step3Data).isNotEmpty;
+        // Backward-compat: old records may mark step3Completed=true right after scoring.
+        _step3Completed = rawStep3Completed && hasStep3Data;
+        _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
+        _step6Completed = latestApplication['step6Completed'] as bool? ?? false;
+      }
+
+      Map<String, dynamic>? offer;
+      if (isActiveFlow) {
+        final offerId = latestApplication['offerId'] as String?;
+        if (offerId != null && offerId.isNotEmpty) {
+          offer = await _loanService.getLoanOfferById(offerId);
+        } else if (applicationId != null) {
+          offer = await _loanService.getLoanOfferByApplicationId(applicationId);
+        }
+      }
+
+      if (offer != null) {
+        _currentOffer = {
+          ...offer,
+          'offerId': offer['id'],
+          'applicationId': applicationId,
+        };
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('[LoanViewModel] Failed to restore flow from Firestore: $e');
+    }
+  }
+
+  bool _isEkycCompletedInProfile(Map<String, dynamic> profile) {
+    if (profile['ekycCompleted'] == true) return true;
+
+    final ekycStatus = (profile['ekycStatus'] as String?)?.toLowerCase().trim();
+    if (ekycStatus == 'verified' ||
+        ekycStatus == 'completed' ||
+        ekycStatus == 'approved' ||
+        ekycStatus == 'success') {
+      return true;
+    }
+
+    return profile['ekycVerifiedAt'] != null;
   }
 
   void _loadDraft() {
-    final draft = LocalStorageService.loadDraft();
+    final draft = LocalStorageService.loadDraft(
+      userId: _firebase.currentUserId,
+    );
     if (draft != null) {
       fullName = draft['fullName'] ?? fullName;
       if (draft['dob'] != null) {
@@ -159,11 +405,12 @@ class LoanViewModel extends ChangeNotifier {
       'yearsCreditHistory': yearsCreditHistory,
       'hasPreviousDefaults': hasPreviousDefaults,
       'currentlyDefaulting': currentlyDefaulting,
-    });
+    }, userId: _firebase.currentUserId);
   }
 
   // Actions
   void completeStep1() async {
+    final wasCompleted = _step1Completed;
     _step1Completed = true;
     notifyListeners();
 
@@ -172,9 +419,18 @@ class LoanViewModel extends ChangeNotifier {
 
     // Persist local eKYC fields for future Step 1 skip -> Step 2 prefill.
     await persistEkycPrefill();
+
+    if (!wasCompleted) {
+      await _notifyFlowMilestone(
+        type: 'ekyc_completed',
+        title: 'eKYC Completed',
+        body: 'Your identity verification is complete.',
+      );
+    }
   }
 
   Future<void> persistEkycPrefill() async {
+    final userId = _firebase.currentUserId;
     final payload = <String, dynamic>{};
 
     if (fullName.isNotEmpty && fullName != 'Nguyen Van A') {
@@ -194,12 +450,14 @@ class LoanViewModel extends ChangeNotifier {
     }
 
     if (payload.isNotEmpty) {
-      await LocalStorageService.saveEkycPrefill(payload);
+      await LocalStorageService.saveEkycPrefill(payload, userId: userId);
     }
   }
 
   void applySavedEkycPrefill({bool notify = true}) {
-    final data = LocalStorageService.loadEkycPrefill();
+    final data = LocalStorageService.loadEkycPrefill(
+      userId: _firebase.currentUserId,
+    );
     if (data == null) return;
 
     bool changed = false;
@@ -255,6 +513,21 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Mark step 1 UI as completed without persisting eKYC verification.
+  void markStep1CompletedLocalOnly() {
+    _step1Completed = true;
+    notifyListeners();
+  }
+
+  /// Prepare a returning applicant to start a new loan directly from Step 3.
+  /// Keeps the saved eKYC prefill and marks Steps 1 and 2 as already completed.
+  void prepareReturningApplicantForNewLoan() {
+    applySavedEkycPrefill(notify: false);
+    _step1Completed = true;
+    _step2Completed = true;
+    notifyListeners();
+  }
+
   // Save eKYC extracted data to user profile
   Future<void> _saveEkycDataToProfile() async {
     final userId = _firebase.currentUserId;
@@ -289,6 +562,8 @@ class LoanViewModel extends ChangeNotifier {
 
       // Only update if we have data to save
       if (updateData.isNotEmpty) {
+        updateData['ekycCompleted'] = true;
+        updateData['ekycVerifiedAt'] = FieldValue.serverTimestamp();
         updateData['updatedAt'] = FieldValue.serverTimestamp();
 
         print(
@@ -299,6 +574,8 @@ class LoanViewModel extends ChangeNotifier {
         await _firebase.usersCollection
             .doc(userId)
             .set(updateData, SetOptions(merge: true));
+
+        await LocalStorageService.markEkycCompleted(userId: userId);
 
         print('[LoanViewModel] eKYC data saved successfully');
       } else {
@@ -315,25 +592,260 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void completeStep3() {
+  Future<void> completeStep3({Map<String, dynamic>? step3Data}) async {
+    final wasCompleted = _step3Completed;
     _step3Completed = true;
     notifyListeners();
+
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    if (userId == null || applicationId == null) return;
+
+    try {
+      await _loanService.saveStep3AdditionalInfo(
+        applicationId: applicationId,
+        userId: userId,
+        step3Data: step3Data ?? const <String, dynamic>{},
+      );
+
+      if (!wasCompleted) {
+        await _notifyFlowMilestone(
+          type: 'step3_completed',
+          title: 'Step 3 Completed',
+          body: 'Additional information has been saved successfully.',
+          applicationId: applicationId,
+        );
+      }
+    } catch (e) {
+      print('[LoanViewModel] Failed to save Step 3 data: $e');
+    }
   }
 
-  void completeStep4() {
+  Future<void> completeStep4() async {
+    final wasCompleted = _step4Completed;
     _step4Completed = true;
     notifyListeners();
+
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    final offerId = _currentOfferId;
+    if (userId == null || applicationId == null || offerId == null) return;
+
+    try {
+      await _loanService.saveStep4OfferSelection(
+        applicationId: applicationId,
+        offerId: offerId,
+        userId: userId,
+        selection: {
+          'loanPurpose': loanPurpose,
+          'loanAmountVnd': _asDouble(_currentOffer?['loanAmountVnd']),
+          'loanTermMonths': _asInt(_currentOffer?['loanTermMonths'], 12),
+          'monthlyPaymentVnd': _asDouble(_currentOffer?['monthlyPaymentVnd']),
+          'totalPaymentVnd': _asDouble(_currentOffer?['totalPaymentVnd']),
+          'totalInterestVnd': _asDouble(_currentOffer?['totalInterestVnd']),
+        },
+      );
+
+      if (!wasCompleted) {
+        await _notifyFlowMilestone(
+          type: 'step4_completed',
+          title: 'Step 4 Completed',
+          body:
+              'Loan offer details are confirmed. Please review your contract.',
+          applicationId: applicationId,
+        );
+      }
+    } catch (e) {
+      print('[LoanViewModel] Failed to save Step 4 data: $e');
+    }
   }
 
-  Future<void> completeStep6() async {
+  Future<void> completeStep6({Map<String, dynamic>? disbursementData}) async {
     _step6Completed = true;
     notifyListeners();
+
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    final offerId = _currentOfferId;
+
+    if (userId != null && applicationId != null && offerId != null) {
+      try {
+        await _loanService.saveStep6DisbursementInfo(
+          applicationId: applicationId,
+          offerId: offerId,
+          userId: userId,
+          disbursementData: disbursementData ?? const <String, dynamic>{},
+        );
+      } catch (e) {
+        print('[LoanViewModel] Failed to save Step 6 data: $e');
+      }
+    }
+
+    // Generate installments if loan was accepted
+    if (_currentOffer != null && _currentOffer!['accepted'] == true) {
+      try {
+        if (userId != null && offerId != null) {
+          // Get the offer ID from lastCompletedOffer or construct from available data
+          final loanAmountVnd = _asDouble(_currentOffer!['loanAmountVnd']);
+          final interestRate = _asDouble(_currentOffer!['interestRate']);
+          final loanTermMonths = _asInt(_currentOffer!['loanTermMonths'], 12);
+          final monthlyPaymentVnd = _asDouble(
+            _currentOffer!['monthlyPaymentVnd'],
+          );
+          final totalInterestVnd = _asDouble(
+            _currentOffer!['totalInterestVnd'],
+          );
+
+          final anchorDate = _resolveRepaymentAnchorDate() ?? DateTime.now();
+          final normalizedAnchorDate = DateTime(
+            anchorDate.year,
+            anchorDate.month,
+            anchorDate.day,
+          );
+          final firstDueDate = _addMonthsSafe(normalizedAnchorDate, 1);
+
+          await _installmentService.generateInstallmentsForLoan(
+            userId: userId,
+            loanOfferId: offerId,
+            loanAmountVnd: loanAmountVnd,
+            interestRate: interestRate,
+            loanTermMonths: loanTermMonths,
+            monthlyPaymentVnd: monthlyPaymentVnd,
+            totalInterestVnd: totalInterestVnd,
+            firstDueDate: firstDueDate,
+          );
+
+          print('[LoanViewModel] Installments generated for loan $offerId');
+        }
+      } catch (e) {
+        print('[LoanViewModel] Error generating installments: $e');
+        // Don't throw - installment generation failure shouldn't block the flow
+      }
+    }
+
     await finalizeAndResetForNewApplication();
   }
 
+  DateTime? _resolveRepaymentAnchorDate() {
+    final candidates = [
+      _currentOffer?['acceptedAt'],
+      _currentOffer?['timestamp'],
+      _currentOffer?['submitted_at'],
+      _currentOffer?['submittedAt'],
+      _currentOffer?['createdAt'],
+      _currentOffer?['updatedAt'],
+    ];
+
+    for (final candidate in candidates) {
+      final parsed = _parseDate(candidate);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    return DateTime.tryParse(value.toString());
+  }
+
+  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
+    final totalMonths = (date.month - 1) + monthsToAdd;
+    final year = date.year + (totalMonths ~/ 12);
+    final month = (totalMonths % 12) + 1;
+    final day = math.min(date.day, DateTime(year, month + 1, 0).day);
+
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
+  }
+
   // Backward compatibility for older call sites.
-  Future<void> completeStep5() async {
-    await completeStep6();
+  Future<void> completeStep5({
+    required String signature,
+    required bool agreedToTerms,
+    required bool agreedToDeduction,
+    required bool agreedToConsent,
+  }) async {
+    final userId = _firebase.currentUserId;
+    final applicationId = _currentApplicationId;
+    final offerId = _currentOfferId;
+    if (userId == null || applicationId == null || offerId == null) return;
+
+    final wasAccepted = _currentOffer?['accepted'] == true;
+
+    try {
+      await _loanService.saveStep5ContractSignature(
+        applicationId: applicationId,
+        offerId: offerId,
+        userId: userId,
+        contractData: {
+          'signature': signature.trim(),
+          'agreedToTerms': agreedToTerms,
+          'agreedToDeduction': agreedToDeduction,
+          'agreedToConsent': agreedToConsent,
+          'signedAt': FieldValue.serverTimestamp(),
+        },
+      );
+
+      if (_currentOffer != null) {
+        _currentOffer!['accepted'] = true;
+        _currentOffer!['acceptedAt'] = DateTime.now().toIso8601String();
+      }
+
+      if (!wasAccepted) {
+        await _notifyFlowMilestone(
+          type: 'step5_completed',
+          title: 'Step 5 Completed',
+          body: 'Contract signed successfully. Continue to disbursement.',
+          applicationId: applicationId,
+        );
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('[LoanViewModel] Failed to save Step 5 data: $e');
+    }
+  }
+
+  Future<void> _notifyFlowMilestone({
+    required String type,
+    required String title,
+    required String body,
+    String? applicationId,
+  }) async {
+    final userId = _firebase.currentUserId;
+    if (userId == null) return;
+
+    try {
+      await _notificationService.createFlowMilestoneNotification(
+        userId: userId,
+        applicationId: applicationId,
+        type: type,
+        title: title,
+        body: body,
+        data: {'flowType': 'loan_application', 'milestone': type},
+      );
+      await _pushNotificationService.showFlowMilestoneNotification(
+        type: type,
+        title: title,
+        body: body,
+        data: {'applicationId': applicationId ?? ''},
+      );
+    } catch (e) {
+      print('[LoanViewModel] Failed to create flow milestone notification: $e');
+    }
   }
 
   // Update the current offer with user's chosen loan parameters from Step 4
@@ -361,6 +873,44 @@ class LoanViewModel extends ChangeNotifier {
       }
 
       notifyListeners();
+    }
+  }
+
+  // Recalculate terms (interest rate, payments) when Step 4 parameters change.
+  Future<bool> refreshOfferTerms({
+    required double loanAmount,
+    required String loanPurpose,
+  }) async {
+    if (_currentOffer == null) return false;
+
+    final creditScore = _asInt(_currentOffer!['creditScore'], -1);
+    if (creditScore < 0) return false;
+
+    try {
+      final termsResponse = await _apiService.calculateTerms(
+        CalculateTermsRequest(
+          loanAmount: loanAmount,
+          loanPurpose: loanPurpose,
+          creditScore: creditScore,
+        ),
+      );
+
+      _currentOffer!['loanAmountVnd'] = termsResponse.loanAmountVnd;
+      _currentOffer!['loanPurpose'] = termsResponse.loanPurpose;
+      _currentOffer!['interestRate'] = termsResponse.interestRate;
+      _currentOffer!['monthlyPaymentVnd'] = termsResponse.monthlyPaymentVnd;
+      _currentOffer!['loanTermMonths'] = termsResponse.loanTermMonths;
+      _currentOffer!['totalPaymentVnd'] = termsResponse.totalPaymentVnd;
+      _currentOffer!['totalInterestVnd'] = termsResponse.totalInterestVnd;
+      _currentOffer!['rateExplanation'] = termsResponse.rateExplanation;
+      _currentOffer!['termExplanation'] = termsResponse.termExplanation;
+      this.loanPurpose = loanPurpose;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 
@@ -475,6 +1025,7 @@ class LoanViewModel extends ChangeNotifier {
       final result = await _loanService.submitLoanApplication(
         userId: userId,
         loanRequest: request,
+        pendingApplicationId: applicationId,
       );
 
       print('[LoanViewModel] Received response from Firebase service');
@@ -487,6 +1038,7 @@ class LoanViewModel extends ChangeNotifier {
 
       // Build currentOffer map from the two-step response
       _currentOffer = {
+        'id': result['offerId'],
         'applicationId': result['applicationId'],
         'offerId': result['offerId'],
         'approved': limitResponse.approved,
@@ -517,10 +1069,20 @@ class LoanViewModel extends ChangeNotifier {
 
       // Clear draft after successful submission
       print('[LoanViewModel] Clearing draft...');
-      await LocalStorageService.clearDraft();
+      await LocalStorageService.clearDraft(userId: _firebase.currentUserId);
+
+      // Show local push when scoring completes and result returns.
+      await _pushNotificationService.showScoringResultNotification(
+        approved: limitResponse.approved,
+        creditScore: limitResponse.creditScore,
+        loanAmount: limitResponse.loanLimitVnd,
+      );
 
       _step2Completed = true;
-      _step3Completed = true; // Processing done
+      // Step 3 is completed only after the split Step 3 flow is submitted.
+      _step3Completed = false;
+      _step4Completed = false;
+      _step6Completed = false;
       notifyListeners();
     } catch (e) {
       print('[LoanViewModel] ERROR during submission: $e');
@@ -571,7 +1133,51 @@ class LoanViewModel extends ChangeNotifier {
       _lastCompletedOffer = Map<String, dynamic>.from(_currentOffer!);
       _lastCompletedStatus = _applicationStatus;
 
+      // Generate a full numeric display contract ID.
+      final displayContractId = _generateDisplayContractId();
+      final contractDetail = <String, dynamic>{
+        'status': _currentOffer!['approved'] == true ? 'Active' : 'Rejected',
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'applicationStatus': _applicationStatus.name,
+        'creditScore': _currentOffer!['creditScore'],
+        'loanAmount': _currentOffer!['loanAmountVnd'],
+        'maxAmount': _currentOffer!['maxAmountVnd'],
+        'loanTermMonths': _currentOffer!['loanTermMonths'],
+        'monthlyPaymentVnd': _currentOffer!['monthlyPaymentVnd'],
+        'interestRate': _currentOffer!['interestRate'],
+        'approved': _currentOffer!['approved'],
+        'accepted': _currentOffer!['accepted'],
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      final contractRecord = _firebase.contractIdCollection.doc();
+      await contractRecord.set({
+        'userId': _firebase.currentUserId,
+        'contractId': displayContractId,
+        'displayContractId': displayContractId,
+        'contractDbId': contractRecord.id,
+        'detail': contractDetail,
+        'applicationId':
+            _currentApplicationId ?? _currentOffer!['applicationId'],
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
       await LocalStorageService.saveApplicationHistory({
+        'offerId':
+            _currentOfferId ??
+            _currentOffer!['offerId'] ??
+            _currentOffer!['id'],
+        'contractId': displayContractId,
+        'displayContractId': displayContractId,
+        'contractDbId': contractRecord.id,
         'approved': _currentOffer!['approved'],
         'creditScore': _currentOffer!['creditScore'],
         'loanAmount': _currentOffer!['loanAmountVnd'],
@@ -583,10 +1189,17 @@ class LoanViewModel extends ChangeNotifier {
             ? 'Active'
             : 'Rejected',
         'timestamp': DateTime.now().toIso8601String(),
-      });
+      }, userId: _firebase.currentUserId);
     }
 
     resetForNewApplication();
+  }
+
+  String _generateDisplayContractId() {
+    final now = DateTime.now();
+    final datePrefix = DateFormat('yyMMddHHmmss').format(now);
+    final randomSuffix = math.Random().nextInt(90) + 10;
+    return '$datePrefix$randomSuffix';
   }
 
   void resetForNewApplication() {
@@ -611,6 +1224,9 @@ class LoanViewModel extends ChangeNotifier {
     _isVerifyingFrontId = false;
     _isVerifyingBackId = false;
     _isVerifyingSelfie = false;
+
+    // Reset bank state
+    _resetBankState();
 
     notifyListeners();
   }
@@ -652,7 +1268,7 @@ class LoanViewModel extends ChangeNotifier {
     hasPreviousDefaults = false;
     currentlyDefaulting = false;
 
-    await LocalStorageService.clearDraft();
+    await LocalStorageService.clearDraft(userId: _firebase.currentUserId);
     notifyListeners();
   }
 
@@ -706,8 +1322,9 @@ class LoanViewModel extends ChangeNotifier {
         if (response.fullName != null) fullName = response.fullName!;
         if (response.idNumber != null) idNumber = response.idNumber!;
         if (response.dateOfBirth != null) dob = response.dateOfBirth;
-        if (response.placeOfResidence != null)
+        if (response.placeOfResidence != null) {
           address = response.placeOfResidence!;
+        }
 
         _saveDraft();
         print('[ViewModel] OCR successful, data auto-filled');
@@ -855,8 +1472,159 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ===== Bank Account & Disbursement Methods (Step 6) =====
+
+  /// Load available banks from service
+  Future<void> loadBanks() async {
+    try {
+      _isLoadingBanks = true;
+      notifyListeners();
+
+      _banks = _bankService.getAllBanks();
+      print('[LoanViewModel] Loaded ${_banks.length} banks');
+
+      _isLoadingBanks = false;
+      notifyListeners();
+    } catch (e) {
+      print('[LoanViewModel] Error loading banks: $e');
+      _isLoadingBanks = false;
+      notifyListeners();
+      throw Exception('Failed to load banks: $e');
+    }
+  }
+
+  /// Update selected bank
+  void updateSelectedBank(String bankCode) {
+    _selectedBankCode = bankCode;
+    _selectedBranchCode = null; // Reset branch selection
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+    print('[LoanViewModel] Selected bank: $bankCode');
+    notifyListeners();
+  }
+
+  /// Update selected branch
+  void updateSelectedBranch(String branchCode) {
+    _selectedBranchCode = branchCode;
+    print('[LoanViewModel] Selected branch: $branchCode');
+    notifyListeners();
+  }
+
+  /// Validate bank account with external service
+  Future<bool> validateBankAccount({
+    required String bankCode,
+    required String accountNumber,
+    required String accountHolder,
+    String? branchCode,
+  }) async {
+    _isValidatingAccount = true;
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+    notifyListeners();
+
+    try {
+      print('[LoanViewModel] Validating bank account...');
+      print('[LoanViewModel] Bank: $bankCode, Account: $accountNumber');
+
+      // Check test accounts first (TEST MODE)
+      final bankService = BankService();
+      if (BankService.TEST_MODE) {
+        final isTestAccount = bankService.validateTestAccount(
+          bankCode: bankCode,
+          accountNumber: accountNumber,
+          accountHolderName: accountHolder,
+        );
+
+        if (isTestAccount) {
+          print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
+          print('[LoanViewModel] Account holder: $accountHolder');
+
+          // Create a mock success response for test account
+          _bankValidationResult = BankAccountValidationResponse(
+            valid: true,
+            accountHolderName: accountHolder,
+            bankName: bankService.getBankByCode(bankCode)?.bankName ?? bankCode,
+            bankCode: bankCode,
+            status: 'active',
+            message: 'Account verified successfully (TEST MODE)',
+            accountType: 'savings',
+            validatedAt: DateTime.now(),
+          );
+
+          _isValidatingAccount = false;
+          notifyListeners();
+          return true;
+        }
+        print(
+          '[LoanViewModel] Test mode enabled but account not in test list, calling API...',
+        );
+      }
+
+      // If not a test account or test mode disabled, call the real API
+      final request = BankAccountValidationRequest(
+        bankCode: bankCode,
+        accountNumber: accountNumber,
+        accountHolder: accountHolder,
+        branchCode: branchCode,
+      );
+
+      _bankValidationResult = await _apiService.validateBankAccount(request);
+
+      if (!_bankValidationResult!.valid) {
+        _bankAccountValidationError = _bankValidationResult!.message;
+        print(
+          '[LoanViewModel] Validation failed: $_bankAccountValidationError',
+        );
+        _isValidatingAccount = false;
+        notifyListeners();
+        return false;
+      }
+
+      print('[LoanViewModel] Bank account validated successfully');
+      print(
+        '[LoanViewModel] Account holder: ${_bankValidationResult!.accountHolderName}',
+      );
+      _isValidatingAccount = false;
+      notifyListeners();
+      return true;
+    } on BankAccountValidationException catch (e) {
+      _bankAccountValidationError = e.message;
+      print('[LoanViewModel] Validation exception: $e');
+      _isValidatingAccount = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _bankAccountValidationError = e.toString();
+      print('[LoanViewModel] Error validating bank account: $e');
+      _isValidatingAccount = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Clear bank validation state
+  void clearBankValidation() {
+    _selectedBankCode = null;
+    _selectedBranchCode = null;
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+    notifyListeners();
+  }
+
+  /// Reset bank state for new application
+  void _resetBankState() {
+    _banks = [];
+    _selectedBankCode = null;
+    _selectedBranchCode = null;
+    _isLoadingBanks = false;
+    _isValidatingAccount = false;
+    _bankAccountValidationError = null;
+    _bankValidationResult = null;
+  }
+
   @override
   void dispose() {
+    _authStateSubscription?.cancel();
     _vnptService.dispose();
     super.dispose();
   }

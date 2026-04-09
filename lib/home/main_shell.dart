@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../viewmodels/home_viewmodel.dart';
 import '../loan/loan_application_page.dart';
 import '../settings/settings_page.dart';
 import '../loan/demo_calculator_page.dart';
+import '../loan/student_hub_page.dart';
 import 'home_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -13,108 +12,173 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
+class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
-  int _previousIndex = 0;
-  late AnimationController _animationController;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    LoanApplicationPage(),
-    DemoCalculatorPage(),
-    SettingsPage(),
-  ];
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    // Keep Home highlighted on first load before any tap animation runs.
-    _animationController.value = 1.0;
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+    _pages = [
+      HomePage(
+        onOpenSettings: () => _onNavItemTap(4),
+        onOpenStudent: () => _onNavItemTap(3),
+      ),
+      const LoanApplicationPage(),
+      const DemoCalculatorPage(),
+      const StudentHubPage(),
+      const SettingsPage(),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<HomeViewModel>();
-
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: Container(
-        constraints: const BoxConstraints(minHeight: 76),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(Icons.home, 0),
-                _buildNavItem(Icons.upload_file, 1),
-                _buildNavItem(Icons.calculate, 2),
-                _buildNavItem(Icons.settings_outlined, 3),
-              ],
-            ),
-          ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 360;
+            final horizontalPadding = isCompact ? 8.0 : 16.0;
+            final verticalPadding = isCompact ? 8.0 : 10.0;
+            final iconSize = isCompact ? 24.0 : 26.0;
+
+            return Container(
+              constraints: BoxConstraints(minHeight: isCompact ? 68 : 76),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: verticalPadding,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.home,
+                        context,
+                        0,
+                        iconSize,
+                        'Home',
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.upload_file,
+                        context,
+                        1,
+                        iconSize,
+                        'Application',
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.calculate,
+                        context,
+                        2,
+                        iconSize,
+                        'Demo',
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.school_outlined,
+                        context,
+                        3,
+                        iconSize,
+                        'Student',
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildNavItem(
+                        Icons.settings_outlined,
+                        context,
+                        4,
+                        iconSize,
+                        'Settings',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
+  void _onNavItemTap(int index) {
+    if (!mounted) return;
+    if (_selectedIndex == index) return;
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Widget _buildNavItem(
+    IconData icon,
+    BuildContext context,
+    int index,
+    double iconSize,
+    String label,
+  ) {
     final isCurrentlySelected = _selectedIndex == index;
-    final wasPreviouslySelected = _previousIndex == index;
-    final inactiveColor = Colors.grey.shade600;
+    final inactiveColor = Colors.grey.shade500;
     const activeColor = Color(0xFF4D4AF9);
+    final iconColor = isCurrentlySelected ? activeColor : inactiveColor;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        setState(() {
-          _previousIndex = _selectedIndex;
-          _selectedIndex = index;
-        });
-        _animationController.forward(from: 0.0);
-      },
-      child: SizedBox(
-        width: 64,
-        height: 52,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              double animationValue;
-
-              if (isCurrentlySelected) {
-                // Item becoming selected: animate from grey to blue
-                animationValue = _animationController.value;
-              } else if (wasPreviouslySelected) {
-                // Item being deselected: animate from blue to grey
-                animationValue = 1.0 - _animationController.value;
-              } else {
-                // Item not involved in animation: stay grey
-                animationValue = 0.0;
-              }
-
-              return Icon(
-                icon,
-                color: Color.lerp(inactiveColor, activeColor, animationValue),
-                size: 26,
-              );
-            },
+    return SizedBox(
+      height: 52,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          color: isCurrentlySelected
+              ? const Color(0xFFEEF0FF)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _onNavItemTap(index),
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, color: iconColor, size: iconSize),
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: iconColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

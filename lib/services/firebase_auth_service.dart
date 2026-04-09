@@ -28,6 +28,7 @@ class FirebaseAuthService {
         'email': email,
         'fullName': fullName,
         'phoneNumber': phoneNumber,
+        'role': 'customer',
         'authMethod': 'email',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -87,8 +88,10 @@ class FirebaseAuthService {
   Future<bool> checkEmailExists(String email) async {
     try {
       // Use Firebase Auth to check if email is registered
-      final signInMethods = await _firebase.auth.fetchSignInMethodsForEmail(email);
-      
+      final signInMethods = await _firebase.auth.fetchSignInMethodsForEmail(
+        email,
+      );
+
       // If signInMethods is not empty, the email exists
       return signInMethods.isNotEmpty;
     } on FirebaseAuthException catch (e) {
@@ -108,94 +111,98 @@ class FirebaseAuthService {
       // First check if email exists by trying to get sign-in methods
       // Note: fetchSignInMethodsForEmail is deprecated and unreliable
       // So we'll use a different approach
-      
+
       // Check if the current user matches this email
       final currentUser = _firebase.auth.currentUser;
-      if (currentUser != null && currentUser.email?.toLowerCase() == email.toLowerCase()) {
+      if (currentUser != null &&
+          currentUser.email?.toLowerCase() == email.toLowerCase()) {
         // User is currently signed in with this email
         // Check their provider data
         final providerData = currentUser.providerData;
-        
-        print('[DEBUG] Current user providers: ${providerData.map((p) => p.providerId).toList()}');
-        
+
+        print(
+          '[DEBUG] Current user providers: ${providerData.map((p) => p.providerId).toList()}',
+        );
+
         final hasPassword = providerData.any((p) => p.providerId == 'password');
         final hasGoogle = providerData.any((p) => p.providerId == 'google.com');
         final hasPhone = providerData.any((p) => p.providerId == 'phone');
-        
-        print('[DEBUG] hasPassword: $hasPassword, hasGoogle: $hasGoogle, hasPhone: $hasPhone');
-        
+
+        print(
+          '[DEBUG] hasPassword: $hasPassword, hasGoogle: $hasGoogle, hasPhone: $hasPhone',
+        );
+
         // PRIORITY: If account has password, allow reset (even if it also has Google/Phone)
         if (hasPassword) {
-          return {
-            'canReset': true,
-            'message': 'OK',
-          };
+          return {'canReset': true, 'message': 'OK'};
         }
-        
+
         // If no password but has Google, show Google-specific message
         if (hasGoogle) {
           return {
             'canReset': false,
-            'message': 'This account uses Google Sign-In. Please sign in with Google instead of resetting password.',
+            'message':
+                'This account uses Google Sign-In. Please sign in with Google instead of resetting password.',
           };
         }
-        
+
         // If no password but has Phone, show Phone-specific message
         if (hasPhone) {
           return {
             'canReset': false,
-            'message': 'This account uses phone authentication. Please sign in with your phone number.',
+            'message':
+                'This account uses phone authentication. Please sign in with your phone number.',
           };
         }
-        
+
         // No password and no recognized OAuth method
         return {
           'canReset': false,
-          'message': 'This account does not use password authentication. Please use your original sign-in method.',
+          'message':
+              'This account does not use password authentication. Please use your original sign-in method.',
         };
       }
-      
+
       // User is not currently signed in or email doesn't match
       // Try the old API as fallback
       try {
-        final signInMethods = await _firebase.auth.fetchSignInMethodsForEmail(email);
-        
+        final signInMethods = await _firebase.auth.fetchSignInMethodsForEmail(
+          email,
+        );
+
         print('[DEBUG] Sign-in methods for $email: $signInMethods');
-        
+
         if (signInMethods.isEmpty) {
           return {
             'canReset': false,
-            'message': 'No account found with this email address. Please check your email or sign up.',
+            'message':
+                'No account found with this email address. Please check your email or sign up.',
           };
         }
-        
+
         final hasPassword = signInMethods.contains('password');
-        
+
         if (hasPassword) {
-          return {
-            'canReset': true,
-            'message': 'OK',
-          };
+          return {'canReset': true, 'message': 'OK'};
         }
-        
+
         return {
           'canReset': false,
-          'message': 'This account does not use password authentication. Please use your original sign-in method.',
+          'message':
+              'This account does not use password authentication. Please use your original sign-in method.',
         };
       } catch (e) {
         print('[DEBUG] fetchSignInMethodsForEmail failed: $e');
         // If API fails, assume email doesn't exist
         return {
           'canReset': false,
-          'message': 'No account found with this email address. Please check your email or sign up.',
+          'message':
+              'No account found with this email address. Please check your email or sign up.',
         };
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-email') {
-        return {
-          'canReset': false,
-          'message': 'Invalid email address format.',
-        };
+        return {'canReset': false, 'message': 'Invalid email address format.'};
       }
       throw _handleAuthException(e);
     } catch (e) {
@@ -213,9 +220,11 @@ class FirebaseAuthService {
   Future<bool> userHasPassword() async {
     final user = _firebase.auth.currentUser;
     if (user == null || user.email == null) return false;
-    
+
     try {
-      final signInMethods = await _firebase.auth.fetchSignInMethodsForEmail(user.email!);
+      final signInMethods = await _firebase.auth.fetchSignInMethodsForEmail(
+        user.email!,
+      );
       return signInMethods.contains('password');
     } catch (e) {
       return false;
@@ -228,33 +237,35 @@ class FirebaseAuthService {
     if (user == null || user.email == null) {
       throw Exception('No authenticated user found');
     }
-    
+
     print('[DEBUG] Attempting to link password for user: ${user.email}');
-    
+
     try {
       // Create email/password credential
       final credential = EmailAuthProvider.credential(
         email: user.email!,
         password: password,
       );
-      
+
       print('[DEBUG] Created credential for ${user.email}');
-      
+
       // Link credential to current user
       await user.linkWithCredential(credential);
-      
+
       print('[DEBUG] Successfully linked password credential');
-      
+
       // Update Firestore to mark password as added
       await _firebase.usersCollection.doc(user.uid).update({
         'hasPassword': true,
         'authMethods': FieldValue.arrayUnion(['password']),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       print('[DEBUG] Updated Firestore user document');
     } on FirebaseAuthException catch (e) {
-      print('[DEBUG] FirebaseAuthException during linking: ${e.code} - ${e.message}');
+      print(
+        '[DEBUG] FirebaseAuthException during linking: ${e.code} - ${e.message}',
+      );
       throw _handleAuthException(e);
     } catch (e) {
       print('[DEBUG] Error during linking: $e');
@@ -293,7 +304,7 @@ class FirebaseAuthService {
       }
 
       await user.updatePassword(newPassword);
-      
+
       // Update Firestore to track password change
       await _firebase.usersCollection.doc(user.uid).update({
         'passwordUpdatedAt': FieldValue.serverTimestamp(),
@@ -346,7 +357,6 @@ class FirebaseAuthService {
     await _firebase.auth.signOut();
   }
 
-
   // Get current user stream
   Stream<User?> get authStateChanges => _firebase.auth.authStateChanges();
 
@@ -354,7 +364,7 @@ class FirebaseAuthService {
   User? get currentUser => _firebase.auth.currentUser;
 
   // === PHONE AUTHENTICATION ===
-  
+
   // Send OTP to phone number
   Future<String> sendPhoneOTP({
     required String phoneNumber,
@@ -363,7 +373,7 @@ class FirebaseAuthService {
   }) async {
     try {
       String verificationIdResult = '';
-      
+
       await _firebase.auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
@@ -382,7 +392,7 @@ class FirebaseAuthService {
         },
         timeout: const Duration(seconds: 60),
       );
-      
+
       return verificationIdResult;
     } catch (e) {
       throw Exception('Failed to send OTP: $e');
@@ -401,8 +411,10 @@ class FirebaseAuthService {
         smsCode: smsCode,
       );
 
-      final userCredential = await _firebase.auth.signInWithCredential(credential);
-      
+      final userCredential = await _firebase.auth.signInWithCredential(
+        credential,
+      );
+
       // Create/update user document if this is a new user
       if (userCredential.additionalUserInfo?.isNewUser == true) {
         final userData = {
@@ -413,11 +425,11 @@ class FirebaseAuthService {
           'updatedAt': FieldValue.serverTimestamp(),
           'profileComplete': false,
         };
-        
+
         if (fullName != null) {
           userData['fullName'] = fullName;
         }
-        
+
         await _firebase.usersCollection
             .doc(userCredential.user!.uid)
             .set(userData);
@@ -430,20 +442,21 @@ class FirebaseAuthService {
   }
 
   // === GOOGLE SIGN-IN ===
-  
+
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
       // Trigger the Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         // User canceled the sign-in
         return null;
       }
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -452,8 +465,10 @@ class FirebaseAuthService {
       );
 
       // Sign in to Firebase with the Google credential
-      final userCredential = await _firebase.auth.signInWithCredential(credential);
-      
+      final userCredential = await _firebase.auth.signInWithCredential(
+        credential,
+      );
+
       // Create/update user document if this is a new user
       if (userCredential.additionalUserInfo?.isNewUser == true) {
         final userData = {
@@ -468,7 +483,7 @@ class FirebaseAuthService {
           'updatedAt': FieldValue.serverTimestamp(),
           'profileComplete': true, // Google users have complete profile
         };
-        
+
         await _firebase.usersCollection
             .doc(userCredential.user!.uid)
             .set(userData);

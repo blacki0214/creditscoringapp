@@ -8,6 +8,50 @@ class NotificationService {
   final FirebaseService _firebase = FirebaseService();
   final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
+  Future<void> _saveNotification(
+    NotificationModel notification, {
+    bool shouldSendPush = true,
+  }) async {
+    final payload = notification.toFirestore();
+    payload['shouldSendPush'] = shouldSendPush;
+    payload['pushStatus'] = shouldSendPush ? 'pending' : 'disabled';
+    payload['pushRequestedAt'] = FieldValue.serverTimestamp();
+    payload['source'] = 'mobile_app';
+
+    await FirebaseFirestore.instance.collection('notifications').add(payload);
+  }
+
+  /// Create a generic flow milestone notification (eKYC/step completion, etc.)
+  Future<void> createFlowMilestoneNotification({
+    required String userId,
+    String? applicationId,
+    required String type,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final notification = NotificationModel(
+        id: '',
+        userId: userId,
+        applicationId: applicationId,
+        type: type,
+        title: title,
+        body: body,
+        data: data,
+        isRead: false,
+        createdAt: DateTime.now(),
+      );
+
+      await _saveNotification(notification, shouldSendPush: true);
+
+      print('[NotificationService] Created milestone notification: $type');
+    } catch (e) {
+      print('[NotificationService] Error creating milestone notification: $e');
+      // Non-blocking by design: notification errors should not break flow.
+    }
+  }
+
   /// Create notification when loan application is processed
   Future<void> createLoanNotification({
     required String userId,
@@ -47,9 +91,7 @@ class NotificationService {
         createdAt: DateTime.now(),
       );
 
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .add(notification.toFirestore());
+      await _saveNotification(notification, shouldSendPush: true);
 
       print('[NotificationService] Created notification: $title');
     } catch (e) {
@@ -86,13 +128,52 @@ class NotificationService {
         createdAt: DateTime.now(),
       );
 
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .add(notification.toFirestore());
+      await _saveNotification(notification, shouldSendPush: true);
 
       print('[NotificationService] Created credit score notification');
     } catch (e) {
       print('[NotificationService] Error creating credit score notification: $e');
+    }
+  }
+
+  Future<void> createPaymentSuccessNotification({
+    required String userId,
+    String? applicationId,
+    String? offerId,
+    String? installmentId,
+    required double amountVnd,
+    DateTime? dueDate,
+    DateTime? paidAt,
+  }) async {
+    try {
+      final formattedAmount = _currencyFormat.format(amountVnd);
+      final title = 'Payment Successful';
+      final body = dueDate != null
+          ? 'We received your payment of $formattedAmount for due date ${DateFormat('dd/MM/yyyy').format(dueDate)}.'
+          : 'We received your payment of $formattedAmount.';
+
+      final notification = NotificationModel(
+        id: '',
+        userId: userId,
+        applicationId: applicationId,
+        type: 'payment_success',
+        title: title,
+        body: body,
+        data: {
+          'offerId': offerId,
+          'installmentId': installmentId,
+          'amountVnd': amountVnd,
+          'dueDate': dueDate?.toIso8601String(),
+          'paidAt': (paidAt ?? DateTime.now()).toIso8601String(),
+        },
+        isRead: false,
+        createdAt: DateTime.now(),
+      );
+
+      await _saveNotification(notification, shouldSendPush: true);
+      print('[NotificationService] Created payment success notification');
+    } catch (e) {
+      print('[NotificationService] Error creating payment success notification: $e');
     }
   }
 
@@ -191,6 +272,28 @@ class NotificationService {
       print('[NotificationService] Deleted all notifications');
     } catch (e) {
       print('[NotificationService] Error deleting all notifications: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete all read notifications for a user
+  Future<void> deleteAllReadNotifications(String userId) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: userId)
+          .where('isRead', isEqualTo: true)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      print('[NotificationService] Deleted all read notifications');
+    } catch (e) {
+      print('[NotificationService] Error deleting all read notifications: $e');
       rethrow;
     }
   }
