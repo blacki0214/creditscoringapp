@@ -217,22 +217,41 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () async {
-                    await vm.calculateLimit();
-                    if (!context.mounted) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StudentStepCResultPage(),
-                      ),
-                    );
-                  },
+                  onPressed: vm.isCalculating
+                      ? null
+                      : () async {
+                          await vm.calculateLimit();
+                          if (!context.mounted) return;
+
+                          if (vm.errorMessage != null && vm.errorMessage!.isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(vm.errorMessage!)),
+                            );
+                            return;
+                          }
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const StudentStepCResultPage(),
+                            ),
+                          );
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4D4AF9),
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(52),
                   ),
-                  child: Text(context.t('Continue to Step 3', 'Tiếp tục sang Bước 3')),
+                  child: vm.isCalculating
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(context.t('Continue to Step 3', 'Tiếp tục sang Bước 3')),
                 ),
               ),
             ],

@@ -1,6 +1,14 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
+
+import '../services/api_service.dart';
 
 class StudentLoanViewModel extends ChangeNotifier {
+  StudentLoanViewModel({ApiService? apiService})
+    : _apiService = apiService ?? ApiService();
+
+  final ApiService _apiService;
+
   double gpaLatest = 2.8;
   int academicYear = 1;
   String major = 'Information Technology';
@@ -17,6 +25,15 @@ class StudentLoanViewModel extends ChangeNotifier {
   int? loanLimitVnd;
   bool? approved;
   String riskLevel = 'MEDIUM';
+  String? apiMessage;
+  String? decisionBand;
+  bool? manualReview;
+  double? defaultProbability;
+  int? approvalThreshold;
+  String? scoreModel;
+  String? scoreRange;
+  bool isCalculating = false;
+  String? errorMessage;
 
   static const List<String> majors = [
     'Information Technology',
@@ -83,22 +100,83 @@ class StudentLoanViewModel extends ChangeNotifier {
       monthlyIncome > 4000000 && supportSources.isEmpty;
 
   Future<void> calculateLimit() async {
-    _refreshPreview();
+    isCalculating = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final request = _buildStudentRequest();
+
+      // Keep score-only step to align with the guide's student flow,
+      // then request official limit from the second endpoint.
+      final scoreResponse = await _apiService.calculateStudentCreditScore(request);
+      final limitResponse = await _apiService.calculateStudentLimit(request);
+
+      creditScore = limitResponse.creditScore > 0
+          ? limitResponse.creditScore
+          : scoreResponse.creditScore;
+      loanLimitVnd = limitResponse.loanLimitVnd.round();
+      approved = limitResponse.approved;
+      riskLevel = limitResponse.riskLevel;
+      apiMessage = limitResponse.message.isNotEmpty
+          ? limitResponse.message
+          : scoreResponse.message;
+      decisionBand = limitResponse.decisionBand ?? scoreResponse.decisionBand;
+      manualReview = limitResponse.manualReview ?? scoreResponse.manualReview;
+      defaultProbability =
+          limitResponse.defaultProbability ?? scoreResponse.defaultProbability;
+      approvalThreshold =
+          limitResponse.approvalThreshold ?? scoreResponse.approvalThreshold;
+      scoreModel = limitResponse.scoreModel ?? scoreResponse.scoreModel;
+      scoreRange = limitResponse.scoreRange ?? scoreResponse.scoreRange;
+    } on ApiServiceException catch (e) {
+      if (e.statusCode != null && e.statusCode! >= 500) {
+        _refreshPreview();
+        errorMessage = null;
+        apiMessage =
+            'Hệ thống chấm điểm đang tạm thời gián đoạn. Kết quả hiện tại là ước tính cục bộ, vui lòng thử lại sau để nhận kết quả chính thức.\nScoring service is temporarily unavailable. Current result is a local estimate; please retry later for official results.';
+      } else {
+        errorMessage = _userFriendlyError(e);
+        _refreshPreview();
+      }
+    } catch (_) {
+      errorMessage =
+          'Kết nối tạm thời gián đoạn. Vui lòng thử lại.\nTemporary connection issue. Please try again.';
+      _refreshPreview();
+    } finally {
+      isCalculating = false;
+      notifyListeners();
+    }
   }
 
   Map<String, dynamic> toRequest() {
     return {
+      'age': _estimateAge(),
       'gpa_latest': gpaLatest,
       'academic_year': academicYear,
-      'major_income_potential': major,
+      'major': _mapMajorToApi(major),
       'living_status': livingStatus,
       'program_level': programLevel,
-      'loan_amount': loanAmount,
       'has_buffer': hasBuffer,
       'monthly_income': monthlyIncome,
       'monthly_expenses': monthlyExpenses,
-      'support_sources': supportSources.toList(),
+      'support_sources': supportSources.map(_mapSupportSourceToApi).toList(),
     };
+  }
+
+  StudentScoringRequest _buildStudentRequest() {
+    return StudentScoringRequest(
+      age: _estimateAge(),
+      gpaLatest: gpaLatest,
+      academicYear: academicYear,
+      major: _mapMajorToApi(major),
+      programLevel: programLevel,
+      livingStatus: livingStatus,
+      hasBuffer: hasBuffer,
+      supportSources: supportSources.map(_mapSupportSourceToApi).toList(),
+      monthlyIncome: monthlyIncome,
+      monthlyExpenses: monthlyExpenses,
+    );
   }
 
   void _refreshPreview() {
@@ -111,6 +189,100 @@ class StudentLoanViewModel extends ChangeNotifier {
     approved = score >= 650;
 
     notifyListeners();
+  }
+
+  int _estimateAge() {
+    final estimated = 17 + academicYear;
+    if (estimated < 18) return 18;
+    if (estimated > 35) return 35;
+    return estimated;
+  }
+
+  String _mapMajorToApi(String value) {
+    final normalized = value.trim().toLowerCase();
+
+    if (normalized.contains('data') || normalized.contains('technology')) {
+      return 'technology';
+    }
+    if (normalized.contains('engineer')) {
+      return 'engineering';
+    }
+    if (normalized.contains('finance')) {
+      return 'finance';
+    }
+    if (normalized.contains('business') || normalized.contains('marketing')) {
+      return 'business';
+    }
+    if (normalized.contains('medicine')) {
+      return 'medicine';
+    }
+    if (normalized.contains('law')) {
+      return 'law';
+    }
+    if (normalized.contains('education')) {
+      return 'education';
+    }
+    return 'other';
+  }
+
+  String _mapSupportSourceToApi(String source) {
+    switch (source) {
+      case 'work':
+        return 'part_time';
+      default:
+        return source;
+    }
+  }
+
+  String _userFriendlyError(ApiServiceException error) {
+    final code = error.statusCode;
+    final backendReason = _extractBackendMessage(error.message);
+    if (code == 401) {
+      return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\nYour session has expired. Please sign in again.';
+    }
+    if (code == 429) {
+      return 'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ít phút.\nToo many requests. Please try again shortly.';
+    }
+    if (code == 403) {
+      if (backendReason != null && backendReason.isNotEmpty) {
+        return 'Không đủ quyền truy cập dịch vụ chấm điểm: $backendReason\nAccess denied by scoring service: $backendReason';
+      }
+      return 'Không đủ quyền truy cập dịch vụ chấm điểm. Vui lòng liên hệ hỗ trợ hoặc thử lại sau.\nAccess denied by scoring service. Please contact support or try again later.';
+    }
+    if (code != null && code >= 500) {
+      return 'Hệ thống đang bận. Vui lòng thử lại sau.\nService is temporarily unavailable. Please try again.';
+    }
+    return 'Không thể xử lý hồ sơ sinh viên lúc này. Vui lòng kiểm tra thông tin và thử lại.\nUnable to process student application right now. Please review your data and retry.';
+  }
+
+  String? _extractBackendMessage(String raw) {
+    if (raw.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        final candidates = [
+          decoded['message'],
+          decoded['detail'],
+          decoded['error'],
+          decoded['code'],
+        ];
+
+        for (final candidate in candidates) {
+          final text = candidate?.toString().trim();
+          if (text != null && text.isNotEmpty) {
+            return text;
+          }
+        }
+      }
+    } catch (_) {
+      // Raw response is not JSON, fallback to plain text below.
+    }
+
+    final text = raw.trim();
+    return text.isEmpty ? null : text;
   }
 
   int _computeScore() {
