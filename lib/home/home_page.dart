@@ -1030,10 +1030,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
-    final currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: 'đ',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     final activeOffer = loanViewModel.currentOffer;
     final activeStatus = loanViewModel.applicationStatus;
     final showScoreStatus =
@@ -1514,10 +1511,7 @@ class _HomePageState extends State<HomePage> {
     final applicationHistory = LocalStorageService.getApplicationHistory(
       userId: userId,
     );
-    final currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: 'đ',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     if (applicationHistory.isEmpty) {
       return Center(
@@ -1727,10 +1721,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildInstallmentDisplay(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
-    final currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: 'đ',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     final applicationHistory = LocalStorageService.getApplicationHistory(
@@ -1825,18 +1816,6 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Contract ID - display at top
-                  Center(
-                    child: Text(
-                      context.t('Contract ID: ', 'ID Hợp đồng: ') + contractId,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1867,7 +1846,7 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            context.t('Next Due', 'Đến hạn tiếp theo'),
+                            context.t('Due date', 'Ngày đến hạn'),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
@@ -1896,32 +1875,70 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 40,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4D4AF9),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ApplicationContractStatusPage(
-                              application: Map<String, dynamic>.from(app),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ApplicationContractStatusPage(
+                                    application: Map<String, dynamic>.from(app),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEEF0FF),
+                                borderRadius: BorderRadius.circular(17),
+                                border: Border.all(
+                                  color: const Color(0xFFD9DDFE),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.open_in_new,
+                                size: 18,
+                                color: Color(0xFF4D4AF9),
+                              ),
                             ),
                           ),
-                        );
-                      },
-                      child: Text(
-                        context.t('View Details', 'Xem chi tiết'),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        ],
                       ),
-                    ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            context.t('Contract ID', 'ID Hợp đồng'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 180),
+                            child: Text(
+                              contractId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1A1F3F),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -3081,7 +3098,7 @@ String _getLocalizedNotificationTitle(
     case 'step3_completed':
       return context.t('Step 3 Completed', 'Hoàn tất Bước 3');
     case 'step4_completed':
-      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');                                      
+      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');
     case 'step5_completed':
       return context.t('Step 5 Completed', 'Hoàn tất Bước 5');
     case 'loan_approved':

@@ -154,8 +154,7 @@ class SwinCreditApp extends StatelessWidget {
           ),
           home: const SplashScreen(),
           routes: {
-            '/step3_personal_info': (context) =>
-              const Step3PersonalInfoPage(),
+            '/step3_personal_info': (context) => const Step3PersonalInfoPage(),
             '/step3_additional_info': (context) =>
                 const Step3PersonalInfoPage(),
             '/step4_offer_calculator': (context) =>

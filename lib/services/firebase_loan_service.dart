@@ -8,6 +8,65 @@ class FirebaseLoanService {
   final ApiService _apiService = ApiService();
   final NotificationService _notificationService = NotificationService();
 
+  Future<Map<String, dynamic>> _lockAndResolveCreditScore({
+    required String userId,
+    required int apiCreditScore,
+    required String apiRiskLevel,
+  }) async {
+    final userRef = _firebase.usersCollection.doc(userId);
+
+    // Candidate defaults to current API score; for legacy users we try to
+    // derive and preserve their earliest historical score first.
+    var candidateScore = apiCreditScore;
+    var candidateRisk = apiRiskLevel;
+
+    final earliestApp = await _firebase.creditApplicationsCollection
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: false)
+        .limit(1)
+        .get();
+
+    if (earliestApp.docs.isNotEmpty) {
+      final earliestData =
+          earliestApp.docs.first.data() as Map<String, dynamic>;
+      final historicalScoreRaw = earliestData['creditScore'];
+      if (historicalScoreRaw is num) {
+        candidateScore = historicalScoreRaw.toInt();
+      }
+      final historicalRiskRaw = earliestData['riskLevel'];
+      if (historicalRiskRaw is String && historicalRiskRaw.isNotEmpty) {
+        candidateRisk = historicalRiskRaw;
+      }
+    }
+
+    return _firebase.firestore.runTransaction((transaction) async {
+      final userSnapshot = await transaction.get(userRef);
+      final userData = userSnapshot.data() as Map<String, dynamic>?;
+
+      final existingScoreRaw = userData?['initialCreditScore'];
+      if (existingScoreRaw is num) {
+        final existingRiskRaw = userData?['initialRiskLevel'];
+        return {
+          'creditScore': existingScoreRaw.toInt(),
+          'riskLevel': existingRiskRaw is String && existingRiskRaw.isNotEmpty
+              ? existingRiskRaw
+              : candidateRisk,
+        };
+      }
+
+      transaction.set(userRef, {
+        'initialCreditScore': candidateScore,
+        'initialRiskLevel': candidateRisk,
+        'initialCreditScoreLockedAt': FieldValue.serverTimestamp(),
+        'latestCreditScore': candidateScore,
+        'lastCreditCheckDate': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      return {'creditScore': candidateScore, 'riskLevel': candidateRisk};
+    });
+  }
+
   // Create pending application (for async processing)
   Future<String> createPendingApplication({
     required String userId,
@@ -19,7 +78,7 @@ class FirebaseLoanService {
         'status': 'processing',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        
+
         // Application data
         'fullName': loanRequest.fullName,
         'age': loanRequest.age,
@@ -62,12 +121,32 @@ class FirebaseLoanService {
 
       print('[FirebaseLoanService] Calling API Step 1: /calculate-limit...');
       final limitResponse = await _apiService.calculateLimit(limitRequest);
-      print('[FirebaseLoanService] Step 1 completed. Score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}');
+      print(
+        '[FirebaseLoanService] Step 1 completed. Score: ${limitResponse.creditScore}, Approved: ${limitResponse.approved}',
+      );
+
+      final lockedScore = await _lockAndResolveCreditScore(
+        userId: userId,
+        apiCreditScore: limitResponse.creditScore,
+        apiRiskLevel: limitResponse.riskLevel,
+      );
+
+      final effectiveLimitResponse = CalculateLimitResponse(
+        creditScore: lockedScore['creditScore'] as int,
+        loanLimitVnd: limitResponse.loanLimitVnd,
+        riskLevel: lockedScore['riskLevel'] as String,
+        approved: limitResponse.approved,
+        message: limitResponse.message,
+      );
 
       // If not approved, return early
-      if (!limitResponse.approved) {
-        final applicationId = pendingApplicationId ??
-            await createPendingApplication(userId: userId, loanRequest: loanRequest);
+      if (!effectiveLimitResponse.approved) {
+        final applicationId =
+            pendingApplicationId ??
+            await createPendingApplication(
+              userId: userId,
+              loanRequest: loanRequest,
+            );
 
         await _firebase.creditApplicationsCollection.doc(applicationId).set({
           'userId': userId,
@@ -87,10 +166,10 @@ class FirebaseLoanService {
           'currentlyDefaulting': loanRequest.currentlyDefaulting,
 
           // Result data
-          'creditScore': limitResponse.creditScore,
-          'riskLevel': limitResponse.riskLevel,
+          'creditScore': effectiveLimitResponse.creditScore,
+          'riskLevel': effectiveLimitResponse.riskLevel,
           'approved': false,
-          'loanLimitVnd': limitResponse.loanLimitVnd,
+          'loanLimitVnd': effectiveLimitResponse.loanLimitVnd,
 
           // Flow state
           'step2Completed': true,
@@ -108,13 +187,13 @@ class FirebaseLoanService {
           'expiresAt': Timestamp.fromDate(
             DateTime.now().add(const Duration(days: 30)),
           ),
-          
+
           'approved': false,
           'loanAmountVnd': 0,
-          'maxAmountVnd': limitResponse.loanLimitVnd,
-          'creditScore': limitResponse.creditScore,
-          'riskLevel': limitResponse.riskLevel,
-          'approvalMessage': limitResponse.message,
+          'maxAmountVnd': effectiveLimitResponse.loanLimitVnd,
+          'creditScore': effectiveLimitResponse.creditScore,
+          'riskLevel': effectiveLimitResponse.riskLevel,
+          'approvalMessage': effectiveLimitResponse.message,
           'accepted': false,
           'step4Completed': false,
           'step5Completed': false,
@@ -135,14 +214,14 @@ class FirebaseLoanService {
           userId: userId,
           applicationId: applicationId,
           approved: false,
-          creditScore: limitResponse.creditScore,
-          loanAmount: limitResponse.loanLimitVnd,
+          creditScore: effectiveLimitResponse.creditScore,
+          loanAmount: effectiveLimitResponse.loanLimitVnd,
         );
 
         return {
           'applicationId': applicationId,
           'offerId': offerRef.id,
-          'limitResponse': limitResponse,
+          'limitResponse': effectiveLimitResponse,
           'termsResponse': null,
         };
       }
@@ -150,19 +229,27 @@ class FirebaseLoanService {
       // Step 2: Calculate loan terms for approved applications
       // Use the loan limit as the approved amount
       final termsRequest = CalculateTermsRequest(
-        loanAmount: limitResponse.loanLimitVnd,
+        loanAmount: effectiveLimitResponse.loanLimitVnd,
         loanPurpose: loanRequest.loanPurpose,
-        creditScore: limitResponse.creditScore,
+        creditScore: effectiveLimitResponse.creditScore,
       );
 
       print('[FirebaseLoanService] Calling API Step 2: /calculate-terms...');
       final termsResponse = await _apiService.calculateTerms(termsRequest);
-      print('[FirebaseLoanService] Step 2 completed. Interest rate: ${termsResponse.interestRate}%, Term: ${termsResponse.loanTermMonths} months');
+      print(
+        '[FirebaseLoanService] Step 2 completed. Interest rate: ${termsResponse.interestRate}%, Term: ${termsResponse.loanTermMonths} months',
+      );
 
-      final applicationId = pendingApplicationId ??
-          await createPendingApplication(userId: userId, loanRequest: loanRequest);
+      final applicationId =
+          pendingApplicationId ??
+          await createPendingApplication(
+            userId: userId,
+            loanRequest: loanRequest,
+          );
 
-      print('[FirebaseLoanService] Updating application document: $applicationId');
+      print(
+        '[FirebaseLoanService] Updating application document: $applicationId',
+      );
       await _firebase.creditApplicationsCollection.doc(applicationId).set({
         'userId': userId,
         'status': 'approved',
@@ -181,10 +268,10 @@ class FirebaseLoanService {
         'currentlyDefaulting': loanRequest.currentlyDefaulting,
 
         // Result data
-        'creditScore': limitResponse.creditScore,
-        'riskLevel': limitResponse.riskLevel,
+        'creditScore': effectiveLimitResponse.creditScore,
+        'riskLevel': effectiveLimitResponse.riskLevel,
         'approved': true,
-        'loanLimitVnd': limitResponse.loanLimitVnd,
+        'loanLimitVnd': effectiveLimitResponse.loanLimitVnd,
 
         // Flow state
         'step2Completed': true,
@@ -193,7 +280,9 @@ class FirebaseLoanService {
         'step5Completed': false,
         'step6Completed': false,
       }, SetOptions(merge: true));
-      print('[FirebaseLoanService] Application document updated: $applicationId');
+      print(
+        '[FirebaseLoanService] Application document updated: $applicationId',
+      );
 
       // Create loan offer document
       print('[FirebaseLoanService] Creating loan offer document...');
@@ -204,27 +293,29 @@ class FirebaseLoanService {
         'expiresAt': Timestamp.fromDate(
           DateTime.now().add(const Duration(days: 30)),
         ),
-        
+
         // Offer details
         'approved': true,
-        'loanAmountVnd': limitResponse.loanLimitVnd,
-        'maxAmountVnd': limitResponse.loanLimitVnd,
+        'loanAmountVnd': effectiveLimitResponse.loanLimitVnd,
+        'maxAmountVnd': effectiveLimitResponse.loanLimitVnd,
         'interestRate': termsResponse.interestRate,
         'monthlyPaymentVnd': termsResponse.monthlyPaymentVnd,
         'loanTermMonths': termsResponse.loanTermMonths,
         'totalPaymentVnd': termsResponse.totalPaymentVnd,
         'totalInterestVnd': termsResponse.totalInterestVnd,
-        'creditScore': limitResponse.creditScore,
-        'riskLevel': limitResponse.riskLevel,
-        'approvalMessage': limitResponse.message,
-        
+        'creditScore': effectiveLimitResponse.creditScore,
+        'riskLevel': effectiveLimitResponse.riskLevel,
+        'approvalMessage': effectiveLimitResponse.message,
+
         // Acceptance status
         'accepted': false,
         'step4Completed': false,
         'step5Completed': false,
         'step6Completed': false,
       });
-      print('[FirebaseLoanService] Loan offer document created: ${offerRef.id}');
+      print(
+        '[FirebaseLoanService] Loan offer document created: ${offerRef.id}',
+      );
 
       await _firebase.loanOffersCollection.doc(offerRef.id).set({
         'contractId': offerRef.id,
@@ -243,28 +334,30 @@ class FirebaseLoanService {
         'action': 'created',
         'timestamp': FieldValue.serverTimestamp(),
         'details': {
-          'creditScore': limitResponse.creditScore,
+          'creditScore': effectiveLimitResponse.creditScore,
           'approved': true,
-          'loanLimitVnd': limitResponse.loanLimitVnd,
+          'loanLimitVnd': effectiveLimitResponse.loanLimitVnd,
         },
         'performedBy': userId,
       });
       print('[FirebaseLoanService] Application history created');
-      print('[FirebaseLoanService] All Firestore operations completed successfully!');
+      print(
+        '[FirebaseLoanService] All Firestore operations completed successfully!',
+      );
 
       // Create notification for approved loan
       await _notificationService.createLoanNotification(
         userId: userId,
         applicationId: applicationId,
         approved: true,
-        creditScore: limitResponse.creditScore,
-        loanAmount: limitResponse.loanLimitVnd,
+        creditScore: effectiveLimitResponse.creditScore,
+        loanAmount: effectiveLimitResponse.loanLimitVnd,
       );
 
       return {
         'applicationId': applicationId,
         'offerId': offerRef.id,
-        'limitResponse': limitResponse,
+        'limitResponse': effectiveLimitResponse,
         'termsResponse': termsResponse,
       };
     } catch (e) {

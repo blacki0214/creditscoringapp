@@ -126,9 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                      ),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: RichText(
                       text: TextSpan(
@@ -138,9 +136,17 @@ class _LoginPageState extends State<LoginPage> {
                           color: Color(0xFF475569),
                         ),
                         children: [
-                          TextSpan(text: context.t('By using the SwinCredit platform, you agree to our comprehensive ', 'Bằng cách sử dụng nền tảng SwinCredit, bạn đồng ý với ')),
                           TextSpan(
-                            text: context.t('Terms of Service', 'Điều khoản dịch vụ'),
+                            text: context.t(
+                              'By using the SwinCredit platform, you agree to our comprehensive ',
+                              'Bằng cách sử dụng nền tảng SwinCredit, bạn đồng ý với ',
+                            ),
+                          ),
+                          TextSpan(
+                            text: context.t(
+                              'Terms of Service',
+                              'Điều khoản dịch vụ',
+                            ),
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF4A52FF),
@@ -155,7 +161,12 @@ class _LoginPageState extends State<LoginPage> {
                                 );
                               },
                           ),
-                          TextSpan(text: context.t('. We prioritize the security of your assets through institutional-grade encryption.', '. Chúng tôi ưu tiên sự an toàn của tài sản của bạn thông qua mã hóa cấp độ tổ chức.')),
+                          TextSpan(
+                            text: context.t(
+                              '. We prioritize the security of your assets through institutional-grade encryption.',
+                              '. Chúng tôi ưu tiên sự an toàn của tài sản của bạn thông qua mã hóa cấp độ tổ chức.',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -406,7 +417,9 @@ class _LoginPageState extends State<LoginPage> {
                         if (success && mounted) {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (_) => const MainShell()),
+                            MaterialPageRoute(
+                              builder: (_) => const MainShell(),
+                            ),
                           );
                         }
                       }
@@ -426,8 +439,9 @@ class _LoginPageState extends State<LoginPage> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Row(
@@ -461,10 +475,7 @@ class _LoginPageState extends State<LoginPage> {
         Row(
           children: [
             Expanded(
-              child: Divider(
-                color: const Color(0xFFE2E8F0),
-                thickness: 1,
-              ),
+              child: Divider(color: const Color(0xFFE2E8F0), thickness: 1),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -479,10 +490,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             Expanded(
-              child: Divider(
-                color: const Color(0xFFE2E8F0),
-                thickness: 1,
-              ),
+              child: Divider(color: const Color(0xFFE2E8F0), thickness: 1),
             ),
           ],
         ),
@@ -616,10 +624,7 @@ class _LoginPageState extends State<LoginPage> {
               decoration: BoxDecoration(
                 color: const Color(0xFFFEE2E2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFFECACA),
-                  width: 1.5,
-                ),
+                border: Border.all(color: const Color(0xFFFECACA), width: 1.5),
               ),
               child: Row(
                 children: [
@@ -747,7 +752,10 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             TextSpan(
-                              text: context.t('Create account', 'Tạo tài khoản'),
+                              text: context.t(
+                                'Create account',
+                                'Tạo tài khoản',
+                              ),
                               style: const TextStyle(
                                 color: Color(0xFF4A52FF),
                                 fontWeight: FontWeight.w700,
@@ -786,10 +794,7 @@ class _LoginPageState extends State<LoginPage> {
                               );
                             },
                             child: Text(
-                              context.t(
-                                'Privacy Policy',
-                                'Chính sách bảo mật',
-                              ),
+                              context.t('Privacy Policy', 'Chính sách bảo mật'),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF94A3B8),
@@ -836,9 +841,7 @@ class _LoginPageState extends State<LoginPage> {
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.3),
-                ),
+                child: Container(color: Colors.black.withValues(alpha: 0.3)),
               ),
             ),
         ],
