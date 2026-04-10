@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                           color: Color(0xFF475569),
                         ),
                         children: [
-                          TextSpan(text: context.t('By using the Financial Atelier platform, you agree to our comprehensive ', 'Bằng cách sử dụng nền tảng Financial Atelier, bạn đồng ý với ')),
+                          TextSpan(text: context.t('By using the SwinCredit platform, you agree to our comprehensive ', 'Bằng cách sử dụng nền tảng SwinCredit, bạn đồng ý với ')),
                           TextSpan(
                             text: context.t('Terms of Service', 'Điều khoản dịch vụ'),
                             style: const TextStyle(
@@ -714,8 +714,8 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 8),
                         Text(
                           context.t(
-                            'Log in to manage your financial atelier',
-                            'Đăng nhập để quản lý atelier tài chính của bạn',
+                            'Log in to manage your SwinCredit account',
+                            'Đăng nhập để quản lý tài khoản SwinCredit của bạn',
                           ),
                           style: const TextStyle(
                             fontSize: 16,

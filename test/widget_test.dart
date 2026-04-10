@@ -5,7 +5,7 @@ import 'package:creditscoring/main.dart';
 void main() {
   testWidgets('App loads SplashScreen correctly', (WidgetTester tester) async {
     // Load the main app
-    await tester.pumpWidget(const VietCreditApp());
+    await tester.pumpWidget(const SwinCreditApp());
     await tester.pump();
 
     // Verify app bootstrap rendered

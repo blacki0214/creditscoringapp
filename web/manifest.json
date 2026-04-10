@@ -1,6 +1,6 @@
 {
-    "name": "creditscoring",
-    "short_name": "creditscoring",
+    "name": "SwinCredit",
+    "short_name": "SwinCredit",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

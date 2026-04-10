@@ -76,11 +76,11 @@ void main() async {
   // Initialize FCM and local notification handling
   await PushNotificationService().initialize();
 
-  runApp(const VietCreditApp());
+  runApp(const SwinCreditApp());
 }
 
-class VietCreditApp extends StatelessWidget {
-  const VietCreditApp({super.key});
+class SwinCreditApp extends StatelessWidget {
+  const SwinCreditApp({super.key});
 
   @override
   Widget build(BuildContext context) {
