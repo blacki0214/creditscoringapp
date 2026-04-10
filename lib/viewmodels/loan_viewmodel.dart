@@ -291,12 +291,18 @@ class LoanViewModel extends ChangeNotifier {
 
       switch (status) {
         case 'processing':
+        case 'pending':
+        case 'in_progress':
           _applicationStatus = ApplicationStatus.processing;
           break;
         case 'approved':
+        case 'scored':
+        case 'offer_ready':
           _applicationStatus = ApplicationStatus.scored;
           break;
         case 'rejected':
+        case 'declined':
+        case 'failed':
           _applicationStatus = ApplicationStatus.rejected;
           break;
         case 'completed':

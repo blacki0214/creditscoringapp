@@ -23,18 +23,29 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
   final _expenseFieldKey = GlobalKey<FormFieldState<String>>();
   final _incomeFocusNode = FocusNode();
   final _expenseFocusNode = FocusNode();
-  final NumberFormat _amountFormatter = NumberFormat('#,###', 'vi_VN');
+  bool _didTapIncome = false;
+  bool _didTapExpense = false;
+
+  bool get _canContinueStep2 {
+    final incomeRaw = _incomeController.text.trim();
+    final expenseRaw = _expenseController.text.trim();
+    if (incomeRaw.isEmpty || expenseRaw.isEmpty) return false;
+
+    final income = double.tryParse(incomeRaw.replaceAll('.', ''));
+    final expense = double.tryParse(expenseRaw.replaceAll('.', ''));
+    if (income == null || expense == null) return false;
+
+    if (income < 0 || income > 5000000) return false;
+    if (expense < 1000000 || expense > 10000000) return false;
+
+    return true;
+  }
 
   @override
   void initState() {
     super.initState();
-    final vm = context.read<StudentLoanViewModel>();
-    _incomeController = TextEditingController(
-      text: _formatAmount(vm.monthlyIncome),
-    );
-    _expenseController = TextEditingController(
-      text: _formatAmount(vm.monthlyExpenses),
-    );
+    _incomeController = TextEditingController();
+    _expenseController = TextEditingController();
 
     _incomeFocusNode.addListener(() {
       if (!_incomeFocusNode.hasFocus) {
@@ -57,32 +68,9 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
     super.dispose();
   }
 
-  String _formatAmount(double value) {
-    return _amountFormatter.format(value.round()).replaceAll(',', '.');
-  }
-
-  void _syncTextFields(StudentLoanViewModel vm) {
-    final incomeText = _formatAmount(vm.monthlyIncome);
-    if (_incomeController.text != incomeText) {
-      _incomeController.text = incomeText;
-      _incomeController.selection = TextSelection.collapsed(
-        offset: _incomeController.text.length,
-      );
-    }
-
-    final expenseText = _formatAmount(vm.monthlyExpenses);
-    if (_expenseController.text != expenseText) {
-      _expenseController.text = expenseText;
-      _expenseController.selection = TextSelection.collapsed(
-        offset: _expenseController.text.length,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<StudentLoanViewModel>();
-    _syncTextFields(vm);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FF),
@@ -113,13 +101,18 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
                     controller: _incomeController,
                     focusNode: _incomeFocusNode,
                     keyboardType: TextInputType.number,
+                    onTap: () {
+                      if (_didTapIncome) return;
+                      _didTapIncome = true;
+                      _incomeController.clear();
+                    },
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                       _DotThousandsInputFormatter(),
                     ],
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      suffixText: 'VND',
+                      suffixText: 'đ',
                     ),
                     validator: (value) {
                       final parsed = double.tryParse(
@@ -140,6 +133,7 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
                       return null;
                     },
                     onChanged: (value) {
+                      setState(() {});
                       final parsed = double.tryParse(value.replaceAll('.', ''));
                       if (parsed == null) return;
                       vm.updateFinancial(income: parsed.clamp(0, 5000000));
@@ -148,10 +142,7 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
                 ),
                 const SizedBox(height: 10),
                 _FinancialCard(
-                  title: context.t(
-                    'Monthly expenses (optional)',
-                    'Chi tiêu hàng tháng (tùy chọn)',
-                  ),
+                  title: context.t('Monthly expenses', 'Chi tiêu hàng tháng'),
                   valueText: context.t(
                     'Range: 1.000.000 - 10.000.000 VND',
                     'Khoảng: 1.000.000 - 10.000.000 VND',
@@ -161,13 +152,18 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
                     controller: _expenseController,
                     focusNode: _expenseFocusNode,
                     keyboardType: TextInputType.number,
+                    onTap: () {
+                      if (_didTapExpense) return;
+                      _didTapExpense = true;
+                      _expenseController.clear();
+                    },
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                       _DotThousandsInputFormatter(),
                     ],
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      suffixText: 'VND',
+                      suffixText: 'đ',
                     ),
                     validator: (value) {
                       final parsed = double.tryParse(
@@ -188,6 +184,7 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
                       return null;
                     },
                     onChanged: (value) {
+                      setState(() {});
                       final parsed = double.tryParse(value.replaceAll('.', ''));
                       if (parsed == null) return;
                       vm.updateFinancial(
@@ -314,17 +311,19 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      if (!_formKey.currentState!.validate()) return;
-                      await vm.calculateLimit();
-                      if (!context.mounted) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const StudentStepCResultPage(),
-                        ),
-                      );
-                    },
+                    onPressed: _canContinueStep2
+                        ? () async {
+                            if (!_formKey.currentState!.validate()) return;
+                            await vm.calculateLimit();
+                            if (!context.mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const StudentStepCResultPage(),
+                              ),
+                            );
+                          }
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4D4AF9),
                       foregroundColor: Colors.white,

@@ -535,10 +535,45 @@ class _HomePageState extends State<HomePage> {
           userId != null) {
         print('HomePage: Loan scored! Refreshing credit score...');
         homeViewModel.refreshCreditScore(userId);
+
+        if (_lastKnownStatus == ApplicationStatus.processing) {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                context.t(
+                  'Scoring completed. Your loan offer is ready.',
+                  'Chấm điểm đã hoàn tất. Đề nghị khoản vay của bạn đã sẵn sàng.',
+                ),
+              ),
+              backgroundColor: const Color(0xFF2E7D32),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+
         _lastKnownStatus = ApplicationStatus.scored;
       } else if (loanViewModel.isApplicationProcessing) {
         _lastKnownStatus = ApplicationStatus.processing;
       } else if (loanViewModel.isApplicationRejected) {
+        if (_lastKnownStatus == ApplicationStatus.processing) {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                context.t(
+                  'Scoring completed. This application was not approved.',
+                  'Chấm điểm đã hoàn tất. Hồ sơ này không được duyệt.',
+                ),
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+
         _lastKnownStatus = ApplicationStatus.rejected;
       }
     });
@@ -1051,9 +1086,7 @@ class _HomePageState extends State<HomePage> {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     final activeOffer = loanViewModel.currentOffer;
     final activeStatus = loanViewModel.applicationStatus;
-    final showScoreStatus =
-        loanViewModel.currentOffer != null ||
-        activeStatus == ApplicationStatus.processing;
+    final showScoreStatus = activeStatus != ApplicationStatus.none;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1286,7 +1319,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       );
                                     } else {
-                                        _openApplicationFromHome();
+                                      _openApplicationFromHome();
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(

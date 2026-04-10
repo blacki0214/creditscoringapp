@@ -27,6 +27,21 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
   final NumberFormat _amountFormatter = NumberFormat('#,###', 'vi_VN');
   bool _didTapLoanAmount = false;
 
+  bool get _canContinueStep1 {
+    final loanRaw = _loanAmountController.text.trim();
+    final gpaRaw = _gpaController.text.trim();
+    if (loanRaw.isEmpty || gpaRaw.isEmpty) return false;
+
+    final loanParsed = int.tryParse(loanRaw.replaceAll('.', ''));
+    final gpaParsed = double.tryParse(gpaRaw);
+
+    if (loanParsed == null || gpaParsed == null) return false;
+    if (loanParsed < 5000000 || loanParsed > 10000000) return false;
+    if (gpaParsed < 0 || gpaParsed > 4) return false;
+
+    return true;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -34,9 +49,7 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
     _loanAmountController = TextEditingController(
       text: _amountFormatter.format(vm.loanAmount).replaceAll(',', '.'),
     );
-    _gpaController = TextEditingController(
-      text: vm.gpaLatest.toStringAsFixed(2),
-    );
+    _gpaController = TextEditingController();
 
     _loanAmountFocusNode.addListener(() {
       if (!_loanAmountFocusNode.hasFocus) {
@@ -143,6 +156,7 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                           return null;
                         },
                         onChanged: (value) {
+                          setState(() {});
                           final parsed = int.tryParse(
                             value.replaceAll('.', ''),
                           );
@@ -213,11 +227,7 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,2}'),
-                          ),
-                        ],
+                        inputFormatters: [_GpaInputFormatter()],
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           hintText: '0-4',
@@ -230,18 +240,19 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                               'Vui lòng nhập GPA',
                             );
                           }
-                          if (parsed < 0 || parsed > 4) {
+                          if (parsed < 1 || parsed > 4) {
                             return context.t(
-                              'GPA must be between 0 and 4',
-                              'GPA phải trong khoảng 0 đến 4',
+                              'GPA must be between 1 and 4',
+                              'GPA phải trong khoảng 1 đến 4',
                             );
                           }
                           return null;
                         },
                         onChanged: (value) {
+                          setState(() {});
                           final parsed = double.tryParse(value);
                           if (parsed == null) return;
-                          if (parsed >= 0 && parsed <= 4) {
+                          if (parsed >= 1 && parsed <= 4) {
                             vm.updateProfile(gpa: parsed);
                           }
                         },
@@ -309,15 +320,18 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (!_formKey.currentState!.validate()) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const StudentStepBFinancialPage(),
-                        ),
-                      );
-                    },
+                    onPressed: _canContinueStep1
+                        ? () {
+                            if (!_formKey.currentState!.validate()) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const StudentStepBFinancialPage(),
+                              ),
+                            );
+                          }
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4D4AF9),
                       foregroundColor: Colors.white,
@@ -358,6 +372,20 @@ class _DotThousandsInputFormatter extends TextInputFormatter {
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );
+  }
+}
+
+class _GpaInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    if (text.isEmpty) return newValue;
+
+    final isValid = RegExp(r'^(?:4|[1-3](?:\.\d{0,2})?)$').hasMatch(text);
+    return isValid ? newValue : oldValue;
   }
 }
 

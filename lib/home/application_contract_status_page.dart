@@ -173,7 +173,7 @@ class _ApplicationContractStatusPageState
                         Text(
                           statusText,
                           style: const TextStyle(
-                              fontSize: 15,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF0E5132),
                           ),
@@ -410,7 +410,10 @@ class _ApplicationContractStatusPageState
                       const SizedBox(height: 18),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEDEFF4),
                           borderRadius: BorderRadius.circular(14),
@@ -477,7 +480,7 @@ class _ApplicationContractStatusPageState
                                     'Kỳ thanh toán mở từ ${DateFormat(datePattern).format(paymentWindowStart)}',
                                   ),
                             style: const TextStyle(
-                                fontSize: 11,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFFE65100),
                             ),
@@ -485,7 +488,7 @@ class _ApplicationContractStatusPageState
                         ),
                       SizedBox(
                         width: double.infinity,
-                          height: 50,
+                        height: 50,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             elevation: 0,

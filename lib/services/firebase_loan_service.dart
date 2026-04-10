@@ -20,15 +20,34 @@ class FirebaseLoanService {
     var candidateScore = apiCreditScore;
     var candidateRisk = apiRiskLevel;
 
-    final earliestApp = await _firebase.creditApplicationsCollection
+    // Avoid requiring a composite index (userId + createdAt) during submit.
+    // We fetch a bounded set by userId and resolve the earliest document
+    // client-side using createdAt when available.
+    final historicalApps = await _firebase.creditApplicationsCollection
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: false)
-        .limit(1)
+        .limit(50)
         .get();
 
-    if (earliestApp.docs.isNotEmpty) {
-      final earliestData =
-          earliestApp.docs.first.data() as Map<String, dynamic>;
+    if (historicalApps.docs.isNotEmpty) {
+      final sortedDocs = historicalApps.docs.toList()
+        ..sort((a, b) {
+          final aData = a.data() as Map<String, dynamic>;
+          final bData = b.data() as Map<String, dynamic>;
+
+          final aCreated = aData['createdAt'];
+          final bCreated = bData['createdAt'];
+
+          if (aCreated is Timestamp && bCreated is Timestamp) {
+            return aCreated.compareTo(bCreated);
+          }
+
+          if (aCreated is Timestamp) return -1;
+          if (bCreated is Timestamp) return 1;
+
+          return a.id.compareTo(b.id);
+        });
+
+      final earliestData = sortedDocs.first.data() as Map<String, dynamic>;
       final historicalScoreRaw = earliestData['creditScore'];
       if (historicalScoreRaw is num) {
         candidateScore = historicalScoreRaw.toInt();

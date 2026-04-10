@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -61,14 +62,19 @@ class _StudentVerificationGatePageState
     super.dispose();
   }
 
+  bool get _hasUniversityEmail => _emailController.text.trim().isNotEmpty;
+
   bool get _canContinue {
     switch (_phase) {
       case StudentVerificationPhase.demo:
-        return _legalConfirmed;
+        return _legalConfirmed && _hasUniversityEmail;
       case StudentVerificationPhase.beta:
-        return _legalConfirmed && _emailVerified;
+        return _legalConfirmed && _emailVerified && _hasUniversityEmail;
       case StudentVerificationPhase.production:
-        return _legalConfirmed && _emailVerified && _transcriptUploaded;
+        return _legalConfirmed &&
+            _emailVerified &&
+            _transcriptUploaded &&
+            _hasUniversityEmail;
     }
   }
 
@@ -289,6 +295,9 @@ class _StudentVerificationGatePageState
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      onChanged: (_) => setState(() {}),
+                      maxLength: 50,
+                      inputFormatters: [LengthLimitingTextInputFormatter(50)],
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
                         labelText: context.t(
