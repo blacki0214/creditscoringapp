@@ -41,6 +41,7 @@ class LoanViewModel extends ChangeNotifier {
   bool _step2Completed = false;
   bool _step3Completed = false;
   bool _step4Completed = false;
+  bool _step5Completed = false;
   bool _step6Completed = false;
   bool _isProcessing = false;
 
@@ -106,6 +107,7 @@ class LoanViewModel extends ChangeNotifier {
   bool get step2Completed => _step2Completed;
   bool get step3Completed => _step3Completed;
   bool get step4Completed => _step4Completed;
+  bool get step5Completed => _step5Completed;
   bool get step6Completed => _step6Completed;
   bool get isProcessing => _isProcessing;
   Map<String, dynamic>? get currentOffer => _currentOffer;
@@ -185,9 +187,8 @@ class LoanViewModel extends ChangeNotifier {
     if (!_step2Completed) return 2;
     if (!_step3Completed) return 3;
     if (!_step4Completed) return 4;
-    if (!_step6Completed) {
-      return 6; // Note: Step 5 is contract review, Step 6 is disbursement
-    }
+    if (!_step5Completed) return 5;
+    if (!_step6Completed) return 6;
     return 7; // All steps completed
   }
 
@@ -286,6 +287,7 @@ class LoanViewModel extends ChangeNotifier {
       _step2Completed = false;
       _step3Completed = false;
       _step4Completed = false;
+      _step5Completed = false;
       _step6Completed = false;
       _currentOffer = null;
 
@@ -327,6 +329,7 @@ class LoanViewModel extends ChangeNotifier {
         // Backward-compat: old records may mark step3Completed=true right after scoring.
         _step3Completed = rawStep3Completed && hasStep3Data;
         _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
+        _step5Completed = latestApplication['step5Completed'] as bool? ?? false;
         _step6Completed = latestApplication['step6Completed'] as bool? ?? false;
       }
 
@@ -772,6 +775,9 @@ class LoanViewModel extends ChangeNotifier {
     final offerId = _currentOfferId;
     if (userId == null || applicationId == null || offerId == null) return;
 
+    final wasCompleted = _step5Completed;
+    _step5Completed = true;
+
     final wasAccepted = _currentOffer?['accepted'] == true;
 
     try {
@@ -793,7 +799,7 @@ class LoanViewModel extends ChangeNotifier {
         _currentOffer!['acceptedAt'] = DateTime.now().toIso8601String();
       }
 
-      if (!wasAccepted) {
+      if (!wasCompleted) {
         await _notifyFlowMilestone(
           type: 'step5_completed',
           title: 'Step 5 Completed',
@@ -897,6 +903,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = true;
     _step3Completed = true;
     _step4Completed = false;
+    _step5Completed = false;
     _step6Completed = false;
     notifyListeners();
   }
@@ -1107,6 +1114,7 @@ class LoanViewModel extends ChangeNotifier {
       // Step 3 is completed only after the split Step 3 flow is submitted.
       _step3Completed = false;
       _step4Completed = false;
+      _step5Completed = false;
       _step6Completed = false;
       notifyListeners();
     } catch (e) {
@@ -1232,6 +1240,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = false;
     _step3Completed = false;
     _step4Completed = false;
+    _step5Completed = false;
     _step6Completed = false;
     _isProcessing = false;
     _applicationStatus = ApplicationStatus.none;
@@ -1261,6 +1270,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = false;
     _step3Completed = false;
     _step4Completed = false;
+    _step5Completed = false;
     _step6Completed = false;
     _isProcessing = false;
     _applicationStatus = ApplicationStatus.none;

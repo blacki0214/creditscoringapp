@@ -970,7 +970,7 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,

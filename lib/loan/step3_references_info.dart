@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../utils/app_localization.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import 'step4_offer_calculator.dart';
+import 'processing_page.dart';
 
 class Step3ReferencesInfoPage extends StatefulWidget {
   final Map<String, dynamic> personalData;
@@ -698,10 +699,14 @@ class _Step3ReferencesInfoPageState extends State<Step3ReferencesInfoPage> {
                         );
                         if (!mounted) return;
 
+                        // Check if offer is available before navigating
+                        final offer = loanViewModel.currentOffer;
+                        final targetPage = offer != null
+                            ? const Step4OfferCalculatorPage()
+                            : const ProcessingPage();
+
                         navigator.push(
-                          MaterialPageRoute(
-                            builder: (_) => const Step4OfferCalculatorPage(),
-                          ),
+                          MaterialPageRoute(builder: (_) => targetPage),
                         );
                       },
                       style: ElevatedButton.styleFrom(
