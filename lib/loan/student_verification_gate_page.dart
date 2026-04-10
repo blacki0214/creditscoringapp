@@ -19,6 +19,7 @@ class StudentVerificationGatePage extends StatefulWidget {
 
 class _StudentVerificationGatePageState
     extends State<StudentVerificationGatePage> {
+  static const Color _luminaBlue = Color(0xFF4D4AF9);
   final TextEditingController _emailController = TextEditingController();
   final StudentEmailVerificationService _verificationService =
       StudentEmailVerificationService();
@@ -40,6 +41,18 @@ class _StudentVerificationGatePageState
       return raw.substring(prefix.length);
     }
     return raw;
+  }
+
+  void _showAuthSnackBar(String message, Color backgroundColor) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   @override
@@ -69,18 +82,13 @@ class _StudentVerificationGatePageState
   Future<void> _sendEmail() async {
     final normalizedEmail = _emailController.text.trim().toLowerCase();
     final domain = _extractDomain(normalizedEmail);
-    if (domain == null ||
-        !domain.endsWith('edu.vn') && !domain.endsWith('student.swin.edu.au')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.t(
-              'Please enter a valid university email.',
-              'Vui lòng nhập email trường hợp lệ.',
-            ),
-          ),
-          backgroundColor: Colors.red,
+    if (domain == null) {
+      _showAuthSnackBar(
+        context.t(
+          'Please enter a valid university email.',
+          'Vui lòng nhập email trường hợp lệ.',
         ),
+        Colors.red,
       );
       return;
     }
@@ -88,16 +96,12 @@ class _StudentVerificationGatePageState
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.t(
-              'Please log in with your main account before verifying student email.',
-              'Vui lòng đăng nhập bằng tài khoản chính trước khi xác minh email sinh viên.',
-            ),
-          ),
-          backgroundColor: Colors.red,
+      _showAuthSnackBar(
+        context.t(
+          'Please log in with your main account before verifying student email.',
+          'Vui lòng đăng nhập bằng tài khoản chính trước khi xác minh email sinh viên.',
         ),
+        Colors.red,
       );
       return;
     }
@@ -115,66 +119,62 @@ class _StudentVerificationGatePageState
         _emailVerified = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            mapped == null
-                ? context.t(
-                    'Verification email sent to $normalizedEmail. Please check your inbox and click the link.',
-                    'Email xác minh đã được gửi đến $normalizedEmail. Vui lòng kiểm tra hộp thư và bấm vào liên kết.',
-                  )
-                : context.t(
-                    'Verification email sent to $normalizedEmail. Please open the link in your mail.',
-                    'Email xác minh đã được gửi đến $normalizedEmail. Vui lòng mở liên kết trong email.',
-                  ),
-          ),
-          backgroundColor: const Color(0xFF2E7D32),
-        ),
+      _showAuthSnackBar(
+        mapped == null
+            ? context.t(
+                'Verification email sent to $normalizedEmail. Please check your inbox and click the link.',
+                'Email xác minh đã được gửi đến $normalizedEmail. Vui lòng kiểm tra hộp thư và bấm vào liên kết.',
+              )
+            : context.t(
+                'Verification email sent to $normalizedEmail. Please open the link in your mail.',
+                'Email xác minh đã được gửi đến $normalizedEmail. Vui lòng mở liên kết trong email.',
+              ),
+        const Color(0xFF2E7D32),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.t(
-              'Failed to send verification email: $e',
-              'Không gửi được email xác minh: $e',
-            ),
-          ),
-          backgroundColor: Colors.red,
+      _showAuthSnackBar(
+        context.t(
+          'Failed to send verification email: $e',
+          'Không gửi được email xác minh: $e',
         ),
+        Colors.red,
       );
     }
   }
 
   Future<void> _checkEmailVerified() async {
-    if (!_emailSent) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.t(
-              'Please tap Send Email first.',
-              'Vui lòng bấm Gửi Email trước.',
-            ),
-          ),
-          backgroundColor: Colors.orange,
+    final normalizedEmail = _emailController.text.trim().toLowerCase();
+    if (_extractDomain(normalizedEmail) == null) {
+      _showAuthSnackBar(
+        context.t(
+          'Please enter a valid university email.',
+          'Vui lòng nhập email trường hợp lệ.',
         ),
+        Colors.red,
+      );
+      return;
+    }
+
+    if (!_emailSent) {
+      _showAuthSnackBar(
+        context.t(
+          'Please tap Send Email first.',
+          'Vui lòng bấm Gửi Email trước.',
+        ),
+        Colors.orange,
       );
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.t(
-              'No verification session found. Tap Send Email first.',
-              'Không tìm thấy phiên xác minh. Hãy bấm Gửi Email trước.',
-            ),
-          ),
-          backgroundColor: Colors.red,
+      _showAuthSnackBar(
+        context.t(
+          'No verification session found. Tap Send Email first.',
+          'Không tìm thấy phiên xác minh. Hãy bấm Gửi Email trước.',
         ),
+        Colors.red,
       );
       return;
     }
@@ -199,35 +199,27 @@ class _StudentVerificationGatePageState
         _emailVerified = verified;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            verified
-                ? context.t(
-                    'Email verified successfully.',
-                    'Email đã được xác minh thành công.',
-                  )
-                : context.t(
-                    'Email is not verified yet. Open the verification link in your inbox, then tap Email Verified again.',
-                    'Email chưa được xác minh. Hãy mở link xác minh trong hộp thư, sau đó bấm Email đã được xác minh lần nữa.',
-                  ),
-          ),
-          backgroundColor: verified ? const Color(0xFF2E7D32) : Colors.orange,
-        ),
+      _showAuthSnackBar(
+        verified
+            ? context.t(
+                'Email verified successfully.',
+                'Email đã được xác minh thành công.',
+              )
+            : context.t(
+                'Email is not verified yet. Open the verification link in your inbox, then tap Email Verified again.',
+                'Email chưa được xác minh. Hãy mở link xác minh trong hộp thư, sau đó bấm Email đã được xác minh lần nữa.',
+              ),
+        verified ? const Color(0xFF2E7D32) : Colors.orange,
       );
     } catch (e) {
       if (!mounted) return;
       final message = _extractErrorMessage(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.t(
-              message,
-              'Không thể kiểm tra trạng thái xác minh. Vui lòng thử lại.',
-            ),
-          ),
-          backgroundColor: Colors.red,
+      _showAuthSnackBar(
+        context.t(
+          message,
+          'Không thể kiểm tra trạng thái xác minh. Vui lòng thử lại.',
         ),
+        Colors.red,
       );
     } finally {
       if (mounted) {
@@ -330,8 +322,9 @@ class _StudentVerificationGatePageState
                         SizedBox(
                           height: 40,
                           child: OutlinedButton(
-                            onPressed:
-                                _emailVerified ? null : _checkEmailVerified,
+                            onPressed: _emailVerified
+                                ? null
+                                : _checkEmailVerified,
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
@@ -413,6 +406,10 @@ class _StudentVerificationGatePageState
                       child: OutlinedButton.icon(
                         onPressed: () => _pickDocument(isStudentId: true),
                         icon: const Icon(Icons.badge_outlined),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _luminaBlue,
+                          side: const BorderSide(color: _luminaBlue),
+                        ),
                         label: Text(
                           context.t(
                             'Upload Student ID',
@@ -432,7 +429,15 @@ class _StudentVerificationGatePageState
                               'Status: Not uploaded',
                               'Trạng thái: Chưa tải lên',
                             ),
-                      style: const TextStyle(fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _studentCardUploaded
+                            ? _luminaBlue
+                            : const Color(0xFF1A1F3F),
+                        fontWeight: _studentCardUploaded
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
@@ -440,6 +445,10 @@ class _StudentVerificationGatePageState
                       child: OutlinedButton.icon(
                         onPressed: () => _pickDocument(isStudentId: false),
                         icon: const Icon(Icons.description_outlined),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _luminaBlue,
+                          side: const BorderSide(color: _luminaBlue),
+                        ),
                         label: Text(
                           context.t('Upload Transcript', 'Tải lên bảng điểm'),
                         ),
@@ -456,7 +465,15 @@ class _StudentVerificationGatePageState
                               'Status: Not uploaded',
                               'Trạng thái: Chưa tải lên',
                             ),
-                      style: const TextStyle(fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _transcriptUploaded
+                            ? _luminaBlue
+                            : const Color(0xFF1A1F3F),
+                        fontWeight: _transcriptUploaded
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -481,6 +498,8 @@ class _StudentVerificationGatePageState
                 child: CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _legalConfirmed,
+                  activeColor: _luminaBlue,
+                  checkColor: Colors.white,
                   onChanged: (value) {
                     setState(() {
                       _legalConfirmed = value ?? false;

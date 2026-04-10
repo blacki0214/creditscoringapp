@@ -390,7 +390,7 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
         builder: (_) => Step6DisbursementPage(
           restrictToAcb: widget.isStudentFlow,
           lockedAccountHolder: widget.isStudentFlow ? 'Nguyen Duy' : null,
-          lockedAccountNumber: widget.isStudentFlow ? '262728' : null,
+          lockedAccountNumber: widget.isStudentFlow ? '26272829' : null,
         ),
       ),
     );

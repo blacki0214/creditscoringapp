@@ -21,10 +21,16 @@ import 'application_contract_status_page.dart';
 import '../utils/app_localization.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, this.onOpenSettings, this.onOpenStudent});
+  const HomePage({
+    super.key,
+    this.onOpenSettings,
+    this.onOpenStudent,
+    this.onOpenApplication,
+  });
 
   final VoidCallback? onOpenSettings;
   final VoidCallback? onOpenStudent;
+  final VoidCallback? onOpenApplication;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -44,6 +50,18 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsPage()),
+    );
+  }
+
+  void _openApplicationFromHome() {
+    if (widget.onOpenApplication != null) {
+      widget.onOpenApplication!();
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoanApplicationPage()),
     );
   }
 
@@ -1268,13 +1286,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       );
                                     } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const LoanApplicationPage(),
-                                        ),
-                                      );
+                                        _openApplicationFromHome();
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -1477,12 +1489,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const LoanApplicationPage(),
-                      ),
-                    );
+                    _openApplicationFromHome();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4D4AF9),

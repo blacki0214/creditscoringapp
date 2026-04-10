@@ -343,7 +343,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                                     : context.t('Retry Auto-Scan', 'Thử quét lại tự động'),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4C40F7),
+                                backgroundColor: const Color(0xFF4D4AF9),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
@@ -427,7 +427,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
             decoration: BoxDecoration(
               color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF4C40F7), width: 2),
+              border: Border.all(color: const Color(0xFF4D4AF9), width: 2),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -438,7 +438,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   Icon(
                     Icons.auto_awesome,
                     size: 60,
-                    color: const Color(0xFF4C40F7),
+                    color: const Color(0xFF4D4AF9),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -481,7 +481,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   height: 40,
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF4C40F7),
+                      Color(0xFF4D4AF9),
                     ),
                   ),
                 )
@@ -491,7 +491,7 @@ class _Step1IDCapturePageState extends State<Step1IDCapturePage> {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF4C40F7),
+                    color: Color(0xFF4D4AF9),
                   ),
                 )
               else
@@ -860,7 +860,7 @@ class _LiveAutoCapturePageState extends State<_LiveAutoCapturePage> {
                         icon: const Icon(Icons.camera_alt),
                         label: Text(context.t('Capture ID', 'Chụp CCCD')),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
+                          backgroundColor: const Color(0xFF4D4AF9),
                           foregroundColor: Colors.white,
                         ),
                       ),

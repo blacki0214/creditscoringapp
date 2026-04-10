@@ -455,7 +455,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                               value: vm.hasPreviousDefaults,
                               onChanged: (val) =>
                                   vm.updatePersonalInfo(defaults: val),
-                              activeThumbColor: const Color(0xFF4C40F7),
+                              activeThumbColor: const Color(0xFF4D4AF9),
                             ),
                             SwitchListTile(
                               title: Text(
@@ -467,7 +467,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
                               value: vm.currentlyDefaulting,
                               onChanged: (val) =>
                                   vm.updatePersonalInfo(currentDefault: val),
-                              activeThumbColor: const Color(0xFF4C40F7),
+                              activeThumbColor: const Color(0xFF4D4AF9),
                             ),
                           ] else if (_hasCreditHistory == false) ...[
                             Container(
@@ -584,7 +584,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: const ColorScheme.light(
-                  primary: Color(0xFF4C40F7),
+                  primary: Color(0xFF4D4AF9),
                   onPrimary: Colors.white,
                   surface: Colors.white,
                   onSurface: Colors.black,
@@ -612,7 +612,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         labelText: context.t('Date of Birth', 'Ngày sinh'),
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
-        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
+        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4D4AF9)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -623,7 +623,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
     );
@@ -672,7 +672,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
         counterText: '',
       ),
@@ -906,7 +906,7 @@ class _Step2PersonalInfoPageState extends State<Step2PersonalInfoPage> {
               'Hồ sơ của bạn đang được xử lý. Vào tab Khoản vay để theo dõi trạng thái.',
             ),
           ),
-          backgroundColor: Color(0xFF4C40F7),
+          backgroundColor: Color(0xFF4D4AF9),
           duration: Duration(seconds: 3),
         ),
       );

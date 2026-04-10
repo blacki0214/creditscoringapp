@@ -21,6 +21,7 @@ class ApplicationContractStatusPage extends StatefulWidget {
 
 class _ApplicationContractStatusPageState
     extends State<ApplicationContractStatusPage> {
+  static const bool _demoAllowOutOfWindowPayment = true;
   bool _paymentSuccessThisMonth = false;
   DateTime? _nextDueDateSynced;
   int _paidInstallmentCount = 0;
@@ -46,6 +47,16 @@ class _ApplicationContractStatusPageState
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final compactScale = (screenWidth / 390).clamp(0.82, 1.0);
+
+    final contractTitleSize = 24 * compactScale;
+    final submittedAtValueSize = 26 * compactScale;
+    final timelineTitleSize = 22 * compactScale;
+    final scheduleTitleSize = 22 * compactScale;
+    final totalCountSize = 30 * compactScale;
+    final currentInstallmentSize = 26 * compactScale;
+
     final isVietnamese = context.isVietnamese;
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     final application = widget.application;
@@ -64,11 +75,18 @@ class _ApplicationContractStatusPageState
     final firstDueDate = submittedAt != null
         ? _calculateShopeeFirstDueDate(submittedAt)
         : null;
+    final firstWindowStart = firstDueDate != null
+        ? _getPaymentWindowStart(firstDueDate)
+        : null;
     final nextDueDate = _nextDueDateSynced ?? firstDueDate;
+    final nextWindowStart = nextDueDate != null
+        ? _getPaymentWindowStart(nextDueDate)
+        : null;
     final finalDueDate = (firstDueDate != null && tenorMonths != null)
         ? _addMonthsSafe(firstDueDate, (tenorMonths - 1).clamp(0, 600))
         : null;
     final canPayNow = _isTestAccountMode ? true : _canPayOnDate(nextDueDate);
+    final canProceedToPayment = canPayNow || _demoAllowOutOfWindowPayment;
     final paymentWindowStart = nextDueDate != null
         ? _getPaymentWindowStart(nextDueDate)
         : null;
@@ -122,9 +140,11 @@ class _ApplicationContractStatusPageState
                 children: [
                   Expanded(
                     child: Text(
-                      context.t('Contract Status', 'Tình trạng hợp đồng'),
-                      style: const TextStyle(
-                        fontSize: 44,
+                      context.t('Contract Status', 'Trạng thái HĐ'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: contractTitleSize,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF171A22),
                         height: 1.02,
@@ -133,8 +153,8 @@ class _ApplicationContractStatusPageState
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+                      horizontal: 14,
+                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
                       color: isApproved
@@ -153,7 +173,7 @@ class _ApplicationContractStatusPageState
                         Text(
                           statusText,
                           style: const TextStyle(
-                            fontSize: 18,
+                              fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF0E5132),
                           ),
@@ -178,8 +198,8 @@ class _ApplicationContractStatusPageState
                     Text(
                       context.t('Submitted At', 'Ngày nộp hồ sơ'),
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                         color: Color(0xFF6D727D),
                       ),
                     ),
@@ -188,8 +208,8 @@ class _ApplicationContractStatusPageState
                       submittedAt != null
                           ? DateFormat(dateTimePattern).format(submittedAt)
                           : naText,
-                      style: const TextStyle(
-                        fontSize: 40,
+                      style: TextStyle(
+                        fontSize: submittedAtValueSize,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF151922),
                       ),
@@ -205,7 +225,7 @@ class _ApplicationContractStatusPageState
                 crossAxisSpacing: 10,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.45,
+                childAspectRatio: 2.02,
                 children: [
                   _buildMetricTile(
                     label: context.t('LOAN AMOUNT', 'SỐ TIỀN VAY'),
@@ -245,15 +265,20 @@ class _ApplicationContractStatusPageState
                   const Icon(
                     Icons.event_repeat,
                     color: Color(0xFF3E4BFF),
-                    size: 24,
+                    size: 20,
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    context.t('Repayment Timeline', 'Lịch trả nợ'),
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF151922),
+                  Expanded(
+                    child: Text(
+                      context.t('Repayment Timeline', 'Lịch trả nợ'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: timelineTitleSize,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF151922),
+                        height: 1.02,
+                      ),
                     ),
                   ),
                 ],
@@ -263,8 +288,12 @@ class _ApplicationContractStatusPageState
                 icon: Icons.check,
                 filled: _paidInstallmentCount > 0,
                 title: context.t('First Payment', 'Kỳ thanh toán đầu'),
-                date: firstDueDate != null
-                    ? DateFormat('MMMM d, yyyy').format(firstDueDate)
+                date: (firstWindowStart != null && firstDueDate != null)
+                    ? _formatPaymentWindow(
+                        startDate: firstWindowStart,
+                        dueDate: firstDueDate,
+                        isVietnamese: isVietnamese,
+                      )
                     : naText,
                 dimmed: false,
               ),
@@ -273,8 +302,12 @@ class _ApplicationContractStatusPageState
                 icon: Icons.circle,
                 filled: false,
                 title: context.t('Next Due Date', 'Kỳ đến hạn tiếp theo'),
-                date: nextDueDate != null
-                    ? DateFormat('MMMM d, yyyy').format(nextDueDate)
+                date: (nextWindowStart != null && nextDueDate != null)
+                    ? _formatPaymentWindow(
+                        startDate: nextWindowStart,
+                        dueDate: nextDueDate,
+                        isVietnamese: isVietnamese,
+                      )
                     : naText,
                 trailingTag: _canPayOnDate(nextDueDate)
                     ? context.t('Due', 'Đến hạn')
@@ -298,10 +331,10 @@ class _ApplicationContractStatusPageState
                 const SizedBox(height: 20),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8F9FC),
-                    borderRadius: BorderRadius.circular(26),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,14 +350,16 @@ class _ApplicationContractStatusPageState
                                     'Installment Schedule',
                                     'Lịch trả góp',
                                   ),
-                                  style: const TextStyle(
-                                    fontSize: 44,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: scheduleTitleSize,
                                     fontWeight: FontWeight.w800,
                                     height: 1.05,
                                     color: Color(0xFF151922),
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 Text(
                                   _paymentSuccessThisMonth
                                       ? context.t(
@@ -336,7 +371,7 @@ class _ApplicationContractStatusPageState
                                           'Trạng thái: Đúng hạn',
                                         ),
                                   style: const TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 13,
                                     color: Color(0xFF666C78),
                                   ),
                                 ),
@@ -348,15 +383,15 @@ class _ApplicationContractStatusPageState
                               Text(
                                 context.t('TOTAL', 'TỔNG'),
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 11,
                                   letterSpacing: 1.2,
                                   color: Color(0xFF8A8F9C),
                                 ),
                               ),
                               Text(
                                 totalInstallments.toString(),
-                                style: const TextStyle(
-                                  fontSize: 52,
+                                style: TextStyle(
+                                  fontSize: totalCountSize,
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF151922),
                                 ),
@@ -364,7 +399,7 @@ class _ApplicationContractStatusPageState
                               Text(
                                 context.t('pmts', 'kỳ'),
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 11,
                                   color: Color(0xFF666C78),
                                 ),
                               ),
@@ -375,13 +410,10 @@ class _ApplicationContractStatusPageState
                       const SizedBox(height: 18),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 16,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEDEFF4),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: Row(
                           children: [
@@ -395,16 +427,16 @@ class _ApplicationContractStatusPageState
                                       'KỲ THANH TOÁN HIỆN TẠI',
                                     ),
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 10,
                                       letterSpacing: 1.4,
                                       color: Color(0xFF858B99),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 2),
                                   Text(
                                     currencyFormat.format(monthlyPayment),
-                                    style: const TextStyle(
-                                      fontSize: 44,
+                                    style: TextStyle(
+                                      fontSize: currentInstallmentSize,
                                       fontWeight: FontWeight.w800,
                                       color: Color(0xFF151922),
                                     ),
@@ -413,34 +445,39 @@ class _ApplicationContractStatusPageState
                               ),
                             ),
                             Container(
-                              width: 38,
-                              height: 38,
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
                                 color: const Color(0xFF3D4AF5),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(7),
                               ),
                               child: const Icon(
                                 Icons.account_balance_wallet_outlined,
                                 color: Colors.white,
-                                size: 22,
+                                size: 20,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 14),
                       if (!_isTestAccountMode &&
                           !canPayNow &&
                           paymentWindowStart != null)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
-                            context.t(
-                              'Payment window opens on ${DateFormat(datePattern).format(paymentWindowStart)}',
-                              'Kỳ thanh toán mở từ ${DateFormat(datePattern).format(paymentWindowStart)}',
-                            ),
+                            nextDueDate != null
+                                ? context.t(
+                                    'Payment window: ${DateFormat(datePattern).format(paymentWindowStart)} - ${DateFormat(datePattern).format(nextDueDate)}',
+                                    'Kỳ thanh toán: ${DateFormat(datePattern).format(paymentWindowStart)} - ${DateFormat(datePattern).format(nextDueDate)}',
+                                  )
+                                : context.t(
+                                    'Payment window opens on ${DateFormat(datePattern).format(paymentWindowStart)}',
+                                    'Kỳ thanh toán mở từ ${DateFormat(datePattern).format(paymentWindowStart)}',
+                                  ),
                             style: const TextStyle(
-                              fontSize: 12,
+                                fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFFE65100),
                             ),
@@ -448,16 +485,16 @@ class _ApplicationContractStatusPageState
                         ),
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                          height: 50,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
-                            backgroundColor: const Color(0xFF4C40F7),
+                            backgroundColor: const Color(0xFF4D4AF9),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          onPressed: canPayNow
+                          onPressed: canProceedToPayment
                               ? () async {
                                   final result = await Navigator.push(
                                     context,
@@ -483,7 +520,7 @@ class _ApplicationContractStatusPageState
                           child: Text(
                             context.t('PAY NOW', 'THANH TOÁN NGAY'),
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.2,
                               color: Colors.white,
@@ -491,6 +528,21 @@ class _ApplicationContractStatusPageState
                           ),
                         ),
                       ),
+                      if (!canPayNow && _demoAllowOutOfWindowPayment)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            context.t(
+                              'Demo mode: you can proceed before the payment window opens.',
+                              'Chế độ demo: bạn vẫn có thể tiếp tục trước khi đến kỳ thanh toán.',
+                            ),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -509,30 +561,32 @@ class _ApplicationContractStatusPageState
     bool highlightBorder = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFFEDEFF4),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: highlightBorder
             ? Border.all(color: const Color(0xFFC5CAF9), width: 2)
             : null,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 12,
-              letterSpacing: 1.2,
+              letterSpacing: 1.0,
               color: Color(0xFF8A8F9C),
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             value,
+            textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -598,13 +652,13 @@ class _ApplicationContractStatusPageState
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: titleColor,
                 ),
               ),
               const SizedBox(height: 2),
-              Text(date, style: TextStyle(fontSize: 14, color: dateColor)),
+              Text(date, style: TextStyle(fontSize: 13, color: dateColor)),
             ],
           ),
         ),
@@ -618,7 +672,7 @@ class _ApplicationContractStatusPageState
             child: Text(
               trailingTag,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF5E3D1B),
               ),
@@ -712,6 +766,16 @@ class _ApplicationContractStatusPageState
     final monthsToAdd = normalized.day <= 23 ? 1 : 2;
     final shifted = _addMonthsSafe(normalized, monthsToAdd);
     return DateTime(shifted.year, shifted.month, 10);
+  }
+
+  String _formatPaymentWindow({
+    required DateTime startDate,
+    required DateTime dueDate,
+    required bool isVietnamese,
+  }) {
+    final pattern = isVietnamese ? 'dd/MM/yyyy' : 'MMM d, yyyy';
+    final formatter = DateFormat(pattern);
+    return '${formatter.format(startDate)} - ${formatter.format(dueDate)}';
   }
 
   Future<void> _startRealtimeDueDateSync() async {

@@ -18,6 +18,7 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
+  static const bool _demoAllowOutOfWindowPayment = true;
   static const int _billingWindowStartDay = 24;
   static const int _billingCutoffDay = 23;
   static const int _monthlyDueDay = 10;
@@ -155,6 +156,20 @@ class _PaymentPageState extends State<PaymentPage> {
                       ),
                     ),
                   ],
+                  if (!canPayNow && _demoAllowOutOfWindowPayment) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      context.t(
+                        'Demo mode: payment processing is enabled before the window opens.',
+                        'Chế độ demo: vẫn cho phép xử lý thanh toán trước khi mở kỳ.',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFE65100),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   _buildSummaryRow(
                     context.t(
@@ -196,7 +211,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   _selectedMethod = value;
                 });
               },
-              activeColor: const Color(0xFF4C40F7),
+              activeColor: const Color(0xFF4D4AF9),
               title: Text(
                 _localizedMethod(method, context),
                 style: const TextStyle(
@@ -218,12 +233,14 @@ class _PaymentPageState extends State<PaymentPage> {
               final canPayNow = _isTestAccountMode
                   ? true
                   : (snapshot.data?.canPayNow ?? false);
+              final canProceedToPayment =
+                  canPayNow || _demoAllowOutOfWindowPayment;
 
               return ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4C40F7),
+                  backgroundColor: const Color(0xFF4D4AF9),
                 ),
-                onPressed: canPayNow
+                onPressed: canProceedToPayment
                     ? () {
                         if (_selectedMethod == 'bank_transfer') {
                           setState(() {
@@ -296,7 +313,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 child: Icon(
                   Icons.qr_code_2,
                   size: 120,
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                 ),
               ),
             ),
@@ -308,7 +325,7 @@ class _PaymentPageState extends State<PaymentPage> {
           height: 48,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C40F7),
+              backgroundColor: const Color(0xFF4D4AF9),
             ),
             onPressed: _isConfirmingPayment
                 ? null
@@ -351,7 +368,9 @@ class _PaymentPageState extends State<PaymentPage> {
       final summary = await _buildPaymentSummary();
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
-      if (!_isTestAccountMode && !summary.canPayNow) {
+      if (!_isTestAccountMode &&
+          !_demoAllowOutOfWindowPayment &&
+          !summary.canPayNow) {
         throw Exception('Payment is not due yet');
       }
 
@@ -365,7 +384,8 @@ class _PaymentPageState extends State<PaymentPage> {
           userId: userId,
           loanOfferId: summary.offerId!,
           installmentId: summary.installmentId!,
-          bypassDueDateCheck: _isTestAccountMode,
+          bypassDueDateCheck:
+              _isTestAccountMode || _demoAllowOutOfWindowPayment,
         );
 
         await _notificationService.createPaymentSuccessNotification(

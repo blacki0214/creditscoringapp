@@ -84,6 +84,7 @@ class SwinCreditApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const luminaBlue = Color(0xFF4D4AF9);
     const primaryGreen = Color(0xFF1B5E20);
 
     return MultiProvider(
@@ -112,8 +113,8 @@ class SwinCreditApp extends StatelessWidget {
             scaffoldBackgroundColor: Colors.white,
             fontFamily: 'Inter',
             colorScheme: ColorScheme.fromSeed(
-              seedColor: primaryGreen,
-              primary: primaryGreen,
+              seedColor: luminaBlue,
+              primary: luminaBlue,
             ),
             appBarTheme: const AppBarTheme(
               backgroundColor: primaryGreen,
@@ -132,13 +133,44 @@ class SwinCreditApp extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: primaryGreen, width: 1.4),
+                borderSide: const BorderSide(color: luminaBlue, width: 1.4),
               ),
               labelStyle: const TextStyle(color: Color(0xFF9E9E9E)),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
               ),
+            ),
+            checkboxTheme: CheckboxThemeData(
+              fillColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return luminaBlue;
+                }
+                return Colors.transparent;
+              }),
+              checkColor: WidgetStateProperty.all(Colors.white),
+            ),
+            switchTheme: SwitchThemeData(
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return luminaBlue;
+                }
+                return Colors.grey.shade400;
+              }),
+              trackColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return luminaBlue.withOpacity(0.45);
+                }
+                return Colors.grey.shade300;
+              }),
+            ),
+            radioTheme: RadioThemeData(
+              fillColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return luminaBlue;
+                }
+                return Colors.grey.shade500;
+              }),
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(

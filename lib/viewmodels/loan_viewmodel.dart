@@ -1542,28 +1542,38 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final normalizedBankCode = bankCode.trim().toUpperCase();
+      final normalizedAccountNumber = accountNumber.trim();
+      final normalizedAccountHolder = accountHolder.trim().replaceAll(
+        RegExp(r'\s+'),
+        ' ',
+      );
+
       print('[LoanViewModel] Validating bank account...');
-      print('[LoanViewModel] Bank: $bankCode, Account: $accountNumber');
+      print(
+        '[LoanViewModel] Bank: $normalizedBankCode, Account: $normalizedAccountNumber',
+      );
 
       // Check test accounts first (TEST MODE)
       final bankService = BankService();
       if (BankService.TEST_MODE) {
-        final isTestAccount = bankService.validateTestAccount(
-          bankCode: bankCode,
-          accountNumber: accountNumber,
-          accountHolderName: accountHolder,
-        );
+        final canonicalHolder = normalizedAccountHolder
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^a-z0-9]'), '');
+        final isCanonicalStudentTestAccount =
+            normalizedBankCode == 'ACB' &&
+            normalizedAccountNumber.replaceAll(RegExp(r'\D'), '') ==
+                '26272829' &&
+            canonicalHolder == 'nguyenduy';
 
-        if (isTestAccount) {
-          print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
-          print('[LoanViewModel] Account holder: $accountHolder');
-
-          // Create a mock success response for test account
+        if (isCanonicalStudentTestAccount) {
           _bankValidationResult = BankAccountValidationResponse(
             valid: true,
-            accountHolderName: accountHolder,
-            bankName: bankService.getBankByCode(bankCode)?.bankName ?? bankCode,
-            bankCode: bankCode,
+            accountHolderName: normalizedAccountHolder,
+            bankName:
+                bankService.getBankByCode(normalizedBankCode)?.bankName ??
+                normalizedBankCode,
+            bankCode: normalizedBankCode,
             status: 'active',
             message: 'Account verified successfully (TEST MODE)',
             accountType: 'savings',
@@ -1574,16 +1584,50 @@ class LoanViewModel extends ChangeNotifier {
           notifyListeners();
           return true;
         }
-        print(
-          '[LoanViewModel] Test mode enabled but account not in test list, calling API...',
+
+        final isTestAccount = bankService.validateTestAccount(
+          bankCode: normalizedBankCode,
+          accountNumber: normalizedAccountNumber,
+          accountHolderName: normalizedAccountHolder,
         );
+
+        if (isTestAccount) {
+          print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
+          print('[LoanViewModel] Account holder: $normalizedAccountHolder');
+
+          // Create a mock success response for test account
+          _bankValidationResult = BankAccountValidationResponse(
+            valid: true,
+            accountHolderName: normalizedAccountHolder,
+            bankName:
+                bankService.getBankByCode(normalizedBankCode)?.bankName ??
+                normalizedBankCode,
+            bankCode: normalizedBankCode,
+            status: 'active',
+            message: 'Account verified successfully (TEST MODE)',
+            accountType: 'savings',
+            validatedAt: DateTime.now(),
+          );
+
+          _isValidatingAccount = false;
+          notifyListeners();
+          return true;
+        }
+        _bankAccountValidationError =
+            'Test account not found. For ACB use Nguyen Duy / 26272829.';
+        print(
+          '[LoanViewModel] Test mode enabled and no local test account matched. Skipping API fallback.',
+        );
+        _isValidatingAccount = false;
+        notifyListeners();
+        return false;
       }
 
       // If not a test account or test mode disabled, call the real API
       final request = BankAccountValidationRequest(
-        bankCode: bankCode,
-        accountNumber: accountNumber,
-        accountHolder: accountHolder,
+        bankCode: normalizedBankCode,
+        accountNumber: normalizedAccountNumber,
+        accountHolder: normalizedAccountHolder,
         branchCode: branchCode,
       );
 

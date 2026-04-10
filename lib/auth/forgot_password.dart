@@ -62,7 +62,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               child: Text(
                 context.t('OK', 'Đồng ý'),
                 style: const TextStyle(
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -107,13 +107,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4C40F7).withOpacity(0.1),
+                        color: const Color(0xFF4D4AF9).withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.lock_reset,
                         size: 100,
-                        color: Color(0xFF4C40F7),
+                        color: Color(0xFF4D4AF9),
                       ),
                     ),
                   ),
@@ -163,7 +163,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           width: 2,
                         ),
                       ),
@@ -179,7 +179,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     child: ElevatedButton(
                       onPressed: viewModel.isLoading ? null : _sendResetEmail,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
+                        backgroundColor: const Color(0xFF4D4AF9),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),

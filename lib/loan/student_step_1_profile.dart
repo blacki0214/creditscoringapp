@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/app_localization.dart';
@@ -15,50 +16,52 @@ class StudentStepAProfilePage extends StatefulWidget {
 }
 
 class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
+  final _formKey = GlobalKey<FormState>();
+
   late TextEditingController _loanAmountController;
   late TextEditingController _gpaController;
+  final _loanAmountFieldKey = GlobalKey<FormFieldState<String>>();
+  final _gpaFieldKey = GlobalKey<FormFieldState<String>>();
+  final _loanAmountFocusNode = FocusNode();
+  final _gpaFocusNode = FocusNode();
+  final NumberFormat _amountFormatter = NumberFormat('#,###', 'vi_VN');
+  bool _didTapLoanAmount = false;
 
   @override
   void initState() {
     super.initState();
     final vm = context.read<StudentLoanViewModel>();
     _loanAmountController = TextEditingController(
-      text: vm.loanAmount.toString(),
+      text: _amountFormatter.format(vm.loanAmount).replaceAll(',', '.'),
     );
     _gpaController = TextEditingController(
       text: vm.gpaLatest.toStringAsFixed(2),
     );
+
+    _loanAmountFocusNode.addListener(() {
+      if (!_loanAmountFocusNode.hasFocus) {
+        _loanAmountFieldKey.currentState?.validate();
+      }
+    });
+    _gpaFocusNode.addListener(() {
+      if (!_gpaFocusNode.hasFocus) {
+        _gpaFieldKey.currentState?.validate();
+      }
+    });
   }
 
   @override
   void dispose() {
     _loanAmountController.dispose();
     _gpaController.dispose();
+    _loanAmountFocusNode.dispose();
+    _gpaFocusNode.dispose();
     super.dispose();
-  }
-
-  void _syncTextFields(StudentLoanViewModel vm) {
-    final loanAmountText = vm.loanAmount.toString();
-    if (_loanAmountController.text != loanAmountText) {
-      _loanAmountController.text = loanAmountText;
-      _loanAmountController.selection = TextSelection.collapsed(
-        offset: _loanAmountController.text.length,
-      );
-    }
-
-    final gpaText = vm.gpaLatest.toStringAsFixed(2);
-    if (_gpaController.text != gpaText) {
-      _gpaController.text = gpaText;
-      _gpaController.selection = TextSelection.collapsed(
-        offset: _gpaController.text.length,
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<StudentLoanViewModel>();
-    _syncTextFields(vm);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FF),
@@ -73,209 +76,287 @@ class _StudentStepAProfilePageState extends State<StudentStepAProfilePage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF8E1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFFD54F)),
-                ),
-                child: Text(
-                  context.t(
-                    'Please note that this feature is still under development. If you encounter any unexpected errors, please contact the support section in the settings. Thank you.',
-                    'Vui lòng lưu ý rằng tính năng này vẫn đang trong quá trình phát triển. Nếu bạn gặp phải bất kỳ lỗi nào không mong muốn, vui lòng liên hệ với bộ phận hỗ trợ trong phần cài đặt. Xin cảm ơn.',
-                  ),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF694D00),
-                    height: 1.35,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _SectionCard(
-                title: context.t('Loan amount', 'Số tiền vay'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _loanAmountController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        suffixText: 'đ',
-                      ),
-                      onChanged: (value) {
-                        final parsed = int.tryParse(value);
-                        if (parsed == null) return;
-                        final clamped = parsed.clamp(5000000, 10000000);
-                        final rounded = ((clamped / 500000).round() * 500000);
-                        vm.updateProfile(selectedLoanAmount: rounded);
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.t(
-                        'Allowed: 5,000,000-10,000,000 ',
-                        'Cho phép: 5,000,000-10,000,000',
-                      ),
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t('Academic year', 'Năm học'),
-                child: DropdownButtonFormField<int>(
-                  initialValue: vm.academicYear,
-                  dropdownColor: Colors.white,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(),
-                  ),
-                  items: List.generate(
-                    5,
-                    (index) => DropdownMenuItem(
-                      value: index + 1,
-                      child: Text(
-                        context.t('Year ${index + 1}', 'Năm ${index + 1}'),
-                      ),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    if (value != null) vm.updateProfile(year: value);
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t('Major', 'Ngành học'),
-                child: _MajorPicker(
-                  value: vm.major,
-                  onChanged: (major) => vm.updateProfile(selectedMajor: major),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t('Current GPA', 'GPA hiện tại'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _gpaController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d{0,2}'),
-                        ),
-                      ],
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        final parsed = double.tryParse(value);
-                        if (parsed == null) return;
-                        final clamped = parsed.clamp(0.0, 4.0);
-                        vm.updateProfile(gpa: clamped);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t('Program level', 'Bậc học'),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _ProgramLevelChip(
-                        label: context.t('University', 'Đại học'),
-                        selected: vm.programLevel == 'undergraduate',
-                        onTap: () => vm.updateProfile(
-                          selectedProgramLevel: 'undergraduate',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ProgramLevelChip(
-                        label: context.t('Graduate', 'Sau đại học'),
-                        selected: vm.programLevel == 'graduate',
-                        onTap: () => vm.updateProfile(
-                          selectedProgramLevel: 'graduate',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionCard(
-                title: context.t('Living status', 'Tình trạng ở'),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _LivingChip(
-                      label: context.t('Dormitory', 'KTX'),
-                      value: 'dormitory',
-                      selected: vm.livingStatus,
-                      onTap: (v) => vm.updateProfile(selectedLivingStatus: v),
-                    ),
-                    _LivingChip(
-                      label: context.t('Rent', 'Thuê'),
-                      value: 'rent',
-                      selected: vm.livingStatus,
-                      onTap: (v) => vm.updateProfile(selectedLivingStatus: v),
-                    ),
-                    _LivingChip(
-                      label: context.t('With parents', 'Nhà bố mẹ'),
-                      value: 'with_parents',
-                      selected: vm.livingStatus,
-                      onTap: (v) => vm.updateProfile(selectedLivingStatus: v),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StudentStepBFinancialPage(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4D4AF9),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(52),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF8E1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFFD54F)),
                   ),
                   child: Text(
-                    context.t('Continue to Step 2', 'Tiếp tục sang Bước 2'),
+                    context.t(
+                      'Please note that this feature is still under development. If you encounter any unexpected errors, please contact the support section in the settings. Thank you.',
+                      'Vui lòng lưu ý rằng tính năng này vẫn đang trong quá trình phát triển. Nếu bạn gặp phải bất kỳ lỗi nào không mong muốn, vui lòng liên hệ với bộ phận hỗ trợ trong phần cài đặt. Xin cảm ơn.',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF694D00),
+                      height: 1.35,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: context.t('Loan amount', 'Số tiền vay'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        key: _loanAmountFieldKey,
+                        controller: _loanAmountController,
+                        focusNode: _loanAmountFocusNode,
+                        keyboardType: TextInputType.number,
+                        onTap: () {
+                          if (_didTapLoanAmount) return;
+                          _didTapLoanAmount = true;
+                          _loanAmountController.clear();
+                        },
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _DotThousandsInputFormatter(),
+                        ],
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          suffixText: 'đ',
+                        ),
+                        validator: (value) {
+                          final cleaned = (value ?? '').replaceAll('.', '');
+                          final parsed = int.tryParse(cleaned);
+                          if (parsed == null) {
+                            return context.t(
+                              'Please enter loan amount',
+                              'Vui lòng nhập số tiền vay',
+                            );
+                          }
+                          if (parsed < 5000000 || parsed > 10000000) {
+                            return context.t(
+                              'Loan amount must be 5.000.000 - 10.000.000',
+                              'Số tiền vay phải từ 5.000.000 - 10.000.000',
+                            );
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          final parsed = int.tryParse(
+                            value.replaceAll('.', ''),
+                          );
+                          if (parsed == null) return;
+                          if (parsed >= 5000000 && parsed <= 10000000) {
+                            vm.updateProfile(selectedLoanAmount: parsed);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.t(
+                          '5.000.000 - 10.000.000',
+                          '5.000.000 - 10.000.000',
+                        ),
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _SectionCard(
+                  title: context.t('Academic year', 'Năm học'),
+                  child: DropdownButtonFormField<int>(
+                    initialValue: vm.academicYear,
+                    dropdownColor: Colors.white,
+                    decoration: const InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(),
+                    ),
+                    items: List.generate(
+                      5,
+                      (index) => DropdownMenuItem(
+                        value: index + 1,
+                        child: Text(
+                          context.t('Year ${index + 1}', 'Năm ${index + 1}'),
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value != null) vm.updateProfile(year: value);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _SectionCard(
+                  title: context.t('Major', 'Ngành học'),
+                  child: _MajorPicker(
+                    value: vm.major,
+                    onChanged: (major) =>
+                        vm.updateProfile(selectedMajor: major),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _SectionCard(
+                  title: context.t('Current GPA', 'GPA hiện tại'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        key: _gpaFieldKey,
+                        controller: _gpaController,
+                        focusNode: _gpaFocusNode,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: '0-4',
+                        ),
+                        validator: (value) {
+                          final parsed = double.tryParse(value ?? '');
+                          if (parsed == null) {
+                            return context.t(
+                              'Please enter GPA',
+                              'Vui lòng nhập GPA',
+                            );
+                          }
+                          if (parsed < 0 || parsed > 4) {
+                            return context.t(
+                              'GPA must be between 0 and 4',
+                              'GPA phải trong khoảng 0 đến 4',
+                            );
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          final parsed = double.tryParse(value);
+                          if (parsed == null) return;
+                          if (parsed >= 0 && parsed <= 4) {
+                            vm.updateProfile(gpa: parsed);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _SectionCard(
+                  title: context.t('Program level', 'Bậc học'),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _ProgramLevelChip(
+                          label: context.t('University', 'Đại học'),
+                          selected: vm.programLevel == 'undergraduate',
+                          onTap: () => vm.updateProfile(
+                            selectedProgramLevel: 'undergraduate',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ProgramLevelChip(
+                          label: context.t('Graduate', 'Sau đại học'),
+                          selected: vm.programLevel == 'graduate',
+                          onTap: () => vm.updateProfile(
+                            selectedProgramLevel: 'graduate',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _SectionCard(
+                  title: context.t('Living status', 'Tình trạng ở'),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _LivingChip(
+                        label: context.t('Dormitory', 'KTX'),
+                        value: 'dormitory',
+                        selected: vm.livingStatus,
+                        onTap: (v) => vm.updateProfile(selectedLivingStatus: v),
+                      ),
+                      _LivingChip(
+                        label: context.t('Rent', 'Thuê'),
+                        value: 'rent',
+                        selected: vm.livingStatus,
+                        onTap: (v) => vm.updateProfile(selectedLivingStatus: v),
+                      ),
+                      _LivingChip(
+                        label: context.t('With parents', 'Nhà bố mẹ'),
+                        value: 'with_parents',
+                        selected: vm.livingStatus,
+                        onTap: (v) => vm.updateProfile(selectedLivingStatus: v),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (!_formKey.currentState!.validate()) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const StudentStepBFinancialPage(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4D4AF9),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(52),
+                    ),
+                    child: Text(
+                      context.t('Continue to Step 2', 'Tiếp tục sang Bước 2'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DotThousandsInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return newValue.copyWith(text: '');
+
+    final number = int.tryParse(digits);
+    if (number == null) return oldValue;
+
+    final formatted = NumberFormat(
+      '#,###',
+      'vi_VN',
+    ).format(number).replaceAll(',', '.');
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }
@@ -303,18 +384,14 @@ class _ProgramLevelChip extends StatelessWidget {
           color: selected ? const Color(0xFFE8EBFF) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF4D4AF9)
-                : const Color(0xFFDDE3FF),
+            color: selected ? const Color(0xFF4D4AF9) : const Color(0xFFDDE3FF),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: selected
-                ? const Color(0xFF2D2AA8)
-                : const Color(0xFF1A1F3F),
+            color: selected ? const Color(0xFF2D2AA8) : const Color(0xFF1A1F3F),
           ),
         ),
       ),

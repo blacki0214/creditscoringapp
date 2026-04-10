@@ -113,6 +113,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     }
 
     // Parse inputs
+    final availableLoanPurposeOptions = widget.isStudentFlow
+        ? const <String>['EDUCATION', 'PERSONAL']
+        : loanPurposeOptions;
+
     final totalPrice = _parseAmount(_totalPriceController.text);
     final downPayment = _parseAmount(_downPaymentController.text);
     final calculatedLoanAmount = (totalPrice - downPayment).clamp(
@@ -198,7 +202,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                               'Bạn cần tài trợ cho mục đích gì?',
                             ),
                             value: _selectedPurpose,
-                            items: loanPurposeOptions,
+                            items: availableLoanPurposeOptions,
+                            fillColor: widget.isStudentFlow
+                                ? const Color(0xFFF1F3F8)
+                                : Colors.white,
                             onChanged: _isRecalculatingTerms
                                 ? null
                                 : (val) async {
@@ -251,6 +258,21 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                     }
                                   },
                           ),
+
+                          if (widget.isStudentFlow) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              context.t(
+                                'Student flow: loan purpose is limited to Education and Personal.',
+                                'Luồng sinh viên: mục đích vay chỉ gồm Giáo dục và Tiêu dùng cá nhân.',
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
 
                           if (_isRecalculatingTerms) ...[
                             const SizedBox(height: 8),
@@ -832,6 +854,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     required String value,
     required List<String> items,
     required void Function(String?)? onChanged,
+    Color fillColor = Colors.white,
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
@@ -839,7 +862,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: fillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

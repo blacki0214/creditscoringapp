@@ -145,7 +145,7 @@ class _OTPPageState extends State<OTPPage> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: otpCode.length > index
-                                  ? const Color(0xFF4C40F7)
+                                  ? const Color(0xFF4D4AF9)
                                   : Colors.grey.shade300,
                               width: 2,
                             ),
@@ -210,7 +210,7 @@ class _OTPPageState extends State<OTPPage> {
                         child: Text(
                           context.t('Resend OTP', 'Gửi lại OTP'),
                           style: const TextStyle(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
                           ),
@@ -222,7 +222,7 @@ class _OTPPageState extends State<OTPPage> {
                       child: Text(
                         context.t('Resend', 'Gửi lại'),
                         style: const TextStyle(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),

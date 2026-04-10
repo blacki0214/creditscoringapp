@@ -259,7 +259,7 @@ class BankService {
   /// Format: { bankCode: [ { accountNumber, accountHolderName }, ... ], ... }
   static final Map<String, List<Map<String, String>>> _testAccounts = {
     'ACB': [
-      {'accountNumber': '262728', 'accountHolderName': 'Nguyen Duy'},
+      {'accountNumber': '26272829', 'accountHolderName': 'Nguyen Duy'},
       {'accountNumber': '12345678', 'accountHolderName': 'Test User ACB'},
       {'accountNumber': '87654321', 'accountHolderName': 'John Doe ACB'},
     ],
@@ -286,15 +286,29 @@ class BankService {
   }) {
     if (!TEST_MODE) return false;
 
-    final testAccounts = _testAccounts[bankCode];
+    final normalizedBankCode = bankCode.trim().toUpperCase();
+    final testAccounts = _testAccounts[normalizedBankCode];
     if (testAccounts == null) return false;
 
-    return testAccounts.any(
-      (account) =>
-          account['accountNumber'] == accountNumber &&
-          account['accountHolderName']!.toLowerCase() ==
-              accountHolderName.toLowerCase(),
+    final normalizedAccountNumber = accountNumber.replaceAll(RegExp(r'\D'), '');
+    final normalizedHolder = accountHolderName.trim().toLowerCase().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
     );
+
+    return testAccounts.any((account) {
+      final storedNumber = (account['accountNumber'] ?? '').replaceAll(
+        RegExp(r'\D'),
+        '',
+      );
+      final storedHolder = (account['accountHolderName'] ?? '')
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r'\s+'), ' ');
+
+      return storedNumber == normalizedAccountNumber &&
+          storedHolder == normalizedHolder;
+    });
   }
 
   /// Get test accounts for a bank (for UI display/debugging)

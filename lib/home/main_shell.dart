@@ -24,6 +24,7 @@ class _MainShellState extends State<MainShell> {
       HomePage(
         onOpenSettings: () => _onNavItemTap(4),
         onOpenStudent: () => _onNavItemTap(3),
+        onOpenApplication: () => _onNavItemTap(1),
       ),
       const LoanApplicationPage(),
       const DemoCalculatorPage(),

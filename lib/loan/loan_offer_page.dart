@@ -138,7 +138,7 @@ class LoanOfferPage extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4C40F7),
+                      backgroundColor: const Color(0xFF4D4AF9),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -165,7 +165,7 @@ class LoanOfferPage extends StatelessWidget {
                        Navigator.pop(context); // Go back to try again
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4C40F7),
+                      backgroundColor: const Color(0xFF4D4AF9),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),

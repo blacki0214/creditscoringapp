@@ -152,10 +152,10 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4C40F7).withOpacity(0.05),
+                              color: const Color(0xFF4D4AF9).withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFF4C40F7).withOpacity(0.2),
+                                color: const Color(0xFF4D4AF9).withOpacity(0.2),
                               ),
                             ),
                             child: Column(
@@ -188,7 +188,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                         onChanged: (val) => setState(
                                           () => _hasCreditHistory = val,
                                         ),
-                                        activeColor: const Color(0xFF4C40F7),
+                                        activeColor: const Color(0xFF4D4AF9),
                                         contentPadding: EdgeInsets.zero,
                                       ),
                                     ),
@@ -209,7 +209,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                         onChanged: (val) => setState(
                                           () => _hasCreditHistory = val,
                                         ),
-                                        activeColor: const Color(0xFF4C40F7),
+                                        activeColor: const Color(0xFF4D4AF9),
                                         contentPadding: EdgeInsets.zero,
                                       ),
                                     ),
@@ -367,7 +367,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                 value: _hasPreviousDefaults,
                                 onChanged: (val) =>
                                     setState(() => _hasPreviousDefaults = val),
-                                activeThumbColor: const Color(0xFF4C40F7),
+                                activeThumbColor: const Color(0xFF4D4AF9),
                               ),
                               SwitchListTile(
                                 title: Text(
@@ -379,7 +379,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                                 value: _currentlyDefaulting,
                                 onChanged: (val) =>
                                     setState(() => _currentlyDefaulting = val),
-                                activeThumbColor: const Color(0xFF4C40F7),
+                                activeThumbColor: const Color(0xFF4D4AF9),
                               ),
                             ] else if (_hasCreditHistory == false) ...[
                               Container(
@@ -486,7 +486,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: (_isCalculating || !_isFormComplete())
                             ? Colors.grey.shade400
-                            : const Color(0xFF4C40F7),
+                            : const Color(0xFF4D4AF9),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -523,7 +523,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const CircularProgressIndicator(
-                        color: Color(0xFF4C40F7),
+                        color: Color(0xFF4D4AF9),
                         strokeWidth: 3,
                       ),
                       const SizedBox(height: 20),
@@ -664,7 +664,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF4C40F7),
+          color: Color(0xFF4D4AF9),
         ),
       ),
     );
@@ -687,7 +687,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
           builder: (context, child) => Theme(
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.light(
-                primary: Color(0xFF4C40F7),
+                primary: Color(0xFF4D4AF9),
                 onPrimary: Colors.white,
                 surface: Colors.white,
                 onSurface: Colors.black,
@@ -709,7 +709,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
       },
       decoration: InputDecoration(
         labelText: context.t('Date of Birth', 'Ngày sinh'),
-        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4C40F7)),
+        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF4D4AF9)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -717,7 +717,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
       ),
     );
@@ -759,7 +759,7 @@ class _DemoCalculatorPageState extends State<DemoCalculatorPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF4C40F7), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF4D4AF9), width: 2),
         ),
         counterText: '',
       ),

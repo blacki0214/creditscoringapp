@@ -119,8 +119,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     // Call validation API
     final isValid = await viewModel.validateBankAccount(
       bankCode: viewModel.selectedBankCode!,
-      accountNumber: _bankAccountController.text,
-      accountHolder: _accountHolderController.text,
+      accountNumber: _bankAccountController.text.trim(),
+      accountHolder: _accountHolderController.text.trim(),
       branchCode: viewModel.selectedBranchCode,
     );
 
@@ -432,7 +432,6 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
   Widget _buildAccountNumberField() {
     return TextFormField(
       controller: _bankAccountController,
-      readOnly: widget.restrictToAcb,
       decoration: InputDecoration(
         labelText: context.t('Account Number*', 'Số tài khoản*'),
         hintText: context.t(
