@@ -5,6 +5,8 @@ import 'firebase_service.dart';
 
 class InstallmentService {
   final FirebaseService _firebase = FirebaseService();
+  static const int _monthlyDueDay = 10;
+  static const int _billingCutoffDay = 23;
 
   /// Generate installments for an accepted loan offer
   /// Called when user accepts the loan in Step 6
@@ -29,7 +31,7 @@ class InstallmentService {
 
       // Generate each installment
       for (int i = 1; i <= loanTermMonths; i++) {
-        final dueDate = _addMonthsSafe(firstDueDate, i - 1);
+        final dueDate = _buildMonthlyDueDate(firstDueDate, i - 1);
 
         final installment = Installment(
           id: '', // Will be set by Firestore
@@ -47,7 +49,7 @@ class InstallmentService {
         );
 
         final docRef = _firebase.firestore
-          .collection('loan_offers')
+            .collection('loan_offers')
             .doc(loanOfferId)
             .collection('installments')
             .doc();
@@ -63,7 +65,9 @@ class InstallmentService {
       }
 
       await batch.commit();
-      print('[InstallmentService] Generated $loanTermMonths installments for loan $loanOfferId');
+      print(
+        '[InstallmentService] Generated $loanTermMonths installments for loan $loanOfferId',
+      );
       return installmentIds;
     } catch (e) {
       print('[InstallmentService] Error generating installments: $e');
@@ -99,14 +103,16 @@ class InstallmentService {
     required String loanOfferId,
   }) {
     return _firebase.firestore
-      .collection('loan_offers')
+        .collection('loan_offers')
         .doc(loanOfferId)
         .collection('installments')
         .orderBy('installmentNumber')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Installment.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Installment.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   /// Mark an installment as paid
@@ -188,7 +194,9 @@ class InstallmentService {
           .doc(installmentId)
           .update(updates);
 
-      print('[InstallmentService] Updated installment $installmentId status to $newStatus');
+      print(
+        '[InstallmentService] Updated installment $installmentId status to $newStatus',
+      );
     } catch (e) {
       print('[InstallmentService] Error updating installment status: $e');
       rethrow;
@@ -242,7 +250,9 @@ class InstallmentService {
         'totalAmountVnd': totalAmountVnd,
         'paidAmountVnd': paidAmountVnd,
         'overdueAmountVnd': overdueAmountVnd,
-        'paymentProgress': totalInstallments > 0 ? paidInstallments / totalInstallments : 0.0,
+        'paymentProgress': totalInstallments > 0
+            ? paidInstallments / totalInstallments
+            : 0.0,
       };
     } catch (e) {
       print('[InstallmentService] Error getting payment summary: $e');
@@ -289,6 +299,35 @@ class InstallmentService {
       date.millisecond,
       date.microsecond,
     );
+  }
+
+  /// Shopee-like first due date logic:
+  /// - Purchase day 1..23  => due on day 10 of next month.
+  /// - Purchase day 24..end => due on day 10 of month after next.
+  DateTime calculateFirstDueDateFromPurchase(DateTime purchaseDate) {
+    final normalized = DateTime(
+      purchaseDate.year,
+      purchaseDate.month,
+      purchaseDate.day,
+    );
+
+    final monthsToAdd = normalized.day <= _billingCutoffDay ? 1 : 2;
+    final shifted = _addMonthsSafe(normalized, monthsToAdd);
+    final dueDay = math.min(
+      _monthlyDueDay,
+      _daysInMonth(shifted.year, shifted.month),
+    );
+    return DateTime(shifted.year, shifted.month, dueDay);
+  }
+
+  /// Shopee-like rule: monthly billing only, fixed due day each month.
+  DateTime _buildMonthlyDueDate(DateTime firstDueDate, int installmentOffset) {
+    final shifted = _addMonthsSafe(firstDueDate, installmentOffset);
+    final day = math.min(
+      _monthlyDueDay,
+      _daysInMonth(shifted.year, shifted.month),
+    );
+    return DateTime(shifted.year, shifted.month, day);
   }
 
   int _daysInMonth(int year, int month) {

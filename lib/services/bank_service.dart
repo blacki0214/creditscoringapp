@@ -1,6 +1,6 @@
 /// Bank Service - Manages bank data and branch information
 /// Currently uses hardcoded Vietnamese bank list (Option A - MVP approach)
-/// 
+///
 /// In future, this can be extended to:
 /// - Fetch from API endpoint
 /// - Load from Firestore
@@ -11,7 +11,7 @@ import 'package:creditscoring/models/bank_model.dart';
 
 class BankService {
   static final BankService _instance = BankService._internal();
-  
+
   factory BankService() => _instance;
   BankService._internal();
 
@@ -77,7 +77,8 @@ class BankService {
     // VCB - Vietcombank
     Bank(
       bankCode: 'VCB',
-      bankName: 'Vietcombank (Joint Stock Commercial Bank for Foreign Trade of Vietnam)',
+      bankName:
+          'Vietcombank (Joint Stock Commercial Bank for Foreign Trade of Vietnam)',
       branches: [
         BankBranch(
           branchCode: 'VCB001',
@@ -258,42 +259,22 @@ class BankService {
   /// Format: { bankCode: [ { accountNumber, accountHolderName }, ... ], ... }
   static final Map<String, List<Map<String, String>>> _testAccounts = {
     'ACB': [
-      {
-        'accountNumber': '12345678',
-        'accountHolderName': 'Test User ACB',
-      },
-      {
-        'accountNumber': '87654321',
-        'accountHolderName': 'John Doe ACB',
-      },
+      {'accountNumber': '262728', 'accountHolderName': 'Nguyen Duy'},
+      {'accountNumber': '12345678', 'accountHolderName': 'Test User ACB'},
+      {'accountNumber': '87654321', 'accountHolderName': 'John Doe ACB'},
     ],
     'BIDV': [
-      {
-        'accountNumber': '11111111',
-        'accountHolderName': 'Test User BIDV',
-      },
-      {
-        'accountNumber': '22222222',
-        'accountHolderName': 'Jane Smith BIDV',
-      },
+      {'accountNumber': '11111111', 'accountHolderName': 'Test User BIDV'},
+      {'accountNumber': '22222222', 'accountHolderName': 'Jane Smith BIDV'},
     ],
     'VCB': [
-      {
-        'accountNumber': '99999999',
-        'accountHolderName': 'Vietcombank Test',
-      },
+      {'accountNumber': '99999999', 'accountHolderName': 'Vietcombank Test'},
     ],
     'MB': [
-      {
-        'accountNumber': '33333333',
-        'accountHolderName': 'MB Bank User',
-      },
+      {'accountNumber': '33333333', 'accountHolderName': 'MB Bank User'},
     ],
     'TPB': [
-      {
-        'accountNumber': '44444444',
-        'accountHolderName': 'TPBank Customer',
-      },
+      {'accountNumber': '44444444', 'accountHolderName': 'TPBank Customer'},
     ],
   };
 
@@ -304,13 +285,16 @@ class BankService {
     required String accountHolderName,
   }) {
     if (!TEST_MODE) return false;
-    
+
     final testAccounts = _testAccounts[bankCode];
     if (testAccounts == null) return false;
 
-    return testAccounts.any((account) =>
-        account['accountNumber'] == accountNumber &&
-        account['accountHolderName']!.toLowerCase() == accountHolderName.toLowerCase());
+    return testAccounts.any(
+      (account) =>
+          account['accountNumber'] == accountNumber &&
+          account['accountHolderName']!.toLowerCase() ==
+              accountHolderName.toLowerCase(),
+    );
   }
 
   /// Get test accounts for a bank (for UI display/debugging)
@@ -332,10 +316,12 @@ class BankService {
   }
 
   /// Get all bank codes
-  List<String> getAllBankCodes() => _vietnameseBanks.map((b) => b.bankCode).toList();
+  List<String> getAllBankCodes() =>
+      _vietnameseBanks.map((b) => b.bankCode).toList();
 
   /// Get all bank names
-  List<String> getAllBankNames() => _vietnameseBanks.map((b) => b.bankName).toList();
+  List<String> getAllBankNames() =>
+      _vietnameseBanks.map((b) => b.bankName).toList();
 
   /// Get branches for a specific bank
   List<BankBranch> getBranchesByBankCode(String bankCode) {
@@ -353,22 +339,28 @@ class BankService {
   /// Search banks by name (case-insensitive)
   List<Bank> searchBanks(String query) {
     final lowerQuery = query.toLowerCase();
-    return _vietnameseBanks.where((bank) =>
-      bank.bankName.toLowerCase().contains(lowerQuery) ||
-      bank.bankCode.toLowerCase().contains(lowerQuery)
-    ).toList();
+    return _vietnameseBanks
+        .where(
+          (bank) =>
+              bank.bankName.toLowerCase().contains(lowerQuery) ||
+              bank.bankCode.toLowerCase().contains(lowerQuery),
+        )
+        .toList();
   }
 
   /// Search branches by name (case-insensitive, within a specific bank)
   List<BankBranch> searchBranches(String bankCode, String query) {
     final bank = getBankByCode(bankCode);
     if (bank == null) return [];
-    
+
     final lowerQuery = query.toLowerCase();
-    return bank.branches.where((branch) =>
-      branch.branchName.toLowerCase().contains(lowerQuery) ||
-      branch.branchCode.toLowerCase().contains(lowerQuery) ||
-      branch.address.toLowerCase().contains(lowerQuery)
-    ).toList();
+    return bank.branches
+        .where(
+          (branch) =>
+              branch.branchName.toLowerCase().contains(lowerQuery) ||
+              branch.branchCode.toLowerCase().contains(lowerQuery) ||
+              branch.address.toLowerCase().contains(lowerQuery),
+        )
+        .toList();
   }
 }

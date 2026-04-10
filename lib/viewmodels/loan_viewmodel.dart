@@ -702,7 +702,8 @@ class LoanViewModel extends ChangeNotifier {
             anchorDate.month,
             anchorDate.day,
           );
-          final firstDueDate = _addMonthsSafe(normalizedAnchorDate, 1);
+          final firstDueDate = _installmentService
+              .calculateFirstDueDateFromPurchase(normalizedAnchorDate);
 
           await _installmentService.generateInstallmentsForLoan(
             userId: userId,
@@ -751,24 +752,6 @@ class LoanViewModel extends ChangeNotifier {
     if (value is DateTime) return value;
     if (value is Timestamp) return value.toDate();
     return DateTime.tryParse(value.toString());
-  }
-
-  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
-    final totalMonths = (date.month - 1) + monthsToAdd;
-    final year = date.year + (totalMonths ~/ 12);
-    final month = (totalMonths % 12) + 1;
-    final day = math.min(date.day, DateTime(year, month + 1, 0).day);
-
-    return DateTime(
-      year,
-      month,
-      day,
-      date.hour,
-      date.minute,
-      date.second,
-      date.millisecond,
-      date.microsecond,
-    );
   }
 
   // Backward compatibility for older call sites.
@@ -874,6 +857,42 @@ class LoanViewModel extends ChangeNotifier {
 
       notifyListeners();
     }
+  }
+
+  // Bootstrap shared Step 4-6 flow using student scoring results.
+  void initializeStudentOfferFlow({
+    required int creditScore,
+    required int loanLimitVnd,
+    required String riskLevel,
+  }) {
+    _currentOffer = {
+      'id': null,
+      'applicationId': null,
+      'offerId': null,
+      'approved': loanLimitVnd > 0,
+      'accepted': false,
+      'creditScore': creditScore,
+      'loanLimitVnd': loanLimitVnd,
+      'maxAmountVnd': loanLimitVnd,
+      'loanAmountVnd': loanLimitVnd,
+      'riskLevel': riskLevel,
+      'interestRate': 15.0,
+      'loanTermMonths': 12,
+      'monthlyPaymentVnd': 0.0,
+      'totalPaymentVnd': 0.0,
+      'totalInterestVnd': 0.0,
+      'approvalMessage': loanLimitVnd > 0
+          ? 'Student pre-approved offer is ready for term selection.'
+          : 'Student profile is not eligible yet.',
+    };
+
+    loanPurpose = 'EDUCATION';
+    _step1Completed = true;
+    _step2Completed = true;
+    _step3Completed = true;
+    _step4Completed = false;
+    _step6Completed = false;
+    notifyListeners();
   }
 
   // Recalculate terms (interest rate, payments) when Step 4 parameters change.

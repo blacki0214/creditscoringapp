@@ -7,7 +7,9 @@ import 'step5_contractreview.dart';
 import '../utils/app_localization.dart';
 
 class Step4OfferCalculatorPage extends StatefulWidget {
-  const Step4OfferCalculatorPage({super.key});
+  const Step4OfferCalculatorPage({super.key, this.isStudentFlow = false});
+
+  final bool isStudentFlow;
 
   @override
   State<Step4OfferCalculatorPage> createState() =>
@@ -29,9 +31,6 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
   String _selectedPurpose = 'PERSONAL';
   double _tenor = 12; // months, default 12
 
-  // Local state - not persisted to ViewModel
-  final double _calculatedLoanAmount = 0;
-  final double _downPayment = 0;
   bool _isProceeding = false;
   bool _isRecalculatingTerms = false;
 
@@ -64,6 +63,10 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
     _totalPriceController = TextEditingController(text: '');
     _downPaymentController = TextEditingController(text: '0');
     _selectedPurpose = vm.loanPurpose;
+
+    if (widget.isStudentFlow) {
+      _selectedPurpose = 'EDUCATION';
+    }
 
     // Set tenor from offer if available
     if (vm.currentOffer?['loanTermMonths'] != null) {
@@ -644,6 +647,7 @@ class _Step4OfferCalculatorPageState extends State<Step4OfferCalculatorPage> {
                                     tenor: _tenor.toInt(),
                                     downPayment: downPayment,
                                     loanPurpose: _selectedPurpose,
+                                    isStudentFlow: widget.isStudentFlow,
                                   ),
                                 ),
                               );
