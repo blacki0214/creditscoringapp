@@ -842,8 +842,10 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 8),
                         _buildDashboardTopTabs(context),
                         const SizedBox(height: 20),
-                        _buildCreditStandingCard(context, viewModel),
-                        const SizedBox(height: 20),
+                        if (_selectedHomeTab != 2) ...[
+                          _buildCreditStandingCard(context, viewModel),
+                          const SizedBox(height: 20),
+                        ],
                         if (_selectedHomeTab == 0) ...[
                           _buildLoanDisplay(context),
                         ] else if (_selectedHomeTab == 1) ...[
