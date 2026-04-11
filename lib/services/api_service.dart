@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -134,6 +135,125 @@ class CalculateTermsResponse {
       totalInterestVnd: (json['total_interest_vnd'] as num).toDouble(),
       rateExplanation: json['rate_explanation'] as String? ?? '',
       termExplanation: json['term_explanation'] as String? ?? '',
+    );
+  }
+}
+
+/// Request model for student scoring endpoints.
+class StudentScoringRequest {
+  final int age;
+  final double gpaLatest;
+  final int academicYear;
+  final String major;
+  final String programLevel;
+  final String livingStatus;
+  final bool hasBuffer;
+  final List<String> supportSources;
+  final double monthlyIncome;
+  final double monthlyExpenses;
+
+  StudentScoringRequest({
+    required this.age,
+    required this.gpaLatest,
+    required this.academicYear,
+    required this.major,
+    required this.programLevel,
+    required this.livingStatus,
+    required this.hasBuffer,
+    required this.supportSources,
+    required this.monthlyIncome,
+    required this.monthlyExpenses,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'age': age,
+      'gpa_latest': gpaLatest,
+      'academic_year': academicYear,
+      'major': major,
+      'program_level': programLevel,
+      'living_status': livingStatus,
+      'has_buffer': hasBuffer,
+      'support_sources': supportSources,
+      'monthly_income': monthlyIncome,
+      'monthly_expenses': monthlyExpenses,
+    };
+  }
+}
+
+/// Response model for `/api/student/credit-score`.
+class StudentCreditScoreResponse {
+  final int creditScore;
+  final String riskLevel;
+  final bool approved;
+  final String message;
+  final double? defaultProbability;
+  final int? approvalThreshold;
+  final String? scoreModel;
+  final String? scoreRange;
+  final String? decisionBand;
+  final bool? manualReview;
+
+  StudentCreditScoreResponse({
+    required this.creditScore,
+    required this.riskLevel,
+    required this.approved,
+    required this.message,
+    this.defaultProbability,
+    this.approvalThreshold,
+    this.scoreModel,
+    this.scoreRange,
+    this.decisionBand,
+    this.manualReview,
+  });
+
+  factory StudentCreditScoreResponse.fromJson(Map<String, dynamic> json) {
+    return StudentCreditScoreResponse(
+      creditScore: (json['credit_score'] as num?)?.toInt() ?? 0,
+      riskLevel: (json['risk_level'] as String?) ?? 'UNKNOWN',
+      approved: (json['approved'] as bool?) ?? false,
+      message: (json['message'] as String?) ?? '',
+      defaultProbability: (json['default_probability'] as num?)?.toDouble(),
+      approvalThreshold: (json['approval_threshold'] as num?)?.toInt(),
+      scoreModel: json['score_model'] as String?,
+      scoreRange: json['score_range'] as String?,
+      decisionBand: json['decision_band'] as String?,
+      manualReview: json['manual_review'] as bool?,
+    );
+  }
+}
+
+/// Response model for `/api/student/calculate-limit`.
+class StudentCalculateLimitResponse extends StudentCreditScoreResponse {
+  final double loanLimitVnd;
+
+  StudentCalculateLimitResponse({
+    required super.creditScore,
+    required super.riskLevel,
+    required super.approved,
+    required super.message,
+    super.defaultProbability,
+    super.approvalThreshold,
+    super.scoreModel,
+    super.scoreRange,
+    super.decisionBand,
+    super.manualReview,
+    required this.loanLimitVnd,
+  });
+
+  factory StudentCalculateLimitResponse.fromJson(Map<String, dynamic> json) {
+    return StudentCalculateLimitResponse(
+      creditScore: (json['credit_score'] as num?)?.toInt() ?? 0,
+      riskLevel: (json['risk_level'] as String?) ?? 'UNKNOWN',
+      approved: (json['approved'] as bool?) ?? false,
+      message: (json['message'] as String?) ?? '',
+      defaultProbability: (json['default_probability'] as num?)?.toDouble(),
+      approvalThreshold: (json['approval_threshold'] as num?)?.toInt(),
+      scoreModel: json['score_model'] as String?,
+      scoreRange: json['score_range'] as String?,
+      decisionBand: json['decision_band'] as String?,
+      manualReview: json['manual_review'] as bool?,
+      loanLimitVnd: (json['loan_limit_vnd'] as num?)?.toDouble() ?? 0,
     );
   }
 }
@@ -278,12 +398,39 @@ class ApiService {
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
 
+  static bool _shouldFallbackForStudentGateway403(ApiServiceException error) {
+    if (error.statusCode != 403) {
+      return false;
+    }
+
+    final lower = error.message.toLowerCase();
+    return lower.contains('<!doctype html') ||
+        lower.contains('<title>403</title>') ||
+        lower.contains('403 forbidden');
+  }
+
+  static Uri? _studentFallbackUri(String path) {
+    final gcpBase = dotenv.env['GCP_API_URL']?.trim();
+    if (gcpBase == null || gcpBase.isEmpty) {
+      return null;
+    }
+
+    final normalizedGcp = _normalizeBaseUrl(gcpBase);
+    final normalizedPrimary = _normalizeBaseUrl(baseUrl);
+    if (normalizedGcp == normalizedPrimary) {
+      return null;
+    }
+
+    return Uri.parse('$normalizedGcp$path');
+  }
+
   /// Gets a fresh Firebase ID token for the current signed-in user.
   /// forceRefresh:true ensures stale tokens (> 1h) are renewed automatically.
   static Future<String> _getAuthToken() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null)
+    if (user == null) {
       throw Exception('User not authenticated — please sign in first');
+    }
     final token = await user.getIdToken(true); // forceRefresh
     return 'Bearer $token';
   }
@@ -297,6 +444,12 @@ class ApiService {
     final envKey = dotenv.env['API_KEY'];
     if (envKey != null && envKey.isNotEmpty) {
       return envKey;
+    }
+
+    // Backward-compatible fallback used by existing environments.
+    final legacyEnvKey = dotenv.env['ML_API_KEY'];
+    if (legacyEnvKey != null && legacyEnvKey.isNotEmpty) {
+      return legacyEnvKey;
     }
 
     return null;
@@ -347,6 +500,18 @@ class ApiService {
         (statusCode >= 500 && statusCode < 600);
   }
 
+  static void _log(String message) {
+    debugPrint(message);
+  }
+
+  static String _previewBody(String body, {int maxLen = 240}) {
+    final compact = body.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (compact.length <= maxLen) {
+      return compact;
+    }
+    return '${compact.substring(0, maxLen)}...';
+  }
+
   Future<http.Response> _postJsonWithRetry(
     Uri url,
     Map<String, dynamic> body, {
@@ -358,26 +523,58 @@ class ApiService {
     for (int attempt = 0; attempt < maxRetries; attempt++) {
       try {
         if (attempt > 0) {
-          print('[ApiService] Retry attempt $attempt/$maxRetries for $operationName');
+          _log('[ApiService] Retry attempt $attempt/$maxRetries for $operationName');
         }
 
         final startTime = DateTime.now();
+        final headers = {
+          ...await _buildHeaders(
+            includeAuthToken: includeAuthToken,
+            includeApiKey: includeApiKey,
+          ),
+          ...?extraHeaders,
+        };
+
+        // Student endpoints always require both Bearer token and API key.
+        if (operationName.startsWith('student-')) {
+          if (!headers.containsKey('Authorization')) {
+            headers['Authorization'] = await _getAuthToken();
+          }
+
+          if (!headers.containsKey('X-API-Key')) {
+            final fallbackApiKey = await _getApiKey();
+            if (fallbackApiKey != null && fallbackApiKey.isNotEmpty) {
+              headers['X-API-Key'] = fallbackApiKey;
+            }
+          }
+
+          if (!headers.containsKey('Authorization')) {
+            throw ApiServiceException(
+              'Missing Authorization header for student endpoint',
+            );
+          }
+
+          if (!headers.containsKey('X-API-Key')) {
+            throw ApiServiceException(
+              'Missing X-API-Key header for student endpoint',
+              statusCode: 403,
+            );
+          }
+        }
+
+        _log(
+          '[ApiService] $operationName headers -> auth:${headers.containsKey('Authorization')}, apiKey:${headers.containsKey('X-API-Key')}',
+        );
         final response = await _activeClient
             .post(
               url,
-              headers: {
-                ...await _buildHeaders(
-                includeAuthToken: includeAuthToken,
-                includeApiKey: includeApiKey,
-              ),
-                ...?extraHeaders,
-              },
+              headers: headers,
               body: jsonEncode(body),
             )
             .timeout(requestTimeout);
 
         final duration = DateTime.now().difference(startTime);
-        print(
+        _log(
           '[ApiService] $operationName completed in ${duration.inMilliseconds}ms, status: ${response.statusCode}',
         );
 
@@ -386,6 +583,12 @@ class ApiService {
         }
 
         if (_nonRetryableStatusCodes.contains(response.statusCode)) {
+          _log(
+            '[ApiService] $operationName response headers -> server:${response.headers['server']}, content-type:${response.headers['content-type']}',
+          );
+          _log(
+            '[ApiService] $operationName non-retryable ${response.statusCode}; body: ${_previewBody(response.body)}',
+          );
           throw ApiServiceException(
             response.body.isNotEmpty
                 ? response.body
@@ -395,7 +598,10 @@ class ApiService {
         }
 
         if (attempt < maxRetries - 1 && _isRetryableStatusCode(response.statusCode)) {
-          print('[ApiService] Retryable status ${response.statusCode} from $operationName');
+          _log(
+            '[ApiService] $operationName retryable ${response.statusCode}; server:${response.headers['server']}, content-type:${response.headers['content-type']}, body: ${_previewBody(response.body)}',
+          );
+          _log('[ApiService] Retryable status ${response.statusCode} from $operationName');
           await Future.delayed(_retryBackoff(attempt));
           continue;
         }
@@ -408,7 +614,7 @@ class ApiService {
           retryable: _isRetryableStatusCode(response.statusCode),
         );
       } on http.ClientException catch (e) {
-        print('[ApiService] Network error during $operationName: $e');
+        _log('[ApiService] Network error during $operationName: $e');
         if (attempt < maxRetries - 1) {
           await Future.delayed(_retryBackoff(attempt));
           continue;
@@ -418,7 +624,7 @@ class ApiService {
           retryable: true,
         );
       } on TimeoutException catch (e) {
-        print('[ApiService] Timeout during $operationName after ${requestTimeout.inSeconds}s');
+        _log('[ApiService] Timeout during $operationName after ${requestTimeout.inSeconds}s');
         if (attempt < maxRetries - 1) {
           await Future.delayed(_retryBackoff(attempt));
           continue;
@@ -445,7 +651,7 @@ class ApiService {
     for (int attempt = 0; attempt < maxRetries; attempt++) {
       try {
         if (attempt > 0) {
-          print('[ApiService] Retry attempt $attempt/$maxRetries for $operationName');
+          _log('[ApiService] Retry attempt $attempt/$maxRetries for $operationName');
         }
 
         final startTime = DateTime.now();
@@ -460,7 +666,7 @@ class ApiService {
             .timeout(effectiveTimeout);
 
         final duration = DateTime.now().difference(startTime);
-        print(
+        _log(
           '[ApiService] $operationName completed in ${duration.inMilliseconds}ms, status: ${response.statusCode}',
         );
 
@@ -469,6 +675,9 @@ class ApiService {
         }
 
         if (_nonRetryableStatusCodes.contains(response.statusCode)) {
+          _log(
+            '[ApiService] $operationName non-retryable ${response.statusCode}; body: ${_previewBody(response.body)}',
+          );
           throw ApiServiceException(
             response.body.isNotEmpty
                 ? response.body
@@ -478,7 +687,7 @@ class ApiService {
         }
 
         if (attempt < maxRetries - 1 && _isRetryableStatusCode(response.statusCode)) {
-          print('[ApiService] Retryable status ${response.statusCode} from $operationName');
+          _log('[ApiService] Retryable status ${response.statusCode} from $operationName');
           await Future.delayed(_retryBackoff(attempt));
           continue;
         }
@@ -491,7 +700,7 @@ class ApiService {
           retryable: _isRetryableStatusCode(response.statusCode),
         );
       } on http.ClientException catch (e) {
-        print('[ApiService] Network error during $operationName: $e');
+        _log('[ApiService] Network error during $operationName: $e');
         if (attempt < maxRetries - 1) {
           await Future.delayed(_retryBackoff(attempt));
           continue;
@@ -501,7 +710,7 @@ class ApiService {
           retryable: true,
         );
       } on TimeoutException catch (e) {
-        print('[ApiService] Timeout during $operationName after ${effectiveTimeout.inSeconds}s');
+        _log('[ApiService] Timeout during $operationName after ${effectiveTimeout.inSeconds}s');
         if (attempt < maxRetries - 1) {
           await Future.delayed(_retryBackoff(attempt));
           continue;
@@ -519,7 +728,7 @@ class ApiService {
   /// Performs a lightweight health check before app flows that submit data.
   Future<bool> checkHealth() async {
     final url = Uri.parse('$baseUrl/health');
-    print('[ApiService] GET $url');
+    _log('[ApiService] GET $url');
 
     try {
       final response = await _getWithRetry(
@@ -532,10 +741,10 @@ class ApiService {
 
       return response.statusCode == 200;
     } on ApiServiceException catch (e) {
-      print('[ApiService] Health check failed: $e');
+      _log('[ApiService] Health check failed: $e');
       return false;
     } catch (e) {
-      print('[ApiService] Health check unexpected error: $e');
+      _log('[ApiService] Health check unexpected error: $e');
       return false;
     }
   }
@@ -547,8 +756,8 @@ class ApiService {
     CalculateLimitRequest request,
   ) async {
     final url = Uri.parse('$baseUrl/calculate-limit');
-    print('[ApiService] POST $url');
-    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+    _log('[ApiService] POST $url');
+    _log('[ApiService] Request: ${jsonEncode(request.toJson())}');
 
     try {
       final response = await _postJsonWithRetry(
@@ -560,7 +769,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      print('[ApiService] Success: ${jsonEncode(data)}');
+      _log('[ApiService] Success: ${jsonEncode(data)}');
       return CalculateLimitResponse.fromJson(data);
     } on ApiServiceException catch (e) {
       throw ApiServiceException(
@@ -569,7 +778,7 @@ class ApiService {
         retryable: e.retryable,
       );
     } catch (e) {
-      print('[ApiService] Unexpected error: $e');
+      _log('[ApiService] Unexpected error: $e');
       throw ApiServiceException('Error calculating limit: $e');
     }
   }
@@ -579,8 +788,8 @@ class ApiService {
     CalculateTermsRequest request,
   ) async {
     final url = Uri.parse('$baseUrl/calculate-terms');
-    print('[ApiService] POST $url');
-    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+    _log('[ApiService] POST $url');
+    _log('[ApiService] Request: ${jsonEncode(request.toJson())}');
 
     try {
       final response = await _postJsonWithRetry(
@@ -592,7 +801,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      print('[ApiService] Success: ${jsonEncode(data)}');
+      _log('[ApiService] Success: ${jsonEncode(data)}');
       return CalculateTermsResponse.fromJson(data);
     } on ApiServiceException catch (e) {
       throw ApiServiceException(
@@ -601,8 +810,112 @@ class ApiService {
         retryable: e.retryable,
       );
     } catch (e) {
-      print('[ApiService] Unexpected error: $e');
+      _log('[ApiService] Unexpected error: $e');
       throw ApiServiceException('Error calculating terms: $e');
+    }
+  }
+
+  /// Student path step 1: score only.
+  Future<StudentCreditScoreResponse> calculateStudentCreditScore(
+    StudentScoringRequest request,
+  ) async {
+    final path = '/student/credit-score';
+    final url = Uri.parse('$baseUrl$path');
+    _log('[ApiService] POST $url');
+    _log('[ApiService] Request: ${jsonEncode(request.toJson())}');
+
+    try {
+      final response = await _postJsonWithRetry(
+        url,
+        request.toJson(),
+        includeAuthToken: true,
+        includeApiKey: true,
+        operationName: 'student-credit-score',
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      _log('[ApiService] Success: ${jsonEncode(data)}');
+      return StudentCreditScoreResponse.fromJson(data);
+    } on ApiServiceException catch (e) {
+      final fallbackUrl = _studentFallbackUri(path);
+      if (_shouldFallbackForStudentGateway403(e) && fallbackUrl != null) {
+        _log(
+          '[ApiService] student-credit-score hit upstream 403 HTML at primary URL. Retrying via fallback $fallbackUrl',
+        );
+        final fallbackResponse = await _postJsonWithRetry(
+          fallbackUrl,
+          request.toJson(),
+          includeAuthToken: true,
+          includeApiKey: true,
+          operationName: 'student-credit-score-fallback',
+        );
+
+        final fallbackData =
+            jsonDecode(fallbackResponse.body) as Map<String, dynamic>;
+        _log('[ApiService] Fallback success: ${jsonEncode(fallbackData)}');
+        return StudentCreditScoreResponse.fromJson(fallbackData);
+      }
+
+      throw ApiServiceException(
+        'Error calculating student credit score: ${e.message}',
+        statusCode: e.statusCode,
+        retryable: e.retryable,
+      );
+    } catch (e) {
+      _log('[ApiService] Unexpected error: $e');
+      throw ApiServiceException('Error calculating student credit score: $e');
+    }
+  }
+
+  /// Student path step 2: score + official loan limit.
+  Future<StudentCalculateLimitResponse> calculateStudentLimit(
+    StudentScoringRequest request,
+  ) async {
+    final path = '/student/calculate-limit';
+    final url = Uri.parse('$baseUrl$path');
+    _log('[ApiService] POST $url');
+    _log('[ApiService] Request: ${jsonEncode(request.toJson())}');
+
+    try {
+      final response = await _postJsonWithRetry(
+        url,
+        request.toJson(),
+        includeAuthToken: true,
+        includeApiKey: true,
+        operationName: 'student-calculate-limit',
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      _log('[ApiService] Success: ${jsonEncode(data)}');
+      return StudentCalculateLimitResponse.fromJson(data);
+    } on ApiServiceException catch (e) {
+      final fallbackUrl = _studentFallbackUri(path);
+      if (_shouldFallbackForStudentGateway403(e) && fallbackUrl != null) {
+        _log(
+          '[ApiService] student-calculate-limit hit upstream 403 HTML at primary URL. Retrying via fallback $fallbackUrl',
+        );
+        final fallbackResponse = await _postJsonWithRetry(
+          fallbackUrl,
+          request.toJson(),
+          includeAuthToken: true,
+          includeApiKey: true,
+          operationName: 'student-calculate-limit-fallback',
+        );
+
+        final fallbackData =
+            jsonDecode(fallbackResponse.body) as Map<String, dynamic>;
+        _log('[ApiService] Fallback success: ${jsonEncode(fallbackData)}');
+        return StudentCalculateLimitResponse.fromJson(fallbackData);
+      }
+
+      throw ApiServiceException(
+        'Error calculating student limit: ${e.message}',
+        statusCode: e.statusCode,
+        retryable: e.retryable,
+      );
+    } catch (e) {
+      _log('[ApiService] Unexpected error: $e');
+      throw ApiServiceException('Error calculating student limit: $e');
     }
   }
 
@@ -651,8 +964,8 @@ class ApiService {
   ) async {
     const endpoint = '/validate-bank-account';
     final url = Uri.parse('$baseUrl$endpoint');
-    print('[ApiService] POST $url');
-    print('[ApiService] Request: ${jsonEncode(request.toJson())}');
+    _log('[ApiService] POST $url');
+    _log('[ApiService] Request: ${jsonEncode(request.toJson())}');
 
     try {
       final response = await _postJsonWithRetry(
@@ -664,13 +977,13 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      print('[ApiService] Success: ${jsonEncode(data)}');
+      _log('[ApiService] Success: ${jsonEncode(data)}');
       return BankAccountValidationResponse.fromJson(data);
     } on ApiServiceException catch (e) {
       if (e.statusCode == 400) {
         final data = e.message.isNotEmpty ? _tryDecodeJsonMap(e.message) : null;
         final message = data?['message'] as String? ?? 'Invalid bank account information';
-        print('[ApiService] Validation failed: $message');
+        _log('[ApiService] Validation failed: $message');
         throw BankAccountValidationException(
           message,
           code: 'INVALID_ACCOUNT',
@@ -681,7 +994,7 @@ class ApiService {
       if (e.statusCode == 404) {
         final data = e.message.isNotEmpty ? _tryDecodeJsonMap(e.message) : null;
         final message = data?['message'] as String? ?? 'Bank account not found';
-        print('[ApiService] Account not found: $message');
+        _log('[ApiService] Account not found: $message');
         throw BankAccountValidationException(
           message,
           code: 'ACCOUNT_NOT_FOUND',
@@ -691,7 +1004,7 @@ class ApiService {
 
       throw Exception('Failed to validate bank account: ${e.message}');
     } catch (e) {
-      print('[ApiService] Unexpected error: $e');
+      _log('[ApiService] Unexpected error: $e');
       throw Exception('Error validating bank account: $e');
     }
   }

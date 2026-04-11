@@ -40,7 +40,7 @@ class StudentStepCResultPage extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE7EBFF)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2D2AA8).withOpacity(0.06),
+                  color: const Color(0xFF2D2AA8).withValues(alpha: 0.06),
                   blurRadius: 14,
                   offset: const Offset(0, 8),
                 ),
@@ -89,6 +89,22 @@ class StudentStepCResultPage extends StatelessWidget {
                   value: vm.riskLevel,
                 ),
                 const SizedBox(height: 8),
+                if ((vm.decisionBand ?? '').isNotEmpty) ...[
+                  _InfoRow(
+                    title: context.t('Decision band', 'Nhóm quyết định'),
+                    value: vm.decisionBand!,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (vm.manualReview != null) ...[
+                  _InfoRow(
+                    title: context.t('Manual review', 'Cần thẩm định thủ công'),
+                    value: vm.manualReview == true
+                        ? context.t('Required', 'Có')
+                        : context.t('Not required', 'Không'),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 _InfoRow(
                   title: context.t('Status', 'Trạng thái'),
                   value: approved
@@ -99,6 +115,26 @@ class StudentStepCResultPage extends StatelessWidget {
                       : const Color(0xFFC62828),
                 ),
                 const SizedBox(height: 18),
+                if ((vm.apiMessage ?? '').isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F7FF),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE1E6FF)),
+                    ),
+                    child: Text(
+                      vm.apiMessage!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF30374A),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
                 if (!approved) _buildImproveTips(score),
                 if (approved) _buildApprovedTips(score),
                 const SizedBox(height: 18),
