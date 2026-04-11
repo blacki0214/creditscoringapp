@@ -7,7 +7,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Ready-FFCA28?logo=firebase&logoColor=black)
-![LightGBM](https://img.shields.io/badge/LightGBM-ML-02D9F7)
+![XGBoost](https://img.shields.io/badge/XGBoost-ML-EC4E20)
 ![GCP](https://img.shields.io/badge/GCP-Cloud%20Run-4285F4?logo=google-cloud&logoColor=white)
 ![Material Design](https://img.shields.io/badge/Material-Design%203-757575?logo=material-design&logoColor=white)
 
@@ -25,6 +25,7 @@
 - [Technology Stack](#-technology-stack)
 - [Getting Started](#-getting-started)
 - [API Integration](#-api-integration)
+- [Student Loan Flow](#-student-loan-flow)
 - [Security Features](#-security-features)
 - [Data Pipeline](#-data-pipeline)
 - [Firebase Cloud Functions](#-firebase-cloud-functions)
@@ -35,11 +36,11 @@
 
 ## 🎯 Overview
 
-This credit scoring application provides Vietnamese users with instant credit limit calculations and loan terms based on machine learning models. The app integrates with a Python-based **Credit Scoring API v2.0** (hosted on **Google Cloud Run**) that uses **LightGBM** for risk assessment, with credit score calibration tuned for the Vietnamese market.
+This credit scoring application provides Vietnamese users with instant credit limit calculations and loan terms based on machine learning models. The app integrates with a Python-based **Credit Scoring API v2.0** (hosted on **Google Cloud Run**) that uses **XGBoost** for risk assessment, with credit score calibration tuned for the Vietnamese market.
 
 ### Key Capabilities
 
-- 📊 **ML-Powered Credit Scoring**: LightGBM model with non-linear score calibration (300–850 range)
+- 📊 **ML-Powered Credit Scoring**: XGBoost model with non-linear score calibration (300–850 range)
 - 💰 **Instant Loan Limit Calculation**: Real-time credit limit in VND with risk-based approval
 - 📱 **6-Step Loan Application**: End-to-end application with eKYC, employment info, banking details
 - 🔐 **Secure Authentication**: Email/password, Google OAuth, Phone OTP, and biometric login
@@ -115,7 +116,7 @@ This credit scoring application provides Vietnamese users with instant credit li
 - 👥 References (optional)
 
 **Step 4 — Loan Offer Calculator** *(API v2.0 two-step flow)*
-- 🤖 **Step 4a**: `POST /api/calculate-limit` — LightGBM scores the profile, returns credit score + loan limit
+- 🤖 **Step 4a**: `POST /api/calculate-limit` — XGBoost scores the profile, returns credit score + loan limit
 - 🏦 **Step 4b**: `POST /api/calculate-terms` — Calculates interest rate, term, monthly payment for chosen amount
 - 🎯 Choose loan purpose (Vehicle, Education, Home Improvement, Business, Personal)
 - 💰 Enter desired loan amount (capped at approved limit)
@@ -163,7 +164,12 @@ lib/
 │   ├── step3_references_info.dart
 │   ├── step4_offer_calculator.dart
 │   ├── step5_contractreview.dart
-│   └── step6_disbursement.dart
+│   ├── step6_disbursement.dart
+│   ├── student_hub_page.dart
+│   ├── student_verification_gate_page.dart
+│   ├── student_step_1_profile.dart
+│   ├── student_step_2_financial.dart
+│   └── student_step_3_result.dart
 ├── models/          # Data models (User, Loan, Notification, BankAccount)
 ├── onboarding/      # First-run onboarding screens
 ├── services/        # Firebase, API, and notification services
@@ -223,7 +229,7 @@ lib/
 | Category | Technology |
 |----------|------------|
 | ⚡ **Framework** | Flask |
-| 🤖 **ML Model** | LightGBM Classifier |
+| 🤖 **ML Model** | XGBoost Classifier |
 | 📊 **Data Processing** | Pandas, NumPy |
 | 🏦 **Score Calibration** | Non-linear probability-to-score mapping (300–850) |
 | 🚧 **Hard Caps** | Business rules for defaults, age, income (Vietnamese market) |
@@ -494,6 +500,34 @@ If configured, the app also sends `X-API-Key` from secure storage or `.env`.
 
 ---
 
+## 🎓 Student Loan Flow
+
+The app includes a dedicated student loan pathway under the Student tab.
+
+### Student Path (3 Steps)
+
+1. **Verification Gate**
+  - Student email/domain verification and document upload checks.
+2. **Step 1 — Profile**
+  - Captures student profile attributes (school, major, academic info).
+3. **Step 2 — Financial**
+  - Captures financial indicators and computes student scoring outcomes.
+4. **Step 3 — Result**
+  - Displays student credit score and official student loan limit.
+
+### Student API Endpoints
+
+- **`POST /api/student/credit-score`**
+  - Step 1 scoring-only endpoint for student profiles.
+- **`POST /api/student/calculate-limit`**
+  - Step 2 endpoint returning score + official student limit.
+
+All student scoring calls use the same auth model as the main flow:
+- `Authorization: Bearer <firebase-id-token>`
+- Optional `X-API-Key` when configured
+
+---
+
 ## 🔒 Security Features
 
 ### Authentication
@@ -526,7 +560,7 @@ The deployed `firestore.rules` enforces:
 
 | Component | Details |
 |-----------|---------|
-| **Algorithm** | LightGBM Classifier |
+| **Algorithm** | XGBoost Classifier |
 | **Features** | 64 engineered features |
 | **Score Range** | 300–850 (non-linear calibration) |
 | **Market Tuning** | Hard caps for Vietnamese risk factors (defaults, low income, age) |
@@ -536,19 +570,19 @@ The deployed `firestore.rules` enforces:
 
 ### Score Calibration Logic
 
-Raw LightGBM probability is mapped to the 300–850 credit score range using a **non-linear transformation** so that the score distribution is realistic for the Vietnamese lending market:
+Raw XGBoost probability is mapped to the 300–850 credit score range using a **non-linear transformation** so that the score distribution is realistic for the Vietnamese lending market:
 - High-risk profiles (defaults, very low income) → hard-capped at lower bands
 - Medium-risk → scores in 580–680 range
 - Low-risk → scores in 720–850 range
 
-### Data Dictionaries
+### Integration References
 
-Comprehensive feature documentation in `docs/data-dictionaries/`:
+Available integration docs in this repository:
 
-- 📄 `application_train_features.md`
-- 📄 `bureau_features.md`
-- 📄 `credit_card_balance_features.md`
-- 📄 `installments_payments_features.md`
+- 📄 `docs/APP_INTEGRATION_GUIDE_VI.md`
+- 📄 `docs/VNPT_SETUP.md`
+- 📄 `docs/api_vnpt_docs.pdf`
+- 📁 `docs/diagrams/`
 
 ---
 
@@ -628,7 +662,10 @@ Deployed to **`asia-southeast1`** using Firebase Functions v2.
 | Document | Location |
 |----------|----------|
 | **README** | This file |
-| **Data Dictionaries** | `docs/data-dictionaries/` |
+| **App Integration Guide** | `docs/APP_INTEGRATION_GUIDE_VI.md` |
+| **VNPT Setup Guide** | `docs/VNPT_SETUP.md` |
+| **VNPT API Reference (PDF)** | `docs/api_vnpt_docs.pdf` |
+| **Architecture Diagrams** | `docs/diagrams/` |
 | **Firestore Rules** | `firestore.rules` |
 | **Storage Rules** | `storage.rules` |
 | **Cloud Functions** | `functions/index.js` |
@@ -648,7 +685,7 @@ Proprietary — All rights reserved
 
 ---
 
-**Last Updated**: March 2026
+**Last Updated**: April 2026
 **Version**: 2.0
 **Status**: Active Development
 **API**: v2.0 on Google Cloud Run
