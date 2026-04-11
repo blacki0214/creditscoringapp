@@ -442,7 +442,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
         },
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
           filled: true,
           fillColor: const Color(0xFFF8FAFC),
           border: OutlineInputBorder(
@@ -462,7 +462,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),
@@ -524,7 +524,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
               return Theme(
                 data: Theme.of(context).copyWith(
                   colorScheme: const ColorScheme.light(
-                    primary: Color(0xFF4C40F7),
+                    primary: Color(0xFF4D4AF9),
                   ),
                 ),
                 child: child!,
@@ -547,10 +547,10 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
         },
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF4C40F7)),
+          prefixIcon: Icon(icon, color: const Color(0xFF4D4AF9)),
           suffixIcon: const Icon(
             Icons.calendar_today,
-            color: Color(0xFF4C40F7),
+            color: Color(0xFF4D4AF9),
           ),
           filled: true,
           fillColor: const Color(0xFFF8FAFC),
@@ -571,7 +571,7 @@ class _Step3PersonalInfoPageState extends State<Step3PersonalInfoPage> {
             borderSide: BorderSide(
               color: _fieldErrors[fieldKey] != null
                   ? const Color(0xFFEF5350)
-                  : const Color(0xFF4C40F7),
+                  : const Color(0xFF4D4AF9),
               width: 2,
             ),
           ),

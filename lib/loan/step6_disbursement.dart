@@ -7,7 +7,16 @@ import '../services/local_storage_service.dart';
 import '../utils/app_localization.dart';
 
 class Step6DisbursementPage extends StatefulWidget {
-  const Step6DisbursementPage({super.key});
+  const Step6DisbursementPage({
+    super.key,
+    this.restrictToAcb = false,
+    this.lockedAccountHolder,
+    this.lockedAccountNumber,
+  });
+
+  final bool restrictToAcb;
+  final String? lockedAccountHolder;
+  final String? lockedAccountNumber;
 
   @override
   State<Step6DisbursementPage> createState() => _Step6DisbursementPageState();
@@ -30,11 +39,27 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.lockedAccountHolder != null) {
+      _accountHolderController.text = widget.lockedAccountHolder!;
+    }
+    if (widget.lockedAccountNumber != null) {
+      _bankAccountController.text = widget.lockedAccountNumber!;
+    }
+
     // Load banks on init
     Future.microtask(() {
-      context.read<LoanViewModel>().loadBanks().catchError((e) {
-        print('[Step6] Error loading banks: $e');
-      });
+      final vm = context.read<LoanViewModel>();
+      vm
+          .loadBanks()
+          .then((_) {
+            if (!widget.restrictToAcb) return;
+            if (vm.banks.any((bank) => bank.bankCode == 'ACB')) {
+              vm.updateSelectedBank('ACB');
+            }
+          })
+          .catchError((e) {
+            print('[Step6] Error loading banks: $e');
+          });
     });
   }
 
@@ -94,8 +119,8 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
     // Call validation API
     final isValid = await viewModel.validateBankAccount(
       bankCode: viewModel.selectedBankCode!,
-      accountNumber: _bankAccountController.text,
-      accountHolder: _accountHolderController.text,
+      accountNumber: _bankAccountController.text.trim(),
+      accountHolder: _accountHolderController.text.trim(),
       branchCode: viewModel.selectedBranchCode,
     );
 
@@ -255,16 +280,24 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
         ),
       ),
       items: viewModel.banks.map((bank) {
+        final isEnabled = !widget.restrictToAcb || bank.bankCode == 'ACB';
         return DropdownMenuItem<String>(
           value: bank.bankCode,
+          enabled: isEnabled,
           child: Text(
             '${bank.bankCode} - ${bank.bankName}',
             overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isEnabled ? const Color(0xFF1A1F3F) : Colors.grey.shade500,
+            ),
           ),
         );
       }).toList(),
       onChanged: (value) {
         if (value != null) {
+          if (widget.restrictToAcb && value != 'ACB') {
+            return;
+          }
           viewModel.updateSelectedBank(value);
           setState(() {
             _bankAccountValidated = false; // Reset validation
@@ -274,6 +307,12 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
       validator: (value) {
         if (value == null || value.isEmpty) {
           return context.t('Please select a bank', 'Vui lòng chọn ngân hàng');
+        }
+        if (widget.restrictToAcb && value != 'ACB') {
+          return context.t(
+            'Only ACB is available in this flow',
+            'Chỉ hỗ trợ ACB trong luồng này',
+          );
         }
         return null;
       },
@@ -343,6 +382,7 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
   Widget _buildAccountHolderField() {
     return TextFormField(
       controller: _accountHolderController,
+      readOnly: widget.restrictToAcb,
       decoration: InputDecoration(
         labelText: context.t('Account Holder Name*', 'Tên chủ tài khoản*'),
         hintText: context.t(
@@ -644,6 +684,30 @@ class _Step6DisbursementPageState extends State<Step6DisbursementPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      if (widget.restrictToAcb) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF8E1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFFD54F)),
+                          ),
+                          child: Text(
+                            context.t(
+                              'Student flow: only ACB is available for disbursement in this test setup.',
+                              'Luồng sinh viên: chỉ hỗ trợ ngân hàng ACB cho giải ngân trong môi trường kiểm thử này.',
+                            ),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF694D00),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
 
                       // Bank dropdown
                       if (loanViewModel.isLoadingBanks)

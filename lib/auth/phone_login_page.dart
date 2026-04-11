@@ -141,7 +141,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           width: 2,
                         ),
                       ),
@@ -157,7 +157,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                     child: ElevatedButton(
                       onPressed: viewModel.isLoading ? null : _sendOTP,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
+                        backgroundColor: const Color(0xFF4D4AF9),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),

@@ -64,7 +64,7 @@ class _AddPasswordDialogState extends State<AddPasswordDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Row(
         children: [
-          Icon(Icons.lock_outline, color: Color(0xFF4C40F7)),
+          Icon(Icons.lock_outline, color: Color(0xFF4D4AF9)),
           SizedBox(width: 8),
           Text('Add Password'),
         ],
@@ -180,7 +180,7 @@ class _AddPasswordDialogState extends State<AddPasswordDialog> {
         ElevatedButton(
           onPressed: viewModel.isLoading ? null : _submitPassword,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4C40F7),
+            backgroundColor: const Color(0xFF4D4AF9),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

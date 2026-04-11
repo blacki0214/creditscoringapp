@@ -145,7 +145,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
+                          backgroundColor: const Color(0xFF4D4AF9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -178,7 +178,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
+                          backgroundColor: const Color(0xFF4D4AF9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -212,7 +212,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           width: 2,
                         ),
                         shape: RoundedRectangleBorder(
@@ -224,7 +224,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                         ),
                       ),
                     ),
@@ -487,7 +487,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
           width: 40,
           height: 40,
           decoration: const BoxDecoration(
-            color: Color(0xFF4C40F7),
+            color: Color(0xFF4D4AF9),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -524,7 +524,7 @@ class _ApprovalStatusPageState extends State<ApprovalStatusPage> {
                 timestamp,
                 style: TextStyle(
                   fontSize: 11,
-                  color: const Color(0xFF4C40F7),
+                  color: const Color(0xFF4D4AF9),
                   fontWeight: FontWeight.w500,
                 ),
               ),

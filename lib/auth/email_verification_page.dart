@@ -90,13 +90,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4C40F7).withOpacity(0.1),
+                  color: const Color(0xFF4D4AF9).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.email_outlined,
                   size: 80,
-                  color: Color(0xFF4C40F7),
+                  color: Color(0xFF4D4AF9),
                 ),
               ),
               const SizedBox(height: 32),
@@ -132,7 +132,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 child: ElevatedButton(
                   onPressed: _isChecking ? null : _checkVerification,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -162,7 +162,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                     'Gửi lại email xác thực',
                   ),
                   style: const TextStyle(
-                    color: Color(0xFF4C40F7),
+                    color: Color(0xFF4D4AF9),
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),

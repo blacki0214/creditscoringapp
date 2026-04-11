@@ -18,7 +18,7 @@ class _SecurityPageState extends State<SecurityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
@@ -165,7 +165,7 @@ class _SecurityPageState extends State<SecurityPage> {
     return Text(
       title,
       style: const TextStyle(
-        color: Colors.white70,
+        color: Color(0xFF334155),
         fontSize: 14,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
@@ -182,8 +182,9 @@ class _SecurityPageState extends State<SecurityPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF252B4C),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -199,14 +200,14 @@ class _SecurityPageState extends State<SecurityPage> {
         title: Text(
           title,
           style: const TextStyle(
-            color: Colors.white,
+            color: Color(0xFF1E293B),
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: Colors.white60, fontSize: 13),
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
         ),
         trailing: Switch(
           value: value,
@@ -226,8 +227,9 @@ class _SecurityPageState extends State<SecurityPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF252B4C),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -251,18 +253,20 @@ class _SecurityPageState extends State<SecurityPage> {
         title: Text(
           title,
           style: TextStyle(
-            color: isDestructive ? const Color(0xFFFF5252) : Colors.white,
+            color: isDestructive
+                ? const Color(0xFFFF5252)
+                : const Color(0xFF1E293B),
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: Colors.white60, fontSize: 13),
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
-          color: Colors.white30,
+          color: const Color(0xFF94A3B8),
           size: 16,
         ),
         onTap: onTap,
@@ -274,12 +278,9 @@ class _SecurityPageState extends State<SecurityPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4D4AF9).withOpacity(0.1),
+        color: const Color(0xFFEEF2FF),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF4D4AF9).withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
       ),
       child: Row(
         children: [
@@ -291,8 +292,8 @@ class _SecurityPageState extends State<SecurityPage> {
                 'We recommend enabling two-factor authentication and biometric login for maximum security.',
                 'Chúng tôi khuyến nghị bật xác thực hai lớp và đăng nhập sinh trắc học để bảo mật tối đa.',
               ),
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+              style: const TextStyle(
+                color: Color(0xFF334155),
                 fontSize: 13,
                 height: 1.4,
               ),

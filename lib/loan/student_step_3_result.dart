@@ -3,8 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/app_localization.dart';
+import '../viewmodels/loan_viewmodel.dart';
 import '../viewmodels/student_loan_viewmodel.dart';
-import 'step5_contractreview.dart';
+import 'step4_offer_calculator.dart';
 
 class StudentStepCResultPage extends StatelessWidget {
   const StudentStepCResultPage({super.key});
@@ -20,7 +21,9 @@ class StudentStepCResultPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FF),
       appBar: AppBar(
-        title: Text(context.t('Student Path - Step 3', 'Vay dành cho sinh viên - Bước 3')),
+        title: Text(
+          context.t('Student Path - Step 3', 'Vay dành cho sinh viên - Bước 3'),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1A1F3F),
         elevation: 0,
@@ -81,7 +84,10 @@ class StudentStepCResultPage extends StatelessWidget {
                       : context.t('Not eligible yet', 'Chưa đủ điều kiện'),
                 ),
                 const SizedBox(height: 8),
-                _InfoRow(title: context.t('Risk', 'Rủi ro'), value: vm.riskLevel),
+                _InfoRow(
+                  title: context.t('Risk', 'Rủi ro'),
+                  value: vm.riskLevel,
+                ),
                 const SizedBox(height: 8),
                 if ((vm.decisionBand ?? '').isNotEmpty) ...[
                   _InfoRow(
@@ -137,14 +143,19 @@ class StudentStepCResultPage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: approved
                         ? () {
+                            context
+                                .read<LoanViewModel>()
+                                .initializeStudentOfferFlow(
+                                  creditScore: score,
+                                  loanLimitVnd: limit,
+                                  riskLevel: vm.riskLevel,
+                                );
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => Step5ContractReviewPage(
-                                  loanAmount: limit.toDouble(),
-                                  tenor: 12,
-                                  downPayment: 0,
-                                  loanPurpose: 'EDUCATION',
+                                builder: (_) => const Step4OfferCalculatorPage(
+                                  isStudentFlow: true,
                                 ),
                               ),
                             );
@@ -155,7 +166,12 @@ class StudentStepCResultPage extends StatelessWidget {
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(52),
                     ),
-                    child: Text(context.t('Choose term and continue', 'Chọn kỳ hạn và tiếp tục')),
+                    child: Text(
+                      context.t(
+                        'Choose term and continue',
+                        'Chọn kỳ hạn và tiếp tục',
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -267,11 +283,7 @@ class _TipsBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final isVi = context.isVietnamese;
     final localizedTips = isVi
-        ? tips
-            .map(
-              (tip) => _tipMap[tip] ?? tip,
-            )
-            .toList()
+        ? tips.map((tip) => _tipMap[tip] ?? tip).toList()
         : tips;
     final localizedTitle = isVi ? (_titleMap[title] ?? title) : title;
 
@@ -313,18 +325,18 @@ class _TipsBox extends StatelessWidget {
 
   static const Map<String, String> _tipMap = {
     'Declare income and support sources to increase score.':
-      'Khai báo thu nhập và nguồn hỗ trợ để tăng điểm.',
+        'Khai báo thu nhập và nguồn hỗ trợ để tăng điểm.',
     'Enable savings if you have an emergency buffer.':
-      'Bật tùy chọn tiết kiệm nếu bạn có quỹ dự phòng.',
+        'Bật tùy chọn tiết kiệm nếu bạn có quỹ dự phòng.',
     'Update your latest GPA if your result improved.':
-      'Cập nhật GPA mới nhất nếu kết quả học tập đã tốt hơn.',
+        'Cập nhật GPA mới nhất nếu kết quả học tập đã tốt hơn.',
     'Below 650: add more details and retry the form.':
-      'Dưới 650: bổ sung thông tin và thử lại.',
+        'Dưới 650: bổ sung thông tin và thử lại.',
     '720+: you may reach the maximum 10M limit.':
-      '720+: có thể đạt hạn mức tối đa 10M.',
+        '720+: có thể đạt hạn mức tối đa 10M.',
     '650-680: typical approved limit is around 5M-6M.':
-      '650-680: hạn mức thường nằm trong 5M-6M.',
+        '650-680: hạn mức thường nằm trong 5M-6M.',
     'Verification documents may be requested before disbursement.':
-      'Có thể yêu cầu tài liệu xác minh trước giải ngân.',
+        'Có thể yêu cầu tài liệu xác minh trước giải ngân.',
   };
 }

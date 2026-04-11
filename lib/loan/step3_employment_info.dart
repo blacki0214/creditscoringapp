@@ -627,7 +627,7 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                         elevation: 4,
                         padding: const EdgeInsets.symmetric(
                           vertical: 14,
-                          horizontal: 16,
+                          horizontal: 12,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -636,18 +636,24 @@ class _Step3EmploymentInfoPageState extends State<Step3EmploymentInfoPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            context.t(
-                              'Next: Contact References',
-                              'Tiếp: Liên hệ tham chiếu',
-                            ),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
+                          Flexible(
+                            child: Text(
+                              context.t(
+                                'Next: Contact References',
+                                'Tiếp: Liên hệ tham chiếu',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           const Icon(Icons.arrow_forward, size: 18),
                         ],
                       ),
