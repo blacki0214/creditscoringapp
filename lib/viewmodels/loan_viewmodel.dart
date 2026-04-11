@@ -41,6 +41,7 @@ class LoanViewModel extends ChangeNotifier {
   bool _step2Completed = false;
   bool _step3Completed = false;
   bool _step4Completed = false;
+  bool _step5Completed = false;
   bool _step6Completed = false;
   bool _isProcessing = false;
 
@@ -106,6 +107,7 @@ class LoanViewModel extends ChangeNotifier {
   bool get step2Completed => _step2Completed;
   bool get step3Completed => _step3Completed;
   bool get step4Completed => _step4Completed;
+  bool get step5Completed => _step5Completed;
   bool get step6Completed => _step6Completed;
   bool get isProcessing => _isProcessing;
   Map<String, dynamic>? get currentOffer => _currentOffer;
@@ -185,9 +187,8 @@ class LoanViewModel extends ChangeNotifier {
     if (!_step2Completed) return 2;
     if (!_step3Completed) return 3;
     if (!_step4Completed) return 4;
-    if (!_step6Completed) {
-      return 6; // Note: Step 5 is contract review, Step 6 is disbursement
-    }
+    if (!_step5Completed) return 5;
+    if (!_step6Completed) return 6;
     return 7; // All steps completed
   }
 
@@ -286,17 +287,24 @@ class LoanViewModel extends ChangeNotifier {
       _step2Completed = false;
       _step3Completed = false;
       _step4Completed = false;
+      _step5Completed = false;
       _step6Completed = false;
       _currentOffer = null;
 
       switch (status) {
         case 'processing':
+        case 'pending':
+        case 'in_progress':
           _applicationStatus = ApplicationStatus.processing;
           break;
         case 'approved':
+        case 'scored':
+        case 'offer_ready':
           _applicationStatus = ApplicationStatus.scored;
           break;
         case 'rejected':
+        case 'declined':
+        case 'failed':
           _applicationStatus = ApplicationStatus.rejected;
           break;
         case 'completed':
@@ -321,6 +329,7 @@ class LoanViewModel extends ChangeNotifier {
         // Backward-compat: old records may mark step3Completed=true right after scoring.
         _step3Completed = rawStep3Completed && hasStep3Data;
         _step4Completed = latestApplication['step4Completed'] as bool? ?? false;
+        _step5Completed = latestApplication['step5Completed'] as bool? ?? false;
         _step6Completed = latestApplication['step6Completed'] as bool? ?? false;
       }
 
@@ -702,7 +711,8 @@ class LoanViewModel extends ChangeNotifier {
             anchorDate.month,
             anchorDate.day,
           );
-          final firstDueDate = _addMonthsSafe(normalizedAnchorDate, 1);
+          final firstDueDate = _installmentService
+              .calculateFirstDueDateFromPurchase(normalizedAnchorDate);
 
           await _installmentService.generateInstallmentsForLoan(
             userId: userId,
@@ -753,24 +763,6 @@ class LoanViewModel extends ChangeNotifier {
     return DateTime.tryParse(value.toString());
   }
 
-  DateTime _addMonthsSafe(DateTime date, int monthsToAdd) {
-    final totalMonths = (date.month - 1) + monthsToAdd;
-    final year = date.year + (totalMonths ~/ 12);
-    final month = (totalMonths % 12) + 1;
-    final day = math.min(date.day, DateTime(year, month + 1, 0).day);
-
-    return DateTime(
-      year,
-      month,
-      day,
-      date.hour,
-      date.minute,
-      date.second,
-      date.millisecond,
-      date.microsecond,
-    );
-  }
-
   // Backward compatibility for older call sites.
   Future<void> completeStep5({
     required String signature,
@@ -782,6 +774,9 @@ class LoanViewModel extends ChangeNotifier {
     final applicationId = _currentApplicationId;
     final offerId = _currentOfferId;
     if (userId == null || applicationId == null || offerId == null) return;
+
+    final wasCompleted = _step5Completed;
+    _step5Completed = true;
 
     final wasAccepted = _currentOffer?['accepted'] == true;
 
@@ -804,7 +799,7 @@ class LoanViewModel extends ChangeNotifier {
         _currentOffer!['acceptedAt'] = DateTime.now().toIso8601String();
       }
 
-      if (!wasAccepted) {
+      if (!wasCompleted) {
         await _notifyFlowMilestone(
           type: 'step5_completed',
           title: 'Step 5 Completed',
@@ -874,6 +869,43 @@ class LoanViewModel extends ChangeNotifier {
 
       notifyListeners();
     }
+  }
+
+  // Bootstrap shared Step 4-6 flow using student scoring results.
+  void initializeStudentOfferFlow({
+    required int creditScore,
+    required int loanLimitVnd,
+    required String riskLevel,
+  }) {
+    _currentOffer = {
+      'id': null,
+      'applicationId': null,
+      'offerId': null,
+      'approved': loanLimitVnd > 0,
+      'accepted': false,
+      'creditScore': creditScore,
+      'loanLimitVnd': loanLimitVnd,
+      'maxAmountVnd': loanLimitVnd,
+      'loanAmountVnd': loanLimitVnd,
+      'riskLevel': riskLevel,
+      'interestRate': 15.0,
+      'loanTermMonths': 12,
+      'monthlyPaymentVnd': 0.0,
+      'totalPaymentVnd': 0.0,
+      'totalInterestVnd': 0.0,
+      'approvalMessage': loanLimitVnd > 0
+          ? 'Student pre-approved offer is ready for term selection.'
+          : 'Student profile is not eligible yet.',
+    };
+
+    loanPurpose = 'EDUCATION';
+    _step1Completed = true;
+    _step2Completed = true;
+    _step3Completed = true;
+    _step4Completed = false;
+    _step5Completed = false;
+    _step6Completed = false;
+    notifyListeners();
   }
 
   // Recalculate terms (interest rate, payments) when Step 4 parameters change.
@@ -1082,6 +1114,7 @@ class LoanViewModel extends ChangeNotifier {
       // Step 3 is completed only after the split Step 3 flow is submitted.
       _step3Completed = false;
       _step4Completed = false;
+      _step5Completed = false;
       _step6Completed = false;
       notifyListeners();
     } catch (e) {
@@ -1207,6 +1240,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = false;
     _step3Completed = false;
     _step4Completed = false;
+    _step5Completed = false;
     _step6Completed = false;
     _isProcessing = false;
     _applicationStatus = ApplicationStatus.none;
@@ -1236,6 +1270,7 @@ class LoanViewModel extends ChangeNotifier {
     _step2Completed = false;
     _step3Completed = false;
     _step4Completed = false;
+    _step5Completed = false;
     _step6Completed = false;
     _isProcessing = false;
     _applicationStatus = ApplicationStatus.none;
@@ -1523,28 +1558,38 @@ class LoanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final normalizedBankCode = bankCode.trim().toUpperCase();
+      final normalizedAccountNumber = accountNumber.trim();
+      final normalizedAccountHolder = accountHolder.trim().replaceAll(
+        RegExp(r'\s+'),
+        ' ',
+      );
+
       print('[LoanViewModel] Validating bank account...');
-      print('[LoanViewModel] Bank: $bankCode, Account: $accountNumber');
+      print(
+        '[LoanViewModel] Bank: $normalizedBankCode, Account: $normalizedAccountNumber',
+      );
 
       // Check test accounts first (TEST MODE)
       final bankService = BankService();
       if (BankService.TEST_MODE) {
-        final isTestAccount = bankService.validateTestAccount(
-          bankCode: bankCode,
-          accountNumber: accountNumber,
-          accountHolderName: accountHolder,
-        );
+        final canonicalHolder = normalizedAccountHolder
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^a-z0-9]'), '');
+        final isCanonicalStudentTestAccount =
+            normalizedBankCode == 'ACB' &&
+            normalizedAccountNumber.replaceAll(RegExp(r'\D'), '') ==
+                '26272829' &&
+            canonicalHolder == 'nguyenduy';
 
-        if (isTestAccount) {
-          print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
-          print('[LoanViewModel] Account holder: $accountHolder');
-
-          // Create a mock success response for test account
+        if (isCanonicalStudentTestAccount) {
           _bankValidationResult = BankAccountValidationResponse(
             valid: true,
-            accountHolderName: accountHolder,
-            bankName: bankService.getBankByCode(bankCode)?.bankName ?? bankCode,
-            bankCode: bankCode,
+            accountHolderName: normalizedAccountHolder,
+            bankName:
+                bankService.getBankByCode(normalizedBankCode)?.bankName ??
+                normalizedBankCode,
+            bankCode: normalizedBankCode,
             status: 'active',
             message: 'Account verified successfully (TEST MODE)',
             accountType: 'savings',
@@ -1555,16 +1600,50 @@ class LoanViewModel extends ChangeNotifier {
           notifyListeners();
           return true;
         }
-        print(
-          '[LoanViewModel] Test mode enabled but account not in test list, calling API...',
+
+        final isTestAccount = bankService.validateTestAccount(
+          bankCode: normalizedBankCode,
+          accountNumber: normalizedAccountNumber,
+          accountHolderName: normalizedAccountHolder,
         );
+
+        if (isTestAccount) {
+          print('[LoanViewModel] ✓ Test account matched! (TEST MODE ENABLED)');
+          print('[LoanViewModel] Account holder: $normalizedAccountHolder');
+
+          // Create a mock success response for test account
+          _bankValidationResult = BankAccountValidationResponse(
+            valid: true,
+            accountHolderName: normalizedAccountHolder,
+            bankName:
+                bankService.getBankByCode(normalizedBankCode)?.bankName ??
+                normalizedBankCode,
+            bankCode: normalizedBankCode,
+            status: 'active',
+            message: 'Account verified successfully (TEST MODE)',
+            accountType: 'savings',
+            validatedAt: DateTime.now(),
+          );
+
+          _isValidatingAccount = false;
+          notifyListeners();
+          return true;
+        }
+        _bankAccountValidationError =
+            'Test account not found. For ACB use Nguyen Duy / 26272829.';
+        print(
+          '[LoanViewModel] Test mode enabled and no local test account matched. Skipping API fallback.',
+        );
+        _isValidatingAccount = false;
+        notifyListeners();
+        return false;
       }
 
       // If not a test account or test mode disabled, call the real API
       final request = BankAccountValidationRequest(
-        bankCode: bankCode,
-        accountNumber: accountNumber,
-        accountHolder: accountHolder,
+        bankCode: normalizedBankCode,
+        accountNumber: normalizedAccountNumber,
+        accountHolder: normalizedAccountHolder,
         branchCode: branchCode,
       );
 

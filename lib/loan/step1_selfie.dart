@@ -201,7 +201,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF4C40F7),
+                            color: const Color(0xFF4D4AF9),
                             width: 2,
                           ),
                         ),
@@ -214,7 +214,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                               Icon(
                                 Icons.camera_alt,
                                 size: 80,
-                                color: const Color(0xFF4C40F7),
+                                color: const Color(0xFF4D4AF9),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -242,7 +242,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             border: Border.all(
                               color: faceMatchData?.isMatch == true
                                   ? const Color(0xFF4CAF50)
-                                  : const Color(0xFF4C40F7),
+                                  : const Color(0xFF4D4AF9),
                               width: 2,
                             ),
                           ),
@@ -373,7 +373,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           width: 50,
                           height: 50,
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4D4AF9)),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -397,7 +397,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                           height: 80,
                           decoration: BoxDecoration(
                             color: imageData != null
-                                ? const Color(0xFF4C40F7)
+                                ? const Color(0xFF4D4AF9)
                                 : Colors.grey.shade300,
                             shape: BoxShape.circle,
                           ),
@@ -417,7 +417,7 @@ class _Step1SelfiePageState extends State<Step1SelfiePage> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: imageData != null
-                                ? const Color(0xFF4C40F7)
+                                ? const Color(0xFF4D4AF9)
                                 : Colors.grey.shade400,
                           ),
                         ),

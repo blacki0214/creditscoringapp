@@ -262,7 +262,7 @@ class _SignupPageState extends State<SignupPage> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             width: 2,
                           ),
                         ),
@@ -307,7 +307,7 @@ class _SignupPageState extends State<SignupPage> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             width: 2,
                           ),
                         ),
@@ -350,7 +350,7 @@ class _SignupPageState extends State<SignupPage> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             width: 2,
                           ),
                         ),
@@ -365,7 +365,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: ElevatedButton(
                         onPressed: viewModel.isLoading ? null : _continueToNextStep,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
+                          backgroundColor: const Color(0xFF4D4AF9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -408,7 +408,7 @@ class _SignupPageState extends State<SignupPage> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             width: 2,
                           ),
                         ),
@@ -423,7 +423,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: ElevatedButton(
                         onPressed: viewModel.isLoading ? null : _continueToNextStep,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
+                          backgroundColor: const Color(0xFF4D4AF9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -449,7 +449,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: Text(
                         context.t('Skip', 'Bỏ qua'),
                         style: TextStyle(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
@@ -485,7 +485,7 @@ class _SignupPageState extends State<SignupPage> {
                         child: Text(
                           context.t('Choose from gallery', 'Chọn từ thư viện'),
                           style: TextStyle(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -510,7 +510,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: ElevatedButton(
                         onPressed: viewModel.isLoading ? null : _completeSignup,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4C40F7),
+                          backgroundColor: const Color(0xFF4D4AF9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -534,7 +534,7 @@ class _SignupPageState extends State<SignupPage> {
                         child: Text(
                           context.t('Skip', 'Bỏ qua'),
                           style: TextStyle(
-                            color: Color(0xFF4C40F7),
+                            color: Color(0xFF4D4AF9),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -565,7 +565,7 @@ class _SignupPageState extends State<SignupPage> {
                           child: Text(
                             context.t('Sign in', 'Đăng nhập'),
                             style: TextStyle(
-                              color: Color(0xFF4C40F7),
+                              color: Color(0xFF4D4AF9),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -613,7 +613,7 @@ class _SignupPageState extends State<SignupPage> {
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isActive ? const Color(0xFF4C40F7) : Colors.grey.shade300,
+        color: isActive ? const Color(0xFF4D4AF9) : Colors.grey.shade300,
       ),
       child: Center(
         child: Text(
@@ -631,7 +631,7 @@ class _SignupPageState extends State<SignupPage> {
     return Expanded(
       child: Container(
         height: 2,
-        color: isActive ? const Color(0xFF4C40F7) : Colors.grey.shade300,
+        color: isActive ? const Color(0xFF4D4AF9) : Colors.grey.shade300,
       ),
     );
   }

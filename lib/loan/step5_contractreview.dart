@@ -11,6 +11,7 @@ class Step5ContractReviewPage extends StatefulWidget {
   final int tenor;
   final double downPayment;
   final String loanPurpose;
+  final bool isStudentFlow;
 
   const Step5ContractReviewPage({
     super.key,
@@ -18,6 +19,7 @@ class Step5ContractReviewPage extends StatefulWidget {
     required this.tenor,
     required this.downPayment,
     required this.loanPurpose,
+    this.isStudentFlow = false,
   });
 
   @override
@@ -384,7 +386,13 @@ class _Step5ContractReviewPageState extends State<Step5ContractReviewPage> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const Step6DisbursementPage()),
+      MaterialPageRoute(
+        builder: (_) => Step6DisbursementPage(
+          restrictToAcb: widget.isStudentFlow,
+          lockedAccountHolder: widget.isStudentFlow ? 'Nguyen Duy' : null,
+          lockedAccountNumber: widget.isStudentFlow ? '26272829' : null,
+        ),
+      ),
     );
   }
 

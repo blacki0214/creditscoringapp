@@ -121,7 +121,7 @@ class NotificationModel {
       case 'loan_rejected':
         return 0xFFEF5350; // Red
       case 'credit_score_updated':
-        return 0xFF4C40F7; // Purple
+        return 0xFF4D4AF9; // Purple
       case 'payment_reminder':
         return 0xFFFFA726; // Orange
       case 'payment_success':

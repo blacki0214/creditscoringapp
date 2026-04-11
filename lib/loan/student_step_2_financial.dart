@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/app_localization.dart';
@@ -10,57 +11,73 @@ class StudentStepBFinancialPage extends StatefulWidget {
   const StudentStepBFinancialPage({super.key});
 
   @override
-  State<StudentStepBFinancialPage> createState() => _StudentStepBFinancialPageState();
+  State<StudentStepBFinancialPage> createState() =>
+      _StudentStepBFinancialPageState();
 }
 
 class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _incomeController;
   late TextEditingController _expenseController;
+  final _incomeFieldKey = GlobalKey<FormFieldState<String>>();
+  final _expenseFieldKey = GlobalKey<FormFieldState<String>>();
+  final _incomeFocusNode = FocusNode();
+  final _expenseFocusNode = FocusNode();
+  bool _didTapIncome = false;
+  bool _didTapExpense = false;
+
+  bool get _canContinueStep2 {
+    final incomeRaw = _incomeController.text.trim();
+    final expenseRaw = _expenseController.text.trim();
+    if (incomeRaw.isEmpty || expenseRaw.isEmpty) return false;
+
+    final income = double.tryParse(incomeRaw.replaceAll('.', ''));
+    final expense = double.tryParse(expenseRaw.replaceAll('.', ''));
+    if (income == null || expense == null) return false;
+
+    if (income < 0 || income > 5000000) return false;
+    if (expense < 1000000 || expense > 10000000) return false;
+
+    return true;
+  }
 
   @override
   void initState() {
     super.initState();
-    final vm = context.read<StudentLoanViewModel>();
-    _incomeController = TextEditingController(text: vm.monthlyIncome.toStringAsFixed(0));
-    _expenseController = TextEditingController(
-      text: vm.monthlyExpenses.toStringAsFixed(0),
-    );
+    _incomeController = TextEditingController();
+    _expenseController = TextEditingController();
+
+    _incomeFocusNode.addListener(() {
+      if (!_incomeFocusNode.hasFocus) {
+        _incomeFieldKey.currentState?.validate();
+      }
+    });
+    _expenseFocusNode.addListener(() {
+      if (!_expenseFocusNode.hasFocus) {
+        _expenseFieldKey.currentState?.validate();
+      }
+    });
   }
 
   @override
   void dispose() {
     _incomeController.dispose();
     _expenseController.dispose();
+    _incomeFocusNode.dispose();
+    _expenseFocusNode.dispose();
     super.dispose();
-  }
-
-  void _syncTextFields(StudentLoanViewModel vm) {
-    final incomeText = vm.monthlyIncome.toStringAsFixed(0);
-    if (_incomeController.text != incomeText) {
-      _incomeController.text = incomeText;
-      _incomeController.selection = TextSelection.collapsed(
-        offset: _incomeController.text.length,
-      );
-    }
-
-    final expenseText = vm.monthlyExpenses.toStringAsFixed(0);
-    if (_expenseController.text != expenseText) {
-      _expenseController.text = expenseText;
-      _expenseController.selection = TextSelection.collapsed(
-        offset: _expenseController.text.length,
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<StudentLoanViewModel>();
-    _syncTextFields(vm);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FF),
       appBar: AppBar(
-        title: Text(context.t('Student Path - Step 2', 'Vay dành cho sinh viên - Bước 2')),
+        title: Text(
+          context.t('Student Path - Step 2', 'Vay dành cho sinh viên - Bước 2'),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1A1F3F),
         elevation: 0,
@@ -68,196 +85,284 @@ class _StudentStepBFinancialPageState extends State<StudentStepBFinancialPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _FinancialCard(
-                title: context.t('Part-time income (optional)', 'Thu nhập làm thêm (tùy chọn)'),
-                valueText: context.t('Range: 0 - 5,000,000 VND', 'Khoảng: 0 - 5,000,000 VND'),
-                inputField: TextFormField(
-                  controller: _incomeController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    suffixText: 'VND',
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _FinancialCard(
+                  title: context.t('Part-time income', 'Thu nhập làm thêm'),
+                  valueText: context.t(
+                    'Range: 0 - 5.000.000 VND',
+                    'Khoảng: 0 - 5.000.000 VND',
                   ),
-                  onChanged: (value) {
-                    final parsed = double.tryParse(value);
-                    if (parsed == null) return;
-                    vm.updateFinancial(income: parsed.clamp(0, 5000000));
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              _FinancialCard(
-                title: context.t('Monthly expenses (optional)', 'Chi tiêu hàng tháng (tùy chọn)'),
-                valueText: context.t(
-                  'Range: 1,000,000 - 10,000,000 VND',
-                  'Khoảng: 1,000,000 - 10,000,000 VND',
-                ),
-                inputField: TextFormField(
-                  controller: _expenseController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    suffixText: 'VND',
+                  inputField: TextFormField(
+                    key: _incomeFieldKey,
+                    controller: _incomeController,
+                    focusNode: _incomeFocusNode,
+                    keyboardType: TextInputType.number,
+                    onTap: () {
+                      if (_didTapIncome) return;
+                      _didTapIncome = true;
+                      _incomeController.clear();
+                    },
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      _DotThousandsInputFormatter(),
+                    ],
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      suffixText: 'đ',
+                    ),
+                    validator: (value) {
+                      final parsed = double.tryParse(
+                        (value ?? '').replaceAll('.', ''),
+                      );
+                      if (parsed == null) {
+                        return context.t(
+                          'Please enter part-time income',
+                          'Vui lòng nhập thu nhập làm thêm',
+                        );
+                      }
+                      if (parsed < 0 || parsed > 5000000) {
+                        return context.t(
+                          'Income must be between 0 and 5.000.000',
+                          'Thu nhập phải trong khoảng 0 đến 5.000.000',
+                        );
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      setState(() {});
+                      final parsed = double.tryParse(value.replaceAll('.', ''));
+                      if (parsed == null) return;
+                      vm.updateFinancial(income: parsed.clamp(0, 5000000));
+                    },
                   ),
-                  onChanged: (value) {
-                    final parsed = double.tryParse(value);
-                    if (parsed == null) return;
-                    vm.updateFinancial(expenses: parsed.clamp(1000000, 10000000));
-                  },
                 ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE7EBFF)),
+                const SizedBox(height: 10),
+                _FinancialCard(
+                  title: context.t('Monthly expenses', 'Chi tiêu hàng tháng'),
+                  valueText: context.t(
+                    'Range: 1.000.000 - 10.000.000 VND',
+                    'Khoảng: 1.000.000 - 10.000.000 VND',
+                  ),
+                  inputField: TextFormField(
+                    key: _expenseFieldKey,
+                    controller: _expenseController,
+                    focusNode: _expenseFocusNode,
+                    keyboardType: TextInputType.number,
+                    onTap: () {
+                      if (_didTapExpense) return;
+                      _didTapExpense = true;
+                      _expenseController.clear();
+                    },
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      _DotThousandsInputFormatter(),
+                    ],
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      suffixText: 'đ',
+                    ),
+                    validator: (value) {
+                      final parsed = double.tryParse(
+                        (value ?? '').replaceAll('.', ''),
+                      );
+                      if (parsed == null) {
+                        return context.t(
+                          'Please enter monthly expenses',
+                          'Vui lòng nhập chi tiêu hàng tháng',
+                        );
+                      }
+                      if (parsed < 1000000 || parsed > 10000000) {
+                        return context.t(
+                          'Expenses must be between 1.000.000 and 10.000.000',
+                          'Chi tiêu phải trong khoảng 1.000.000 đến 10.000.000',
+                        );
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      setState(() {});
+                      final parsed = double.tryParse(value.replaceAll('.', ''));
+                      if (parsed == null) return;
+                      vm.updateFinancial(
+                        expenses: parsed.clamp(1000000, 10000000),
+                      );
+                    },
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.t('Do you have savings?', 'Có tiết kiệm?'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1F3F),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: vm.hasBuffer,
-                      onChanged: (value) => vm.updateFinancial(buffer: value),
-                      title: Text(
-                        vm.hasBuffer
-                            ? context.t('Emergency buffer available', 'Đã có quỹ dự phòng')
-                            : context.t('No emergency buffer yet', 'Chưa có quỹ dự phòng'),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.t(
-                        'Declare to increase approval chance',
-                        'Khai báo để tăng cơ hội duyệt',
-                      ),
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE7EBFF)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.t('Support sources', 'Nguồn hỗ trợ tài chính'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1F3F),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _SupportChip(
-                          label: context.t('Family', 'Gia đình'),
-                          value: 'family',
-                        ),
-                        _SupportChip(
-                          label: context.t('Work', 'Việc làm'),
-                          value: 'work',
-                        ),
-                        _SupportChip(
-                          label: context.t('Scholarship', 'Học bổng'),
-                          value: 'scholarship',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (vm.suspiciousIncomeWithoutSupport) ...[
                 const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF8E1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFFD54F)),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE7EBFF)),
                   ),
-                  child: Text(
-                    context.t(
-                      'Warning: High income but no support source selected.',
-                      'Cảnh báo: Thu nhập cao nhưng chưa khai báo nguồn hỗ trợ.',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.t('Do you have savings?', 'Có tiết kiệm?'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1F3F),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: vm.hasBuffer,
+                        onChanged: (value) => vm.updateFinancial(buffer: value),
+                        title: Text(
+                          vm.hasBuffer
+                              ? context.t(
+                                  'Emergency buffer available',
+                                  'Đã có quỹ dự phòng',
+                                )
+                              : context.t(
+                                  'No emergency buffer yet',
+                                  'Chưa có quỹ dự phòng',
+                                ),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.t(
+                          'Declare to increase approval chance',
+                          'Khai báo để tăng cơ hội duyệt',
+                        ),
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE7EBFF)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.t('Support sources', 'Nguồn hỗ trợ tài chính'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1F3F),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _SupportChip(
+                            label: context.t('Family', 'Gia đình'),
+                            value: 'family',
+                          ),
+                          _SupportChip(
+                            label: context.t('Work', 'Việc làm'),
+                            value: 'work',
+                          ),
+                          _SupportChip(
+                            label: context.t('Scholarship', 'Học bổng'),
+                            value: 'scholarship',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (vm.suspiciousIncomeWithoutSupport) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFFD54F)),
                     ),
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF694D00)),
+                    child: Text(
+                      context.t(
+                        'Warning: High income but no support source selected.',
+                        'Cảnh báo: Thu nhập cao nhưng chưa khai báo nguồn hỗ trợ.',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF694D00),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _canContinueStep2
+                        ? () async {
+                            if (!_formKey.currentState!.validate()) return;
+                            await vm.calculateLimit();
+                            if (!context.mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const StudentStepCResultPage(),
+                              ),
+                            );
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4D4AF9),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(52),
+                    ),
+                    child: Text(
+                      context.t('Continue to Step 3', 'Tiếp tục sang Bước 3'),
+                    ),
                   ),
                 ),
               ],
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: vm.isCalculating
-                      ? null
-                      : () async {
-                          await vm.calculateLimit();
-                          if (!context.mounted) return;
-
-                          if (vm.errorMessage != null && vm.errorMessage!.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(vm.errorMessage!)),
-                            );
-                            return;
-                          }
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const StudentStepCResultPage(),
-                            ),
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4D4AF9),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                  child: vm.isCalculating
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(context.t('Continue to Step 3', 'Tiếp tục sang Bước 3')),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DotThousandsInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return newValue.copyWith(text: '');
+
+    final number = int.tryParse(digits);
+    if (number == null) return oldValue;
+
+    final formatted = NumberFormat(
+      '#,###',
+      'vi_VN',
+    ).format(number).replaceAll(',', '.');
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

@@ -67,7 +67,7 @@ class SuccessPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C40F7),
+                    backgroundColor: const Color(0xFF4D4AF9),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

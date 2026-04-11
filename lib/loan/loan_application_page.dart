@@ -202,7 +202,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                             'Read and sign your loan contract',
                             'Đọc và ký hợp đồng vay',
                           ),
-                          isCompleted: viewModel.step6Completed,
+                          isCompleted: viewModel.step5Completed,
                         ),
                         const SizedBox(height: 16),
                         _buildStepCard(

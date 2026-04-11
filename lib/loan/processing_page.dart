@@ -82,7 +82,7 @@ class _ProcessingPageState extends State<ProcessingPage> {
                 child: CircularProgressIndicator(
                   strokeWidth: 6,
                   key: ValueKey('loading_indicator'),
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C40F7)),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4D4AF9)),
                 ),
               ),
               const SizedBox(height: 32),

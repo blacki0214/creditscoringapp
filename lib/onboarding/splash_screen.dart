@@ -149,24 +149,13 @@ class _SplashScreenState extends State<SplashScreen> {
                     ).createShader(bounds);
                   },
                   child: const Text(
-                    'VietCredit',
+                    'SwinCredit',
                     style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
                       color: Colors.white,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Subtitle
-                Text(
-                  context.t('FINANCIAL ATELIER', 'ATELIER TÀI CHÍNH'),
-                  style: const TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.5,
                   ),
                 ),
               ],

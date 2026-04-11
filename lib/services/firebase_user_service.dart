@@ -25,7 +25,10 @@ class FirebaseUserService {
   }
 
   // Update user profile
-  Future<void> updateUserProfile(String userId, Map<String, dynamic> data) async {
+  Future<void> updateUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       data['updatedAt'] = FieldValue.serverTimestamp();
       await _firebase.usersCollection.doc(userId).update(data);
@@ -85,10 +88,10 @@ class FirebaseUserService {
     try {
       // Delete user document and related data
       final batch = _firebase.firestore.batch();
-      
+
       // Delete user document
       batch.delete(_firebase.usersCollection.doc(userId));
-      
+
       // Delete related EKYC logs
       final ekycLogs = await _firebase.ekycLogsCollection
           .where('userId', isEqualTo: userId)
@@ -96,7 +99,7 @@ class FirebaseUserService {
       for (var doc in ekycLogs.docs) {
         batch.delete(doc.reference);
       }
-      
+
       // Delete related applications
       final applications = await _firebase.creditApplicationsCollection
           .where('userId', isEqualTo: userId)
@@ -104,7 +107,7 @@ class FirebaseUserService {
       for (var doc in applications.docs) {
         batch.delete(doc.reference);
       }
-      
+
       await batch.commit();
     } catch (e) {
       throw Exception('Failed to delete user account: $e');
@@ -119,10 +122,10 @@ class FirebaseUserService {
           .child('users')
           .child(userId)
           .child('avatar.jpg');
-      
+
       final uploadTask = await storageRef.putFile(imageFile);
       final downloadUrl = await uploadTask.ref.getDownloadURL();
-      
+
       return downloadUrl;
     } catch (e) {
       throw Exception('Failed to upload avatar: $e');
@@ -141,24 +144,48 @@ class FirebaseUserService {
     }
   }
 
-  // Get user's latest credit score from applications
+  // Get user's locked first credit score (demo behavior)
   Future<Map<String, dynamic>?> getUserCreditScore(String userId) async {
     try {
-      print('FirebaseUserService: Querying credit score for user $userId');
+      print(
+        'FirebaseUserService: Querying locked credit score for user $userId',
+      );
+
+      final userDoc = await _firebase.usersCollection.doc(userId).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        final lockedScoreRaw = userData['initialCreditScore'];
+        if (lockedScoreRaw is num) {
+          return {
+            'creditScore': lockedScoreRaw.toInt(),
+            'riskLevel': userData['initialRiskLevel'],
+            'approved': true,
+            'createdAt':
+                userData['initialCreditScoreLockedAt'] ??
+                userData['lastCreditCheckDate'],
+          };
+        }
+      }
+
+      // Fallback for old users before lock fields existed: derive from first app.
       final querySnapshot = await _firebase.creditApplicationsCollection
           .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
+          .orderBy('createdAt', descending: false)
           .limit(1)
           .get();
 
-      print('FirebaseUserService: Found ${querySnapshot.docs.length} applications');
+      print(
+        'FirebaseUserService: Found ${querySnapshot.docs.length} applications',
+      );
 
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
         final data = doc.data() as Map<String, dynamic>;
-        
-        print('FirebaseUserService: Application data: creditScore=${data['creditScore']}, riskLevel=${data['riskLevel']}');
-        
+
+        print(
+          'FirebaseUserService: Application data: creditScore=${data['creditScore']}, riskLevel=${data['riskLevel']}',
+        );
+
         return {
           'creditScore': data['creditScore'],
           'riskLevel': data['riskLevel'],
@@ -175,10 +202,7 @@ class FirebaseUserService {
   }
 
   // Update cached credit score in user document
-  Future<void> updateCachedCreditScore(
-    String userId,
-    int creditScore,
-  ) async {
+  Future<void> updateCachedCreditScore(String userId, int creditScore) async {
     try {
       // Use set with merge to create document if it doesn't exist
       await _firebase.usersCollection.doc(userId).set({
@@ -198,7 +222,7 @@ class FirebaseUserService {
       final querySnapshot = await _firebase.creditApplicationsCollection
           .where('userId', isEqualTo: userId)
           .get();
-      
+
       return querySnapshot.docs.length;
     } catch (e) {
       return 0;

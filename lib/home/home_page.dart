@@ -21,10 +21,16 @@ import 'application_contract_status_page.dart';
 import '../utils/app_localization.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, this.onOpenSettings, this.onOpenStudent});
+  const HomePage({
+    super.key,
+    this.onOpenSettings,
+    this.onOpenStudent,
+    this.onOpenApplication,
+  });
 
   final VoidCallback? onOpenSettings;
   final VoidCallback? onOpenStudent;
+  final VoidCallback? onOpenApplication;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -44,6 +50,18 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsPage()),
+    );
+  }
+
+  void _openApplicationFromHome() {
+    if (widget.onOpenApplication != null) {
+      widget.onOpenApplication!();
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoanApplicationPage()),
     );
   }
 
@@ -517,10 +535,45 @@ class _HomePageState extends State<HomePage> {
           userId != null) {
         print('HomePage: Loan scored! Refreshing credit score...');
         homeViewModel.refreshCreditScore(userId);
+
+        if (_lastKnownStatus == ApplicationStatus.processing) {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                context.t(
+                  'Scoring completed. Your loan offer is ready.',
+                  'Chấm điểm đã hoàn tất. Đề nghị khoản vay của bạn đã sẵn sàng.',
+                ),
+              ),
+              backgroundColor: const Color(0xFF2E7D32),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+
         _lastKnownStatus = ApplicationStatus.scored;
       } else if (loanViewModel.isApplicationProcessing) {
         _lastKnownStatus = ApplicationStatus.processing;
       } else if (loanViewModel.isApplicationRejected) {
+        if (_lastKnownStatus == ApplicationStatus.processing) {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                context.t(
+                  'Scoring completed. This application was not approved.',
+                  'Chấm điểm đã hoàn tất. Hồ sơ này không được duyệt.',
+                ),
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+
         _lastKnownStatus = ApplicationStatus.rejected;
       }
     });
@@ -917,7 +970,7 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -1030,15 +1083,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLoanDisplay(BuildContext context) {
     final loanViewModel = context.watch<LoanViewModel>();
-    final currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: 'đ',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     final activeOffer = loanViewModel.currentOffer;
     final activeStatus = loanViewModel.applicationStatus;
-    final showScoreStatus =
-        loanViewModel.currentOffer != null ||
-        activeStatus == ApplicationStatus.processing;
+    final showScoreStatus = activeStatus != ApplicationStatus.none;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1271,13 +1319,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       );
                                     } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const LoanApplicationPage(),
-                                        ),
-                                      );
+                                      _openApplicationFromHome();
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -1480,12 +1522,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const LoanApplicationPage(),
-                      ),
-                    );
+                    _openApplicationFromHome();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4D4AF9),
@@ -1514,10 +1551,7 @@ class _HomePageState extends State<HomePage> {
     final applicationHistory = LocalStorageService.getApplicationHistory(
       userId: userId,
     );
-    final currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: 'đ',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     if (applicationHistory.isEmpty) {
       return Center(
@@ -1727,10 +1761,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildInstallmentDisplay(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
-    final currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: 'đ',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     final applicationHistory = LocalStorageService.getApplicationHistory(
@@ -1825,18 +1856,6 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Contract ID - display at top
-                  Center(
-                    child: Text(
-                      context.t('Contract ID: ', 'ID Hợp đồng: ') + contractId,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1867,7 +1886,7 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            context.t('Next Due', 'Đến hạn tiếp theo'),
+                            context.t('Due date', 'Ngày đến hạn'),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
@@ -1896,32 +1915,70 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 40,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4D4AF9),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ApplicationContractStatusPage(
-                              application: Map<String, dynamic>.from(app),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ApplicationContractStatusPage(
+                                    application: Map<String, dynamic>.from(app),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEEF0FF),
+                                borderRadius: BorderRadius.circular(17),
+                                border: Border.all(
+                                  color: const Color(0xFFD9DDFE),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.open_in_new,
+                                size: 18,
+                                color: Color(0xFF4D4AF9),
+                              ),
                             ),
                           ),
-                        );
-                      },
-                      child: Text(
-                        context.t('View Details', 'Xem chi tiết'),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        ],
                       ),
-                    ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            context.t('Contract ID', 'ID Hợp đồng'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 180),
+                            child: Text(
+                              contractId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1A1F3F),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -3081,7 +3138,7 @@ String _getLocalizedNotificationTitle(
     case 'step3_completed':
       return context.t('Step 3 Completed', 'Hoàn tất Bước 3');
     case 'step4_completed':
-      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');                                      
+      return context.t('Step 4 Completed', 'Hoàn tất Bước 4');
     case 'step5_completed':
       return context.t('Step 5 Completed', 'Hoàn tất Bước 5');
     case 'loan_approved':

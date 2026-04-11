@@ -76,13 +76,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4C40F7).withOpacity(0.1),
+                        color: const Color(0xFF4D4AF9).withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.vpn_key,
                         size: 100,
-                        color: Color(0xFF4C40F7),
+                        color: Color(0xFF4D4AF9),
                       ),
                     ),
                   ),
@@ -140,7 +140,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           width: 2,
                         ),
                       ),
@@ -185,7 +185,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: Color(0xFF4C40F7),
+                          color: Color(0xFF4D4AF9),
                           width: 2,
                         ),
                       ),
@@ -210,7 +210,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4C40F7),
+                        backgroundColor: const Color(0xFF4D4AF9),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
